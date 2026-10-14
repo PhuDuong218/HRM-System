@@ -22,3 +22,5 @@ application-*.local.properties
 *.bacpac
 # Cau hinh database rieng cua tung thanh vien
 **/application-local.properties
+# Khong day mat khau SQL Server len GitHub
+**/application-local.properties
