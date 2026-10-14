@@ -1,33 +1,24 @@
-HELP.md
+# Maven / Java
 target/
-.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
+*.class
+*.log
 
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
-
-### VS Code ###
+# IDE / OS
 .vscode/
+.idea/
+*.iml
+.DS_Store
+Thumbs.db
+
+# Local-only secrets/configurations
+.env
+.env.*
+!.env.example
+application-local.properties
+application-*.local.properties
+
+# Local SQL backups / generated dumps
+*.bak
+*.bacpac
+# Cau hinh database rieng cua tung thanh vien
+**/application-local.properties

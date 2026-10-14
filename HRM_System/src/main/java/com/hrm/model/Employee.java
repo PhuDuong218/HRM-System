@@ -1,15 +1,24 @@
 package com.hrm.model;
 
-import jakarta.persistence.*;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
-
 import java.time.LocalDate;
-// import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 
-// import com.fasterxml.jackson.annotation.JsonManagedReference;    
 import com.hrm.enums.EmploymentStatus;
+
+import jakarta.persistence.CascadeType;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.OneToMany;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 
 @Entity
 @Table(name = "employees")
@@ -156,6 +165,6 @@ public class Employee extends BaseEntity { // Kế thừa toàn bộ cột từ 
     }
 
     @OneToMany(mappedBy = "employee", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
-    private List<EmployeeAssignment> assignments;
+    private List<EmployeeAssignment> assignments = new ArrayList<>();
 
 }
