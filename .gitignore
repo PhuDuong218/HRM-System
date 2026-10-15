@@ -1,0 +1,8 @@
+# Không đưa bài tập cá nhân lên Git nhóm
+/Python/
+/Java/
+
+# Không đưa file build Java lên Git
+**/target/
+**/bin/
+**/obj/
