@@ -1,0 +1,4 @@
+@if (data$ | async; as data) {
+  <p class="eyebrow">HRM CENTER</p><h1>{{ data['title'] }}</h1>
+  <section class="surface mt-4"><h2>{{ data['message'] ? 'Thông tin' : 'Chưa triển khai chức năng' }}</h2><p class="muted">{{ data['message'] || 'Trang đã có đường dẫn. Bước tiếp theo là tạo component riêng và tích hợp API backend cho chức năng này.' }}</p><a routerLink="/overview" class="btn btn-outline-primary">Về tổng quan</a></section>
+}
