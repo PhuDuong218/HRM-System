@@ -5,8 +5,10 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hrm.dto.EmployeeDTO;
 import com.hrm.dto.EmployeeRequestDTO;
@@ -53,26 +55,38 @@ public class EmployeeService {
     @Transactional
     public EmployeeDTO addEmployee(EmployeeRequestDTO requestDTO) {
 
+        // Chuẩn hóa mã nhân viên
+        String employeeCode = requestDTO.getEmployeeCode().trim();
+
+        // Kiểm tra mã nhân viên đã tồn tại hay chưa
+        if (employeeRepository.existsByEmployeeCode(employeeCode)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Mã nhân viên đã tồn tại: " + employeeCode
+            );
+        }
+
         Department department = departmentRepository
-        .findById(requestDTO.getDepartmentId())
-        .orElseThrow(() -> new ResourceNotFoundException(
-                "Không tìm thấy phòng ban có ID: "
-                + requestDTO.getDepartmentId()));
+                .findById(requestDTO.getDepartmentId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy phòng ban có ID: "
+                        + requestDTO.getDepartmentId()));
 
         Position position = positionRepository
-        .findById(requestDTO.getPositionId())
-        .orElseThrow(() -> new ResourceNotFoundException(
-                "Không tìm thấy chức vụ có ID: "
-                + requestDTO.getPositionId()));
+                .findById(requestDTO.getPositionId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy chức vụ có ID: "
+                        + requestDTO.getPositionId()));
 
         // 3. Tạo nhân viên
         Employee employee = new Employee();
 
-        employee.setEmployeeCode(requestDTO.getEmployeeCode());
+        employee.setEmployeeCode(employeeCode);
         employee.setFullName(requestDTO.getFullName());
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(requestDTO.getEmail());
         employee.setPhone(requestDTO.getPhone());
+        employee.setIdentityNumber(requestDTO.getIdentityNumber());
         employee.setHireDate(requestDTO.getHireDate());
         employee.setEmploymentStatus(EmploymentStatus.DANG_LAM);
         employee.setCreatedAt(LocalDateTime.now());
@@ -134,7 +148,7 @@ public class EmployeeService {
         existingEmployee.setBirthDate(requestDTO.getBirthDate());
         existingEmployee.setEmail(requestDTO.getEmail());
         existingEmployee.setPhone(requestDTO.getPhone());
-
+        existingEmployee.setIdentityNumber(requestDTO.getIdentityNumber());
         // Cập nhật Audit
         existingEmployee.setUpdatedAt(java.time.LocalDateTime.now());
 
