@@ -1,0 +1,20 @@
+<div class="app-shell">
+  <aside class="sidebar" [class.is-open]="menuOpen" id="main-menu">
+    <a class="brand" routerLink="/overview"><span class="brand-mark">H</span><span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span></a>
+    <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
+    <nav aria-label="Điều hướng chính">
+      @for (item of menu; track item.path) {
+        <a [routerLink]="['/', item.path]" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="menuOpen = false">{{ item.label }}</a>
+      }
+    </nav>
+    <div class="sidebar-note">Web dành cho ADMIN / HR<br><span>Bộ khung để phát triển</span></div>
+  </aside>
+  <div class="workspace">
+    <header class="topbar">
+      <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-controls="main-menu">Menu</button><span>Quản lý nhân sự <span class="muted">/ HRM-CENTER</span></span></div>
+      <a routerLink="/login" class="btn btn-sm btn-outline-primary">Đăng nhập</a>
+    </header>
+    <main class="page-content"><router-outlet /></main>
+    <footer>HRM Center · Nền tảng quản lý nhân sự trung tâm giáo dục</footer>
+  </div>
+</div>
