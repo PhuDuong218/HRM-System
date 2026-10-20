@@ -17,19 +17,22 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
-@RestControllerAdvice
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
+@RestControllerAdvice // Đánh dấu đây là Trạm kiểm soát lỗi toàn cầu
 public class GlobalExceptionHandler {
 
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<Object> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "Phuong thuc HTTP khong duoc ho tro");
+        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED,
+                "Lỗi thao tác: Bạn đang dùng sai phương thức (Ví dụ: Cần PUT nhưng lại dùng POST).");
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        String errorMessage = ex.getBindingResult().getAllErrors().isEmpty()
-                ? "Du lieu khong hop le"
-                : ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
+        // Lấy câu thông báo lỗi đầu tiên trong file DTO (Ví dụ: "Tên phòng ban không
+        // được để trống")
+        String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
     }
 
@@ -38,31 +41,22 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.NOT_FOUND, ex.getMessage());
     }
 
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Tham so tren URL sai kieu du lieu");
-    }
-
-    // QUAN TRONG: ResponseStatusException phai duoc xu ly TRUOC handler RuntimeException.
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Object> handleResponseStatus(ResponseStatusException ex) {
-        String reason = ex.getReason() != null ? ex.getReason() : "Yeu cau khong hop le";
-        return buildErrorResponse(ex.getStatusCode(), reason);
-    }
-
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleJsonParseException(HttpMessageNotReadableException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Du lieu JSON khong dung dinh dang");
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng (có thể dư dấu phẩy hoặc sai ngoặc).");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, "Du lieu trung hoac vi pham rang buoc database");
+        return buildErrorResponse(HttpStatus.CONFLICT,
+                "Lỗi xung đột dữ liệu: Mã bạn nhập đã tồn tại trong hệ thống hoặc vi phạm ràng buộc.");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Object> handleNotFoundException(NoResourceFoundException ex) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, "Duong dan API khong ton tai");
+        return buildErrorResponse(HttpStatus.NOT_FOUND,
+                "Lỗi 404: Đường dẫn API không tồn tại, vui lòng kiểm tra lại URL.");
     }
 
     @ExceptionHandler(RuntimeException.class)
@@ -77,5 +71,16 @@ public class GlobalExceptionHandler {
         error.put("trang_thai", status.value());
         error.put("loi_chi_tiet", message);
         return new ResponseEntity<>(error, status);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(BusinessException ex) {
+        return buildErrorResponse(ex.getStatus(), ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                "Tham số " + ex.getName() + " không đúng định dạng");
     }
 }
