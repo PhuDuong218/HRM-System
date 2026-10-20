@@ -5,22 +5,21 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import com.hrm.model.Employee;
-import com.hrm.repository.EmployeeRepository;
-
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hrm.dto.EmployeeDTO;
 import com.hrm.dto.EmployeeRequestDTO;
 import com.hrm.enums.EmploymentStatus;
-
-import com.hrm.model.EmployeeAssignment;
+import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.Department;
+import com.hrm.model.Employee;
+import com.hrm.model.EmployeeAssignment;
 import com.hrm.model.Position;
-
 import com.hrm.repository.DepartmentRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PositionRepository;
 
 @Service
@@ -47,33 +46,47 @@ public class EmployeeService {
 
     public EmployeeDTO getEmployeeById(Long id) {
         Employee entity = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
+                .orElseThrow(()
+                        -> new ResourceNotFoundException("Không tìm thấy nhân viên có mã: " + id)
+                );
         return convertToDTO(entity);
     }
 
     @Transactional
     public EmployeeDTO addEmployee(EmployeeRequestDTO requestDTO) {
 
-        // 1. Kiểm tra phòng ban có tồn tại
+        // Chuẩn hóa mã nhân viên
+        String employeeCode = requestDTO.getEmployeeCode().trim();
+
+        // Kiểm tra mã nhân viên đã tồn tại hay chưa
+        if (employeeRepository.existsByEmployeeCode(employeeCode)) {
+            throw new ResponseStatusException(
+                    HttpStatus.CONFLICT,
+                    "Mã nhân viên đã tồn tại: " + employeeCode
+            );
+        }
+
         Department department = departmentRepository
                 .findById(requestDTO.getDepartmentId())
-                .orElseThrow(()
-                        -> new RuntimeException("Không tìm thấy phòng ban"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy phòng ban có ID: "
+                        + requestDTO.getDepartmentId()));
 
-        // 2. Kiểm tra chức vụ có tồn tại
         Position position = positionRepository
                 .findById(requestDTO.getPositionId())
-                .orElseThrow(()
-                        -> new RuntimeException("Không tìm thấy chức vụ"));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Không tìm thấy chức vụ có ID: "
+                        + requestDTO.getPositionId()));
 
         // 3. Tạo nhân viên
         Employee employee = new Employee();
 
-        employee.setEmployeeCode(requestDTO.getEmployeeCode());
+        employee.setEmployeeCode(employeeCode);
         employee.setFullName(requestDTO.getFullName());
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(requestDTO.getEmail());
         employee.setPhone(requestDTO.getPhone());
+        employee.setIdentityNumber(requestDTO.getIdentityNumber());
         employee.setHireDate(requestDTO.getHireDate());
         employee.setEmploymentStatus(EmploymentStatus.DANG_LAM);
         employee.setCreatedAt(LocalDateTime.now());
@@ -126,14 +139,16 @@ public class EmployeeService {
     @Transactional
     public EmployeeDTO updateEmployee(Long id, EmployeeRequestDTO requestDTO) {
         Employee existingEmployee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
+                .orElseThrow(()
+                        -> new ResourceNotFoundException("Không tìm thấy nhân viên có mã: " + id)
+                );
 
         // Cập nhật các trường thông tin cơ bản từ requestDTO gửi lên
         existingEmployee.setFullName(requestDTO.getFullName());
         existingEmployee.setBirthDate(requestDTO.getBirthDate());
         existingEmployee.setEmail(requestDTO.getEmail());
         existingEmployee.setPhone(requestDTO.getPhone());
-
+        existingEmployee.setIdentityNumber(requestDTO.getIdentityNumber());
         // Cập nhật Audit
         existingEmployee.setUpdatedAt(java.time.LocalDateTime.now());
 
@@ -144,7 +159,7 @@ public class EmployeeService {
     @Transactional
     public void deleteEmployee(Long id) {
         Employee existingEmployee = employeeRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên có mã: " + id));
 
         // Xóa mềm: Chuyển trạng thái sang DA_NGHI và ghi nhận ngày nghỉ chính thức
         existingEmployee.setEmploymentStatus(EmploymentStatus.DA_NGHI);

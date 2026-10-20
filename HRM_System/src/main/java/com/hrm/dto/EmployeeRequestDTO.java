@@ -26,7 +26,10 @@ public class EmployeeRequestDTO {
     @Size(max = 254)
     private String email;
 
-    @Pattern(regexp = "^(0[3|5|7|8|9])+([0-9]{8})$", message = "Số điện thoại không hợp lệ (Phải là số điện thoại VN 10 số)")
+    @Pattern(
+    regexp = "^0[35789][0-9]{8}$",
+    message = "Số điện thoại phải gồm 10 chữ số hợp lệ"
+)
     private String phone;
 
     @NotNull(message = "Ngày bắt đầu làm việc không được để trống")
