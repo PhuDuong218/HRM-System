@@ -24,3 +24,4 @@ application-*.local.properties
 **/application-local.properties
 # Khong day mat khau SQL Server len GitHub
 **/application-local.properties
+docs/

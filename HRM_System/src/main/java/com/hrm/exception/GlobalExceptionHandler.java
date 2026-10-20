@@ -13,19 +13,24 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
+
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
 @RestControllerAdvice // Đánh dấu đây là Trạm kiểm soát lỗi toàn cầu
 public class GlobalExceptionHandler {
 
     // 1. Tóm cổ lỗi 405 (Sai phương thức GET/POST/PUT/DELETE)
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
     public ResponseEntity<Object> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
-        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED, "Lỗi thao tác: Bạn đang dùng sai phương thức (Ví dụ: Cần PUT nhưng lại dùng POST).");
+        return buildErrorResponse(HttpStatus.METHOD_NOT_ALLOWED,
+                "Lỗi thao tác: Bạn đang dùng sai phương thức (Ví dụ: Cần PUT nhưng lại dùng POST).");
     }
 
     // 2. Tóm cổ lỗi 400 (Do Lính gác @Valid bắt được: Để trống tên, sai định dạng)
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(MethodArgumentNotValidException ex) {
-        // Lấy câu thông báo lỗi đầu tiên trong file DTO (Ví dụ: "Tên phòng ban không được để trống")
+        // Lấy câu thông báo lỗi đầu tiên trong file DTO (Ví dụ: "Tên phòng ban không
+        // được để trống")
         String errorMessage = ex.getBindingResult().getAllErrors().get(0).getDefaultMessage();
         return buildErrorResponse(HttpStatus.BAD_REQUEST, errorMessage);
     }
@@ -36,19 +41,22 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, ex.getMessage());
     }
 
-@ExceptionHandler(HttpMessageNotReadableException.class)
+    @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleJsonParseException(HttpMessageNotReadableException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng (có thể dư dấu phẩy hoặc sai ngoặc).");
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng (có thể dư dấu phẩy hoặc sai ngoặc).");
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrityViolation(DataIntegrityViolationException ex) {
-        return buildErrorResponse(HttpStatus.CONFLICT, "Lỗi xung đột dữ liệu: Mã bạn nhập đã tồn tại trong hệ thống hoặc vi phạm ràng buộc.");
+        return buildErrorResponse(HttpStatus.CONFLICT,
+                "Lỗi xung đột dữ liệu: Mã bạn nhập đã tồn tại trong hệ thống hoặc vi phạm ràng buộc.");
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Object> handleNotFoundException(NoResourceFoundException ex) {
-        return buildErrorResponse(HttpStatus.NOT_FOUND, "Lỗi 404: Đường dẫn API không tồn tại, vui lòng kiểm tra lại URL.");
+        return buildErrorResponse(HttpStatus.NOT_FOUND,
+                "Lỗi 404: Đường dẫn API không tồn tại, vui lòng kiểm tra lại URL.");
     }
 
     // --- Hàm Helper để đóng gói JSON báo lỗi cho đẹp ---
@@ -58,5 +66,16 @@ public class GlobalExceptionHandler {
         error.put("trang_thai", status.value());
         error.put("loi_chi_tiet", message);
         return new ResponseEntity<>(error, status);
+    }
+
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(BusinessException ex) {
+        return buildErrorResponse(ex.getStatus(), ex.getMessage());
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Object> handleTypeMismatch(MethodArgumentTypeMismatchException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                "Tham số " + ex.getName() + " không đúng định dạng");
     }
 }
