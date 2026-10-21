@@ -1,45 +1,58 @@
 package com.hrm.controller;
 
-import com.hrm.model.Position;
-import com.hrm.service.PositionService;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
+import com.hrm.dto.PositionDTO;
+import com.hrm.dto.PositionRequestDTO;
+import com.hrm.service.PositionService;
+
+import jakarta.validation.Valid;
+
 @RestController
-@RequestMapping("/positions") // Tất cả API bắt đầu bằng http://localhost:2005/positions
+@RequestMapping("/positions")
 public class PositionController {
 
-    @Autowired
-    private PositionService positionService;
+    private final PositionService positionService;
 
-    // Khi có người gọi GET /positions -> Trả về danh sách
+    public PositionController(PositionService positionService) {
+        this.positionService = positionService;
+    }
+
     @GetMapping
-    public List<Position> getAllPositions() {
+    public List<PositionDTO> getAllPositions() {
         return positionService.getAllPositions();
     }
 
     @GetMapping("/{id}")
-    public Position getPositionById(@PathVariable Long id) {
+    public PositionDTO getPositionById(@PathVariable Long id) {
         return positionService.getPositionById(id);
     }
 
-    // Khi có người gọi POST /positions (kèm cục JSON) -> Gửi cho Service thêm mới
     @PostMapping
-    public Position addPosition(@RequestBody Position position) {
-        return positionService.addPosition(position);
+    public PositionDTO addPosition(@Valid @RequestBody PositionRequestDTO requestDTO) {
+        return positionService.addPosition(requestDTO);
     }
 
-    // Khi có người gọi PUT /positions/1 (kèm cục JSON) -> Gửi cho Service sửa chức vụ có ID=1
     @PutMapping("/{id}")
-    public Position updatePosition(@PathVariable Long id, @RequestBody Position position) {
-        return positionService.updatePosition(id, position);
+    public PositionDTO updatePosition(@PathVariable Long id, @Valid @RequestBody PositionRequestDTO requestDTO) {
+        System.out.println("ID: " + id);
+        System.out.println("positionCode: " + requestDTO.getPositionCode());
+        return positionService.updatePosition(id, requestDTO);
     }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<String> deletePosition(@PathVariable Long id) {
         positionService.deletePosition(id);
-        return ResponseEntity.ok("Đã vô hiệu hóa chức vụ thành công!");
+        return ResponseEntity.ok("Da vo hieu hoa chuc vu thanh cong!");
     }
 }

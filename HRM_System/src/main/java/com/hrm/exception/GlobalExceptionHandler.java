@@ -7,12 +7,14 @@ import java.util.Map;
 
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
@@ -31,15 +33,17 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 2. Xử lý lỗi 400: Dữ liệu không hợp lệ do @Valid phát hiện
+    // 2. Xử lý lỗi 400: Dữ liệu không hợp lệ do @Valid
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationExceptions(
             MethodArgumentNotValidException ex) {
 
         String errorMessage = ex.getBindingResult()
                 .getAllErrors()
-                .get(0)
-                .getDefaultMessage();
+                .stream()
+                .findFirst()
+                .map(error -> error.getDefaultMessage())
+                .orElse("Dữ liệu không hợp lệ");
 
         return buildErrorResponse(
                 HttpStatus.BAD_REQUEST,
@@ -47,36 +51,43 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 3. Xử lý ResponseStatusException:
+    // 3. Xử lý lỗi 404: Không tìm thấy tài nguyên
+    @ExceptionHandler(ResourceNotFoundException.class)
+    public ResponseEntity<Object> handleResourceNotFound(
+            ResourceNotFoundException ex) {
+
+        return buildErrorResponse(
+                HttpStatus.NOT_FOUND,
+                ex.getMessage()
+        );
+    }
+
+    // 4. Xử lý lỗi nghiệp vụ
+    @ExceptionHandler(BusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(
+            BusinessException ex) {
+
+        return buildErrorResponse(
+                ex.getStatus(),
+                ex.getMessage()
+        );
+    }
+
+    // 5. Xử lý ResponseStatusException
     // Giữ nguyên HTTP status do Service chỉ định
-    // Ví dụ:
-    // 409 - Lịch làm việc bị chồng lấn
-    // 404 - Không tìm thấy dữ liệu
-    // 400 - Yêu cầu không hợp lệ
     @ExceptionHandler(ResponseStatusException.class)
     public ResponseEntity<Object> handleResponseStatusException(
             ResponseStatusException ex) {
 
         return buildErrorResponse(
-                HttpStatus.valueOf(ex.getStatusCode().value()),
+                ex.getStatusCode(),
                 ex.getReason() != null
                         ? ex.getReason()
                         : "Yêu cầu không thể thực hiện"
         );
     }
 
-    // 4. Xử lý các RuntimeException khác
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntimeException(
-            RuntimeException ex) {
-
-        return buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                ex.getMessage()
-        );
-    }
-
-    // 5. Xử lý lỗi 400: JSON sai định dạng
+    // 6. Xử lý lỗi 400: JSON sai định dạng
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Object> handleJsonParseException(
             HttpMessageNotReadableException ex) {
@@ -88,7 +99,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 6. Xử lý lỗi 409: Vi phạm ràng buộc dữ liệu
+    // 7. Xử lý lỗi 409: Vi phạm ràng buộc dữ liệu
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Object> handleDataIntegrityViolation(
             DataIntegrityViolationException ex) {
@@ -100,7 +111,7 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // 7. Xử lý lỗi 404: Đường dẫn API không tồn tại
+    // 8. Xử lý lỗi 404: Đường dẫn API không tồn tại
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<Object> handleNotFoundException(
             NoResourceFoundException ex) {
@@ -112,9 +123,32 @@ public class GlobalExceptionHandler {
         );
     }
 
-    // Hàm dùng chung để trả về thông báo lỗi dạng JSON
+    // 9. Xử lý lỗi 400: Tham số sai kiểu dữ liệu
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<Object> handleTypeMismatch(
+            MethodArgumentTypeMismatchException ex) {
+
+        return buildErrorResponse(
+                HttpStatus.BAD_REQUEST,
+                "Tham số " + ex.getName() + " không đúng định dạng"
+        );
+    }
+
+    // 10. Xử lý các RuntimeException chưa được xử lý riêng
+    @ExceptionHandler(RuntimeException.class)
+    public ResponseEntity<Object> handleRuntimeException(
+            RuntimeException ex) {
+
+        // Không trả thông tin lỗi nội bộ về client
+        return buildErrorResponse(
+                HttpStatus.INTERNAL_SERVER_ERROR,
+                "Máy chủ không xử lý được yêu cầu"
+        );
+    }
+
+    // 11. Hàm dùng chung để trả về thông báo lỗi dạng JSON
     private ResponseEntity<Object> buildErrorResponse(
-            HttpStatus status,
+            HttpStatusCode status,
             String message) {
 
         Map<String, Object> error = new HashMap<>();

@@ -5,7 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-
+import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.dto.DepartmentDTO;
 import com.hrm.dto.DepartmentRequestDTO;
 import com.hrm.model.Department;
@@ -33,7 +33,9 @@ public class DepartmentService {
 
     public DepartmentDTO getDepartment(Long id) {
         Department entity = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban!"));
+                .orElseThrow(() ->
+    new ResourceNotFoundException("Không tìm thấy phòng ban có mã: " + id)
+);
         return convertToDTO(entity);
     }
 
@@ -70,7 +72,7 @@ public class DepartmentService {
     // 2. Hàm Cập nhật
     public DepartmentDTO updateDepartment(Long id, DepartmentRequestDTO requestDTO) {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban có mã: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban có mã: " + id));
 
         // Chỉ chép những gì khách gửi lên (Mã phòng ban là duy nhất, không cho sửa)
         if (requestDTO.getDepartmentName() != null) {
@@ -92,7 +94,7 @@ public class DepartmentService {
 
     public void deleteDepartment(Long id) {
         Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban có mã:" + id));
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy phòng ban có mã: " + id));
 
         // Xóa mềm: Tắt trạng thái hoạt động và lưu lại//
         existingDepartment.setIsActive(false);
