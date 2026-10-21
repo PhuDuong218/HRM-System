@@ -6,12 +6,18 @@ import com.hrm.service.ContractService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import com.hrm.service.ContractLifecycleService;
 
 @RestController
 @RequestMapping("/contracts")
 public class ContractController {
     private final ContractService service;
-    public ContractController(ContractService service) { this.service = service; }
+    private final ContractLifecycleService lifecycle;
+
+    public ContractController(ContractService service, ContractLifecycleService lifecycle) {
+        this.service = service;
+        this.lifecycle = lifecycle;
+    }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
@@ -38,12 +44,12 @@ public class ContractController {
     @ResponseStatus(HttpStatus.CREATED)
     public ContractResponse renew(@PathVariable Long id,
             @Valid @RequestBody ContractRenewRequest request) {
-        return service.renew(id, request);
+        return lifecycle.renew(id, request);
     }
 
     @PostMapping("/{id}/terminate")
     public ContractResponse terminate(@PathVariable Long id,
             @Valid @RequestBody ContractTerminateRequest request) {
-        return service.terminate(id, request);
+        return lifecycle.terminate(id, request);
     }
 }
