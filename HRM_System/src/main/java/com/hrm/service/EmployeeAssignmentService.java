@@ -111,6 +111,22 @@
                                 "Chức vụ mới không tồn tại: "
                                 + request.positionId()));
 
+                // Kiểm tra trạng thái phòng ban
+                if (!Boolean.TRUE.equals(newDepartment.getIsActive())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Phòng ban đã ngừng hoạt động"
+                );
+                }
+
+                // Kiểm tra trạng thái chức vụ
+                if (!Boolean.TRUE.equals(newPosition.getIsActive())) {
+                throw new ResponseStatusException(
+                        HttpStatus.CONFLICT,
+                        "Chức vụ đã ngừng hoạt động"
+                );
+                }
+
                 // 5. Kiểm tra ngày điều chuyển
                 LocalDate transferDate = request.effectiveFrom();
 
@@ -118,6 +134,13 @@
                 throw new ResponseStatusException(
                         HttpStatus.BAD_REQUEST,
                         "Ngày điều chuyển không được để trống");
+                }
+                
+                if (transferDate.isBefore(employee.getHireDate())) {
+                throw new ResponseStatusException(
+                        HttpStatus.BAD_REQUEST,
+                        "Ngày điều chuyển không được trước ngày vào làm"
+                );
                 }
 
                 if (transferDate.isAfter(LocalDate.now())) {

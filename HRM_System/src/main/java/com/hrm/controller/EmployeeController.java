@@ -2,6 +2,7 @@ package com.hrm.controller;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -9,11 +10,12 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.hrm.dto.EmployeeDTO;
 import com.hrm.dto.EmployeeRequestDTO;
-import com.hrm.model.Employee;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.service.EmployeeService;
 
 import jakarta.validation.Valid;
@@ -54,4 +56,23 @@ public class EmployeeController {
         employeeService.deleteEmployee(id);
         return "Đã xóa nhân viên có mã: " + id;
     }
+
+    @GetMapping("/search")
+public Page<EmployeeDTO> searchEmployees(
+        @RequestParam(required = false) String keyword,
+        @RequestParam(required = false) EmploymentStatus status,
+        @RequestParam(required = false) Long departmentId,
+        @RequestParam(required = false) Long positionId,
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
+
+    return employeeService.searchEmployees(
+            keyword,
+            status,
+            departmentId,
+            positionId,
+            page,
+            size
+    );
+}
 }

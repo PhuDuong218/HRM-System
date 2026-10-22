@@ -1,6 +1,6 @@
-
 package com.hrm.repository;
 
+import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -29,13 +29,12 @@ public interface EmployeeAssignmentRepository
             JOIN FETCH ea.department
             JOIN FETCH ea.position
             WHERE ea.employee.employeeId = :employeeId
-            ORDER BY ea.effectiveFrom DESC
+            ORDER BY ea.effectiveFrom DESC, ea.assignmentId DESC
             """)
     List<EmployeeAssignment> findHistoryByEmployeeId(
             @Param("employeeId") Long employeeId);
 
-    
-    @Query("""
+    @Query("""  
             SELECT ea
             FROM EmployeeAssignment ea
             JOIN FETCH ea.employee
@@ -46,5 +45,16 @@ public interface EmployeeAssignmentRepository
             """)
     List<EmployeeAssignment> findCurrentAssignments(
             @Param("employeeId") Long employeeId);
-        
+
+    @Query("""
+        SELECT a
+        FROM EmployeeAssignment a
+        JOIN FETCH a.department
+        JOIN FETCH a.position
+        WHERE a.employee.employeeId IN :employeeIds
+        AND a.effectiveTo IS NULL
+        """)
+    List<EmployeeAssignment> findCurrentByEmployeeIds(
+            @Param("employeeIds") Collection<Long> employeeIds
+    );
 }

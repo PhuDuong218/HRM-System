@@ -3,8 +3,14 @@ package com.hrm.service;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -19,6 +25,7 @@ import com.hrm.model.Employee;
 import com.hrm.model.EmployeeAssignment;
 import com.hrm.model.Position;
 import com.hrm.repository.DepartmentRepository;
+import com.hrm.repository.EmployeeAssignmentRepository;
 import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PositionRepository;
 
@@ -28,13 +35,18 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
+    private final EmployeeAssignmentRepository assignmentRepository;
 
-    public EmployeeService(EmployeeRepository employeeRepository,
+    public EmployeeService(
+            EmployeeRepository employeeRepository,
             DepartmentRepository departmentRepository,
-            PositionRepository positionRepository) {
+            PositionRepository positionRepository,
+            EmployeeAssignmentRepository assignmentRepository) {
+
         this.employeeRepository = employeeRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
+        this.assignmentRepository = assignmentRepository;
     }
 
     public List<EmployeeDTO> getAllEmployees() {
@@ -42,6 +54,78 @@ public class EmployeeService {
         return employeeRepository.findAllWithCurrentAssignments().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<EmployeeDTO> searchEmployees(
+            String keyword,
+            EmploymentStatus status,
+            Long departmentId,
+            Long positionId,
+            int page,
+            int size) {
+
+        // 1. Kiểm tra tham số phân trang
+        if (page < 0 || size < 1 || size > 100) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "page >= 0 va size phai tu 1 den 100"
+            );
+        }
+
+        // 2. Chuẩn hóa từ khóa
+        String searchKeyword = keyword == null
+                ? ""
+                : keyword.trim().toLowerCase(Locale.ROOT);
+
+        searchKeyword = "%" + searchKeyword + "%";
+
+        // 3. Tạo thông tin phân trang
+        Pageable pageable = PageRequest.of(
+                page,
+                size,
+                Sort.by(Sort.Direction.ASC, "employeeId")
+        );
+
+        // 4. Tìm nhân viên
+        Page<Employee> employees
+                = employeeRepository.searchEmployees(
+                        searchKeyword,
+                        status,
+                        departmentId,
+                        positionId,
+                        pageable
+                );
+
+        // 5. Lấy ID của nhân viên trên trang hiện tại
+        List<Long> employeeIds = employees.getContent()
+                .stream()
+                .map(Employee::getEmployeeId)
+                .toList();
+
+        if (employeeIds.isEmpty()) {
+            return employees.map(e
+                    -> convertToSearchDTO(e, null));
+        }
+
+        // 6. Lấy phân công hiện tại cho cả trang
+        Map<Long, EmployeeAssignment> assignments
+                = assignmentRepository
+                        .findCurrentByEmployeeIds(employeeIds)
+                        .stream()
+                        .collect(Collectors.toMap(
+                                a -> a.getEmployee().getEmployeeId(),
+                                a -> a,
+                                (first, second) -> first
+                        ));
+
+        // 7. Chuyển Entity thành DTO
+        return employees.map(employee
+                -> convertToSearchDTO(
+                        employee,
+                        assignments.get(employee.getEmployeeId())
+                )
+        );
     }
 
     public EmployeeDTO getEmployeeById(Long id) {
@@ -168,6 +252,47 @@ public class EmployeeService {
 
         // (Tùy chọn) Khóa luôn cả user account tương ứng nếu có
         employeeRepository.save(existingEmployee);
+    }
+
+    private EmployeeDTO convertToSearchDTO(
+            Employee employee,
+            EmployeeAssignment assignment) {
+
+        EmployeeDTO dto = new EmployeeDTO();
+
+        dto.setEmployeeId(employee.getEmployeeId());
+        dto.setEmployeeCode(employee.getEmployeeCode());
+        dto.setFullName(employee.getFullName());
+        dto.setBirthDate(employee.getBirthDate());
+        dto.setEmail(employee.getEmail());
+        dto.setPhone(employee.getPhone());
+        dto.setHireDate(employee.getHireDate());
+
+        if (employee.getEmploymentStatus() != null) {
+            dto.setEmploymentStatus(
+                    employee.getEmploymentStatus().name()
+            );
+        }
+
+        if (assignment != null) {
+            dto.setCurrentDepartmentId(
+                    assignment.getDepartment().getDepartmentId()
+            );
+
+            dto.setCurrentDepartmentName(
+                    assignment.getDepartment().getDepartmentName()
+            );
+
+            dto.setCurrentPositionId(
+                    assignment.getPosition().getPositionId()
+            );
+
+            dto.setCurrentPositionName(
+                    assignment.getPosition().getPositionName()
+            );
+        }
+
+        return dto;
     }
 
 }
