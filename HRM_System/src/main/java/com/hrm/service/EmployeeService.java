@@ -22,6 +22,8 @@ import com.hrm.model.Position;
 
 import com.hrm.repository.DepartmentRepository;
 import com.hrm.repository.PositionRepository;
+import com.hrm.security.AuthenticatedAccount;
+import org.springframework.security.access.AccessDeniedException;
 
 @Service
 public class EmployeeService {
@@ -38,14 +40,20 @@ public class EmployeeService {
         this.positionRepository = positionRepository;
     }
 
-    public List<EmployeeDTO> getAllEmployees() {
+    public List<EmployeeDTO> getAllEmployees(AuthenticatedAccount actor) {
+        if ("EMPLOYEE".equals(actor.roleCode())) {
+            throw new AccessDeniedException("EMPLOYEE không được xem danh sách nhân sự");
+        }
         // Dùng hàm Custom Query JOIN FETCH để gộp SQL, chống sập Database
         return employeeRepository.findAllWithCurrentAssignments().stream()
                 .map(this::convertToDTO)
                 .collect(Collectors.toList());
     }
 
-    public EmployeeDTO getEmployeeById(Long id) {
+    public EmployeeDTO getEmployeeById(Long id, AuthenticatedAccount actor) {
+        if ("EMPLOYEE".equals(actor.roleCode()) && !actor.employeeId().equals(id)) {
+            throw new AccessDeniedException("Không được truy cập hồ sơ của nhân viên khác");
+        }
         Employee entity = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
         return convertToDTO(entity);

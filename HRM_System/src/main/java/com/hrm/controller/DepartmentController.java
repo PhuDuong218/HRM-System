@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 import com.hrm.dto.DepartmentDTO;
 import com.hrm.dto.DepartmentRequestDTO;
@@ -28,26 +29,31 @@ public class DepartmentController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAuthority('department.view')")
     public List<DepartmentDTO> getAllDepartments() {
         return departmentService.getAllDepartment();
     }
 
     @GetMapping("/{id}")
+    @PreAuthorize("hasAuthority('department.view')")
     public DepartmentDTO getDepartment(@PathVariable Long id) {
         return departmentService.getDepartment(id);
     }
 
     @PostMapping
+    @PreAuthorize("hasAuthority('department.create')")
     public DepartmentDTO addDepartment(@Valid @RequestBody DepartmentRequestDTO requestDTO) {
         return departmentService.addDepartment(requestDTO);
     }
 
     @PutMapping("/{id}")
+    @PreAuthorize("hasAuthority('department.update')")
     public DepartmentDTO updateDepartment(@PathVariable Long id, @Valid @RequestBody DepartmentRequestDTO requestDTO) {
         return departmentService.updateDepartment(id, requestDTO);
     }
 
     @DeleteMapping("/{id}")
+    @PreAuthorize("hasAuthority('department.delete')")
     public String deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return "Đã xóa phòng ban có mã: " + id;
