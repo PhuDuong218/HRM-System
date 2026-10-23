@@ -10,12 +10,31 @@ import static com.hrm.dto.WorkTimeDTOs.*;
 /** Disabled by default until Spring Security/JWT authorization is available. */
 @RestController
 @RequestMapping("/api/management/shifts")
-@ConditionalOnProperty(prefix="hrm.task", name="api-enabled", havingValue="true", matchIfMissing=false)
+@ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true", matchIfMissing = false)
 public class WorkShiftController {
- private final WorkShiftService shifts;
- public WorkShiftController(WorkShiftService shifts){this.shifts=shifts;}
- @GetMapping public List<ShiftView> list(){return shifts.list();}
- @GetMapping("/{id}") public ShiftView get(@PathVariable long id){return shifts.get(id);}
- @PostMapping public ShiftView create(@Valid @RequestBody ShiftInput body){return shifts.create(body);}
- @PutMapping("/{id}") public ShiftView update(@PathVariable long id,@Valid @RequestBody ShiftInput body){return shifts.update(id,body);}
+    private final WorkShiftService shifts;
+
+    public WorkShiftController(WorkShiftService shifts) {
+        this.shifts = shifts;
+    }
+
+    @GetMapping
+    public List<ShiftView> list() {
+        return shifts.list();
+    }
+
+    @GetMapping("/{id}")
+    public ShiftView get(@PathVariable long id) {
+        return shifts.get(id);
+    }
+
+    @PostMapping
+    public ShiftView create(@Valid @RequestBody ShiftInput body) {
+        return shifts.create(body);
+    }
+
+    @PutMapping("/{id}")
+    public ShiftView update(@PathVariable long id, @Valid @RequestBody ShiftInput body) {
+        return shifts.update(id, body);
+    }
 }

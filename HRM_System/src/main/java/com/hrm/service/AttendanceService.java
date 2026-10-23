@@ -1,4 +1,5 @@
 package com.hrm.service;
+
 import com.hrm.dto.AttendanceDTOs.AttendanceCorrection;
 
 import java.sql.Timestamp;
@@ -21,14 +22,15 @@ import com.hrm.dto.AttendanceDTOs.AttendanceView;
 public class AttendanceService {
 
     private final JdbcTemplate db;
+    private final AttendancePermissionService permissionService;
 
-    public AttendanceService(JdbcTemplate db) {
+    public AttendanceService(JdbcTemplate db, AttendancePermissionService permissionService) {
         this.db = db;
+        this.permissionService = java.util.Objects.requireNonNull(permissionService, "permissionService");
     }
 
     // Chuyển dữ liệu SQL Server sang AttendanceView
-    private static final RowMapper<AttendanceView> MAPPER =
-        (rs, rowNum) -> new AttendanceView(
+    private static final RowMapper<AttendanceView> MAPPER = (rs, rowNum) -> new AttendanceView(
             rs.getLong("attendance_id"),
             rs.getLong("employee_id"),
             rs.getObject("schedule_id", Long.class),
@@ -40,8 +42,7 @@ public class AttendanceService {
             rs.getString("verification_status"),
             rs.getObject("confirmed_by", Long.class),
             toDateTime(rs.getTimestamp("confirmed_at")),
-            rs.getString("correction_reason")
-        );
+            rs.getString("correction_reason"));
 
     private static LocalDateTime toDateTime(Timestamp value) {
         return value == null ? null : value.toLocalDateTime();
@@ -51,19 +52,16 @@ public class AttendanceService {
     public AttendanceView get(long attendanceId) {
 
         return db.query(
-            """
-            SELECT *
-            FROM dbo.attendance_records
-            WHERE attendance_id = ?
-            """,
-            MAPPER,
-            attendanceId
-        ).stream().findFirst().orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Không tìm thấy bản ghi chấm công"
-            )
-        );
+                """
+                        SELECT *
+                        FROM dbo.attendance_records
+                        WHERE attendance_id = ?
+                        """,
+                MAPPER,
+                attendanceId).stream().findFirst().orElseThrow(
+                        () -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Không tìm thấy bản ghi chấm công"));
     }
 
     // Kiểm tra dữ liệu đầu vào
@@ -77,16 +75,14 @@ public class AttendanceService {
                 || input.workDate() == null) {
 
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Phải chọn nhân viên, lịch làm việc và ngày công"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Phải chọn nhân viên, lịch làm việc và ngày công");
         }
 
         if (input.actualBreakMinutes() < 0) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Thời gian nghỉ không được âm"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Thời gian nghỉ không được âm");
         }
 
         String result = input.attendanceResult();
@@ -95,9 +91,8 @@ public class AttendanceService {
                 && !"VANG".equals(result)) {
 
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Kết quả công chỉ được là DI_LAM hoặc VANG"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Kết quả công chỉ được là DI_LAM hoặc VANG");
         }
 
         LocalDateTime start = input.actualStart();
@@ -111,9 +106,8 @@ public class AttendanceService {
                     || input.actualBreakMinutes() != 0) {
 
                 throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Công vắng mặt không được có giờ vào, giờ ra hoặc phút nghỉ"
-                );
+                        HttpStatus.BAD_REQUEST,
+                        "Công vắng mặt không được có giờ vào, giờ ra hoặc phút nghỉ");
             }
 
             return;
@@ -122,9 +116,8 @@ public class AttendanceService {
         // Nhân viên đi làm phải có giờ vào
         if (start == null) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Chấm công đi làm phải có giờ bắt đầu"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Chấm công đi làm phải có giờ bắt đầu");
         }
 
         // Có thể chưa check-out, tức actualEnd = null
@@ -132,28 +125,24 @@ public class AttendanceService {
 
             if (!end.isAfter(start)) {
                 throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Giờ ra phải sau giờ vào"
-                );
+                        HttpStatus.BAD_REQUEST,
+                        "Giờ ra phải sau giờ vào");
             }
 
             long duration = Duration.between(
-                start, end
-            ).toMinutes();
+                    start, end).toMinutes();
 
             if (input.actualBreakMinutes() > duration) {
                 throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
-                    "Phút nghỉ vượt quá thời gian làm việc"
-                );
+                        HttpStatus.BAD_REQUEST,
+                        "Phút nghỉ vượt quá thời gian làm việc");
             }
 
         } else if (input.actualBreakMinutes() != 0) {
 
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Chưa có giờ ra thì phút nghỉ phải bằng 0"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Chưa có giờ ra thì phút nghỉ phải bằng 0");
         }
     }
 
@@ -169,32 +158,28 @@ public class AttendanceService {
          * Phải thực hiện trong JDBC transaction.
          */
         List<LocalDate> scheduleDates = db.query(
-            """
-            SELECT work_date
-            FROM dbo.work_schedules WITH (UPDLOCK, HOLDLOCK)
-            WHERE schedule_id = ?
-              AND employee_id = ?
-            """,
-            (rs, rowNum) ->
-                rs.getDate("work_date").toLocalDate(),
-            input.scheduleId(),
-            input.employeeId()
-        );
+                """
+                        SELECT work_date
+                        FROM dbo.work_schedules WITH (UPDLOCK, HOLDLOCK)
+                        WHERE schedule_id = ?
+                          AND employee_id = ?
+                        """,
+                (rs, rowNum) -> rs.getDate("work_date").toLocalDate(),
+                input.scheduleId(),
+                input.employeeId());
 
         if (scheduleDates.isEmpty()) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Lịch làm việc không tồn tại hoặc không thuộc nhân viên"
-            );
+                    HttpStatus.NOT_FOUND,
+                    "Lịch làm việc không tồn tại hoặc không thuộc nhân viên");
         }
 
         LocalDate scheduleDate = scheduleDates.get(0);
 
         if (!scheduleDate.equals(input.workDate())) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Ngày chấm công không khớp ngày của lịch làm việc"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Ngày chấm công không khớp ngày của lịch làm việc");
         }
     }
 
@@ -202,20 +187,18 @@ public class AttendanceService {
     private void assertNoDuplicate(long scheduleId) {
 
         Integer count = db.queryForObject(
-            """
-            SELECT COUNT(1)
-            FROM dbo.attendance_records
-            WHERE schedule_id = ?
-            """,
-            Integer.class,
-            scheduleId
-        );
+                """
+                        SELECT COUNT(1)
+                        FROM dbo.attendance_records
+                        WHERE schedule_id = ?
+                        """,
+                Integer.class,
+                scheduleId);
 
         if (count != null && count > 0) {
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Lịch làm việc này đã có bản ghi chấm công"
-            );
+                    HttpStatus.CONFLICT,
+                    "Lịch làm việc này đã có bản ghi chấm công");
         }
     }
 
@@ -235,69 +218,64 @@ public class AttendanceService {
 
         // 4. Tạo bản ghi chưa xác nhận
         Long attendanceId = db.queryForObject(
-            """
-            INSERT INTO dbo.attendance_records
-            (
-                employee_id,
-                schedule_id,
-                work_date,
-                actual_start,
-                actual_end,
-                actual_break_minutes,
-                attendance_result,
-                verification_status,
-                correction_reason
-            )
-            OUTPUT INSERTED.attendance_id
-            VALUES
-            (
-                ?, ?, ?, ?, ?, ?, ?,
-                'CHUA_XAC_NHAN', ?
-            )
-            """,
-            Long.class,
-            input.employeeId(),
-            input.scheduleId(),
-            input.workDate(),
-            input.actualStart() == null
-                ? null
-                : Timestamp.valueOf(input.actualStart()),
-            input.actualEnd() == null
-                ? null
-                : Timestamp.valueOf(input.actualEnd()),
-            input.actualBreakMinutes(),
-            input.attendanceResult(),
-            input.correctionReason()
-        );
+                """
+                        INSERT INTO dbo.attendance_records
+                        (
+                            employee_id,
+                            schedule_id,
+                            work_date,
+                            actual_start,
+                            actual_end,
+                            actual_break_minutes,
+                            attendance_result,
+                            verification_status,
+                            correction_reason
+                        )
+                        OUTPUT INSERTED.attendance_id
+                        VALUES
+                        (
+                            ?, ?, ?, ?, ?, ?, ?,
+                            'CHUA_XAC_NHAN', ?
+                        )
+                        """,
+                Long.class,
+                input.employeeId(),
+                input.scheduleId(),
+                input.workDate(),
+                input.actualStart() == null
+                        ? null
+                        : Timestamp.valueOf(input.actualStart()),
+                input.actualEnd() == null
+                        ? null
+                        : Timestamp.valueOf(input.actualEnd()),
+                input.actualBreakMinutes(),
+                input.attendanceResult(),
+                input.correctionReason());
 
         // 5. Trả kết quả vừa tạo
         if (attendanceId == null) {
             throw new IllegalStateException(
-                "Không nhận được ID bản ghi chấm công"
-            );
+                    "Không nhận được ID bản ghi chấm công");
         }
 
         return get(attendanceId);
     }
-    
+
     // Lấy bản ghi và khóa trong suốt transaction
     private AttendanceView getForUpdate(long attendanceId) {
 
         return db.query(
-            """
-            SELECT *
-            FROM dbo.attendance_records
-                 WITH (UPDLOCK, HOLDLOCK)
-            WHERE attendance_id = ?
-            """,
-            MAPPER,
-            attendanceId
-        ).stream().findFirst().orElseThrow(
-            () -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Không tìm thấy bản ghi chấm công"
-            )
-        );
+                """
+                        SELECT *
+                        FROM dbo.attendance_records
+                             WITH (UPDLOCK, HOLDLOCK)
+                        WHERE attendance_id = ?
+                        """,
+                MAPPER,
+                attendanceId).stream().findFirst().orElseThrow(
+                        () -> new ResponseStatusException(
+                                HttpStatus.NOT_FOUND,
+                                "Không tìm thấy bản ghi chấm công"));
     }
 
     // Kiểm tra tài khoản thực hiện có tồn tại
@@ -306,26 +284,23 @@ public class AttendanceService {
 
         if (actorAccountId <= 0) {
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Tài khoản thực hiện không hợp lệ"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Tài khoản thực hiện không hợp lệ");
         }
 
         Integer count = db.queryForObject(
-            """
-            SELECT COUNT(*)
-            FROM dbo.accounts
-            WHERE account_id = ?
-            """,
-            Integer.class,
-            actorAccountId
-        );
+                """
+                        SELECT COUNT(*)
+                        FROM dbo.accounts
+                        WHERE account_id = ?
+                        """,
+                Integer.class,
+                actorAccountId);
 
         if (count == null || count == 0) {
             throw new ResponseStatusException(
-                HttpStatus.NOT_FOUND,
-                "Không tìm thấy tài khoản thực hiện"
-            );
+                    HttpStatus.NOT_FOUND,
+                    "Không tìm thấy tài khoản thực hiện");
         }
     }
 
@@ -333,31 +308,30 @@ public class AttendanceService {
     private String attendanceSnapshot(long attendanceId) {
 
         return db.queryForObject(
-            """
-            SELECT (
-                SELECT
-                    attendance_id,
-                    employee_id,
-                    schedule_id,
-                    work_date,
-                    actual_start,
-                    actual_end,
-                    actual_break_minutes,
-                    attendance_result,
-                    verification_status,
-                    confirmed_by,
-                    confirmed_at,
-                    correction_reason
-                FROM dbo.attendance_records
-                WHERE attendance_id = ?
-                FOR JSON PATH,
-                    INCLUDE_NULL_VALUES,
-                    WITHOUT_ARRAY_WRAPPER
-            )
-            """,
-            String.class,
-            attendanceId
-        );
+                """
+                        SELECT (
+                            SELECT
+                                attendance_id,
+                                employee_id,
+                                schedule_id,
+                                work_date,
+                                actual_start,
+                                actual_end,
+                                actual_break_minutes,
+                                attendance_result,
+                                verification_status,
+                                confirmed_by,
+                                confirmed_at,
+                                correction_reason
+                            FROM dbo.attendance_records
+                            WHERE attendance_id = ?
+                            FOR JSON PATH,
+                                INCLUDE_NULL_VALUES,
+                                WITHOUT_ARRAY_WRAPPER
+                        )
+                        """,
+                String.class,
+                attendanceId);
     }
 
     // Ghi lịch sử trước/sau trong cùng transaction
@@ -370,26 +344,25 @@ public class AttendanceService {
             String afterJson) {
 
         db.update(
-            """
-            INSERT INTO dbo.audit_logs
-            (
-                actor_account_id,
+                """
+                        INSERT INTO dbo.audit_logs
+                        (
+                            actor_account_id,
+                            action,
+                            target_table,
+                            target_record_key,
+                            reason,
+                            before_data_json,
+                            after_data_json
+                        )
+                        VALUES (?, ?, 'attendance_records', ?, ?, ?, ?)
+                        """,
+                actorAccountId,
                 action,
-                target_table,
-                target_record_key,
+                String.valueOf(attendanceId),
                 reason,
-                before_data_json,
-                after_data_json
-            )
-            VALUES (?, ?, 'attendance_records', ?, ?, ?, ?)
-            """,
-            actorAccountId,
-            action,
-            String.valueOf(attendanceId),
-            reason,
-            beforeJson,
-            afterJson
-        );
+                beforeJson,
+                afterJson);
     }
 
     // HR/Quản lý điều chỉnh công CHƯA xác nhận
@@ -399,83 +372,77 @@ public class AttendanceService {
             AttendanceCorrection correction,
             long actorAccountId) {
 
-        validateActor(actorAccountId);
-
         if (correction == null
                 || correction.correctionReason() == null
                 || correction.correctionReason().isBlank()) {
 
             throw new ResponseStatusException(
-                HttpStatus.BAD_REQUEST,
-                "Phải nhập lý do điều chỉnh chấm công"
-            );
+                    HttpStatus.BAD_REQUEST,
+                    "Phải nhập lý do điều chỉnh chấm công");
         }
 
         AttendanceView current = getForUpdate(attendanceId);
+        // B1: always authorize the locked record before any update/audit.
+        permissionService.requireAttendanceAccess(
+                actorAccountId, current.employeeId(), AttendancePermissionService.MANAGE);
 
         // Cấm điều chỉnh sau khi đã xác nhận
         if (!"CHUA_XAC_NHAN".equals(
                 current.verificationStatus())) {
 
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Chấm công đã xác nhận, phải hủy xác nhận trước"
-            );
+                    HttpStatus.CONFLICT,
+                    "Chấm công đã xác nhận, phải hủy xác nhận trước");
         }
 
         // Tận dụng validate() hiện có
         AttendanceInput proposed = new AttendanceInput(
-            current.employeeId(),
-            current.scheduleId(),
-            current.workDate(),
-            correction.actualStart(),
-            correction.actualEnd(),
-            correction.actualBreakMinutes(),
-            correction.attendanceResult(),
-            correction.correctionReason()
-        );
+                current.employeeId(),
+                current.scheduleId(),
+                current.workDate(),
+                correction.actualStart(),
+                correction.actualEnd(),
+                correction.actualBreakMinutes(),
+                correction.attendanceResult(),
+                correction.correctionReason());
 
         validate(proposed);
 
-        String beforeJson =
-            attendanceSnapshot(attendanceId);
+        String beforeJson = attendanceSnapshot(attendanceId);
 
         db.update(
-            """
-            UPDATE dbo.attendance_records
-            SET actual_start = ?,
-                actual_end = ?,
-                actual_break_minutes = ?,
-                attendance_result = ?,
-                correction_reason = ?,
-                updated_at = SYSUTCDATETIME(),
-                updated_by = ?
-            WHERE attendance_id = ?
-            """,
-            correction.actualStart() == null
-                ? null
-                : Timestamp.valueOf(correction.actualStart()),
-            correction.actualEnd() == null
-                ? null
-                : Timestamp.valueOf(correction.actualEnd()),
-            correction.actualBreakMinutes(),
-            correction.attendanceResult(),
-            correction.correctionReason(),
-            actorAccountId,
-            attendanceId
-        );
+                """
+                        UPDATE dbo.attendance_records
+                        SET actual_start = ?,
+                            actual_end = ?,
+                            actual_break_minutes = ?,
+                            attendance_result = ?,
+                            correction_reason = ?,
+                            updated_at = SYSUTCDATETIME(),
+                            updated_by = ?
+                        WHERE attendance_id = ?
+                        """,
+                correction.actualStart() == null
+                        ? null
+                        : Timestamp.valueOf(correction.actualStart()),
+                correction.actualEnd() == null
+                        ? null
+                        : Timestamp.valueOf(correction.actualEnd()),
+                correction.actualBreakMinutes(),
+                correction.attendanceResult(),
+                correction.correctionReason(),
+                actorAccountId,
+                attendanceId);
 
-        String afterJson =
-            attendanceSnapshot(attendanceId);
+        String afterJson = attendanceSnapshot(attendanceId);
 
         writeAudit(
-            actorAccountId,
-            attendanceId,
-            "ATTENDANCE_CORRECT",
-            correction.correctionReason(),
-            beforeJson,
-            afterJson
-        );
+                actorAccountId,
+                attendanceId,
+                "ATTENDANCE_CORRECT",
+                correction.correctionReason(),
+                beforeJson,
+                afterJson);
 
         return get(attendanceId);
     }
@@ -486,17 +453,18 @@ public class AttendanceService {
             long attendanceId,
             long actorAccountId) {
 
-        validateActor(actorAccountId);
-
         AttendanceView current = getForUpdate(attendanceId);
+        // B1: check effective grants and object-level authority before update/audit.
+        // Creator-versus-approver checks are pending B2; do not expose this API.
+        permissionService.requireAttendanceAccess(
+                actorAccountId, current.employeeId(), AttendancePermissionService.CONFIRM);
 
         if (!"CHUA_XAC_NHAN".equals(
                 current.verificationStatus())) {
 
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Bản ghi chấm công đã được xác nhận"
-            );
+                    HttpStatus.CONFLICT,
+                    "Bản ghi chấm công đã được xác nhận");
         }
 
         // Công đi làm phải có giờ ra mới được xác nhận
@@ -504,40 +472,35 @@ public class AttendanceService {
                 && current.actualEnd() == null) {
 
             throw new ResponseStatusException(
-                HttpStatus.CONFLICT,
-                "Chưa check-out nên không thể xác nhận công"
-            );
+                    HttpStatus.CONFLICT,
+                    "Chưa check-out nên không thể xác nhận công");
         }
 
-        String beforeJson =
-            attendanceSnapshot(attendanceId);
+        String beforeJson = attendanceSnapshot(attendanceId);
 
         db.update(
-            """
-            UPDATE dbo.attendance_records
-            SET verification_status = 'DA_XAC_NHAN',
-                confirmed_by = ?,
-                confirmed_at = SYSUTCDATETIME(),
-                updated_at = SYSUTCDATETIME(),
-                updated_by = ?
-            WHERE attendance_id = ?
-            """,
-            actorAccountId,
-            actorAccountId,
-            attendanceId
-        );
+                """
+                        UPDATE dbo.attendance_records
+                        SET verification_status = 'DA_XAC_NHAN',
+                            confirmed_by = ?,
+                            confirmed_at = SYSUTCDATETIME(),
+                            updated_at = SYSUTCDATETIME(),
+                            updated_by = ?
+                        WHERE attendance_id = ?
+                        """,
+                actorAccountId,
+                actorAccountId,
+                attendanceId);
 
-        String afterJson =
-            attendanceSnapshot(attendanceId);
+        String afterJson = attendanceSnapshot(attendanceId);
 
         writeAudit(
-            actorAccountId,
-            attendanceId,
-            "ATTENDANCE_CONFIRM",
-            "Xac nhan cham cong",
-            beforeJson,
-            afterJson
-        );
+                actorAccountId,
+                attendanceId,
+                "ATTENDANCE_CONFIRM",
+                "Xac nhan cham cong",
+                beforeJson,
+                afterJson);
 
         return get(attendanceId);
     }

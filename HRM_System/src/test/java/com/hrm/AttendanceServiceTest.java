@@ -12,6 +12,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import com.hrm.dto.AttendanceDTOs.AttendanceInput;
 import com.hrm.service.AttendanceService;
+import com.hrm.service.AttendancePermissionService;
 
 class AttendanceServiceTest {
 
@@ -19,23 +20,21 @@ class AttendanceServiceTest {
     void khongChoPhepNhapCongNgoaiLich() {
 
         JdbcTemplate db = mock(JdbcTemplate.class);
-        AttendanceService service = new AttendanceService(db);
+        AttendanceService service = new AttendanceService(db, mock(AttendancePermissionService.class));
 
         AttendanceInput input = new AttendanceInput(
-            3L,
-            null,
-            LocalDate.of(2026, 10, 22),
-            LocalDateTime.of(2026, 10, 22, 14, 0),
-            LocalDateTime.of(2026, 10, 22, 22, 0),
-            45,
-            "DI_LAM",
-            "Kiem tra nhap cong ngoai lich"
-        );
+                3L,
+                null,
+                LocalDate.of(2026, 10, 22),
+                LocalDateTime.of(2026, 10, 22, 14, 0),
+                LocalDateTime.of(2026, 10, 22, 22, 0),
+                45,
+                "DI_LAM",
+                "Kiem tra nhap cong ngoai lich");
 
         assertThrows(
-            org.springframework.web.server.ResponseStatusException.class,
-            () -> service.createManual(input)
-        );
+                org.springframework.web.server.ResponseStatusException.class,
+                () -> service.createManual(input));
 
         verifyNoInteractions(db);
     }
