@@ -1,5 +1,6 @@
 package com.hrm.controller;
 
+import com.hrm.dto.AdjustmentBatchRequestDTO;
 import com.hrm.dto.CreateDraftBatchRequestDTO;
 import com.hrm.dto.PayrollBatchDTO;
 import com.hrm.dto.PayrollDetailViewDTO;
@@ -37,32 +38,48 @@ public class PayrollBatchController {
         this.lineRepository = lineRepository;
     }
 
-    // 1. Lấy tất cả các đợt bảng lương
     @GetMapping
     public ResponseEntity<List<PayrollBatchDTO>> getAll() {
         return ResponseEntity.ok(batchService.getAllBatches());
     }
 
-    // 2. Lấy các đợt bảng lương theo kỳ
     @GetMapping("/period/{periodId}")
     public ResponseEntity<List<PayrollBatchDTO>> getByPeriod(@PathVariable Long periodId) {
         return ResponseEntity.ok(batchService.getBatchesByPeriod(periodId));
     }
 
-    // 3. P-05: API tạo bản nháp bảng lương
     @PostMapping("/draft")
     public ResponseEntity<PayrollBatchDTO> createDraft(@Valid @RequestBody CreateDraftBatchRequestDTO request) {
         PayrollBatchDTO created = batchService.createDraftBatch(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
-    // 4. P-08 -> P-11: Bấm nút tính toán lương cho đợt nháp
     @PostMapping("/{batchId}/calculate")
     public ResponseEntity<String> calculatePayroll(@PathVariable Long batchId) {
         return ResponseEntity.ok(executionService.calculateBatch(batchId));
     }
 
-    // 5. Xem chi tiết bảng lương sau khi tính (Gross, Khấu trừ, Net)
+    // P-12: Chốt bảng lương (truyền null cho actorAccountId khi chưa có auth)
+    @PostMapping("/{batchId}/lock")
+    public ResponseEntity<PayrollBatchDTO> lockBatch(@PathVariable Long batchId,
+                                                    @RequestParam(required = false) Long actorAccountId) {
+        return ResponseEntity.ok(batchService.lockBatch(batchId, actorAccountId));
+    }
+
+    // P-12 & P-14: Công bố bảng lương và tự động phát hành phiếu lương
+    @PostMapping("/{batchId}/publish")
+    public ResponseEntity<PayrollBatchDTO> publishBatch(@PathVariable Long batchId,
+                                                       @RequestParam(required = false) Long actorAccountId) {
+        return ResponseEntity.ok(batchService.publishBatch(batchId, actorAccountId));
+    }
+
+    // P-13: Tạo phiên bản điều chỉnh có lý do
+    @PostMapping("/{batchId}/adjust")
+    public ResponseEntity<PayrollBatchDTO> createAdjustment(@PathVariable Long batchId,
+                                                            @Valid @RequestBody AdjustmentBatchRequestDTO request) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(batchService.createAdjustmentBatch(batchId, request));
+    }
+
     @GetMapping("/{batchId}/details")
     public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
         List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
