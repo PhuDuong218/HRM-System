@@ -2,6 +2,7 @@ package com.hrm.service;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ import com.hrm.model.Position;
 
 import com.hrm.repository.DepartmentRepository;
 import com.hrm.repository.PositionRepository;
+import com.hrm.repository.AccountRepository;
 import com.hrm.security.AuthenticatedAccount;
 import org.springframework.security.access.AccessDeniedException;
 
@@ -31,30 +33,35 @@ public class EmployeeService {
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
+    private final AccountRepository accountRepository;
 
     public EmployeeService(EmployeeRepository employeeRepository,
             DepartmentRepository departmentRepository,
-            PositionRepository positionRepository) {
+            PositionRepository positionRepository,
+            AccountRepository accountRepository) {
         this.employeeRepository = employeeRepository;
         this.departmentRepository = departmentRepository;
         this.positionRepository = positionRepository;
+        this.accountRepository = accountRepository;
     }
 
+    @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees(AuthenticatedAccount actor) {
         if ("EMPLOYEE".equals(actor.roleCode())) {
             throw new AccessDeniedException("EMPLOYEE không được xem danh sách nhân sự");
         }
-        // Dùng hàm Custom Query JOIN FETCH để gộp SQL, chống sập Database
-        return employeeRepository.findAllWithCurrentAssignments().stream()
-                .map(this::convertToDTO)
+        LocalDate asOfDate = LocalDate.now();
+        return employeeRepository.findAllWithAssignments().stream()
+                .map(employee -> convertToDTO(employee, asOfDate))
                 .collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public EmployeeDTO getEmployeeById(Long id, AuthenticatedAccount actor) {
         if ("EMPLOYEE".equals(actor.roleCode()) && !actor.employeeId().equals(id)) {
             throw new AccessDeniedException("Không được truy cập hồ sơ của nhân viên khác");
         }
-        Employee entity = employeeRepository.findById(id)
+        Employee entity = employeeRepository.findByIdWithAssignments(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
         return convertToDTO(entity);
     }
@@ -98,6 +105,10 @@ public class EmployeeService {
     }
 
     private EmployeeDTO convertToDTO(Employee entity) {
+        return convertToDTO(entity, LocalDate.now());
+    }
+
+    private EmployeeDTO convertToDTO(Employee entity, LocalDate asOfDate) {
         EmployeeDTO dto = new EmployeeDTO();
         dto.setEmployeeId(entity.getEmployeeId());
         dto.setEmployeeCode(entity.getEmployeeCode());
@@ -108,17 +119,20 @@ public class EmployeeService {
         dto.setHireDate(entity.getHireDate());
         dto.setEmploymentStatus(entity.getEmploymentStatus().name()); // Chuyển Enum thành String cho Front-end
 
-// Trích xuất Phòng ban và Chức vụ hiện tại (effective_to == null)
-        if (entity.getAssignments() != null && !entity.getAssignments().isEmpty()) {
-            for (EmployeeAssignment assignment : entity.getAssignments()) {
-                if (assignment.getEffectiveTo() == null) { // Đang đương nhiệm
-                    dto.setCurrentDepartmentId(assignment.getDepartment().getDepartmentId());
-                    dto.setCurrentDepartmentName(assignment.getDepartment().getDepartmentName());
-                    dto.setCurrentPositionId(assignment.getPosition().getPositionId());
-                    dto.setCurrentPositionName(assignment.getPosition().getPositionName());
-                    break; // Tìm thấy thì dừng vòng lặp
-                }
-            }
+        if (entity.getAssignments() != null) {
+            // Match the statistics query when legacy data contains overlapping assignments.
+            entity.getAssignments().stream()
+                    .filter(assignment -> !assignment.getEffectiveFrom().isAfter(asOfDate)
+                            && (assignment.getEffectiveTo() == null || assignment.getEffectiveTo().isAfter(asOfDate)))
+                    .max(Comparator.comparing(EmployeeAssignment::getEffectiveFrom)
+                            .thenComparing(EmployeeAssignment::getAssignmentId,
+                                    Comparator.nullsFirst(Comparator.naturalOrder())))
+                    .ifPresent(assignment -> {
+                        dto.setCurrentDepartmentId(assignment.getDepartment().getDepartmentId());
+                        dto.setCurrentDepartmentName(assignment.getDepartment().getDepartmentName());
+                        dto.setCurrentPositionId(assignment.getPosition().getPositionId());
+                        dto.setCurrentPositionName(assignment.getPosition().getPositionName());
+                    });
         }
         return dto;
     }
@@ -143,17 +157,19 @@ public class EmployeeService {
 
     @Transactional
     public void deleteEmployee(Long id) {
-            Employee existingEmployee = employeeRepository.findById(id)
+        Employee existingEmployee = employeeRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy nhân viên có mã: " + id));
-        
-        
-        // Xóa mềm: Chuyển trạng thái sang DA_NGHI và ghi nhận ngày nghỉ chính thức
-        existingEmployee.setEmploymentStatus(EmploymentStatus.DA_NGHI);
-        existingEmployee.setTerminationDate(LocalDate.now());
-        existingEmployee.setUpdatedAt(LocalDateTime.now());
 
-        // (Tùy chọn) Khóa luôn cả user account tương ứng nếu có
-        employeeRepository.save(existingEmployee);
+        if (existingEmployee.getEmploymentStatus() != EmploymentStatus.DA_NGHI) {
+            existingEmployee.setEmploymentStatus(EmploymentStatus.DA_NGHI);
+            existingEmployee.setTerminationDate(LocalDate.now());
+            existingEmployee.setUpdatedAt(LocalDateTime.now());
+            employeeRepository.save(existingEmployee);
+        }
+
+        // Flush the employee change, then revoke the linked account in the same transaction.
+        // A missing account is valid; legacy retired employees are also locked on repeat calls.
+        accountRepository.deactivateAndRevokeByEmployeeId(id);
     }
 
 }

@@ -1,7 +1,9 @@
 package com.hrm.security;
 
 import com.hrm.model.Account;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.repository.AccountRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PermissionRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -22,14 +24,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final AccountRepository accountRepository;
+    private final EmployeeRepository employeeRepository;
     private final PermissionRepository permissionRepository;
 
     public JwtAuthenticationFilter(
             JwtService jwtService,
             AccountRepository accountRepository,
+            EmployeeRepository employeeRepository,
             PermissionRepository permissionRepository) {
         this.jwtService = jwtService;
         this.accountRepository = accountRepository;
+        this.employeeRepository = employeeRepository;
         this.permissionRepository = permissionRepository;
     }
 
@@ -46,6 +51,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     }
 
     private void authenticate(String token) {
+        SecurityContextHolder.clearContext();
         try {
             Claims claims = jwtService.parse(token);
             Long accountId = claims.get("account_id", Long.class);
@@ -55,7 +61,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
 
             Account account = accountRepository.findById(accountId).orElse(null);
-            if (account == null || !account.isActive() || account.getTokenVersion() != tokenVersion) {
+            if (account == null || !account.isActive() || account.getTokenVersion() != tokenVersion
+                    || !employeeRepository.existsByEmployeeIdAndEmploymentStatus(
+                            account.getEmployeeId(), EmploymentStatus.DANG_LAM)) {
                 return;
             }
 

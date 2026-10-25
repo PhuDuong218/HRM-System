@@ -28,8 +28,13 @@ public interface PayrollRepository extends JpaRepository<com.hrm.model.PayrollDe
             join payroll_periods pp on pp.period_id = pb.period_id
             join payroll_lines pl on pl.payroll_detail_id = pd.payroll_detail_id
             where pd.employee_id = :employeeId
-              and pb.status = 'PUBLISHED'
-            order by pp.period_end desc, pl.line_no
+              and pb.status = 'DA_CHOT'
+              and pb.locked_by is not null
+              and pb.locked_at is not null
+              and pb.published_by is not null
+              and pb.published_at is not null
+              and pb.published_at >= pb.locked_at
+            order by pp.period_end desc, pb.version_no desc, pd.payroll_detail_id, pl.line_no
             """, nativeQuery = true)
     List<EmployeePayrollLineView> findPublishedSalaryLines(@Param("employeeId") Long employeeId);
 
@@ -47,8 +52,13 @@ public interface PayrollRepository extends JpaRepository<com.hrm.model.PayrollDe
             join payroll_batches pb on pb.batch_id = pd.batch_id
             join payroll_periods pp on pp.period_id = pb.period_id
             where pd.employee_id = :employeeId
-              and pb.status = 'PUBLISHED'
-            order by pp.period_end desc
+              and pb.status = 'DA_CHOT'
+              and pb.locked_by is not null
+              and pb.locked_at is not null
+              and pb.published_by is not null
+              and pb.published_at is not null
+              and pb.published_at >= pb.locked_at
+            order by pp.period_end desc, pb.version_no desc, ps.payslip_id desc
             """, nativeQuery = true)
     List<EmployeePayslipView> findPublishedPayslips(@Param("employeeId") Long employeeId);
 }

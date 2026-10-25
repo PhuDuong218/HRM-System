@@ -29,31 +29,31 @@ public class DepartmentController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('department.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public List<DepartmentDTO> getAllDepartments() {
         return departmentService.getAllDepartment();
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('department.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public DepartmentDTO getDepartment(@PathVariable Long id) {
         return departmentService.getDepartment(id);
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('department.create')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public DepartmentDTO addDepartment(@Valid @RequestBody DepartmentRequestDTO requestDTO) {
         return departmentService.addDepartment(requestDTO);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('department.update')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public DepartmentDTO updateDepartment(@PathVariable Long id, @Valid @RequestBody DepartmentRequestDTO requestDTO) {
         return departmentService.updateDepartment(id, requestDTO);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('department.delete')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public String deleteDepartment(@PathVariable Long id) {
         departmentService.deleteDepartment(id);
         return "Đã xóa phòng ban có mã: " + id;

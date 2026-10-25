@@ -20,13 +20,18 @@ public interface ContractStatisticsRepository extends JpaRepository<Contract, Lo
                               and c.end_date <= dateadd(day, :expiringWithinDays, :reportDate)
                               then 1 else 0 end) as expiringCount
             from contracts c
-            join employee_assignments ea
-              on ea.employee_id = c.employee_id
-             and ea.effective_to is null
             where c.status = 'DA_KY'
               and c.start_date <= :toDate
               and (c.end_date is null or c.end_date >= :fromDate)
-              and (:departmentId is null or ea.department_id = :departmentId)
+              and (:departmentId is null or exists (
+                  select 1 from employee_assignments ea
+                  where ea.employee_id = c.employee_id
+                    and ea.department_id = :departmentId
+                    and ea.effective_from <= :toDate
+                    and (ea.effective_to is null or ea.effective_to > :fromDate)
+                    and (c.end_date is null or ea.effective_from <= c.end_date)
+                    and (ea.effective_to is null or ea.effective_to > c.start_date)
+              ))
             """, nativeQuery = true)
     Optional<ContractStatisticsRow> summarize(
             @Param("fromDate") LocalDate fromDate,

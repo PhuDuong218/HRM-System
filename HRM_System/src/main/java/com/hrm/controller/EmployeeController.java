@@ -32,32 +32,33 @@ public class EmployeeController {
     }
 
     @GetMapping
-    @PreAuthorize("hasAuthority('employee.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public List<EmployeeDTO> getAllEmployees(Authentication authentication) {
         return employeeService.getAllEmployees((AuthenticatedAccount) authentication.getPrincipal());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('employee.view')")
+    @PreAuthorize("(hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE'))"
+            + " or (hasAuthority('SELF_READ') and #id == authentication.principal.employeeId())")
     public EmployeeDTO getEmployee(@PathVariable Long id, Authentication authentication) {
         return employeeService.getEmployeeById(id, (AuthenticatedAccount) authentication.getPrincipal());
     }
 
     @PostMapping
-    @PreAuthorize("hasAuthority('employee.create')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public EmployeeDTO addEmployee(@Valid @RequestBody EmployeeRequestDTO requestDTO) {
         return employeeService.addEmployee(requestDTO);
     }
 
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('employee.update')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public EmployeeDTO updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDTO requestDTO) {
         // Tầng Service phải tự gọi convertToDTO bên trong nó
         return employeeService.updateEmployee(id, requestDTO);
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAuthority('employee.delete')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public String deleteEmployee(@PathVariable Long id) {
         employeeService.deleteEmployee(id);
         return "Đã xóa nhân viên có mã: " + id;

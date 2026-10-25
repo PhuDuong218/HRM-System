@@ -22,7 +22,7 @@ public class ContractStatisticsController {
     }
 
     @GetMapping("/contracts")
-    @PreAuthorize("hasAuthority('contract.report.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
     public ContractStatisticsResponse getContractStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,

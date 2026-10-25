@@ -51,4 +51,17 @@ public class AuditLog {
         this.reason = reason;
         this.correlationId = UUID.randomUUID();
     }
+
+    public static AuditLog forReportExport(
+            Long actorAccountId, String reportCode, String targetTable, String effectiveFilters) {
+        AuditLog log = new AuditLog();
+        log.actorAccountId = actorAccountId;
+        // Records successful generation; HTTP delivery to the client cannot be guaranteed.
+        log.action = "REPORT_EXPORT_GENERATED";
+        log.targetTable = targetTable;
+        log.targetRecordKey = reportCode;
+        log.reason = "format=XLSX; " + effectiveFilters;
+        log.correlationId = UUID.randomUUID();
+        return log;
+    }
 }

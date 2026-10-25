@@ -15,6 +15,16 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
     @Modifying(clearAutomatically = true, flushAutomatically = true)
     @Query("""
             update Account a
+               set a.active = false,
+                   a.tokenVersion = a.tokenVersion + 1,
+                   a.updatedAt = CURRENT_TIMESTAMP
+             where a.employeeId = :employeeId
+            """)
+    int deactivateAndRevokeByEmployeeId(@Param("employeeId") Long employeeId);
+
+    @Modifying(clearAutomatically = true, flushAutomatically = true)
+    @Query("""
+            update Account a
                set a.tokenVersion = a.tokenVersion + 1,
                    a.updatedAt = CURRENT_TIMESTAMP
              where a.accountId = :accountId

@@ -22,7 +22,7 @@ public class WorkStatisticsController {
     }
 
     @GetMapping("/work")
-    @PreAuthorize("hasAuthority('work.report.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
     public WorkStatisticsResponse getWorkStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {

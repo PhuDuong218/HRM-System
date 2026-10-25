@@ -4,9 +4,11 @@ import com.hrm.dto.ChangePasswordRequest;
 import com.hrm.dto.LoginRequest;
 import com.hrm.dto.LoginResponse;
 import com.hrm.dto.ResetPasswordRequest;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.model.Account;
 import com.hrm.repository.AuditLogRepository;
 import com.hrm.repository.AccountRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.security.JwtService;
 import jakarta.transaction.Transactional;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -18,16 +20,19 @@ import org.springframework.stereotype.Service;
 public class AuthService {
 
     private final AccountRepository accountRepository;
+    private final EmployeeRepository employeeRepository;
     private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
 
     public AuthService(
             AccountRepository accountRepository,
+            EmployeeRepository employeeRepository,
             AuditLogRepository auditLogRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService) {
         this.accountRepository = accountRepository;
+        this.employeeRepository = employeeRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -36,7 +41,10 @@ public class AuthService {
     public LoginResponse login(LoginRequest request) {
         Account account = accountRepository.findByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException("Tên đăng nhập hoặc mật khẩu không đúng"));
-        if (!account.isActive() || !passwordEncoder.matches(request.password(), account.getPasswordHash())) {
+        if (!account.isActive()
+                || !employeeRepository.existsByEmployeeIdAndEmploymentStatus(
+                        account.getEmployeeId(), EmploymentStatus.DANG_LAM)
+                || !passwordEncoder.matches(request.password(), account.getPasswordHash())) {
             throw new BadCredentialsException("Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
@@ -96,8 +104,10 @@ public class AuthService {
     private Account getActiveAccount(Long accountId) {
         Account account = accountRepository.findById(accountId)
                 .orElseThrow(() -> new IllegalArgumentException("Tài khoản không tồn tại"));
-        if (!account.isActive()) {
-            throw new AccessDeniedException("Tài khoản đã bị khóa");
+        if (!account.isActive()
+                || !employeeRepository.existsByEmployeeIdAndEmploymentStatus(
+                        account.getEmployeeId(), EmploymentStatus.DANG_LAM)) {
+            throw new AccessDeniedException("Tài khoản đã bị khóa hoặc nhân viên không còn làm việc");
         }
         return account;
     }

@@ -4,38 +4,58 @@ import com.hrm.model.Employee;
 import com.hrm.repository.projection.EmployeeStatisticsRow;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDate;
 import java.util.List;
 
 public interface EmployeeStatisticsRepository extends JpaRepository<Employee, Long> {
 
     @Query(value = """
+            with effective_assignments as (
+                select ea.employee_id, ea.department_id,
+                       row_number() over (
+                           partition by ea.employee_id
+                           order by ea.effective_from desc, ea.assignment_id desc
+                       ) as assignmentRank
+                from employee_assignments ea
+                where ea.effective_from <= :asOfDate
+                  and (ea.effective_to is null or ea.effective_to > :asOfDate)
+            )
             select d.department_id as groupId,
-                   d.department_code as groupCode,
-                   d.department_name as groupName,
+                   coalesce(d.department_code, 'CHUA_PHAN_CONG') as groupCode,
+                   coalesce(d.department_name, N'Chưa có phân công hiệu lực') as groupName,
                    count(distinct e.employee_id) as employeeCount
             from employees e
-            join employee_assignments ea on ea.employee_id = e.employee_id
-                and ea.effective_to is null
-            join departments d on d.department_id = ea.department_id
+            left join effective_assignments ea on ea.employee_id = e.employee_id and ea.assignmentRank = 1
+            left join departments d on d.department_id = ea.department_id
             group by d.department_id, d.department_code, d.department_name
             order by d.department_name
             """, nativeQuery = true)
-    List<EmployeeStatisticsRow> countByDepartment();
+    List<EmployeeStatisticsRow> countByDepartment(@Param("asOfDate") LocalDate asOfDate);
 
     @Query(value = """
+            with effective_assignments as (
+                select ea.employee_id, ea.position_id,
+                       row_number() over (
+                           partition by ea.employee_id
+                           order by ea.effective_from desc, ea.assignment_id desc
+                       ) as assignmentRank
+                from employee_assignments ea
+                where ea.effective_from <= :asOfDate
+                  and (ea.effective_to is null or ea.effective_to > :asOfDate)
+            )
             select p.position_id as groupId,
-                   p.position_code as groupCode,
-                   p.position_name as groupName,
+                   coalesce(p.position_code, 'CHUA_PHAN_CONG') as groupCode,
+                   coalesce(p.position_name, N'Chưa có phân công hiệu lực') as groupName,
                    count(distinct e.employee_id) as employeeCount
             from employees e
-            join employee_assignments ea on ea.employee_id = e.employee_id
-                and ea.effective_to is null
-            join positions p on p.position_id = ea.position_id
+            left join effective_assignments ea on ea.employee_id = e.employee_id and ea.assignmentRank = 1
+            left join positions p on p.position_id = ea.position_id
             group by p.position_id, p.position_code, p.position_name
             order by p.position_name
             """, nativeQuery = true)
-    List<EmployeeStatisticsRow> countByPosition();
+    List<EmployeeStatisticsRow> countByPosition(@Param("asOfDate") LocalDate asOfDate);
 
     @Query(value = """
             select cast(null as bigint) as groupId,
