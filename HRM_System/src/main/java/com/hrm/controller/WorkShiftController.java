@@ -1,6 +1,9 @@
 package com.hrm.controller;
 
 import java.util.List;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.hrm.security.AuthenticatedAccount;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -29,12 +32,20 @@ public class WorkShiftController {
     }
 
     @PostMapping
-    public ShiftView create(@Valid @RequestBody ShiftInput body) {
-        return shifts.create(body);
+    public ShiftView create(@AuthenticationPrincipal AuthenticatedAccount actor, @Valid @RequestBody ShiftInput body) {
+        return shifts.create(actor, body);
     }
 
     @PutMapping("/{id}")
-    public ShiftView update(@PathVariable long id, @Valid @RequestBody ShiftInput body) {
-        return shifts.update(id, body);
+    public ShiftView update(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody ShiftInput body) {
+        return shifts.update(actor, id, body);
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@AuthenticationPrincipal AuthenticatedAccount actor,
+            @PathVariable long id) {
+        shifts.deleteOrDeactivate(actor, id);
+        return ResponseEntity.noContent().build();
     }
 }

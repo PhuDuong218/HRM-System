@@ -34,7 +34,7 @@ class AttendanceServiceTest {
 
         assertThrows(
                 org.springframework.web.server.ResponseStatusException.class,
-                () -> service.createManual(input));
+                () -> service.createManual(input, 2L));
 
         verifyNoInteractions(db);
     }

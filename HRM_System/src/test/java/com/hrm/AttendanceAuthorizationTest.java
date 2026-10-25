@@ -35,11 +35,13 @@ class AttendanceAuthorizationTest {
         JdbcTemplate db = lockedRecord();
         AttendancePermissionService permissions = mock(AttendancePermissionService.class);
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "denied"))
-                .when(permissions).requireAttendanceAccess(1L, 3L, AttendancePermissionService.CONFIRM);
+                .when(permissions)
+                .requireAttendanceAccess(1L, 3L, LocalDate.of(2026, 10, 22), AttendancePermissionService.CONFIRM);
         AttendanceService service = new AttendanceService(db, permissions);
         assertThrows(ResponseStatusException.class, () -> service.confirm(12L, 1L));
         verify(db, never()).update(anyString(), any(Object[].class));
-        verify(permissions).requireAttendanceAccess(1L, 3L, AttendancePermissionService.CONFIRM);
+        verify(permissions).requireAttendanceAccess(1L, 3L, LocalDate.of(2026, 10, 22),
+                AttendancePermissionService.CONFIRM);
     }
 
     @Test
@@ -47,12 +49,14 @@ class AttendanceAuthorizationTest {
         JdbcTemplate db = lockedRecord();
         AttendancePermissionService permissions = mock(AttendancePermissionService.class);
         doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "denied"))
-                .when(permissions).requireAttendanceAccess(1L, 3L, AttendancePermissionService.MANAGE);
+                .when(permissions)
+                .requireAttendanceAccess(1L, 3L, LocalDate.of(2026, 10, 22), AttendancePermissionService.MANAGE);
         AttendanceService service = new AttendanceService(db, permissions);
         AttendanceCorrection correction = new AttendanceCorrection(null, null, 0, "VANG", "reason");
         assertThrows(ResponseStatusException.class, () -> service.correct(12L, correction, 1L));
         verify(db, never()).update(anyString(), any(Object[].class));
-        verify(permissions).requireAttendanceAccess(1L, 3L, AttendancePermissionService.MANAGE);
+        verify(permissions).requireAttendanceAccess(1L, 3L, LocalDate.of(2026, 10, 22),
+                AttendancePermissionService.MANAGE);
     }
 
     @Test
