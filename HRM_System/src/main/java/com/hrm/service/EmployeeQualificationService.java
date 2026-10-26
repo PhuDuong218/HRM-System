@@ -4,6 +4,8 @@ import java.time.LocalDateTime;
 import java.time.Year;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +20,7 @@ import com.hrm.model.QualificationLevel;
 import com.hrm.repository.EmployeeQualificationRepository;
 import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.QualificationLevelRepository;
+import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeQualificationService {
@@ -180,4 +183,29 @@ public class EmployeeQualificationService {
                 q.getMajor(), q.getInstitution(), q.getGraduationYear(),
                 q.getCertificateNumber(), q.getIsPrimary());
     }
+
+    @Transactional(readOnly = true)
+public Page<EmployeeQualificationDTO> getQualificationsPage(
+        Long employeeId,
+        int page,
+        int size) {
+
+    if (!employeeRepository.existsById(employeeId)) {
+        throw new ResourceNotFoundException(
+                "Không tìm thấy nhân viên: " + employeeId
+        );
+    }
+
+    return repository.findPagedByEmployeeId(
+            employeeId,
+            PagingUtils.create(
+                    page,
+                    size,
+                    Sort.by(
+                            Sort.Order.desc("isPrimary"),
+                            Sort.Order.desc("employeeQualificationId")
+                    )
+            )
+    ).map(this::toDTO);
+}
 }

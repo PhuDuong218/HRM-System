@@ -1,18 +1,11 @@
+
 package com.hrm.controller;
 
-import java.util.List;
-
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+
+import org.springframework.web.bind.annotation.*;
 
 import com.hrm.dto.LeaveTypeDTO;
 import com.hrm.dto.LeaveTypeRequestDTO;
@@ -30,15 +23,19 @@ public class LeaveTypeController {
         this.leaveTypeService = leaveTypeService;
     }
 
-    // 1. Xem tất cả loại nghỉ
+    // 1. Danh sách loại nghỉ có phân trang
     @GetMapping
-    public List<LeaveTypeDTO> getAllLeaveTypes() {
-        return leaveTypeService.getAllLeaveTypes();
+    public Page<LeaveTypeDTO> getAllLeaveTypes(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return leaveTypeService.getLeaveTypesPage(page, size);
     }
 
-    // 2. Xem loại nghỉ theo ID
+    // 2. Xem chi tiết loại nghỉ
     @GetMapping("/{id}")
     public LeaveTypeDTO getLeaveTypeById(@PathVariable Long id) {
+
         return leaveTypeService.getLeaveTypeById(id);
     }
 
@@ -62,7 +59,8 @@ public class LeaveTypeController {
 
     // 5. Ngừng sử dụng loại nghỉ
     @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteLeaveType(@PathVariable Long id) {
+    public ResponseEntity<Void> deleteLeaveType(
+            @PathVariable Long id) {
 
         leaveTypeService.deleteLeaveType(id);
 

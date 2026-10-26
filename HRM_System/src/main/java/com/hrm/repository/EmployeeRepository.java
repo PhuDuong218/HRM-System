@@ -10,17 +10,21 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-
+import java.time.LocalDate;
+import java.time.ZoneId;
 import com.hrm.enums.EmploymentStatus;
 import com.hrm.model.Employee;
 
 import jakarta.persistence.LockModeType;
 
 @Repository
-// Chú ý chữ String ở cuối cùng: JpaRepository<Tên_Thực_Thể, Kiểu_Dữ_Liệu_Của_ID>
+// Chú ý chữ String ở cuối cùng: JpaRepository<Tên_Thực_Thể,
+// Kiểu_Dữ_Liệu_Của_ID>
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     boolean existsByEmployeeCode(String employeeCode);
-    // Ép Hibernate JOIN thẳng vào bảng Phân công, Phòng ban, Chức vụ trong 1 câu SQL
+
+    // Ép Hibernate JOIN thẳng vào bảng Phân công, Phòng ban, Chức vụ trong 1 câu
+    // SQL
     // Điều kiện: a.effectiveTo IS NULL (Chỉ lấy chức vụ ĐƯƠNG NHIỆM)
     @Query("SELECT DISTINCT e FROM Employee e " +
             "LEFT JOIN FETCH e.assignments a " +
@@ -33,65 +37,89 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e WHERE e.employeeId = :id")
     Optional<Employee> findByIdForUpdate(@Param("id") Long id);
 
-    @Query(
-    value = """
-        SELECT e
-        FROM Employee e
-        WHERE (
-            LOWER(e.fullName) LIKE :keyword
-            OR LOWER(e.employeeCode) LIKE :keyword
-        )
-        AND (:status IS NULL OR e.employmentStatus = :status)
-        AND (
-            (:departmentId IS NULL AND :positionId IS NULL)
-            OR EXISTS (
-                SELECT a.assignmentId
-                FROM EmployeeAssignment a
-                WHERE a.employee = e
-                AND a.effectiveTo IS NULL
-                AND (
-                    :departmentId IS NULL
-                    OR a.department.departmentId = :departmentId
-                )
-                AND (
-                    :positionId IS NULL
-                    OR a.position.positionId = :positionId
-                )
+    @Query(value = """
+                    SELECT e
+                    FROM Employee e
+                    WHERE (
+                        LOWER(e.fullName) LIKE :keyword
+                        OR LOWER(e.employeeCode) LIKE :keyword
+                    )
+                    AND (:status IS NULL OR e.employmentStatus = :status)
+                    AND (
+                        (:departmentId IS NULL AND :positionId IS NULL)
+                        OR EXISTS (
+                            SELECT a.assignmentId
+                            FROM EmployeeAssignment a
+                            WHERE a.employee = e
+                            AND a.effectiveFrom <= :asOf
+            AND (
+                a.effectiveTo IS NULL
+                OR a.effectiveTo > :asOf
             )
-        )
-        """,
-    countQuery = """
-        SELECT COUNT(e)
-        FROM Employee e
-        WHERE (
-            LOWER(e.fullName) LIKE :keyword
-            OR LOWER(e.employeeCode) LIKE :keyword
-        )
-        AND (:status IS NULL OR e.employmentStatus = :status)
-        AND (
-            (:departmentId IS NULL AND :positionId IS NULL)
-            OR EXISTS (
-                SELECT a.assignmentId
-                FROM EmployeeAssignment a
-                WHERE a.employee = e
-                AND a.effectiveTo IS NULL
-                AND (
-                    :departmentId IS NULL
-                    OR a.department.departmentId = :departmentId
-                )
-                AND (
-                    :positionId IS NULL
-                    OR a.position.positionId = :positionId
-                )
+                            AND (
+                                :departmentId IS NULL
+                                OR a.department.departmentId = :departmentId
+                            )
+                            AND (
+                                :positionId IS NULL
+                                OR a.position.positionId = :positionId
+                            )
+                        )
+                    )
+                    """, countQuery = """
+                    SELECT COUNT(e)
+                    FROM Employee e
+                    WHERE (
+                        LOWER(e.fullName) LIKE :keyword
+                        OR LOWER(e.employeeCode) LIKE :keyword
+                    )
+                    AND (:status IS NULL OR e.employmentStatus = :status)
+                    AND (
+                        (:departmentId IS NULL AND :positionId IS NULL)
+                        OR EXISTS (
+                            SELECT a.assignmentId
+                            FROM EmployeeAssignment a
+                            WHERE a.employee = e
+                            AND a.effectiveFrom <= :asOf
+            AND (
+                a.effectiveTo IS NULL
+                OR a.effectiveTo > :asOf
             )
-        )
-        """
-)
-Page<Employee> searchEmployees(
-        @Param("keyword") String keyword,
-        @Param("status") EmploymentStatus status,
-        @Param("departmentId") Long departmentId,
-        @Param("positionId") Long positionId,
-        Pageable pageable
-);
+                            AND (
+                                :departmentId IS NULL
+                                OR a.department.departmentId = :departmentId
+                            )
+                            AND (
+                                :positionId IS NULL
+                                OR a.position.positionId = :positionId
+                            )
+                        )
+                    )
+                    """)
+    Page<Employee> searchEmployees(
+            @Param("keyword") String keyword,
+            @Param("status") EmploymentStatus status,
+            @Param("departmentId") Long departmentId,
+            @Param("positionId") Long positionId,
+            @Param("asOf") LocalDate asOf,
+            Pageable pageable);
+
+    default Page<Employee> searchEmployees(
+            String keyword,
+            EmploymentStatus status,
+            Long departmentId,
+            Long positionId,
+            Pageable pageable) {
+
+        LocalDate today = LocalDate.now(
+                ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        return searchEmployees(
+                keyword,
+                status,
+                departmentId,
+                positionId,
+                today,
+                pageable);
+    }
 }

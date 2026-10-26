@@ -1,8 +1,10 @@
+
 package com.hrm.service;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,6 +15,7 @@ import com.hrm.dto.LeaveTypeRequestDTO;
 import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.LeaveType;
 import com.hrm.repository.LeaveTypeRepository;
+import com.hrm.util.PagingUtils;
 
 @Service
 public class LeaveTypeService {
@@ -23,13 +26,20 @@ public class LeaveTypeService {
         this.leaveTypeRepository = leaveTypeRepository;
     }
 
-    // 1. Lấy tất cả loại nghỉ
+    // 1. Lấy danh sách loại nghỉ có phân trang
     @Transactional(readOnly = true)
-    public List<LeaveTypeDTO> getAllLeaveTypes() {
-        return leaveTypeRepository.findAll()
-                .stream()
-                .map(this::toDTO)
-                .toList();
+    public Page<LeaveTypeDTO> getLeaveTypesPage(int page, int size) {
+
+        return leaveTypeRepository.findAll(
+                PagingUtils.create(
+                        page,
+                        size,
+                        Sort.by(
+                                Sort.Direction.DESC,
+                                "leaveTypeId"
+                        )
+                )
+        ).map(this::toDTO);
     }
 
     // 2. Lấy loại nghỉ theo ID
@@ -78,7 +88,6 @@ public class LeaveTypeService {
 
         String code = request.getTypeCode().trim();
 
-        // Không thay đổi mã sau khi đã tạo
         if (!leaveType.getTypeCode().equals(code)) {
             throw new ResponseStatusException(
                     HttpStatus.BAD_REQUEST,
@@ -86,8 +95,10 @@ public class LeaveTypeService {
             );
         }
 
-        // Bảo vệ ý nghĩa hưởng lương của dữ liệu lịch sử
-        if (!leaveType.getIsPaid().equals(request.getIsPaid())) {
+        if (!java.util.Objects.equals(
+                leaveType.getIsPaid(),
+                request.getIsPaid())) {
+
             throw new ResponseStatusException(
                     HttpStatus.CONFLICT,
                     "Không được thay đổi chế độ hưởng lương của loại nghỉ đã tạo"
@@ -105,7 +116,7 @@ public class LeaveTypeService {
         return toDTO(leaveTypeRepository.saveAndFlush(leaveType));
     }
 
-    // 5. Ngừng sử dụng loại nghỉ
+    // 5. Ngừng sử dụng loại nghỉ (không xóa khỏi database)
     @Transactional
     public void deleteLeaveType(Long id) {
 
@@ -117,7 +128,7 @@ public class LeaveTypeService {
         leaveTypeRepository.saveAndFlush(leaveType);
     }
 
-    // 6. Hàm dùng chung: tìm loại nghỉ
+    // 6. Tìm loại nghỉ theo ID
     private LeaveType findRequired(Long id) {
 
         return leaveTypeRepository.findById(id)
@@ -126,7 +137,7 @@ public class LeaveTypeService {
                 ));
     }
 
-    // 7. Chuyển Entity sang DTO
+    // 7. Chuyển Entity thành DTO
     private LeaveTypeDTO toDTO(LeaveType leaveType) {
 
         return new LeaveTypeDTO(

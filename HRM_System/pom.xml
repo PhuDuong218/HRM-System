@@ -59,6 +59,17 @@
 
 	<build>
 		<plugins>
+			<!-- Local datasource credentials remain usable by local runs/tests, never shipped in the jar. -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<excludes>
+						<exclude>application-local.properties</exclude>
+						<exclude>application-*.local.properties</exclude>
+					</excludes>
+				</configuration>
+			</plugin>
 			<plugin>
 				<groupId>org.springframework.boot</groupId>
 				<artifactId>spring-boot-maven-plugin</artifactId>

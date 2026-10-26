@@ -1,78 +1,119 @@
 package com.hrm.controller;
 
-import java.util.List;
-
-import org.springframework.data.domain.Page;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
-
+import java.security.Principal;
+import com.hrm.service.EmployeeCreationAuditService;
 import com.hrm.dto.EmployeeDTO;
 import com.hrm.dto.EmployeeRequestDTO;
+import com.hrm.dto.EmployeeUpdateRequestDTO;
 import com.hrm.enums.EmploymentStatus;
+
+import com.hrm.service.DepartmentHeadAccessService;
 import com.hrm.service.EmployeeService;
+import com.hrm.service.EmployeeTerminationAuditService;
 
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/employees")
 public class EmployeeController {
 
     private final EmployeeService employeeService;
+    private final DepartmentHeadAccessService accessService;
+    private final EmployeeTerminationAuditService terminationAudit;
 
-    public EmployeeController(EmployeeService employeeService) {
-        this.employeeService = employeeService;
-    }
+    private final EmployeeCreationAuditService creationAudit;
+   public EmployeeController(
+        EmployeeService employeeService,
+        DepartmentHeadAccessService accessService,
+        EmployeeTerminationAuditService terminationAudit,
+        EmployeeCreationAuditService creationAudit) {
+
+    this.employeeService = employeeService;
+    this.accessService = accessService;
+    this.terminationAudit = terminationAudit;
+    this.creationAudit = creationAudit;
+}
 
     @GetMapping
-    public List<EmployeeDTO> getAllEmployees() {
-        return employeeService.getAllEmployees();
+    public Page<EmployeeDTO> getAllEmployees(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal principal) {
+
+        accessService.requireManager(principal);
+
+        return employeeService.getEmployeesPage(page, size);
     }
 
     @GetMapping("/{id}")
-    public EmployeeDTO getEmployee(@PathVariable Long id) {
+    public EmployeeDTO getEmployee(
+            @PathVariable Long id,
+            Principal principal) {
+
+        accessService.requireManager(principal);
+
         return employeeService.getEmployeeById(id);
     }
 
     @PostMapping
-    public EmployeeDTO addEmployee(@Valid @RequestBody EmployeeRequestDTO requestDTO) {
-        return employeeService.addEmployee(requestDTO);
-    }
+@ResponseStatus(HttpStatus.CREATED)
+public EmployeeDTO addEmployee(
+        @Valid @RequestBody EmployeeRequestDTO requestDTO,
+        Principal principal) {
+
+    Long actorAccountId = accessService.requireManager(principal);
+
+    return creationAudit.create(requestDTO, actorAccountId);
+}
 
     @PutMapping("/{id}")
-    public EmployeeDTO updateEmployee(@PathVariable Long id, @Valid @RequestBody EmployeeRequestDTO requestDTO) {
-        // Tầng Service phải tự gọi convertToDTO bên trong nó
-        return employeeService.updateEmployee(id, requestDTO);
+    public EmployeeDTO updateEmployee(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployeeUpdateRequestDTO requestDTO,
+            Principal principal) {
+
+        Long actorAccountId = accessService.requireManager(principal);
+
+        return creationAudit.update(id, requestDTO, actorAccountId);
     }
 
-    @DeleteMapping("/{id}")
-    public String deleteEmployee(@PathVariable Long id) {
-        employeeService.deleteEmployee(id);
-        return "Đã xóa nhân viên có mã: " + id;
+    @DeleteMapping(
+            value = "/{id}",
+            produces = "text/plain;charset=UTF-8")
+    public String deleteEmployee(
+            @PathVariable Long id,
+            Principal principal) {
+
+        Long actorAccountId =
+                accessService.requireManager(principal);
+
+        terminationAudit.terminate(id, actorAccountId);
+
+        return "Đã xử lý nghỉ việc cho nhân viên có ID: " + id;
     }
 
     @GetMapping("/search")
-public Page<EmployeeDTO> searchEmployees(
-        @RequestParam(required = false) String keyword,
-        @RequestParam(required = false) EmploymentStatus status,
-        @RequestParam(required = false) Long departmentId,
-        @RequestParam(required = false) Long positionId,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
+    public Page<EmployeeDTO> searchEmployees(
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) EmploymentStatus status,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long positionId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size,
+            Principal principal) {
 
-    return employeeService.searchEmployees(
-            keyword,
-            status,
-            departmentId,
-            positionId,
-            page,
-            size
-    );
-}
+        accessService.requireManager(principal);
+
+        return employeeService.searchEmployees(
+                keyword,
+                status,
+                departmentId,
+                positionId,
+                page,
+                size);
+    }
 }
