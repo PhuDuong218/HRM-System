@@ -13,4 +13,14 @@ public interface PositionRepository extends JpaRepository<Position, Long> {
 
     
     boolean existsByPositionCode(String positionCode);
+
+    @org.springframework.data.jpa.repository.Query("""
+            SELECT p FROM Position p
+            WHERE (:keyword IS NULL OR LOWER(p.positionCode) LIKE :keyword OR LOWER(p.positionName) LIKE :keyword)
+              AND (:active IS NULL OR p.isActive = :active)
+            """)
+    org.springframework.data.domain.Page<Position> search(
+            @org.springframework.data.repository.query.Param("keyword") String keyword,
+            @org.springframework.data.repository.query.Param("active") Boolean active,
+            org.springframework.data.domain.Pageable pageable);
 }
