@@ -81,7 +81,7 @@ private EmployeeCreationAuditService creationAudit;
 
     private List<MockHttpServletRequestBuilder> requests() {
         return List.of(
-                get("/employees"),
+                get("/employees").param("page", "0"),
 
                 get("/employees/100"),
 
@@ -164,7 +164,7 @@ verifyNoInteractions(service, terminationAudit, creationAudit);    }
                 eq(100L), any(EmployeeUpdateRequestDTO.class), eq(7L)))
                 .thenReturn(new EmployeeDTO());
 
-        mvc.perform(get("/employees").principal(manager))
+        mvc.perform(get("/employees").param("page", "0").principal(manager))
                 .andExpect(status().isOk());
 
         mvc.perform(get("/employees/100").principal(manager))

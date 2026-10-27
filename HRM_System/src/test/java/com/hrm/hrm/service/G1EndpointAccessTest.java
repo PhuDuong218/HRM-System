@@ -42,9 +42,9 @@ class G1EndpointAccessTest {
         String d="{\"departmentCode\":\"D1\",\"departmentName\":\"Phòng\"}";
         String p="{\"positionCode\":\"P1\",\"positionName\":\"Chức vụ\"}";
         String t="{\"departmentId\":1,\"positionId\":1,\"effectiveFrom\":\"2020-01-01\"}";
-        return List.of(get("/departments"),get("/departments/1"),post("/departments").contentType(MediaType.APPLICATION_JSON).content(d),
+        return List.of(get("/departments").param("page","0"),get("/departments/1"),post("/departments").contentType(MediaType.APPLICATION_JSON).content(d),
                 put("/departments/1").contentType(MediaType.APPLICATION_JSON).content(d),delete("/departments/1"),
-                get("/positions"),get("/positions/1"),post("/positions").contentType(MediaType.APPLICATION_JSON).content(p),
+                get("/positions").param("page","0"),get("/positions/1"),post("/positions").contentType(MediaType.APPLICATION_JSON).content(p),
                 put("/positions/1").contentType(MediaType.APPLICATION_JSON).content(p),delete("/positions/1"),
                 get("/employee-assignments"),get("/employees/1/assignments"),
                 put("/employees/1/transfer").contentType(MediaType.APPLICATION_JSON).content(t),

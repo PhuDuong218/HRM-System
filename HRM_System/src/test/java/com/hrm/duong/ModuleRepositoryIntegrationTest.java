@@ -39,11 +39,12 @@ class ModuleRepositoryIntegrationTest {
         // this suite deliberately makes no claims about rowversion concurrency.
         var versioned=jdbc.queryForList("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA='DBO' and COLUMN_NAME='ROW_VERSION'",String.class);
         for(var table:versioned)jdbc.execute("alter table dbo."+table+" alter column row_version set default X'0000000000000001'");
-        jdbc.execute("create table dbo.roles(role_id bigint primary key,role_code varchar(50))");
-        jdbc.execute("create table dbo.accounts(account_id bigint primary key,employee_id bigint,role_id bigint,is_active boolean)");
+        // The merged security entities already create roles and accounts through JPA.
         jdbc.execute("create table dbo.payroll_periods(period_id bigint primary key,period_start date,period_end date)");
         jdbc.execute("create table dbo.payroll_batches(batch_id bigint primary key,period_id bigint,status varchar(20))");
-        jdbc.execute("create table dbo.payroll_details(payroll_detail_id bigint primary key,batch_id bigint,employee_id bigint)");
+        // Complete the minimal payroll entity only inside this private test database.
+        jdbc.execute("alter table dbo.payroll_details add batch_id bigint");
+        jdbc.execute("alter table dbo.payroll_details add employee_id bigint");
         tx=new TransactionTemplate(new JpaTransactionManager(emf));
         var repositories=new JpaRepositoryFactory(SharedEntityManagerCreator.createSharedEntityManager(emf));
         contracts=repositories.getRepository(ContractRepository.class);terms=repositories.getRepository(ContractSalaryTermRepository.class);
@@ -85,7 +86,12 @@ class ModuleRepositoryIntegrationTest {
     }
     @Test void realActorQueryRejectsInactiveAndEmployeeRole(){
         jdbc.update("insert into dbo.roles values (1,'ADMIN'),(2,'EMPLOYEE')");
-        jdbc.update("insert into dbo.accounts values (10,1,1,true),(11,2,1,false),(12,2,2,true)");
+        jdbc.update("""
+            insert into dbo.accounts(account_id,employee_id,role_id,is_active,username,password_hash,token_version,created_at)
+            values (10,1,1,true,'synthetic-admin','test-only-unused-hash',0,CURRENT_TIMESTAMP),
+                   (11,2,1,false,'synthetic-inactive','test-only-unused-hash',0,CURRENT_TIMESTAMP),
+                   (12,2,2,true,'synthetic-employee','test-only-unused-hash',0,CURRENT_TIMESTAMP)
+            """);
         var env=new org.springframework.mock.env.MockEnvironment();env.setActiveProfiles("local");
         assertEquals(1L,new LocalDecisionActorProvider(jdbc,env,true,10L).requireManager().employeeId());
         status(403,()->new LocalDecisionActorProvider(jdbc,env,true,11L).requireManager());
