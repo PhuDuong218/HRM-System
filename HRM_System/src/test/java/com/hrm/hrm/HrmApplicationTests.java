@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
+// The default smoke test stays on H2; external datasource checks are opt-in separately.
 @ActiveProfiles("test")
 class HrmApplicationTests {
 

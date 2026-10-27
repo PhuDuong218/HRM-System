@@ -4,6 +4,9 @@ import java.sql.SQLException;
 import java.util.Map;
 import java.util.stream.Stream;
 
+import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.NotBlank;
+
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -21,6 +24,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -83,6 +87,22 @@ class GlobalExceptionHandlerMergeTest {
     }
 
     @Test
+    void handlesMainMethodParameterValidationWithoutLosingTheErrorFormat() throws Exception {
+        mvc.perform(get("/merge-test/validate").param("count", "0"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.trang_thai").value(400))
+                .andExpect(jsonPath("$.loi_chi_tiet").value("Tham số yêu cầu không hợp lệ"));
+    }
+
+    @Test
+    void preservesInternalServerErrorForInvalidControllerReturnValues() throws Exception {
+        mvc.perform(get("/merge-test/invalid-return"))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.trang_thai").value(500))
+                .andExpect(jsonPath("$.loi_chi_tiet").value("Tham số yêu cầu không hợp lệ"));
+    }
+
+    @Test
     void retainsMainFallbackWithoutExposingInternalFailure() throws Exception {
         controller.failure = new RuntimeException("sensitive internal details");
 
@@ -108,6 +128,17 @@ class GlobalExceptionHandlerMergeTest {
         @PostMapping("/merge-test/json")
         public Map<String, Object> readJson(@RequestBody Map<String, Object> body) {
             return body;
+        }
+
+        @GetMapping("/merge-test/validate")
+        public String validate(@RequestParam @Min(1) int count) {
+            return Integer.toString(count);
+        }
+
+        @GetMapping("/merge-test/invalid-return")
+        @NotBlank
+        public String invalidReturn() {
+            return "";
         }
     }
 }
