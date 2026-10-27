@@ -1,0 +1,4 @@
+<p class="eyebrow">KẾT NỐI HỆ THỐNG</p><h1>Kiểm tra backend</h1><p class="page-description">Một ví dụ nhỏ về luồng component → service → API.</p>
+<section class="surface"><h2>GET /api/health</h2><p class="muted">Bấm nút để gửi yêu cầu HTTP thật tới backend được cấu hình qua proxy.</p><button type="button" class="btn btn-primary" [disabled]="loading" (click)="checkConnection()">{{ loading ? 'Đang kết nối…' : 'Kiểm tra kết nối' }}</button>
+<div class="mt-4" aria-live="polite">@if (success) {<div class="alert alert-success">Đã nhận phản hồi HTTP thành công.</div><pre>{{ response }}</pre>} @if (error) {<div class="alert alert-danger" role="alert">{{ error }}</div>}</div>
+<p class="small muted mb-0 mt-3">Kết quả này kiểm tra HTTP của endpoint. Không chứng minh SQL Server đang kết nối.</p></section>

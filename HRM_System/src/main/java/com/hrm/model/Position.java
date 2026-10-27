@@ -74,6 +74,10 @@ public class Position extends BaseEntity { // Kế thừa toàn bộ cột từ 
     public void setIsActive(Boolean isActive) {
         this.isActive = isActive;
     }
+
+    public void setPositionId(Long positionId) {
+    this.positionId = positionId;
+}
 }
     
 

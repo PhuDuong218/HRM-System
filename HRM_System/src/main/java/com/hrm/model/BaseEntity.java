@@ -4,7 +4,8 @@ import java.time.LocalDateTime;
 import jakarta.persistence.Column;
 import jakarta.persistence.MappedSuperclass;
 import jakarta.persistence.Version;
-
+import org.hibernate.annotations.Generated;
+import org.hibernate.generator.EventType;
 @MappedSuperclass // Báo cho Hibernate biết đây là class cha chứa các cột chung
 public abstract class BaseEntity {
 
@@ -21,8 +22,9 @@ public abstract class BaseEntity {
     private Long updatedBy;
 
     @Version
-    @Column(name = "row_version", insertable = false, updatable = false)
-    private byte[] rowVersion;
+@Generated(event = {EventType.INSERT, EventType.UPDATE})
+@Column(name = "row_version", insertable = false, updatable = false)
+private byte[] rowVersion;
 
     // TODO: Generate Getters and Setters cho 5 biến này
     public LocalDateTime getCreatedAt() {
