@@ -1,102 +1,111 @@
 package com.hrm.service;
 
+import java.time.Clock;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
-
+import java.time.ZoneOffset;
+import java.util.*;
+import com.hrm.dto.*;
+import com.hrm.model.*;
+import com.hrm.repository.*;
+import com.hrm.exception.ResourceNotFoundException;
+import com.hrm.util.PagingUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.data.domain.*;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-
-import com.hrm.dto.DepartmentDTO;
-import com.hrm.dto.DepartmentRequestDTO;
-import com.hrm.model.Department;
-import com.hrm.repository.DepartmentRepository;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
+@Transactional(readOnly=true)
 public class DepartmentService {
+    private final DepartmentRepository departments;
+    private final EmployeeAssignmentRepository assignments;
+    private final AssignmentGuardService guard;
+    private final Clock clock;
 
-    private final DepartmentRepository departmentRepository;
-
-    public DepartmentService(DepartmentRepository departmentRepository) {
-        this.departmentRepository = departmentRepository;
+    public DepartmentService(DepartmentRepository departments, EmployeeAssignmentRepository assignments,
+            AssignmentGuardService guard, @Qualifier("hrmBusinessClock") Clock clock) {
+        this.departments=departments; this.assignments=assignments; this.guard=guard; this.clock=clock;
     }
 
-// Hàm Helper dùng chung: Biến 1 Entity thành 1 DTO
-    private DepartmentDTO convertToDTO(Department entity) {
-        DepartmentDTO dto = new DepartmentDTO();
-        dto.setDepartmentId(entity.getDepartmentId());
-        dto.setDepartmentCode(entity.getDepartmentCode());
-        dto.setDepartmentName(entity.getDepartmentName());
-        dto.setDescription(entity.getDescription());
-        dto.setIsActive(entity.getIsActive());
-        return dto;
+    public DepartmentDTO getDepartment(Long id) { return enrich(List.of(required(id))).get(0); }
+    public List<DepartmentDTO> getAllDepartment() { return enrich(departments.findAll()); }
+
+    public Page<DepartmentDTO> getDepartmentsPage(int page,int size) {
+        return searchDepartments(null, null, page, size);
     }
 
-    public DepartmentDTO getDepartment(Long id) {
-        Department entity = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban!"));
-        return convertToDTO(entity);
+    public Page<DepartmentDTO> searchDepartments(String keyword, Boolean active, int page, int size) {
+        String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
+        var result=departments.search(pattern,active,PagingUtils.create(page,size,Sort.by(Sort.Direction.DESC,"departmentId")));
+        return new PageImpl<>(enrich(result.getContent()),result.getPageable(),result.getTotalElements());
     }
 
-    // 2. Hàm lấy danh sách (Không truyền tham số)
-    public List<DepartmentDTO> getAllDepartment() {
-        List<Department> entities = departmentRepository.findAll();
-
-        // Dùng Stream: Cho danh sách Entity chạy qua băng chuyền (stream)
-        // map(): Giao cho cỗ máy convertToDTO xử lý từng phần tử
-        // collect(): Đóng gói lại thành một Danh sách DTO mới
-        return entities.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
+    @Transactional
+    public DepartmentDTO addDepartment(DepartmentRequestDTO request) {
+        if (departments.existsByDepartmentCode(request.getDepartmentCode().trim()))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã phòng ban đã tồn tại");
+        Department d=new Department();
+        d.setDepartmentCode(request.getDepartmentCode().trim());
+        d.setDepartmentName(request.getDepartmentName().trim());
+        d.setDescription(request.getDescription());
+        d.setIsActive(true);
+        d.setCreatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        return enrich(List.of(departments.saveAndFlush(d))).get(0);
     }
 
-    public DepartmentDTO addDepartment(DepartmentRequestDTO requestDTO) {
-        // Tự tay tạo một thực thể gốc mới tinh, hoàn toàn không dính líu đến rác của Client
-        Department newDepartment = new Department();
-        newDepartment.setDepartmentCode(requestDTO.getDepartmentCode());
-        newDepartment.setDepartmentName(requestDTO.getDepartmentName());
-        newDepartment.setDescription(requestDTO.getDescription());
-
-        // Nhồi thông tin hệ thống (Bếp trưởng hoàn toàn làm chủ)
-        newDepartment.setCreatedAt(LocalDateTime.now());
-        newDepartment.setIsActive(true);
-
-        // Lưu xuống Database
-        Department savedDepartment = departmentRepository.save(newDepartment);
-
-        // Đưa qua hàm Helper để dọn dẹp trước khi bưng ra cho khách
-        return convertToDTO(savedDepartment);
-    }
-
-    // 2. Hàm Cập nhật
-    public DepartmentDTO updateDepartment(Long id, DepartmentRequestDTO requestDTO) {
-        Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban có mã: " + id));
-
-        // Chỉ chép những gì khách gửi lên (Mã phòng ban là duy nhất, không cho sửa)
-        if (requestDTO.getDepartmentName() != null) {
-            existingDepartment.setDepartmentName(requestDTO.getDepartmentName());
+    @Transactional
+    public DepartmentDTO updateDepartment(Long id,DepartmentRequestDTO request) {
+        guard.lockTimeline();
+        Department d=required(id);
+        if(!d.getDepartmentCode().equals(request.getDepartmentCode().trim()))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Không được đổi mã phòng ban");
+        if(Boolean.FALSE.equals(request.getIsActive())) {
+            guard.requireNoOpenHead(id);
+            guard.requireNoDepartmentAssignments(id, LocalDate.now(clock));
         }
-        if (requestDTO.getDescription() == null) {
-        } else {
-            existingDepartment.setDescription(requestDTO.getDescription());
-        }
-        if (requestDTO.getIsActive() != null) {
-            existingDepartment.setIsActive(requestDTO.getIsActive());
-        }
-
-        existingDepartment.setUpdatedAt(LocalDateTime.now());
-
-        Department updatedDepartment = departmentRepository.save(existingDepartment);
-        return convertToDTO(updatedDepartment);
+        d.setDepartmentName(request.getDepartmentName().trim());
+        d.setDescription(request.getDescription());
+        if(request.getIsActive()!=null) d.setIsActive(request.getIsActive());
+        d.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        return enrich(List.of(departments.saveAndFlush(d))).get(0);
     }
 
+    @Transactional
     public void deleteDepartment(Long id) {
-        Department existingDepartment = departmentRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy phòng ban có mã:" + id));
+        guard.lockTimeline();
+        Department d=required(id);
+        guard.requireNoOpenHead(id);
+        guard.requireNoDepartmentAssignments(id, LocalDate.now(clock));
+        d.setIsActive(false);
+        d.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        departments.saveAndFlush(d);
+    }
 
-        // Xóa mềm: Tắt trạng thái hoạt động và lưu lại//
-        existingDepartment.setIsActive(false);
-        existingDepartment.setUpdatedAt(LocalDateTime.now());
-        departmentRepository.save(existingDepartment);
+    private Department required(Long id) {
+        return departments.findById(id).orElseThrow(()->new ResourceNotFoundException("Không tìm thấy phòng ban: "+id));
+    }
+
+    private List<DepartmentDTO> enrich(List<Department> rows) {
+        if(rows.isEmpty()) return List.of();
+        Map<Long,EmployeeAssignment> heads=new HashMap<>();
+        for(var a:assignments.findHeadsAt(rows.stream().map(Department::getDepartmentId).toList(),LocalDate.now(clock))) {
+            if(heads.put(a.getDepartment().getDepartmentId(),a)!=null)
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"Dữ liệu trưởng phòng chồng hiệu lực");
+        }
+        return rows.stream().map(d->{
+            DepartmentDTO dto=new DepartmentDTO();
+            dto.setDepartmentId(d.getDepartmentId()); dto.setDepartmentCode(d.getDepartmentCode());
+            dto.setDepartmentName(d.getDepartmentName()); dto.setDescription(d.getDescription()); dto.setIsActive(d.getIsActive());
+            var a=heads.get(d.getDepartmentId());
+            if(a!=null) {
+                dto.setHeadEmployeeId(a.getEmployee().getEmployeeId());
+                dto.setHeadEmployeeCode(a.getEmployee().getEmployeeCode());
+                dto.setHeadFullName(a.getEmployee().getFullName()); dto.setHeadEffectiveFrom(a.getEffectiveFrom());
+            }
+            return dto;
+        }).toList();
     }
 }

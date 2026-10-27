@@ -10,10 +10,14 @@ import com.hrm.controller.PositionController;
 import com.hrm.controller.WorkStatisticsController;
 import com.hrm.dto.ResetPasswordRequest;
 import com.hrm.service.AuthService;
+import com.hrm.service.CatalogAuditService;
 import com.hrm.service.ContractStatisticsService;
+import com.hrm.service.DepartmentHeadAccessService;
 import com.hrm.service.DepartmentService;
+import com.hrm.service.EmployeeCreationAuditService;
 import com.hrm.service.EmployeeService;
 import com.hrm.service.EmployeeStatisticsService;
+import com.hrm.service.EmployeeTerminationAuditService;
 import com.hrm.service.PayrollService;
 import com.hrm.service.PositionService;
 import com.hrm.service.WorkStatisticsService;
@@ -72,6 +76,10 @@ class PermissionAuthorizationTests {
         context.registerBean(ContractStatisticsService.class, () -> mock(ContractStatisticsService.class));
         context.registerBean(WorkStatisticsService.class, () -> mock(WorkStatisticsService.class));
         context.registerBean(AuthService.class, () -> mock(AuthService.class));
+        context.registerBean(DepartmentHeadAccessService.class, () -> mock(DepartmentHeadAccessService.class));
+        context.registerBean(CatalogAuditService.class, () -> mock(CatalogAuditService.class));
+        context.registerBean(EmployeeCreationAuditService.class, () -> mock(EmployeeCreationAuditService.class));
+        context.registerBean(EmployeeTerminationAuditService.class, () -> mock(EmployeeTerminationAuditService.class));
         context.register(EmployeeController.class, DepartmentController.class, PositionController.class,
                 PayrollController.class, EmployeeStatisticsController.class, ContractStatisticsController.class,
                 WorkStatisticsController.class, AdminAccountController.class);
@@ -80,7 +88,9 @@ class PermissionAuthorizationTests {
                 context.getBean(EmployeeService.class), context.getBean(DepartmentService.class),
                 context.getBean(PositionService.class), context.getBean(PayrollService.class),
                 context.getBean(EmployeeStatisticsService.class), context.getBean(ContractStatisticsService.class),
-                context.getBean(WorkStatisticsService.class), context.getBean(AuthService.class)
+                context.getBean(WorkStatisticsService.class), context.getBean(AuthService.class),
+                context.getBean(DepartmentHeadAccessService.class), context.getBean(CatalogAuditService.class),
+                context.getBean(EmployeeCreationAuditService.class), context.getBean(EmployeeTerminationAuditService.class)
         };
     }
 
@@ -137,9 +147,17 @@ class PermissionAuthorizationTests {
         verify(context.getBean(EmployeeService.class)).getEmployeeById(EMPLOYEE_ID, actor);
 
         clearInvocations(services);
+        assertDoesNotThrow(() -> controller.getEmployeeDetails(EMPLOYEE_ID, authentication));
+        verify(context.getBean(EmployeeService.class)).getEmployeeById(EMPLOYEE_ID, actor);
+
+        clearInvocations(services);
         assertThrows(AccessDeniedException.class,
                 () -> controller.getEmployee(OTHER_EMPLOYEE_ID, authentication));
+        assertThrows(AccessDeniedException.class,
+                () -> controller.getEmployeeDetails(OTHER_EMPLOYEE_ID, authentication));
         assertThrows(AccessDeniedException.class, () -> controller.getAllEmployees(authentication));
+        assertThrows(AccessDeniedException.class, () -> controller.listEmployees(authentication));
+        assertThrows(AccessDeniedException.class, () -> controller.getEmployeesPage(0, 10, authentication));
         verifyNoInteractions(services);
     }
 
@@ -237,6 +255,52 @@ class PermissionAuthorizationTests {
                 new ProtectedOperation("POST /positions", "POSITION_MANAGE", () -> position.addPosition(null)),
                 new ProtectedOperation("PUT /positions/{id}", "POSITION_MANAGE", () -> position.updatePosition(1L, null)),
                 new ProtectedOperation("DELETE /positions/{id}", "POSITION_MANAGE", () -> position.deletePosition(1L)),
+                new ProtectedOperation("HTTP GET /employees", "EMPLOYEE_MANAGE",
+                        () -> employee.listEmployees(SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /employees?page=0", "EMPLOYEE_MANAGE",
+                        () -> employee.getEmployeesPage(0, 10, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /employees/search", "EMPLOYEE_MANAGE",
+                        () -> employee.searchEmployees(null, null, null, null, 0, 10,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /employees/{id}", "EMPLOYEE_MANAGE",
+                        () -> employee.getEmployeeDetails(OTHER_EMPLOYEE_ID,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP POST /employees", "EMPLOYEE_MANAGE",
+                        () -> employee.createEmployee(null, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP PUT /employees/{id}", "EMPLOYEE_MANAGE",
+                        () -> employee.replaceEmployee(OTHER_EMPLOYEE_ID, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP DELETE /employees/{id}", "EMPLOYEE_MANAGE",
+                        () -> employee.terminateEmployee(OTHER_EMPLOYEE_ID,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /departments", "DEPARTMENT_MANAGE",
+                        () -> department.listDepartments(SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /departments/search", "DEPARTMENT_MANAGE",
+                        () -> department.searchDepartments(0, 10, null, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /departments/{id}", "DEPARTMENT_MANAGE",
+                        () -> department.getDepartmentDetails(1L, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP POST /departments", "DEPARTMENT_MANAGE",
+                        () -> department.createDepartment(null, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP PUT /departments/{id}", "DEPARTMENT_MANAGE",
+                        () -> department.replaceDepartment(1L, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP DELETE /departments/{id}", "DEPARTMENT_MANAGE",
+                        () -> department.deactivateDepartment(1L, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /positions", "POSITION_MANAGE",
+                        () -> position.listPositions(SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /positions/search", "POSITION_MANAGE",
+                        () -> position.searchPositions(0, 10, null, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP GET /positions/{id}", "POSITION_MANAGE",
+                        () -> position.getPositionDetails(1L, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP POST /positions", "POSITION_MANAGE",
+                        () -> position.createPosition(null, SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP PUT /positions/{id}", "POSITION_MANAGE",
+                        () -> position.replacePosition(1L, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("HTTP DELETE /positions/{id}", "POSITION_MANAGE",
+                        () -> position.deactivatePosition(1L, SecurityContextHolder.getContext().getAuthentication())),
                 new ProtectedOperation("GET /api/reports/employees", "REPORT_VIEW",
                         () -> context.getBean(EmployeeStatisticsController.class).getEmployeeStatistics()),
                 new ProtectedOperation("GET /api/reports/contracts", "REPORT_VIEW",
