@@ -16,11 +16,13 @@ public interface WorkStatisticsRepository extends JpaRepository<AttendanceRecord
         (select count(ar.attendance_id)
            from attendance_records ar
           where ar.work_date between :fromDate and :toDate
+            and ar.invalidated_at IS NULL
             and ar.verification_status = 'DA_XAC_NHAN'
             and ar.attendance_result = 'DI_LAM') as confirmedWorkDays,
         (select count(ar.attendance_id)
            from attendance_records ar
           where ar.work_date between :fromDate and :toDate
+            and ar.invalidated_at IS NULL
             and ar.verification_status = 'DA_XAC_NHAN'
             and ar.attendance_result = 'VANG') as confirmedAbsentDays,
         (select count(distinct er.request_id)

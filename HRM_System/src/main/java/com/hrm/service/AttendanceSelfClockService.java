@@ -82,7 +82,7 @@ public class AttendanceSelfClockService {
         var matches = db.query("""
                 SELECT attendance_id,actual_start,actual_end
                 FROM dbo.attendance_records WITH (UPDLOCK,HOLDLOCK)
-                WHERE schedule_id=?
+                WHERE schedule_id=? AND invalidated_at IS NULL
                 """,
                 (rs, n) -> new Existing(rs.getLong(1), timestamp(rs.getTimestamp(2)), timestamp(rs.getTimestamp(3))),
                 scheduleId);
@@ -151,17 +151,21 @@ public class AttendanceSelfClockService {
         LocalDateTime at = now();
         if (!AttendanceClockPolicy.checkOut(s.plannedStart(), s.plannedEnd(), e.in(), at).allowed())
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Outside check-out window");
-        Long collisions = db.queryForObject("""
-                SELECT COUNT_BIG(*) FROM dbo.attendance_records WITH (UPDLOCK,HOLDLOCK)
-                WHERE employee_id=? AND attendance_id<>? AND actual_start IS NOT NULL AND actual_end IS NOT NULL
-                  AND actual_start<? AND actual_end>?
-                """, Long.class, employee, e.id(), Timestamp.valueOf(at), Timestamp.valueOf(e.in()));
+        Long collisions = db.queryForObject(
+                """
+                        SELECT COUNT_BIG(*) FROM dbo.attendance_records WITH (UPDLOCK,HOLDLOCK)
+                        WHERE employee_id=? AND invalidated_at IS NULL AND attendance_id<>? AND actual_start IS NOT NULL AND actual_end IS NOT NULL
+                          AND actual_start<? AND actual_end>?
+                        """,
+                Long.class, employee, e.id(), Timestamp.valueOf(at), Timestamp.valueOf(e.in()));
         if (collisions != null && collisions > 0)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Overlapping confirmed time interval");
-        int changed = db.update("""
-                UPDATE dbo.attendance_records SET actual_end=?, updated_by=?,updated_at=SYSUTCDATETIME()
-                WHERE attendance_id=? AND actual_end IS NULL AND verification_status='CHUA_XAC_NHAN'
-                """, Timestamp.valueOf(at), accountId, e.id());
+        int changed = db.update(
+                """
+                        UPDATE dbo.attendance_records SET actual_end=?, updated_by=?,updated_at=SYSUTCDATETIME()
+                        WHERE attendance_id=? AND invalidated_at IS NULL AND actual_end IS NULL AND verification_status='CHUA_XAC_NHAN'
+                        """,
+                Timestamp.valueOf(at), accountId, e.id());
         if (changed != 1)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Attendance changed during checkout");
         audit(accountId, e.id(), "ATTENDANCE_SELF_CHECK_OUT", null, "{\"actual_end\":\"" + at + "\"}");

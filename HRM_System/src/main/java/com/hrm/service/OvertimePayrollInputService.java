@@ -30,9 +30,11 @@ public class OvertimePayrollInputService {
     private final JdbcTemplate db;
     private final OvertimePermissionService permissions;
     private final OvertimeDailyLedger ledger;
+    private final OvertimeRecognizedMinutes recognition;
 
     public OvertimePayrollInputService(JdbcTemplate db, OvertimePermissionService permissions,
-            OvertimeDailyLedger ledger) {
+            OvertimeDailyLedger ledger, OvertimeRecognizedMinutes recognition) {
+        this.recognition = recognition;
         this.db = db;
         this.permissions = permissions;
         this.ledger = ledger;
@@ -86,13 +88,12 @@ public class OvertimePayrollInputService {
             int breaks = rs.getInt(7);
             var approvedStart = rs.getObject(8, java.time.LocalDateTime.class);
             var approvedEnd = rs.getObject(9, java.time.LocalDateTime.class);
-            if (actualStart.isBefore(approvedStart) || actualEnd.isAfter(approvedEnd))
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "Confirmed OT exceeds approved range: " + otId);
-            ledger.netMinutes(otId, actualStart, actualEnd, breaks).forEach((day, minutes) -> {
-                if (!day.isBefore(start) && day.isBefore(end) && minutes > 0)
-                    rows.add(new PayrollInputRow(emp, empCode, otId, requestCode, day, Math.toIntExact(minutes)));
-            });
+            recognition.recognize(otId, actualStart, actualEnd, approvedStart, approvedEnd, breaks)
+                    .forEach((day, minutes) -> {
+                        if (!day.isBefore(start) && day.isBefore(end) && minutes > 0)
+                            rows.add(new PayrollInputRow(emp, empCode, otId, requestCode, day,
+                                    Math.toIntExact(minutes)));
+                    });
         }, args.toArray());
         Map<Long, long[]> sums = new LinkedHashMap<>();
         Map<Long, String> codes = new LinkedHashMap<>();

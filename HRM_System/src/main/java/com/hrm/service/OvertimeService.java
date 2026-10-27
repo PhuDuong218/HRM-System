@@ -21,6 +21,7 @@ public class OvertimeService {
     private final JdbcTemplate db;
     private final OvertimePermissionService perms;
     private final OvertimeDailyLedger ledger;
+    private final OvertimeRecognizedMinutes recognition;
     private static final String FIELDS = "o.overtime_id,o.employee_id,o.request_code,o.requested_start,o.requested_end,o.reason,o.status,o.processed_by,o.rejection_reason,o.actual_start,o.actual_end,o.actual_break_minutes,o.confirmed_by";
     private static final RowMapper<OvertimeView> MAPPER = (rs, i) -> new OvertimeView(rs.getLong(1), rs.getLong(2),
             rs.getString(3), rs.getObject(4, LocalDateTime.class), rs.getObject(5, LocalDateTime.class),
@@ -28,7 +29,9 @@ public class OvertimeService {
             rs.getObject(10, LocalDateTime.class), rs.getObject(11, LocalDateTime.class), rs.getInt(12),
             rs.getObject(13, Long.class), null, null, null);
 
-    public OvertimeService(JdbcTemplate db, OvertimePermissionService perms, OvertimeDailyLedger ledger) {
+    public OvertimeService(JdbcTemplate db, OvertimePermissionService perms, OvertimeDailyLedger ledger,
+            OvertimeRecognizedMinutes recognition) {
+        this.recognition = recognition;
         this.db = db;
         this.perms = perms;
         this.ledger = ledger;
@@ -202,6 +205,11 @@ public class OvertimeService {
             throw bad("Invalid break minutes");
         if (v.actualStart() != null && (body.reason() == null || body.reason().isBlank()))
             throw bad("Correction reason required");
+        Long priorOverflow = db.queryForObject(
+                "SELECT COUNT_BIG(*) FROM dbo.overtime_request_details d JOIN dbo.employee_requests r ON r.request_id=d.request_id WHERE d.overtime_id=? AND r.request_type='OT_VUOT'",
+                Long.class, id);
+        need(priorOverflow != null && priorOverflow == 0,
+                "Actual OT with overflow decisions is immutable; administrative correction workflow required");
         String before = snapshot(id);
         db.update(
                 "UPDATE dbo.overtime_requests SET actual_start=?,actual_end=?,actual_break_minutes=? WHERE overtime_id=?",
@@ -226,15 +234,27 @@ public class OvertimeService {
                 v.processedBy() == null ? 0 : v.processedBy());
         need("DA_DUYET".equals(v.status()) && v.confirmedBy() == null && v.actualStart() != null
                 && v.actualEnd() != null, "OT is not ready for confirmation");
-        need(!v.actualStart().isBefore(v.requestedStart()) && !v.actualEnd().isAfter(v.requestedEnd()),
-                "Actual OT exceeds approved interval; preserve actual but do not confirm without approved overflow workflow");
+        boolean overflow = v.actualStart().isBefore(v.requestedStart()) || v.actualEnd().isAfter(v.requestedEnd());
+        if (overflow) {
+            Long pending = db.queryForObject(
+                    "SELECT COUNT_BIG(*) FROM dbo.overtime_request_details d JOIN dbo.employee_requests r ON r.request_id=d.request_id WHERE d.overtime_id=? AND r.request_type='OT_VUOT' AND r.status='CHO_DUYET'",
+                    Long.class, id);
+            need(pending != null && pending == 0, "Pending overflow decision before OT confirmation");
+            Long resolved = db.queryForObject(
+                    "SELECT COUNT_BIG(*) FROM dbo.overtime_request_details d JOIN dbo.employee_requests r ON r.request_id=d.request_id WHERE d.overtime_id=? AND r.request_type='OT_VUOT' AND r.status IN ('DA_DUYET','TU_CHOI')",
+                    Long.class, id);
+            need(resolved != null && resolved > 0, "Overflow must be reviewed before confirmation");
+        }
+        var recognized = recognition.recognize(id, v.actualStart(), v.actualEnd(), v.requestedStart(), v.requestedEnd(),
+                v.actualBreakMinutes());
+        need(recognized.values().stream().mapToLong(Long::longValue).sum() > 0, "No recognized OT minutes");
         // Daily net is calculated from persisted break intervals; no estimation across
         // midnight.
         var byDay = ledger.netMinutes(id, v.actualStart(), v.actualEnd(), v.actualBreakMinutes());
         need(byDay.values().stream().mapToLong(Long::longValue).sum() > 0, "OT net time must be positive");
         Long regularOverlap = db.queryForObject("""
                 SELECT COUNT_BIG(*) FROM dbo.attendance_records a
-                WHERE a.employee_id=? AND a.verification_status='DA_XAC_NHAN'
+                WHERE a.employee_id=? AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN'
                   AND a.attendance_result='DI_LAM' AND a.actual_end IS NOT NULL
                   AND a.actual_start<? AND a.actual_end>?
                 """, Long.class, v.employeeId(), v.actualEnd(), v.actualStart());
@@ -248,18 +268,20 @@ public class OvertimeService {
         for (var entry : byDay.entrySet()) {
             LocalDate day = entry.getKey();
             LocalDateTime lo = day.atStartOfDay(), hi = day.plusDays(1).atStartOfDay();
-            Long missing = db.queryForObject("""
-                    SELECT COUNT_BIG(*) FROM dbo.work_schedules s
-                    WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
-                    AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
-                      WHERE a.schedule_id=s.schedule_id AND a.verification_status='DA_XAC_NHAN')
-                    """, Long.class, v.employeeId(), hi, lo);
+            Long missing = db.queryForObject(
+                    """
+                            SELECT COUNT_BIG(*) FROM dbo.work_schedules s
+                            WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
+                            AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
+                              WHERE a.schedule_id=s.schedule_id AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN')
+                            """,
+                    Long.class, v.employeeId(), hi, lo);
             need(missing != null && missing == 0, "Regular attendance not fully confirmed: " + day);
             // Only completely same-day attendance is safe to attribute using aggregate
             // breaks.
             Long ambiguousRegular = db.queryForObject("""
                     SELECT COUNT_BIG(*) FROM dbo.attendance_records a
-                    WHERE a.employee_id=? AND a.verification_status='DA_XAC_NHAN'
+                    WHERE a.employee_id=? AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN'
                     AND a.attendance_result='DI_LAM' AND a.actual_end IS NOT NULL
                     AND a.actual_start<? AND a.actual_end>?
                     AND (a.actual_start<? OR a.actual_end>?)
@@ -269,7 +291,7 @@ public class OvertimeService {
             Long regular = db.queryForObject("""
                     SELECT COALESCE(SUM(DATEDIFF_BIG(MINUTE,a.actual_start,a.actual_end)-a.actual_break_minutes),0)
                     FROM dbo.attendance_records a
-                    WHERE a.employee_id=? AND a.verification_status='DA_XAC_NHAN'
+                    WHERE a.employee_id=? AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN'
                     AND a.attendance_result='DI_LAM' AND a.actual_end IS NOT NULL
                     AND a.actual_start>=? AND a.actual_end<=?
                     """, Long.class, v.employeeId(), lo, hi);
@@ -323,6 +345,11 @@ public class OvertimeService {
                 current.actualStart().toLocalDate());
         need(lockedBatches != null && lockedBatches == 0,
                 "Cannot reopen confirmed OT in a locked payroll period");
+        Long reviewed = db.queryForObject(
+                "SELECT COUNT_BIG(*) FROM dbo.overtime_request_details d JOIN dbo.employee_requests r ON r.request_id=d.request_id WHERE d.overtime_id=? AND r.request_type='OT_VUOT'",
+                Long.class, id);
+        need(reviewed != null && reviewed == 0,
+                "Cannot reopen confirmed OT with overflow requests without a separate amendment process");
         String before = snapshot(id);
         int changed = db.update("""
                 UPDATE dbo.overtime_requests
@@ -392,7 +419,7 @@ public class OvertimeService {
         if ("CHO_DUYET".equals(v.status())) {
             perms.requireOwner(principal, v.employeeId());
         } else if ("DA_DUYET".equals(v.status())) {
-            perms.requireApprove(principal, v.employeeId(), v.requestedStart().toLocalDate());
+            throw conflict("Approved OT requires a separate employee cancellation request");
         } else {
             throw conflict("Only pending or approved requests can be cancelled");
         }

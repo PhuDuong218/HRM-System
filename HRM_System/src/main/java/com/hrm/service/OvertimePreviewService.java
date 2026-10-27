@@ -68,17 +68,19 @@ public class OvertimePreviewService {
         var dayContext = new HashMap<LocalDate, OvertimeDailyCalculation.DayContext>();
         for (LocalDate d = first; !d.isAfter(last); d = d.plusDays(1)) {
             LocalDateTime lo = d.atStartOfDay(), hi = d.plusDays(1).atStartOfDay();
-            Long unconfirmed = db.queryForObject("""
-                    SELECT COUNT_BIG(*) FROM dbo.work_schedules s
-                    WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
-                      AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
-                        WHERE a.schedule_id=s.schedule_id AND a.verification_status='DA_XAC_NHAN')
-                    """, Long.class, ot.employee(), hi, lo);
+            Long unconfirmed = db.queryForObject(
+                    """
+                            SELECT COUNT_BIG(*) FROM dbo.work_schedules s
+                            WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
+                              AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
+                                WHERE a.schedule_id=s.schedule_id AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN')
+                            """,
+                    Long.class, ot.employee(), hi, lo);
             if (unconfirmed != null && unconfirmed > 0)
                 throw new ResponseStatusException(HttpStatus.CONFLICT, "Unconfirmed regular attendance for " + d);
             var attendance = db.query("""
                     SELECT actual_start,actual_end,actual_break_minutes FROM dbo.attendance_records
-                    WHERE employee_id=? AND verification_status='DA_XAC_NHAN'
+                    WHERE employee_id=? AND invalidated_at IS NULL AND verification_status='DA_XAC_NHAN'
                       AND attendance_result='DI_LAM' AND actual_end IS NOT NULL
                       AND actual_start<? AND actual_end>?
                     """, (rs, i) -> new Attendance(rs.getObject(1, LocalDateTime.class),

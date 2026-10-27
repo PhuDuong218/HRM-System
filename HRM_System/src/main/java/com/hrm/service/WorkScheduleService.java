@@ -160,6 +160,11 @@ public class WorkScheduleService {
 
     @Transactional("scheduleTransactionManager")
     public ScheduleView create(AuthenticatedAccount actor, ScheduleInput v) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Use detailed break-aware work time API");
+    }
+
+    @Transactional("scheduleTransactionManager")
+    ScheduleView createWithVerifiedBreaks(AuthenticatedAccount actor, ScheduleInput v) {
         validate(v);
         lockEmployee(v.employeeId());
         rejectStarted(v.plannedStart());
@@ -184,6 +189,11 @@ public class WorkScheduleService {
 
     @Transactional("scheduleTransactionManager")
     public ScheduleView update(AuthenticatedAccount actor, long id, ScheduleInput v) {
+        throw new ResponseStatusException(HttpStatus.CONFLICT, "Use detailed break-aware work time API");
+    }
+
+    @Transactional("scheduleTransactionManager")
+    ScheduleView updateWithVerifiedBreaks(AuthenticatedAccount actor, long id, ScheduleInput v) {
         validate(v);
         ScheduleView previous = get(id);
 

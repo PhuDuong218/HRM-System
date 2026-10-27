@@ -60,6 +60,11 @@ public class WorkShiftService {
 
   @Transactional("scheduleTransactionManager")
   public ShiftView create(AuthenticatedAccount actor, ShiftInput v) {
+    throw new ResponseStatusException(HttpStatus.CONFLICT, "Use detailed break-aware work time API");
+  }
+
+  @Transactional("scheduleTransactionManager")
+  ShiftView createWithVerifiedBreaks(AuthenticatedAccount actor, ShiftInput v) {
     validate(v);
     permissions.requireManage(actor);
     Long id = db.queryForObject(
@@ -71,6 +76,11 @@ public class WorkShiftService {
 
   @Transactional("scheduleTransactionManager")
   public ShiftView update(AuthenticatedAccount actor, long id, ShiftInput v) {
+    throw new ResponseStatusException(HttpStatus.CONFLICT, "Use detailed break-aware work time API");
+  }
+
+  @Transactional("scheduleTransactionManager")
+  ShiftView updateWithVerifiedBreaks(AuthenticatedAccount actor, long id, ShiftInput v) {
     validate(v);
     permissions.requireManage(actor);
     ShiftView old = lockShift(id);

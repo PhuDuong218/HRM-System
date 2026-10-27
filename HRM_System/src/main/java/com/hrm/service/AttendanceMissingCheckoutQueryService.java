@@ -54,7 +54,7 @@ public class AttendanceMissingCheckoutQueryService {
                 FROM dbo.attendance_records ar
                 INNER JOIN dbo.work_schedules ws
                   ON ws.schedule_id = ar.schedule_id AND ws.employee_id = ar.employee_id
-                WHERE ar.actual_start IS NOT NULL
+                WHERE ar.invalidated_at IS NULL AND ar.actual_start IS NOT NULL
                   AND ar.actual_end IS NULL
                   AND ws.planned_end < ?
                 ORDER BY ws.planned_end, ar.attendance_id

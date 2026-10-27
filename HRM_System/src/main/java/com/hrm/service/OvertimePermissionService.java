@@ -24,15 +24,16 @@ public class OvertimePermissionService {
      * effective department scope of the HR account bound to the single '?'.
      */
     public static String hrScopeExistsSql(String employeeIdExpr, String dateExpr) {
-        return "(EXISTS (SELECT 1 FROM dbo.employee_assignments ea"
-                + " JOIN dbo.employee_assignments ha ON ha.department_id=ea.department_id"
-                + " WHERE ea.employee_id=" + employeeIdExpr + " AND ea.effective_from<=" + dateExpr
-                + " AND (ea.effective_to IS NULL OR ea.effective_to>" + dateExpr + ")"
-                + " AND ha.employee_id=(SELECT employee_id FROM dbo.accounts WHERE account_id=?)"
-                + " AND ha.effective_from<=" + dateExpr
-                + " AND (ha.effective_to IS NULL OR ha.effective_to>" + dateExpr + "))"
-                + " AND EXISTS (SELECT 1 FROM dbo.accounts ta JOIN dbo.roles tr ON tr.role_id=ta.role_id"
-                + " WHERE ta.employee_id=" + employeeIdExpr + " AND ta.is_active=1 AND tr.role_code='EMPLOYEE'))";
+        return "(EXISTS (SELECT 1 FROM dbo.employee_assignments ea "
+                + "JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id "
+                + "WHERE ea.employee_id=" + employeeIdExpr + " AND hs.hr_account_id=? "
+                + "AND ea.effective_from<=" + dateExpr
+                + " AND (ea.effective_to IS NULL OR ea.effective_to>" + dateExpr + ") "
+                + "AND CONVERT(date,hs.effective_from)<=" + dateExpr
+                + " AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>" + dateExpr + ") "
+                + "AND hs.revoked_at IS NULL) "
+                + "AND EXISTS (SELECT 1 FROM dbo.accounts ta JOIN dbo.roles tr ON tr.role_id=ta.role_id "
+                + "WHERE ta.employee_id=" + employeeIdExpr + " AND ta.is_active=1 AND tr.role_code='EMPLOYEE'))";
     }
 
     public record VerifiedActor(long accountId, Long employeeId, String roleCode) {
@@ -199,11 +200,12 @@ public class OvertimePermissionService {
 
     private boolean inHrScope(long accountId, long targetEmployeeId, LocalDate date) {
         Long count = db.queryForObject("""
-                SELECT COUNT_BIG(*) FROM dbo.accounts h
-                JOIN dbo.employee_assignments ha ON ha.employee_id=h.employee_id
-                JOIN dbo.employee_assignments ta ON ta.department_id=ha.department_id
-                WHERE h.account_id=? AND ta.employee_id=?
-                  AND ha.effective_from<=? AND (ha.effective_to IS NULL OR ha.effective_to>?)
+                SELECT COUNT_BIG(*) FROM dbo.hr_department_scopes hs
+                JOIN dbo.employee_assignments ta ON ta.department_id=hs.department_id
+                WHERE hs.hr_account_id=? AND ta.employee_id=?
+                  AND CONVERT(date,hs.effective_from)<=?
+                  AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>?)
+                  AND hs.revoked_at IS NULL
                   AND ta.effective_from<=? AND (ta.effective_to IS NULL OR ta.effective_to>?)
                 """, Long.class, accountId, targetEmployeeId, date, date, date, date);
         return count != null && count > 0;

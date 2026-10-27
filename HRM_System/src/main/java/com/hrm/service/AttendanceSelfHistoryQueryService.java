@@ -47,7 +47,7 @@ public class AttendanceSelfHistoryQueryService {
                        ar.actual_start, ar.actual_end, ar.actual_break_minutes,
                        ar.attendance_result, ar.verification_status
                 FROM dbo.attendance_records ar
-                WHERE ar.employee_id = ? AND ar.work_date >= ? AND ar.work_date <= ?
+                WHERE ar.invalidated_at IS NULL AND ar.employee_id = ? AND ar.work_date >= ? AND ar.work_date <= ?
                 ORDER BY ar.work_date DESC, ar.attendance_id DESC
                 OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
                 """, (rs, i) -> new HistoryItem(

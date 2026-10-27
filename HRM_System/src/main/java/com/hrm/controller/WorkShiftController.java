@@ -8,6 +8,8 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import com.hrm.service.WorkShiftService;
+import com.hrm.service.DetailedWorkTimeService;
+import com.hrm.dto.DetailedWorkTimeDTOs.ShiftWithBreaks;
 import static com.hrm.dto.WorkTimeDTOs.*;
 
 /** Disabled by default until Spring Security/JWT authorization is available. */
@@ -16,9 +18,11 @@ import static com.hrm.dto.WorkTimeDTOs.*;
 @ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true", matchIfMissing = false)
 public class WorkShiftController {
     private final WorkShiftService shifts;
+    private final DetailedWorkTimeService detailed;
 
-    public WorkShiftController(WorkShiftService shifts) {
+    public WorkShiftController(WorkShiftService shifts, DetailedWorkTimeService detailed) {
         this.shifts = shifts;
+        this.detailed = detailed;
     }
 
     @GetMapping
@@ -32,14 +36,15 @@ public class WorkShiftController {
     }
 
     @PostMapping
-    public ShiftView create(@AuthenticationPrincipal AuthenticatedAccount actor, @Valid @RequestBody ShiftInput body) {
-        return shifts.create(actor, body);
+    public ShiftView create(@AuthenticationPrincipal AuthenticatedAccount actor,
+            @Valid @RequestBody ShiftWithBreaks body) {
+        return detailed.createShift(actor, body);
     }
 
     @PutMapping("/{id}")
     public ShiftView update(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
-            @Valid @RequestBody ShiftInput body) {
-        return shifts.update(actor, id, body);
+            @Valid @RequestBody ShiftWithBreaks body) {
+        return detailed.updateShift(actor, id, body);
     }
 
     @DeleteMapping("/{id}")

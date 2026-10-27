@@ -55,7 +55,7 @@ public class AttendanceService {
                                 """
                                                 SELECT *
                                                 FROM dbo.attendance_records
-                                                WHERE attendance_id = ?
+                                                WHERE attendance_id = ? AND invalidated_at IS NULL
                                                 """,
                                 MAPPER,
                                 attendanceId).stream().findFirst().orElseThrow(
@@ -190,7 +190,7 @@ public class AttendanceService {
                                 """
                                                 SELECT COUNT(1)
                                                 FROM dbo.attendance_records
-                                                WHERE schedule_id = ?
+                                                WHERE schedule_id = ? AND invalidated_at IS NULL
                                                 """,
                                 Integer.class,
                                 scheduleId);
@@ -277,7 +277,7 @@ public class AttendanceService {
                                                 SELECT *
                                                 FROM dbo.attendance_records
                                                      WITH (UPDLOCK, HOLDLOCK)
-                                                WHERE attendance_id = ?
+                                                WHERE attendance_id = ? AND invalidated_at IS NULL
                                                 """,
                                 MAPPER,
                                 attendanceId).stream().findFirst().orElseThrow(
@@ -332,7 +332,7 @@ public class AttendanceService {
                                                         confirmed_at,
                                                         correction_reason
                                                     FROM dbo.attendance_records
-                                                    WHERE attendance_id = ?
+                                                    WHERE attendance_id = ? AND invalidated_at IS NULL
                                                     FOR JSON PATH,
                                                         INCLUDE_NULL_VALUES,
                                                         WITHOUT_ARRAY_WRAPPER
@@ -430,7 +430,7 @@ public class AttendanceService {
                                                     correction_reason = ?,
                                                     updated_at = SYSUTCDATETIME(),
                                                     updated_by = ?
-                                                WHERE attendance_id = ?
+                                                WHERE attendance_id = ? AND invalidated_at IS NULL
                                                 """,
                                 correction.actualStart() == null
                                                 ? null
@@ -471,7 +471,7 @@ public class AttendanceService {
                 if ("HR".equals(actor.roleCode())) {
                         Long creator = db.query("""
                                         SELECT created_by FROM dbo.attendance_records WITH (HOLDLOCK)
-                                        WHERE attendance_id=?
+                                        WHERE attendance_id = ? AND invalidated_at IS NULL
                                         """, rs -> rs.next() ? rs.getObject(1, Long.class) : null, attendanceId);
                         // Legacy records without a verifiable creator require a separate workflow.
                         if (creator == null || creator == actorAccountId) {
@@ -518,7 +518,7 @@ public class AttendanceService {
                                                     confirmed_at = SYSUTCDATETIME(),
                                                     updated_at = SYSUTCDATETIME(),
                                                     updated_by = ?
-                                                WHERE attendance_id = ?
+                                                WHERE attendance_id = ? AND invalidated_at IS NULL
                                                 """,
                                 actorAccountId,
                                 actorAccountId,
@@ -580,7 +580,7 @@ public class AttendanceService {
                                                     confirmed_at = NULL,
                                                     updated_at = SYSUTCDATETIME(),
                                                     updated_by = ?
-                                                WHERE attendance_id = ?
+                                                WHERE attendance_id = ? AND invalidated_at IS NULL
                                                   AND verification_status = 'DA_XAC_NHAN'
                                                 """,
                                 actorAccountId,

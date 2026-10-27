@@ -9,6 +9,8 @@ import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.ScheduleQueryService;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.hrm.service.WorkScheduleService;
+import com.hrm.service.DetailedWorkTimeService;
+import com.hrm.dto.DetailedWorkTimeDTOs.ScheduleWithBreaks;
 import static com.hrm.dto.WorkTimeDTOs.*;
 
 /** Disabled by default until Spring Security/JWT authorization is available. */
@@ -17,10 +19,13 @@ import static com.hrm.dto.WorkTimeDTOs.*;
 @ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true", matchIfMissing = false)
 public class WorkScheduleController {
     private final WorkScheduleService schedules;
+    private final DetailedWorkTimeService detailed;
     private final ScheduleQueryService queries;
 
-    public WorkScheduleController(WorkScheduleService schedules, ScheduleQueryService queries) {
+    public WorkScheduleController(WorkScheduleService schedules, ScheduleQueryService queries,
+            DetailedWorkTimeService detailed) {
         this.schedules = schedules;
+        this.detailed = detailed;
         this.queries = queries;
     }
 
@@ -44,13 +49,13 @@ public class WorkScheduleController {
 
     @PostMapping
     public ScheduleView create(@AuthenticationPrincipal AuthenticatedAccount actor,
-            @Valid @RequestBody ScheduleInput body) {
-        return schedules.create(actor, body);
+            @Valid @RequestBody ScheduleWithBreaks body) {
+        return detailed.createSchedule(actor, body);
     }
 
     @PutMapping("/{id}")
     public ScheduleView update(@AuthenticationPrincipal AuthenticatedAccount actor,
-            @PathVariable long id, @Valid @RequestBody ScheduleInput body) {
-        return schedules.update(actor, id, body);
+            @PathVariable long id, @Valid @RequestBody ScheduleWithBreaks body) {
+        return detailed.updateSchedule(actor, id, body);
     }
 }

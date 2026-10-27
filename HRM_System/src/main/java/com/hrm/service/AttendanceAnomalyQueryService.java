@@ -67,7 +67,7 @@ public class AttendanceAnomalyQueryService {
                 FROM dbo.attendance_records a
                 JOIN dbo.work_schedules w ON w.schedule_id=a.schedule_id
                                      AND w.employee_id=a.employee_id
-                WHERE a.employee_id=? AND a.work_date>=? AND a.work_date<=?
+                WHERE a.employee_id=? AND a.invalidated_at IS NULL AND a.work_date>=? AND a.work_date<=?
                 ORDER BY a.work_date DESC, a.attendance_id DESC
                 """, (rs, n) -> new Raw(rs.getLong(1), rs.getLong(2), rs.getLong(3),
                 rs.getDate(4).toLocalDate(), dt(rs.getTimestamp(5)), dt(rs.getTimestamp(6)),
