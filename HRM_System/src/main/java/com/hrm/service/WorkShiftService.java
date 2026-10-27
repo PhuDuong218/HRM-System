@@ -83,11 +83,10 @@ public class WorkShiftService {
   ShiftView updateWithVerifiedBreaks(AuthenticatedAccount actor, long id, ShiftInput v) {
     validate(v);
     permissions.requireManage(actor);
-    ShiftView old = lockShift(id);
-    boolean timeChanged = !old.startTime().equals(v.startTime()) || !old.endTime().equals(v.endTime())
-        || old.endDayOffset() != v.endDayOffset() || old.breakMinutes() != v.breakMinutes();
-    if (timeChanged && hasScheduleReference(id))
-      throw new ResponseStatusException(HttpStatus.CONFLICT, "Ca đã được sử dụng, không thể sửa thời gian");
+    lockShift(id);
+    // Existing work_schedules persist their own planned_start/planned_end and break
+    // snapshots.
+    // Updating the template must never rewrite already assigned schedules.
     int count = db.update(
         "UPDATE dbo.work_shifts SET shift_code=?,shift_name=?,start_time=?,end_time=?,end_day_offset=?,break_minutes=?,is_active=? WHERE shift_id=?",
         v.shiftCode().trim(), v.shiftName().trim(), v.startTime(), v.endTime(), v.endDayOffset(), v.breakMinutes(),
