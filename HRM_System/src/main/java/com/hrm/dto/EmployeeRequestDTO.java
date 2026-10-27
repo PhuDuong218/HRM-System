@@ -41,11 +41,14 @@ public class EmployeeRequestDTO {
     // --- CÁC TRƯỜNG BẮT BUỘC ĐỂ TẠO PHÂN CÔNG CÔNG TÁC ---
     
     @NotNull(message = "Bắt buộc phải chọn Phòng ban khi thêm nhân viên")
+    @jakarta.validation.constraints.Positive(message = "ID phòng ban phải lớn hơn 0")
     private Long departmentId;
 
     @NotNull(message = "Bắt buộc phải chọn Chức vụ khi thêm nhân viên")
+    @jakarta.validation.constraints.Positive(message = "ID chức vụ phải lớn hơn 0")
     private Long positionId;
-
+@Size(max = 500, message = "Địa chỉ không vượt quá 500 ký tự")
+private String address;
     // TODO: Sử dụng Generate Getters and Setters cho toàn bộ các biến trên
     public String getEmployeeCode() {
         return employeeCode;
@@ -117,5 +120,13 @@ public class EmployeeRequestDTO {
     public void setPositionId(Long positionId) {
         this.positionId = positionId;
     }
+
+    public String getAddress() {
+    return address;
+}
+
+public void setAddress(String address) {
+    this.address = address;
+}
 
 }

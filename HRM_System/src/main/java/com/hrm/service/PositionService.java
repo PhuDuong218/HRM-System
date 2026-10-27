@@ -1,8 +1,14 @@
 package com.hrm.service;
 
 import java.time.LocalDateTime;
+import java.time.Clock;
+import java.time.LocalDate;
+import java.time.ZoneOffset;
+import java.util.Locale;
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -13,14 +19,20 @@ import com.hrm.dto.PositionRequestDTO;
 import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.Position;
 import com.hrm.repository.PositionRepository;
+import com.hrm.util.PagingUtils;
 
 @Service
 public class PositionService {
 
     private final PositionRepository positionRepository;
+    private final AssignmentGuardService guard;
+    private final Clock clock;
 
-    public PositionService(PositionRepository positionRepository) {
+    public PositionService(PositionRepository positionRepository, AssignmentGuardService guard,
+            @org.springframework.beans.factory.annotation.Qualifier("hrmBusinessClock") Clock clock) {
         this.positionRepository = positionRepository;
+        this.guard=guard;
+        this.clock=clock;
     }
 
     // Chuyen Entity sang DTO: khong tra cac truong audit / rowVersion.
@@ -63,13 +75,14 @@ public class PositionService {
         position.setPositionName(requestDTO.getPositionName().trim());
         position.setDescription(requestDTO.getDescription());
         position.setIsActive(true); // He thong tu gan trang thai khi tao moi
-        position.setCreatedAt(LocalDateTime.now());
+        position.setCreatedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
 
         return convertToDTO(positionRepository.save(position));
     }
 
     @Transactional
     public PositionDTO updatePosition(Long id, PositionRequestDTO requestDTO) {
+        guard.lockTimeline();
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Khong tim thay chuc vu co ID: " + id));
@@ -85,22 +98,48 @@ public class PositionService {
         position.setDescription(requestDTO.getDescription()); // null -> xoa mo ta
 
         if (requestDTO.getIsActive() != null) {
+            if (AssignmentGuardService.HEAD_CODE.equals(position.getPositionCode()) && !requestDTO.getIsActive()) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,"Không ngừng sử dụng chức vụ hệ thống TRUONG_PHONG");
+            }
+            if (!requestDTO.getIsActive()) guard.requireNoPositionAssignments(id, LocalDate.now(clock));
             position.setIsActive(requestDTO.getIsActive());
         }
 
-        position.setUpdatedAt(LocalDateTime.now());
+        position.setUpdatedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         return convertToDTO(positionRepository.save(position));
     }
 
     @Transactional
     public void deletePosition(Long id) {
+        guard.lockTimeline();
         Position position = positionRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Khong tim thay chuc vu co ID: " + id));
 
         // Xoa mem: khong xoa ban ghi khoi SQL Server.
+        if (AssignmentGuardService.HEAD_CODE.equals(position.getPositionCode())) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,"Không ngừng sử dụng chức vụ hệ thống TRUONG_PHONG");
+        }
+        guard.requireNoPositionAssignments(id, LocalDate.now(clock));
         position.setIsActive(false);
-        position.setUpdatedAt(LocalDateTime.now());
+        position.setUpdatedAt(LocalDateTime.now(clock.withZone(ZoneOffset.UTC)));
         positionRepository.save(position);
     }
+
+    @Transactional(readOnly = true)
+public Page<PositionDTO> getPositionsPage(int page, int size) {
+    return searchPositions(null, null, page, size);
+}
+
+@Transactional(readOnly = true)
+public Page<PositionDTO> searchPositions(String keyword, Boolean active, int page, int size) {
+    String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
+    return positionRepository.search(pattern, active,
+            PagingUtils.create(
+                    page,
+                    size,
+                    Sort.by(Sort.Direction.DESC, "positionId")
+            )
+    ).map(this::convertToDTO);
+}
 }
