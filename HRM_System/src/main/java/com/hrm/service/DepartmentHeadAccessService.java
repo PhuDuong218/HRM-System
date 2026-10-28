@@ -1,7 +1,10 @@
 package com.hrm.service;
 
+import com.hrm.security.AuthenticatedAccount;
 import java.security.Principal;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.server.ResponseStatusException;
@@ -16,6 +19,20 @@ public class DepartmentHeadAccessService {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cần đăng nhập để quản lý nhân sự");
         }
+        String username;
+        if (principal instanceof Authentication authentication) {
+            if (!authentication.isAuthenticated() || authentication instanceof AnonymousAuthenticationToken) {
+                throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cần đăng nhập để quản lý nhân sự");
+            }
+            username = authentication.getPrincipal() instanceof AuthenticatedAccount account
+                    ? account.username()
+                    : authentication.getName();
+        } else {
+            username = principal.getName();
+        }
+        if (username == null || username.isBlank()) {
+            throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cần đăng nhập để quản lý nhân sự");
+        }
         var ids = jdbc.queryForList("""
             SELECT a.account_id FROM dbo.accounts a
             JOIN dbo.employees e ON e.employee_id=a.employee_id
@@ -25,7 +42,7 @@ public class DepartmentHeadAccessService {
               AND EXISTS (SELECT 1 FROM dbo.role_permissions rp
                 JOIN dbo.permissions p ON p.permission_id=rp.permission_id
                 WHERE rp.role_id=r.role_id AND p.permission_code='EMPLOYEE_MANAGE')
-            """, Long.class, principal.getName());
+            """, Long.class, username);
         if (ids.size() != 1) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Không có quyền quản lý nhân sự");
         }

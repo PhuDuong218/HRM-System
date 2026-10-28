@@ -14,14 +14,10 @@ Thumbs.db
 .env
 .env.*
 !.env.example
-application-local.properties
+**/application-local.properties
 application-*.local.properties
 
 # Local SQL backups / generated dumps
 *.bak
 *.bacpac
-# Cau hinh database rieng cua tung thanh vien
-**/application-local.properties
-# Khong day mat khau SQL Server len GitHub
-**/application-local.properties
 docs/

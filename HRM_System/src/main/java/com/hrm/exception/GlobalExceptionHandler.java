@@ -6,26 +6,30 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.jdbc.UncategorizedSQLException;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-    @ExceptionHandler(IllegalArgumentException.class)
+    // Compatibility entry point; only handleIllegalArgumentException is registered as a handler.
     public ResponseEntity<Object> invalidArgument(IllegalArgumentException ex) {
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Tham số hoặc dữ liệu nghiệp vụ không hợp lệ");
+        return handleIllegalArgumentException(ex);
     }
 
     @ExceptionHandler(HandlerMethodValidationException.class)
@@ -33,22 +37,27 @@ public class GlobalExceptionHandler {
         return buildErrorResponse(ex.getStatusCode(), "Tham số yêu cầu không hợp lệ");
     }
 
-    @ExceptionHandler(org.springframework.dao.ConcurrencyFailureException.class)
-    public ResponseEntity<Object> handleConcurrentChange(org.springframework.dao.ConcurrencyFailureException ex) {
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+
+    @ExceptionHandler(ConcurrencyFailureException.class)
+    public ResponseEntity<Object> handleConcurrentChange(ConcurrencyFailureException ex) {
         return buildErrorResponse(HttpStatus.CONFLICT, "Dữ liệu vừa thay đổi hoặc đang được xử lý; hãy tải lại và thử lại");
     }
 
-    @ExceptionHandler(org.springframework.jdbc.UncategorizedSQLException.class)
-    public ResponseEntity<Object> handleAssignmentConstraint(org.springframework.jdbc.UncategorizedSQLException ex) {
-        int code=ex.getSQLException().getErrorCode();
-        if(code>=51000 && code<=51399) return buildErrorResponse(HttpStatus.CONFLICT,
-                "Dữ liệu nghiệp vụ không hợp lệ, chồng hiệu lực hoặc lịch sử đang được bảo vệ");
-        log.error("Loi SQL chua duoc xu ly",ex);
-        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,"Máy chủ không xử lý được yêu cầu");
+    @ExceptionHandler(UncategorizedSQLException.class)
+    public ResponseEntity<Object> handleAssignmentConstraint(UncategorizedSQLException ex) {
+        int code = ex.getSQLException().getErrorCode();
+        if (code >= 51100 && code <= 51199) {
+            return buildErrorResponse(HttpStatus.CONFLICT,
+                    "Phân công/trưởng phòng không hợp lệ hoặc chồng hiệu lực; hãy kiểm tra dữ liệu và thử lại");
+        }
+        if (code >= 51000 && code <= 51399) {
+            return buildErrorResponse(HttpStatus.CONFLICT,
+                    "Dữ liệu nghiệp vụ không hợp lệ, chồng hiệu lực hoặc lịch sử đang được bảo vệ");
+        }
+        log.error("Loi SQL chua duoc xu ly", ex);
+        return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Máy chủ không xử lý được yêu cầu");
     }
-
-    private static final Logger log =
-            LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     // 1. Sai phương thức HTTP
     @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
@@ -90,15 +99,25 @@ public class GlobalExceptionHandler {
         );
     }
 
+    @ExceptionHandler(AuthenticationException.class)
+    public ResponseEntity<Object> handleAuthenticationException(AuthenticationException ex) {
+        return buildErrorResponse(HttpStatus.UNAUTHORIZED, "Tên đăng nhập hoặc mật khẩu không đúng.");
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Object> handleAccessDeniedException(AccessDeniedException ex) {
+        return buildErrorResponse(HttpStatus.FORBIDDEN, ex.getMessage());
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> handleIllegalArgumentException(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, ex.getMessage());
+    }
+
     // 4. JSON sai định dạng
     @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Object> handleJsonParseException(
-            HttpMessageNotReadableException ex) {
-
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Dữ liệu JSON không đúng định dạng"
-        );
+    public ResponseEntity<Object> handleJsonParseException(HttpMessageNotReadableException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng (có thể dư dấu phẩy hoặc sai ngoặc).");
     }
 
     // 5. Content-Type không được hỗ trợ
