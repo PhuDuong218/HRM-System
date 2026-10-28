@@ -22,6 +22,7 @@ class EmployeeTerminationServiceTest {
     @Mock EmployeeRepository employees;
     @Mock DepartmentRepository departments;
     @Mock PositionRepository positions;
+    @Mock AccountRepository accounts;
     @Mock EmployeeAssignmentRepository assignments;
     @Mock AssignmentGuardService guard;
     @Spy Clock clock = Clock.fixed(Instant.parse("2026-10-23T17:30:00Z"),
@@ -59,6 +60,7 @@ class EmployeeTerminationServiceTest {
         verify(guard).lockTimeline();
         verify(employees).save(employee);
         verify(assignments).save(assignment);
+        verify(accounts).deactivateAndRevokeByEmployeeId(100L);
         verify(employees, never()).deleteById(anyLong());
         verify(employees, never()).delete(any(Employee.class));
     }
@@ -69,11 +71,13 @@ class EmployeeTerminationServiceTest {
         verifyNoInteractions(assignments);
     }
 
-    @Test void rejectsRepeatedTermination() {
-        employee(EmploymentStatus.DA_NGHI);
-        var error = assertThrows(ResponseStatusException.class,
-                () -> service.deleteEmployee(100L));
-        assertEquals(409, error.getStatusCode().value());
+    @Test void repeatedTerminationStillRevokesAccountWithoutChangingEmploymentHistory() {
+        Employee employee = employee(EmploymentStatus.DA_NGHI);
+        LocalDate originalTermination = day.minusDays(2);
+        employee.setTerminationDate(originalTermination);
+        assertDoesNotThrow(() -> service.deleteEmployee(100L));
+        assertEquals(originalTermination, employee.getTerminationDate());
+        verify(accounts).deactivateAndRevokeByEmployeeId(100L);
         verifyNoInteractions(assignments);
         verify(employees, never()).save(any(Employee.class));
     }

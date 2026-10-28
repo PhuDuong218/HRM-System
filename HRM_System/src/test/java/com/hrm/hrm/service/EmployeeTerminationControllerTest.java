@@ -127,11 +127,11 @@ private EmployeeCreationAuditService creationAudit;
                 .andExpect(content().string(
                         "Đã xử lý nghỉ việc cho nhân viên có ID: 100"));
 
-        // DELETE cũ cũng đi qua service nghỉ việc có audit.
+        // DELETE cũ giữ tính lặp lại an toàn và vẫn ghi audit lần nghỉ việc đầu.
         var order = inOrder(access, terminationAudit);
 
         order.verify(access).requireManager(manager);
-        order.verify(terminationAudit).terminate(100L, 7L);
+        order.verify(terminationAudit).terminateIfActive(100L, 7L);
 
         verifyNoInteractions(service);
     }

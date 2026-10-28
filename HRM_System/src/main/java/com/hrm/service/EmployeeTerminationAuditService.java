@@ -3,12 +3,15 @@ package com.hrm.service;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.Employee;
 import com.hrm.repository.EmployeeRepository;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EmployeeTerminationAuditService {
@@ -32,6 +35,15 @@ public class EmployeeTerminationAuditService {
 
     @Transactional
     public void terminate(Long employeeId, Long actorAccountId) {
+        terminateEmployee(employeeId, actorAccountId, true);
+    }
+
+    @Transactional
+    public void terminateIfActive(Long employeeId, Long actorAccountId) {
+        terminateEmployee(employeeId, actorAccountId, false);
+    }
+
+    private void terminateEmployee(Long employeeId, Long actorAccountId, boolean rejectRepeatedTermination) {
         if (actorAccountId == null || actorAccountId <= 0) {
             throw new IllegalArgumentException(
                     "Phải xác định tài khoản thực hiện");
@@ -44,6 +56,15 @@ public class EmployeeTerminationAuditService {
                 .findByIdForUpdate(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy nhân viên: " + employeeId));
+
+        if (employee.getEmploymentStatus() == EmploymentStatus.DA_NGHI) {
+            if (rejectRepeatedTermination) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT, "Nhân viên đã nghỉ việc");
+            }
+            // DELETE lặp lại vẫn thu hồi tài khoản, không đổi người sửa hoặc ghi audit nghỉ việc lần nữa.
+            employeeService.deleteEmployee(employeeId);
+            return;
+        }
 
         Map<String, String> before = snapshot(employee);
 
