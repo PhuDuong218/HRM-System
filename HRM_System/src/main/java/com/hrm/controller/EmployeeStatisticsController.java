@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import com.hrm.dto.EmployeeStatisticsResponse;
@@ -18,7 +19,7 @@ public class EmployeeStatisticsController {
     }
 
     @GetMapping("/employees")
-    @PreAuthorize("hasAuthority('employee.report.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
     public EmployeeStatisticsResponse getEmployeeStatistics() {
         return statisticsService.getEmployeeStatistics();
     }

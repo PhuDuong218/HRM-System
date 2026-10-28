@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import com.hrm.dto.ContractStatisticsResponse;
@@ -22,15 +23,16 @@ public class ContractStatisticsController {
     }
 
     @GetMapping("/contracts")
-    @PreAuthorize("hasAuthority('contract.report.view')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
     public ContractStatisticsResponse getContractStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate,
-            @RequestParam(required = false)
-            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate reportDate,
             @RequestParam(defaultValue = "30") int expiringWithinDays,
             @RequestParam(required = false) Long departmentId) {
+
         LocalDate evaluatedAt = reportDate == null ? LocalDate.now() : reportDate;
+
         return statisticsService.summarize(
                 fromDate, toDate, evaluatedAt, expiringWithinDays, departmentId);
     }

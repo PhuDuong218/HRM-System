@@ -3,16 +3,20 @@ package com.hrm.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-
+import org.springframework.transaction.annotation.Transactional;
 import com.hrm.dto.QualificationLevelDTO;
 import com.hrm.dto.QualificationLevelRequestDTO;
 import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.QualificationLevel;
 import com.hrm.repository.QualificationLevelRepository;
+import com.hrm.util.PagingUtils;
 
 @Service
 public class QualificationLevelService {
@@ -78,4 +82,20 @@ public class QualificationLevelService {
         return new QualificationLevelDTO(level.getQualificationLevelId(), level.getLevelCode(),
                 level.getLevelName(), level.getDescription(), level.getIsActive());
     }
+
+    @Transactional(readOnly = true)
+    public Page<QualificationLevelDTO> getLevelsPage(
+        int page, int size) {
+
+    return repository.findAll(
+            PagingUtils.create(
+                    page,
+                    size,
+                    Sort.by(
+                            Sort.Direction.DESC,
+                            "qualificationLevelId"
+                    )
+            )
+    ).map(this::toDTO);
+}
 }

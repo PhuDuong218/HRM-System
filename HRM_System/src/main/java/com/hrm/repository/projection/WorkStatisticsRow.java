@@ -1,3 +1,4 @@
+
 package com.hrm.repository.projection;
 
 import java.math.BigDecimal;

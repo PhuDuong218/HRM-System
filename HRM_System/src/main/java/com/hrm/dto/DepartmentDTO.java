@@ -7,6 +7,19 @@ public class DepartmentDTO {
     private String departmentName;
     private String description;
     private Boolean isActive;
+    private Long headEmployeeId;
+    private String headEmployeeCode;
+    private String headFullName;
+    private java.time.LocalDate headEffectiveFrom;
+
+    public Long getHeadEmployeeId() { return headEmployeeId; }
+    public void setHeadEmployeeId(Long value) { headEmployeeId=value; }
+    public String getHeadEmployeeCode() { return headEmployeeCode; }
+    public void setHeadEmployeeCode(String value) { headEmployeeCode=value; }
+    public String getHeadFullName() { return headFullName; }
+    public void setHeadFullName(String value) { headFullName=value; }
+    public java.time.LocalDate getHeadEffectiveFrom() { return headEffectiveFrom; }
+    public void setHeadEffectiveFrom(java.time.LocalDate value) { headEffectiveFrom=value; }
 
     // --- GETTERS & SETTERS ---
     // (Sử dụng Generate Getters and Setters của VS Code cho 5 biến này)

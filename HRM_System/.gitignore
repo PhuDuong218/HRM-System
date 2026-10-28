@@ -1,3 +1,4 @@
+
 # Maven / Java
 target/
 *.class
@@ -24,3 +25,4 @@ application-*.local.properties
 # Local SQL backups / generated dumps
 *.bak
 *.bacpac
+docs/

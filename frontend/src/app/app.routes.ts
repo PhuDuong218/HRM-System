@@ -4,6 +4,7 @@ import { OverviewPage } from './pages/overview/overview';
 import { EmployeesPage } from './pages/employees/employees';
 import { ConnectionPage } from './pages/connection/connection';
 import { PlaceholderPage } from './pages/placeholder/placeholder';
+import { DepartmentsPage } from './pages/departments/departments';
 export const routes: Routes = [
   { path: 'login', component: PlaceholderPage, data: { title: 'Đăng nhập', message: 'Chờ đối chiếu API và chính sách phiên của backend để tích hợp đăng nhập thật.' } },
   { path: '', component: AdminLayout, children: [
@@ -12,7 +13,7 @@ export const routes: Routes = [
       { path: 'employees', component: EmployeesPage },
       { path: 'connection', component: ConnectionPage },
       { path: 'accounts', component: PlaceholderPage, data: { title: 'Tài khoản và phân quyền' } },
-      { path: 'departments', component: PlaceholderPage, data: { title: 'Phòng ban' } },
+      { path: 'departments', component: DepartmentsPage },
       { path: 'positions', component: PlaceholderPage, data: { title: 'Chức vụ' } },
       { path: 'qualifications', component: PlaceholderPage, data: { title: 'Trình độ' } },
       { path: 'contracts', component: PlaceholderPage, data: { title: 'Hợp đồng' } },

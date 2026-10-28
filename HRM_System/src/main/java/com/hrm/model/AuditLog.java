@@ -1,3 +1,4 @@
+
 package com.hrm.model;
 
 import jakarta.persistence.Column;
@@ -43,12 +44,41 @@ public class AuditLog {
     protected AuditLog() {
     }
 
-    public AuditLog(Long actorAccountId, String action, String targetTable, Long targetRecordId, String reason) {
+    public AuditLog(
+            Long actorAccountId,
+            String action,
+            String targetTable,
+            Long targetRecordId,
+            String reason) {
+
         this.actorAccountId = actorAccountId;
         this.action = action;
         this.targetTable = targetTable;
         this.targetRecordKey = String.valueOf(targetRecordId);
         this.reason = reason;
         this.correlationId = UUID.randomUUID();
+    }
+
+    // Tao audit log cho chuc nang xuat bao cao
+    public static AuditLog forReportExport(
+            Long actorAccountId,
+            String reportCode,
+            String targetTable,
+            String effectiveFilters) {
+
+        AuditLog log = new AuditLog();
+
+        log.actorAccountId = actorAccountId;
+
+        // Ghi nhan viec tao bao cao thanh cong.
+        // Khong dam bao client da nhan duoc file.
+        log.action = "REPORT_EXPORT_GENERATED";
+
+        log.targetTable = targetTable;
+        log.targetRecordKey = reportCode;
+        log.reason = "format=XLSX; " + effectiveFilters;
+        log.correlationId = UUID.randomUUID();
+
+        return log;
     }
 }

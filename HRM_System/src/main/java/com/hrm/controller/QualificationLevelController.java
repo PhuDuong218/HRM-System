@@ -3,6 +3,8 @@ package com.hrm.controller;
 import java.util.List;
 
 import jakarta.validation.Valid;
+
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -12,9 +14,11 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.hrm.dto.PositionDTO;
 import com.hrm.dto.QualificationLevelDTO;
 import com.hrm.dto.QualificationLevelRequestDTO;
 import com.hrm.service.QualificationLevelService;
@@ -29,8 +33,12 @@ public class QualificationLevelController {
     }
 
     @GetMapping
-    public List<QualificationLevelDTO> getAllQualificationLevels() { return service.getAllQualificationLevels(); }
+public Page<QualificationLevelDTO> getAllQualificationLevels(
+        @RequestParam(defaultValue = "0") int page,
+        @RequestParam(defaultValue = "10") int size) {
 
+    return service.getLevelsPage(page, size);
+}
     @GetMapping("/{id}")
     public QualificationLevelDTO getQualificationLevelById(@PathVariable Long id) { return service.getQualificationLevelById(id); }
 
