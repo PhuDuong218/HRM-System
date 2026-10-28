@@ -1,0 +1,279 @@
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="mb-0">Hợp đồng</h1>
+
+  <button
+    type="button"
+    class="btn btn-primary"
+    [disabled]="saving || typesLoading"
+    (click)="openCreate()"
+  >
+    Tạo hợp đồng
+  </button>
+</div>
+
+@if (message) {
+<div class="alert alert-success" role="status">{{ message }}</div>
+} @if (showCreate) {
+<section class="card mb-4">
+  <div class="card-body">
+    <h2 class="h4">Tạo hợp đồng đã ký</h2>
+
+    @if (typesLoading) {
+    <p role="status">Đang tải loại hợp đồng…</p>
+    } @if (createError) {
+    <div class="alert alert-danger" role="alert">{{ createError }}</div>
+    } @if (!typesLoading && activeTypes.length === 0 && !createError) {
+    <div class="alert alert-warning">Chưa có loại hợp đồng đang hoạt động.</div>
+    }
+
+    <form class="row g-3" (submit)="saveContract($event)">
+      <div class="col-md-6">
+        <label for="create-employee" class="form-label"> ID nhân viên </label>
+        <input
+          id="create-employee"
+          name="employeeId"
+          type="number"
+          min="1"
+          step="1"
+          required
+          class="form-control"
+          [disabled]="saving"
+        />
+
+        <div class="form-text">
+          Nhập ID nhân viên có thật. Sau này nối với bộ chọn nhân viên của Xuân
+          Anh.
+        </div>
+      </div>
+
+      <div class="col-md-6">
+        <label for="create-type" class="form-label"> Loại hợp đồng </label>
+        <select
+          id="create-type"
+          name="contractTypeId"
+          required
+          class="form-select"
+          [disabled]="saving || typesLoading"
+        >
+          <option value="">Chọn loại hợp đồng</option>
+
+          @for (type of activeTypes; track type.contractTypeId) {
+          <option [value]="type.contractTypeId">
+            {{ type.typeCode }} — {{ type.typeName }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md-6">
+        <label for="create-number" class="form-label"> Số hợp đồng </label>
+        <input
+          id="create-number"
+          name="contractNumber"
+          maxlength="50"
+          pattern="[A-Za-z0-9/_\-]+"
+          required
+          class="form-control"
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-6">
+        <label for="create-signed" class="form-label">Ngày ký</label>
+        <input
+          id="create-signed"
+          name="signedDate"
+          type="date"
+          required
+          class="form-control"
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-6">
+        <label for="create-start" class="form-label"> Ngày bắt đầu </label>
+        <input
+          id="create-start"
+          name="startDate"
+          type="date"
+          required
+          class="form-control"
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-6">
+        <label for="create-end" class="form-label">
+          Ngày cuối còn hiệu lực
+        </label>
+        <input
+          id="create-end"
+          name="endDate"
+          type="date"
+          class="form-control"
+          [disabled]="saving"
+        />
+
+        <div class="form-text">Để trống nếu không xác định thời hạn.</div>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="saving || typesLoading || !activeTypes.length"
+        >
+          {{ saving ? 'Đang lưu…' : 'Lưu hợp đồng' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [disabled]="saving"
+          (click)="cancelCreate()"
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+}
+<form
+  class="row g-2 mb-3"
+  (submit)="$event.preventDefault(); search(employee.value, status.value, keyword.value)"
+>
+  <div class="col-md-3">
+    <label for="employee-id" class="form-label">Mã ID nhân viên</label>
+    <input
+      id="employee-id"
+      #employee
+      type="number"
+      min="1"
+      class="form-control"
+    />
+  </div>
+
+  <div class="col-md-3">
+    <label for="contract-status" class="form-label">Trạng thái</label>
+    <select id="contract-status" #status class="form-select">
+      <option value="">Tất cả</option>
+      <option value="DA_KY">Đã ký</option>
+      <option value="DA_KET_THUC">Đã kết thúc</option>
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label for="keyword" class="form-label">Từ khóa</label>
+    <input id="keyword" #keyword class="form-control" maxlength="50" />
+  </div>
+
+  <div class="col-md-2 d-flex align-items-end">
+    <button class="btn btn-primary w-100" [disabled]="loading">Tìm</button>
+  </div>
+</form>
+
+@if (loading) {
+<p role="status">Đang tải hợp đồng…</p>
+} @if (error) {
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+} @if (!loading && !error) {
+<table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Số hợp đồng</th>
+      <th>Nhân viên</th>
+      <th>Loại</th>
+      <th>Hiệu lực</th>
+      <th>Trạng thái</th>
+      <th>Thao tác</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (c of rows; track c.contractId) {
+    <tr>
+      <td>{{ c.contractNumber }}</td>
+      <td>{{ c.employeeCode }} — {{ c.employeeName }}</td>
+      <td>{{ c.contractTypeName }}</td>
+      <td>{{ c.startDate }} → {{ c.endDate ?? 'Không xác định' }}</td>
+      <td>{{ c.status }}</td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary"
+          [disabled]="saving"
+          (click)="viewDetail(c.contractId)"
+        >
+          Chi tiết
+        </button>
+      </td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="6">Chưa có hợp đồng phù hợp.</td>
+    </tr>
+    }
+  </tbody>
+</table>
+
+<button
+  class="btn btn-outline-secondary me-2"
+  [disabled]="page === 0"
+  (click)="load(page - 1)"
+>
+  Trước
+</button>
+<span>Trang {{ totalPages ? page + 1 : 0 }} / {{ totalPages }}</span>
+<button
+  class="btn btn-outline-secondary ms-2"
+  [disabled]="page + 1 >= totalPages"
+  (click)="load(page + 1)"
+>
+  Sau
+</button>
+} @if (detailLoading) {
+<p class="mt-4" role="status">Đang tải chi tiết hợp đồng…</p>
+} @if (detailError) {
+<div class="alert alert-danger mt-4" role="alert">{{ detailError }}</div>
+} @if (selected; as c) {
+<section class="card mt-4">
+  <div class="card-body">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="h4 mb-0">Chi tiết hợp đồng</h2>
+
+      <button
+        type="button"
+        class="btn btn-outline-secondary btn-sm"
+        (click)="closeDetail()"
+      >
+        Đóng
+      </button>
+    </div>
+
+    <dl class="row mb-0">
+      <dt class="col-sm-4">Số hợp đồng</dt>
+      <dd class="col-sm-8">{{ c.contractNumber }}</dd>
+
+      <dt class="col-sm-4">Nhân viên</dt>
+      <dd class="col-sm-8">{{ c.employeeCode }} — {{ c.employeeName }}</dd>
+
+      <dt class="col-sm-4">Loại hợp đồng</dt>
+      <dd class="col-sm-8">{{ c.contractTypeName }}</dd>
+
+      <dt class="col-sm-4">Ngày ký</dt>
+      <dd class="col-sm-8">{{ c.signedDate }}</dd>
+
+      <dt class="col-sm-4">Ngày bắt đầu</dt>
+      <dd class="col-sm-8">{{ c.startDate }}</dd>
+
+      <dt class="col-sm-4">Ngày cuối còn hiệu lực</dt>
+      <dd class="col-sm-8">{{ c.endDate ?? 'Không xác định thời hạn' }}</dd>
+
+      <dt class="col-sm-4">Trạng thái</dt>
+      <dd class="col-sm-8">
+        {{ c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc' }}
+      </dd>
+    </dl>
+  </div>
+</section>
+}
