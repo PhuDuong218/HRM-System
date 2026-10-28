@@ -1,0 +1,992 @@
+{
+  "info": {
+    "name": "HRM — Kiểm thử trưởng phòng",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "JUnit kiểm tra đầy đủ ngay cả khi chưa có JWT. Collection này kiểm tra HTTP thật: request có token được bỏ qua khi token trống; nhóm ghi mặc định tắt. Chỉ bật runMutations trên dữ liệu thử nghiệm riêng, theo BO_TEST_TRUONG_PHONG.md. Không có login giả hoặc endpoint login suy đoán."
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:2005",
+      "type": "string"
+    },
+    {
+      "key": "departmentId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeA",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "employeeB",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "nextPositionId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "firstDate",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "replaceDate",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "endDate",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "tokenEmployee",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "runMutations",
+      "value": "false",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 — Chạy ngay khi backend đang bật",
+      "item": [
+        {
+          "name": "Health trả UP",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/health",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Health UP', function () { pm.expect(pm.response.json().status).to.eql('UP'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Danh sách phòng chưa đăng nhập bị 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Trưởng phòng chưa đăng nhập bị 401",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/0/head",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Tự khai role và account bằng header vẫn bị 401",
+          "request": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "X-Role",
+                "value": "ADMIN"
+              },
+              {
+                "key": "X-Account-Id",
+                "value": "1"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/0/head",
+            "auth": {
+              "type": "noauth"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401', function () { pm.response.to.have.status(401); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "02 — Cần token thật từ JWT của nhóm",
+      "item": [
+        {
+          "name": "ADMIN/HR xem danh sách phòng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments?page=0&size=10",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('token')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Có phân trang', function () { pm.expect(pm.response.json().content).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Lịch sử trưởng phòng có phân trang",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head/history?page=0&size=10",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('token')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Có items', function () { pm.expect(pm.response.json().items).to.be.an('array'); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ứng viên trong phòng",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head/candidates?page=0&size=10",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('token')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Body bổ nhiệm thiếu dữ liệu bị 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('token')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "EMPLOYEE đọc quản lý trưởng phòng bị 403",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{tokenEmployee}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (!pm.variables.get('tokenEmployee')) { pm.execution.skipRequest(); }"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403', function () { pm.response.to.have.status(403); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "03 — Chuỗi ghi dữ liệu thử nghiệm (mặc định tắt)",
+      "description": "Chỉ chạy trên phòng mới chưa có trưởng phòng. Phân công A/B phải bắt đầu trước firstDate. Chạy đúng thứ tự, đặt runMutations=true và token thật. Không tự rollback các thay đổi HTTP.",
+      "item": [
+        {
+          "name": "01 Bổ nhiệm A",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": {{employeeA}},\n  \"effectiveFrom\": \"{{firstDate}}\",\n  \"reason\": \"Kiểm thử bổ nhiệm A\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Người mới là A', function () { pm.expect(pm.response.json().employeeId).to.eql(Number(pm.variables.get('employeeA'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 Tra cứu tại ngày A nhận chức",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head?asOf={{firstDate}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Đúng A', function () { pm.expect(pm.response.json().employeeId).to.eql(Number(pm.variables.get('employeeA'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 Bổ nhiệm lại A bị 409",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"employeeId\": {{employeeA}}, \"effectiveFrom\": \"{{replaceDate}}\", \"reason\": \"Kiểm thử bổ nhiệm trùng\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 Thay B thiếu chức vụ người cũ bị 400",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\"employeeId\": {{employeeB}}, \"effectiveFrom\": \"{{replaceDate}}\", \"reason\": \"Kiểm thử thiếu chức vụ người cũ\"}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 Thay bằng B",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": {{employeeB}},\n  \"effectiveFrom\": \"{{replaceDate}}\",\n  \"previousHeadPositionId\": {{nextPositionId}},\n  \"reason\": \"Kiểm thử thay A bằng B\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Người mới là B', function () { pm.expect(pm.response.json().employeeId).to.eql(Number(pm.variables.get('employeeB'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 Tra cứu đúng ngày chuyển giao là B",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head?asOf={{replaceDate}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Đúng B', function () { pm.expect(pm.response.json().employeeId).to.eql(Number(pm.variables.get('employeeB'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 Ngày trước đó trong lịch sử vẫn là A",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head?asOf={{firstDate}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Lịch sử A không bị ghi đè', function () { pm.expect(pm.response.json().employeeId).to.eql(Number(pm.variables.get('employeeA'))); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 Lịch sử có đúng hai lần đảm nhiệm",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head/history",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+                  "pm.test('Hai lần đảm nhiệm', function () { pm.expect(pm.response.json().totalElements).to.eql(2); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 Kết thúc nhiệm kỳ B",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head/end",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"effectiveFrom\": \"{{endDate}}\",\n  \"nextPositionId\": {{nextPositionId}},\n  \"reason\": \"Kiểm thử kết thúc nhiệm kỳ B\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "10 Sau mốc kết thúc phòng trống",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/departments/{{departmentId}}/head?asOf={{endDate}}",
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{token}}",
+                  "type": "string"
+                }
+              ]
+            }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if (pm.variables.get('runMutations') !== 'true' || !pm.variables.get('token')) {",
+                  "  pm.execution.skipRequest();",
+                  "} else {",
+                  "  ['departmentId','employeeA','employeeB','nextPositionId'].forEach(function(k) {",
+                  "    if (!/^[1-9][0-9]*$/.test(pm.variables.get(k) || '')) { pm.execution.skipRequest(); throw new Error('Set a positive test ID for ' + k); }",
+                  "  });",
+                  "  var dates = ['firstDate','replaceDate','endDate'].map(function(k) {",
+                  "    var v=pm.variables.get(k) || '';",
+                  "    if (!/^\\d{4}-\\d{2}-\\d{2}$/.test(v) || Number.isNaN(Date.parse(v))) { pm.execution.skipRequest(); throw new Error('Set a valid YYYY-MM-DD date for ' + k); }",
+                  "    return v;",
+                  "  });",
+                  "  var today = new Date(Date.now()+7*60*60*1000).toISOString().slice(0,10);",
+                  "  if (!(dates[0] < dates[1] && dates[1] < dates[2] && dates[2] <= today)) {",
+                  "    pm.execution.skipRequest(); throw new Error('Require firstDate < replaceDate < endDate <= today in Vietnam.');",
+                  "  }",
+                  "}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

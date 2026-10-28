@@ -13,7 +13,7 @@ import jakarta.persistence.Version;
 
 @Entity
 @Table(name = "qualification_levels")
-public class QualificationLevel {
+public class QualificationLevel extends BaseEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,22 +31,6 @@ public class QualificationLevel {
 
     @Column(name = "is_active", nullable = false)
     private Boolean isActive = true;
-
-    @Column(name = "created_at", nullable = false, updatable = false)
-    private LocalDateTime createdAt;
-
-    @Column(name = "updated_at")
-    private LocalDateTime updatedAt;
-
-    @Column(name = "created_by")
-    private Long createdBy;
-
-    @Column(name = "updated_by")
-    private Long updatedBy;
-
-    @Version
-    @Column(name = "row_version", insertable = false, updatable = false)
-    private byte[] rowVersion;
 
     public Long getQualificationLevelId() {
         return qualificationLevelId;
@@ -88,43 +72,4 @@ public class QualificationLevel {
         this.isActive = isActive;
     }
 
-    public LocalDateTime getCreatedAt() {
-        return createdAt;
-    }
-
-    public void setCreatedAt(LocalDateTime createdAt) {
-        this.createdAt = createdAt;
-    }
-
-    public LocalDateTime getUpdatedAt() {
-        return updatedAt;
-    }
-
-    public void setUpdatedAt(LocalDateTime updatedAt) {
-        this.updatedAt = updatedAt;
-    }
-
-    public Long getCreatedBy() {
-        return createdBy;
-    }
-
-    public void setCreatedBy(Long createdBy) {
-        this.createdBy = createdBy;
-    }
-
-    public Long getUpdatedBy() {
-        return updatedBy;
-    }
-
-    public void setUpdatedBy(Long updatedBy) {
-        this.updatedBy = updatedBy;
-    }
-
-    public byte[] getRowVersion() {
-        return rowVersion;
-    }
-
-    public void setRowVersion(byte[] rowVersion) {
-        this.rowVersion = rowVersion;
-    }
 }

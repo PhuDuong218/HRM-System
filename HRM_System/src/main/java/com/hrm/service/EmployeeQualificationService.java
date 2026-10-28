@@ -60,7 +60,7 @@ public class EmployeeQualificationService {
         q.setQualificationLevel(level);
         applyDetails(q, request);
         q.setIsPrimary(false);
-        q.setCreatedAt(LocalDateTime.now());
+        q.setCreatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         // Flush ban ghi moi truoc, sau do (neu can) chuyen primary.
         EmployeeQualification saved = repository.saveAndFlush(q);
         if (Boolean.TRUE.equals(request.getIsPrimary())) {
@@ -79,7 +79,7 @@ public class EmployeeQualificationService {
         validateGraduationYear(request.getGraduationYear());
         q.setQualificationLevel(level);
         applyDetails(q, request);
-        q.setUpdatedAt(LocalDateTime.now());
+        q.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         if (Boolean.TRUE.equals(request.getIsPrimary())) {
             setPrimaryInternal(employeeId, q);
         } else if (Boolean.FALSE.equals(request.getIsPrimary())) {
@@ -111,11 +111,11 @@ public class EmployeeQualificationService {
         requiredLockedEmployee(employeeId);
 
         qualification.setIsDeleted(true);
-        qualification.setDeletedAt(LocalDateTime.now());
+        qualification.setDeletedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         // Chua co thong tin tai khoan dang nhap: deletedBy giu NULL.
         // Giai phong filtered unique index UX_qualifications_primary.
         qualification.setIsPrimary(false);
-        qualification.setUpdatedAt(LocalDateTime.now());
+        qualification.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         repository.saveAndFlush(qualification);
     }
 
@@ -126,12 +126,12 @@ public class EmployeeQualificationService {
         repository.findPrimaryByEmployeeId(employeeId).ifPresent(old -> {
             if (!old.getEmployeeQualificationId().equals(selected.getEmployeeQualificationId())) {
                 old.setIsPrimary(false);
-                old.setUpdatedAt(LocalDateTime.now());
+                old.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
                 repository.saveAndFlush(old);
             }
         });
         selected.setIsPrimary(true);
-        selected.setUpdatedAt(LocalDateTime.now());
+        selected.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         repository.saveAndFlush(selected);
     }
 
@@ -149,7 +149,7 @@ public class EmployeeQualificationService {
     }
 
     private void validateGraduationYear(Integer year) {
-        if (year != null && year > Year.now().getValue()) {
+        if (year != null && year > Year.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).getValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
                     "Nam tot nghiep khong duoc lon hon nam hien tai");
         }

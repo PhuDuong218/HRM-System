@@ -1,74 +1,26 @@
 package com.hrm.controller;
 
-import java.util.List;
-
+import java.security.Principal;
+import com.hrm.dto.*;
+import com.hrm.service.*;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.hrm.dto.EmployeeQualificationDTO;
-import com.hrm.dto.EmployeeQualificationRequestDTO;
-import com.hrm.service.EmployeeQualificationService;
-
-import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-@RequestMapping
 public class EmployeeQualificationController {
-
     private final EmployeeQualificationService service;
-
+    private final PersonnelAccessService access;
+    private final PersonnelCatalogService writes;
+    public EmployeeQualificationController(EmployeeQualificationService service,PersonnelAccessService access,PersonnelCatalogService writes){this.service=service;this.access=access;this.writes=writes;}
     @GetMapping("/employees/{employeeId}/qualifications")
-public Page<EmployeeQualificationDTO> getEmployeeQualificationsByEmployeeId(
-        @PathVariable Long employeeId,
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-
-    return service.getQualificationsPage(
-            employeeId, page, size
-    );
-}
-
-    public EmployeeQualificationController(EmployeeQualificationService service) {
-        this.service = service;
-    }
-
-    @GetMapping("/employee-qualifications/{id}")
-    public EmployeeQualificationDTO getEmployeeQualificationById(@PathVariable Long id) {
-        return service.getEmployeeQualificationById(id);
-    }
-
-    @PostMapping("/employees/{employeeId}/qualifications")
-    @ResponseStatus(HttpStatus.CREATED)
-    public EmployeeQualificationDTO addEmployeeQualification(@PathVariable Long employeeId,
-            @Valid @RequestBody EmployeeQualificationRequestDTO request) {
-        return service.addEmployeeQualification(employeeId, request);
-    }
-
-    @PutMapping("/employee-qualifications/{id}")
-    public EmployeeQualificationDTO updateEmployeeQualification(@PathVariable Long id,
-            @Valid @RequestBody EmployeeQualificationRequestDTO request) {
-        return service.updateEmployeeQualification(id, request);
-    }
-
-    // Xoa mem: khong xoa du lieu khoi SQL Server.
-    @DeleteMapping("/employee-qualifications/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteEmployeeQualification(@PathVariable Long id) {
-        service.deleteEmployeeQualification(id);
-    }
-
-    @PutMapping("/employee-qualifications/{id}/primary")
-    public EmployeeQualificationDTO setPrimaryEmployeeQualification(@PathVariable Long id) {
-        return service.setPrimaryEmployeeQualification(id);
-    }
+    public Page<EmployeeQualificationDTO> getEmployeeQualificationsByEmployeeId(@PathVariable Long employeeId,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){access.ownerOrManager(p,employeeId);return service.getQualificationsPage(employeeId,page,size);}
+    @GetMapping("/employee-qualifications/{id}") public EmployeeQualificationDTO getEmployeeQualificationById(@PathVariable Long id,Principal p){access.actor(p);var result=service.getEmployeeQualificationById(id);access.ownerOrManager(p,result.employeeId());return result;}
+    @PostMapping("/employees/{employeeId}/qualifications") @ResponseStatus(HttpStatus.CREATED)
+    public EmployeeQualificationDTO addEmployeeQualification(@PathVariable Long employeeId,@Valid @RequestBody EmployeeQualificationRequestDTO request,Principal p){return writes.qualification(p,employeeId,null,"EMPLOYEE_QUALIFICATION_CREATE",()->service.addEmployeeQualification(employeeId,request),EmployeeQualificationDTO::employeeQualificationId);}
+    @PutMapping("/employee-qualifications/{id}") public EmployeeQualificationDTO updateEmployeeQualification(@PathVariable Long id,@Valid @RequestBody EmployeeQualificationRequestDTO request,Principal p){return writes.qualification(p,null,id,"EMPLOYEE_QUALIFICATION_UPDATE",()->service.updateEmployeeQualification(id,request),EmployeeQualificationDTO::employeeQualificationId);}
+    @DeleteMapping("/employee-qualifications/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteEmployeeQualification(@PathVariable Long id,Principal p){writes.qualification(p,null,id,"EMPLOYEE_QUALIFICATION_DELETE",()->{service.deleteEmployeeQualification(id);return id;},Long::longValue);}
+    @PutMapping("/employee-qualifications/{id}/primary") public EmployeeQualificationDTO setPrimaryEmployeeQualification(@PathVariable Long id,Principal p){return writes.qualification(p,null,id,"EMPLOYEE_QUALIFICATION_PRIMARY",()->service.setPrimaryEmployeeQualification(id),EmployeeQualificationDTO::employeeQualificationId);}
 }

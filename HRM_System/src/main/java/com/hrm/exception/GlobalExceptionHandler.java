@@ -7,6 +7,7 @@ import java.util.Map;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -29,212 +30,230 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+        private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
-    // 1. Xu ly loi dong thoi
-    @ExceptionHandler(ConcurrencyFailureException.class)
-    public ResponseEntity<Object> handleConcurrentChange(
-            ConcurrencyFailureException ex) {
+        // Compatibility entry point; only handleIllegalArgumentException
+        // is registered as a handler.
+        public ResponseEntity<Object> invalidArgument(
+                        IllegalArgumentException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.CONFLICT,
-                "Dữ liệu vừa thay đổi hoặc đang được xử lý; hãy tải lại và thử lại");
-    }
-
-    // 2. Xu ly rang buoc SQL nghiep vu
-    @ExceptionHandler(UncategorizedSQLException.class)
-    public ResponseEntity<Object> handleAssignmentConstraint(
-            UncategorizedSQLException ex) {
-
-        int code = ex.getSQLException().getErrorCode();
-
-        if (code >= 51100 && code <= 51199) {
-            return buildErrorResponse(
-                    HttpStatus.CONFLICT,
-                    "Phân công/trưởng phòng không hợp lệ hoặc chồng hiệu lực; hãy kiểm tra dữ liệu và thử lại");
+                return handleIllegalArgumentException(ex);
         }
 
-        log.error("Loi SQL chua duoc xu ly", ex);
+        // 1. Xu ly loi dong thoi
+        @ExceptionHandler(ConcurrencyFailureException.class)
+        public ResponseEntity<Object> handleConcurrentChange(
+                        ConcurrencyFailureException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Máy chủ không xử lý được yêu cầu");
-    }
+                return buildErrorResponse(
+                                HttpStatus.CONFLICT,
+                                "Dữ liệu vừa thay đổi hoặc đang được xử lý; hãy tải lại và thử lại");
+        }
 
-    // 3. Sai phuong thuc HTTP
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<Object> handleMethodNotSupported(
-            HttpRequestMethodNotSupportedException ex) {
+        // 2. Xu ly rang buoc SQL nghiep vu
+        @ExceptionHandler(UncategorizedSQLException.class)
+        public ResponseEntity<Object> handleAssignmentConstraint(
+                        UncategorizedSQLException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.METHOD_NOT_ALLOWED,
-                "Lỗi thao tác: Bạn đang dùng sai phương thức "
-                        + "(Ví dụ: Cần PUT nhưng lại dùng POST).");
-    }
+                int code = ex.getSQLException().getErrorCode();
 
-    // 4. Loi validation DTO
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<Object> handleValidationExceptions(
-            MethodArgumentNotValidException ex) {
+                // Thong bao rieng cho loi phan cong va truong phong
+                if (code >= 51100 && code <= 51199) {
+                        return buildErrorResponse(
+                                        HttpStatus.CONFLICT,
+                                        "Phân công/trưởng phòng không hợp lệ hoặc chồng hiệu lực; hãy kiểm tra dữ liệu và thử lại");
+                }
 
-        String message = ex.getBindingResult()
-                .getAllErrors()
-                .stream()
-                .findFirst()
-                .map(error -> error.getDefaultMessage())
-                .orElse("Dữ liệu không hợp lệ");
+                // Cac loi rang buoc nghiep vu khac tu main
+                if (code >= 51000 && code <= 51399) {
+                        return buildErrorResponse(
+                                        HttpStatus.CONFLICT,
+                                        "Dữ liệu nghiệp vụ không hợp lệ, chồng hiệu lực hoặc lịch sử đang được bảo vệ");
+                }
 
-        return buildErrorResponse(HttpStatus.BAD_REQUEST, message);
-    }
+                log.error("Loi SQL chua duoc xu ly", ex);
 
-    // 5. Khong tim thay du lieu
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<Object> handleResourceNotFound(
-            ResourceNotFoundException ex) {
+                return buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Máy chủ không xử lý được yêu cầu");
+        }
 
-        return buildErrorResponse(
-                HttpStatus.NOT_FOUND,
-                ex.getMessage());
-    }
+        // 3. Sai phuong thuc HTTP
+        @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+        public ResponseEntity<Object> handleMethodNotSupported(
+                        HttpRequestMethodNotSupportedException ex) {
 
-    // 6. Loi nghiep vu
-    @ExceptionHandler(BusinessException.class)
-    public ResponseEntity<Object> handleBusinessException(
-            BusinessException ex) {
+                return buildErrorResponse(
+                                HttpStatus.METHOD_NOT_ALLOWED,
+                                "Lỗi thao tác: Bạn đang dùng sai phương thức "
+                                                + "(Ví dụ: Cần PUT nhưng lại dùng POST).");
+        }
 
-        return buildErrorResponse(
-                ex.getStatus(),
-                ex.getMessage());
-    }
+        // 4. Loi validation DTO
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<Object> handleValidationExceptions(
+                        MethodArgumentNotValidException ex) {
 
-    // 7. Loi xac thuc
-    @ExceptionHandler(AuthenticationException.class)
-    public ResponseEntity<Object> handleAuthenticationException(
-            AuthenticationException ex) {
+                String message = ex.getBindingResult()
+                                .getAllErrors()
+                                .stream()
+                                .findFirst()
+                                .map(error -> error.getDefaultMessage())
+                                .orElse("Dữ liệu không hợp lệ");
 
-        return buildErrorResponse(
-                HttpStatus.UNAUTHORIZED,
-                "Tên đăng nhập hoặc mật khẩu không đúng.");
-    }
+                return buildErrorResponse(
+                                HttpStatus.BAD_REQUEST,
+                                message);
+        }
 
-    // 8. Khong co quyen truy cap
-    @ExceptionHandler(AccessDeniedException.class)
-    public ResponseEntity<Object> handleAccessDeniedException(
-            AccessDeniedException ex) {
+        // 5. Khong tim thay du lieu
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<Object> handleResourceNotFound(
+                        ResourceNotFoundException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.FORBIDDEN,
-                "Bạn không có quyền thực hiện thao tác này.");
-    }
+                return buildErrorResponse(
+                                HttpStatus.NOT_FOUND,
+                                ex.getMessage());
+        }
 
-    // 9. Tham so nghiep vu khong hop le
-    @ExceptionHandler(IllegalArgumentException.class)
-    public ResponseEntity<Object> handleIllegalArgumentException(
-            IllegalArgumentException ex) {
+        // 6. Loi nghiep vu
+        @ExceptionHandler(BusinessException.class)
+        public ResponseEntity<Object> handleBusinessException(
+                        BusinessException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                ex.getMessage());
-    }
+                return buildErrorResponse(
+                                ex.getStatus(),
+                                ex.getMessage());
+        }
 
-    // 10. Giu nguyen HTTP status tu Service
-    @ExceptionHandler(ResponseStatusException.class)
-    public ResponseEntity<Object> handleResponseStatusException(
-            ResponseStatusException ex) {
+        // 7. Loi xac thuc
+        @ExceptionHandler(AuthenticationException.class)
+        public ResponseEntity<Object> handleAuthenticationException(
+                        AuthenticationException ex) {
 
-        return buildErrorResponse(
-                ex.getStatusCode(),
-                ex.getReason() != null
-                        ? ex.getReason()
-                        : "Yêu cầu không thể thực hiện");
-    }
+                return buildErrorResponse(
+                                HttpStatus.UNAUTHORIZED,
+                                "Tên đăng nhập hoặc mật khẩu không đúng.");
+        }
 
-    // 11. JSON sai dinh dang
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Object> handleJsonParseException(
-            HttpMessageNotReadableException ex) {
+        // 8. Khong co quyen truy cap
+        @ExceptionHandler(AccessDeniedException.class)
+        public ResponseEntity<Object> handleAccessDeniedException(
+                        AccessDeniedException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng "
-                        + "(có thể dư dấu phẩy hoặc sai ngoặc).");
-    }
+                return buildErrorResponse(
+                                HttpStatus.FORBIDDEN,
+                                "Bạn không có quyền thực hiện thao tác này.");
+        }
 
-    // 12. Content-Type khong duoc ho tro
-    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
-    public ResponseEntity<Object> handleUnsupportedMediaType(
-            HttpMediaTypeNotSupportedException ex) {
+        // 9. Tham so nghiep vu khong hop le
+        @ExceptionHandler(IllegalArgumentException.class)
+        public ResponseEntity<Object> handleIllegalArgumentException(
+                        IllegalArgumentException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
-                "Content-Type không được hỗ trợ. Hãy sử dụng application/json");
-    }
+                return buildErrorResponse(
+                                HttpStatus.BAD_REQUEST,
+                                ex.getMessage());
+        }
 
-    // 13. Vi pham rang buoc du lieu
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<Object> handleDataIntegrityViolation(
-            DataIntegrityViolationException ex) {
+        // 10. Giu nguyen HTTP status tu Service
+        @ExceptionHandler(ResponseStatusException.class)
+        public ResponseEntity<Object> handleResponseStatusException(
+                        ResponseStatusException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.CONFLICT,
-                "Lỗi xung đột dữ liệu: Mã bạn nhập đã tồn tại "
-                        + "trong hệ thống hoặc vi phạm ràng buộc.");
-    }
+                return buildErrorResponse(
+                                ex.getStatusCode(),
+                                ex.getReason() != null
+                                                ? ex.getReason()
+                                                : "Yêu cầu không thể thực hiện");
+        }
 
-    // 14. Duong dan API khong ton tai
-    @ExceptionHandler(NoResourceFoundException.class)
-    public ResponseEntity<Object> handleNotFoundException(
-            NoResourceFoundException ex) {
+        // 11. JSON sai dinh dang
+        @ExceptionHandler(HttpMessageNotReadableException.class)
+        public ResponseEntity<Object> handleJsonParseException(
+                        HttpMessageNotReadableException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.NOT_FOUND,
-                "Lỗi 404: Đường dẫn API không tồn tại, "
-                        + "vui lòng kiểm tra lại URL.");
-    }
+                return buildErrorResponse(
+                                HttpStatus.BAD_REQUEST,
+                                "Lỗi cú pháp: Dữ liệu JSON gửi lên không đúng định dạng "
+                                                + "(có thể dư dấu phẩy hoặc sai ngoặc).");
+        }
 
-    // 15. Tham so sai kieu du lieu
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<Object> handleTypeMismatch(
-            MethodArgumentTypeMismatchException ex) {
+        // 12. Content-Type khong duoc ho tro
+        @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+        public ResponseEntity<Object> handleUnsupportedMediaType(
+                        HttpMediaTypeNotSupportedException ex) {
 
-        return buildErrorResponse(
-                HttpStatus.BAD_REQUEST,
-                "Tham số " + ex.getName() + " không đúng định dạng");
-    }
+                return buildErrorResponse(
+                                HttpStatus.UNSUPPORTED_MEDIA_TYPE,
+                                "Content-Type không được hỗ trợ. Hãy sử dụng application/json");
+        }
 
-    // 16. Loi validation tren tham so phuong thuc
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<Object> handleMethodValidation(
-            HandlerMethodValidationException ex) {
+        // 13. Vi pham rang buoc du lieu
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<Object> handleDataIntegrityViolation(
+                        DataIntegrityViolationException ex) {
 
-        return buildErrorResponse(
-                ex.getStatusCode(),
-                "Tham số yêu cầu không hợp lệ");
-    }
+                return buildErrorResponse(
+                                HttpStatus.CONFLICT,
+                                "Lỗi xung đột dữ liệu: Mã bạn nhập đã tồn tại "
+                                                + "trong hệ thống hoặc vi phạm ràng buộc.");
+        }
 
-    // 17. Loi RuntimeException chua duoc xu ly
-    @ExceptionHandler(RuntimeException.class)
-    public ResponseEntity<Object> handleRuntimeException(
-            RuntimeException ex) {
+        // 14. Duong dan API khong ton tai
+        @ExceptionHandler(NoResourceFoundException.class)
+        public ResponseEntity<Object> handleNotFoundException(
+                        NoResourceFoundException ex) {
 
-        log.error("Loi Backend chua duoc xu ly", ex);
+                return buildErrorResponse(
+                                HttpStatus.NOT_FOUND,
+                                "Lỗi 404: Đường dẫn API không tồn tại, "
+                                                + "vui lòng kiểm tra lại URL.");
+        }
 
-        return buildErrorResponse(
-                HttpStatus.INTERNAL_SERVER_ERROR,
-                "Máy chủ không xử lý được yêu cầu");
-    }
+        // 15. Tham so sai kieu du lieu
+        @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+        public ResponseEntity<Object> handleTypeMismatch(
+                        MethodArgumentTypeMismatchException ex) {
 
-    // 18. Dinh dang JSON loi thong nhat
-    private ResponseEntity<Object> buildErrorResponse(
-            HttpStatusCode status,
-            String message) {
+                return buildErrorResponse(
+                                HttpStatus.BAD_REQUEST,
+                                "Tham số " + ex.getName() + " không đúng định dạng");
+        }
 
-        Map<String, Object> error = new HashMap<>();
+        // 16. Loi validation tren tham so phuong thuc
+        @ExceptionHandler(HandlerMethodValidationException.class)
+        public ResponseEntity<Object> handleMethodValidation(
+                        HandlerMethodValidationException ex) {
 
-        error.put("thoi_gian", LocalDateTime.now());
-        error.put("trang_thai", status.value());
-        error.put("loi_chi_tiet", message);
+                return buildErrorResponse(
+                                ex.getStatusCode(),
+                                "Tham số yêu cầu không hợp lệ");
+        }
 
-        return new ResponseEntity<>(error, status);
-    }
+        // 17. Loi RuntimeException chua duoc xu ly
+        @ExceptionHandler(RuntimeException.class)
+        public ResponseEntity<Object> handleRuntimeException(
+                        RuntimeException ex) {
+
+                log.error("Loi Backend chua duoc xu ly", ex);
+
+                return buildErrorResponse(
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                "Máy chủ không xử lý được yêu cầu");
+        }
+
+        // 18. Dinh dang JSON loi thong nhat
+        private ResponseEntity<Object> buildErrorResponse(
+                        HttpStatusCode status,
+                        String message) {
+
+                Map<String, Object> error = new HashMap<>();
+
+                error.put("thoi_gian", LocalDateTime.now());
+                error.put("trang_thai", status.value());
+                error.put("loi_chi_tiet", message);
+
+                return new ResponseEntity<>(error, status);
+        }
 }

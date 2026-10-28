@@ -1,0 +1,3758 @@
+{
+  "info": {
+    "name": "HRM Personnel — Trình độ, phép và đơn từ",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Xuân Anh backend; runMutations=true creates retained test history in hrm_test. Uses test-only Principal sessions while the team authentication module is integrated separately. Reimport runtime after server restart. Java tests verify time advancement and rollback."
+  },
+  "item": [
+    {
+      "name": "00 — Health và quyền truy cập",
+      "item": [
+        {
+          "name": "01 — Health",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/health"
+          }
+        },
+        {
+          "name": "02 — Chưa đăng nhập /qualification-levels",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/qualification-levels"
+          }
+        },
+        {
+          "name": "03 — Chưa đăng nhập /leave-types",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/leave-types"
+          }
+        },
+        {
+          "name": "04 — Chưa đăng nhập /leave-entitlements",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/leave-entitlements"
+          }
+        },
+        {
+          "name": "05 — Chưa đăng nhập /employee-requests/mine",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/employee-requests/mine"
+          }
+        },
+        {
+          "name": "06 — Chưa đăng nhập /employee-requests",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/employee-requests"
+          }
+        },
+        {
+          "name": "07 — Chưa đăng nhập /personnel/audit?targetTable=employee_requests&recordId=1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/personnel/audit?targetTable=employee_requests&recordId=1"
+          }
+        },
+        {
+          "name": "08 — Chưa đăng nhập /audit-logs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": []
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 401',()=>pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "noauth"
+            },
+            "url": "{{baseUrl}}/audit-logs"
+          }
+        },
+        {
+          "name": "09 — EMPLOYEE không có quyền /leave-entitlements",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-entitlements"
+          }
+        },
+        {
+          "name": "10 — EMPLOYEE không có quyền /employee-requests",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests"
+          }
+        },
+        {
+          "name": "11 — EMPLOYEE không có quyền /personnel/audit?targetTable=employee_requests&recordId=1",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/personnel/audit?targetTable=employee_requests&recordId=1"
+          }
+        },
+        {
+          "name": "12 — EMPLOYEE không có quyền /audit-logs",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/audit-logs"
+          }
+        },
+        {
+          "name": "13 — EMPLOYEE không cấu hình chính sách",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave-policies/9007199254740991",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumesEntitlement\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "14 — EMPLOYEE không chạy nghỉ việc hàng loạt",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/resignations/execute-due"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 — Trình độ, phép và đơn từ (bật runMutations)",
+      "item": [
+        {
+          "name": "15 — Tạo cấp trình độ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();",
+                  "\n  ['levelId','q1','q2','leaveTypeId','entitlementId','leaveId','leave2','resignId','withdrawId','managerResignId','createCorrelation'].forEach(k=>pm.collectionVariables.unset(k));\n  pm.collectionVariables.set('runTag','PERSONNELPM-'+Date.now());\n  const base=new Date(pm.environment.get('firstDay')+'T00:00:00Z');\n  const date=k=>new Date(base.getTime()+k*86400000).toISOString().slice(0,10);\n  pm.collectionVariables.set('day1',date(0));pm.collectionVariables.set('day2',date(1));pm.collectionVariables.set('day3',date(2));\n  pm.collectionVariables.set('periodStart',date(-1));pm.collectionVariables.set('periodEnd',date(65));pm.collectionVariables.set('lastDay',date(90));"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('levelId',pm.response.json()['qualificationLevelId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelCode\": \"{{runTag}}\",\n  \"levelName\": \"Trình độ nhân sự\",\n  \"description\": \"Postman nhân sự\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "16 — Mã trình độ trùng",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelCode\": \"{{runTag}}\",\n  \"levelName\": \"Trình độ nhân sự\",\n  \"description\": \"Postman nhân sự\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "17 — Sửa trình độ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels/{{levelId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelCode\": \"{{runTag}}\",\n  \"levelName\": \"Trình độ nhân sự đã sửa\",\n  \"description\": \"Postman nhân sự\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "18 — Đổi mã bị từ chối",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels/{{levelId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelCode\": \"{{runTag}}-OTHER\",\n  \"levelName\": \"Trình độ nhân sự\",\n  \"description\": \"Postman nhân sự\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "19 — Thêm bằng chính thứ nhất",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('q1',pm.response.json()['employeeQualificationId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employees/{{employeeId}}/qualifications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualificationLevelId\": {{levelId}},\n  \"major\": \"Tin học\",\n  \"institution\": \"Trường thử nghiệm\",\n  \"graduationYear\": 2020,\n  \"isPrimary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "20 — Thêm bằng chính mới",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('q2',pm.response.json()['employeeQualificationId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employees/{{employeeId}}/qualifications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualificationLevelId\": {{levelId}},\n  \"major\": \"Tin học\",\n  \"institution\": \"Trường thử nghiệm\",\n  \"graduationYear\": 2020,\n  \"isPrimary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "21 — Nhân viên xem bằng của mình",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Đúng một bằng chính',()=>pm.expect(pm.response.json().content.filter(x=>x.isPrimary).length).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employees/{{employeeId}}/qualifications"
+          }
+        },
+        {
+          "name": "22 — Chọn lại bằng thứ nhất làm chính",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-qualifications/{{q1}}/primary"
+          }
+        },
+        {
+          "name": "23 — Xóa mềm bằng thứ hai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',()=>pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-qualifications/{{q2}}"
+          }
+        },
+        {
+          "name": "24 — Bằng đã xóa không đọc được",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 404',()=>pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-qualifications/{{q2}}"
+          }
+        },
+        {
+          "name": "25 — Ngừng cấp trình độ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',()=>pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels/{{levelId}}"
+          }
+        },
+        {
+          "name": "26 — Không thêm bằng từ cấp đã ngừng",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employees/{{employeeId}}/qualifications",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"qualificationLevelId\": {{levelId}},\n  \"major\": \"Tin học\",\n  \"institution\": \"Trường thử nghiệm\",\n  \"graduationYear\": 2020,\n  \"isPrimary\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "27 — Kích hoạt lại cấp trình độ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/qualification-levels/{{levelId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"levelCode\": \"{{runTag}}\",\n  \"levelName\": \"Trình độ nhân sự\",\n  \"description\": \"Postman nhân sự\",\n  \"isActive\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "28 — Tạo loại nghỉ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('leaveTypeId',pm.response.json()['leaveTypeId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeCode\": \"{{runTag}}\",\n  \"typeName\": \"Phép nhân sự\",\n  \"isPaid\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "29 — Trùng mã loại nghỉ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-types",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeCode\": \"{{runTag}}\",\n  \"typeName\": \"Phép nhân sự\",\n  \"isPaid\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "30 — ADMIN cấu hình trừ hạn mức",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 204',()=>pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave-policies/{{leaveTypeId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumesEntitlement\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "31 — Xem chính sách",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave-policies/{{leaveTypeId}}"
+          }
+        },
+        {
+          "name": "32 — Cấp 16 giờ phép",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('entitlementId',pm.response.json()['entitlementId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-entitlements",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"periodStart\": \"{{periodStart}}\",\n  \"periodEnd\": \"{{periodEnd}}\",\n  \"entitledHours\": 16\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "33 — Chặn kỳ hạn mức trùng",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-entitlements",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"periodStart\": \"{{periodStart}}\",\n  \"periodEnd\": \"{{periodEnd}}\",\n  \"entitledHours\": 16\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "34 — Đơn phép thiếu dữ liệu",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "35 — Thời gian phép đảo ngược",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day1}}T17:00:00\",\n  \"leaveEnd\": \"{{day1}}T08:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "36 — Nhân viên nộp đơn phép để rút",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('withdrawId',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day1}}T08:00:00\",\n  \"leaveEnd\": \"{{day1}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "37 — Quản lý không được rút thay người nộp",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Rút thay\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "38 — Rút đơn bắt buộc lý do",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \" \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "39 — Người nộp rút đơn chờ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Giữ lịch sử và trạng thái gốc',()=>{pm.expect(pm.response.json().status).to.eql('CHO_DUYET');pm.expect(pm.response.json().withdrawnAt).to.be.a('string');});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Đổi kế hoạch\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "40 — Không rút hai lần",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Lặp\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "41 — Không duyệt đơn đã rút",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "42 — Không từ chối đơn đã rút",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{withdrawId}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Đã rút\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "43 — Hàng đợi không chứa đơn đã rút",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Đã rút khỏi hàng đợi',()=>pm.expect(pm.response.json().content.some(x=>String(x.requestId)===String(pm.collectionVariables.get('withdrawId')))).to.eql(false));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests?status=CHO_DUYET&size=100"
+          }
+        },
+        {
+          "name": "44 — Nhân viên nộp lại đơn phép sau rút",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('leaveId',pm.response.json()['requestId']);",
+                  "pm.test('Đơn chờ duyệt',()=>pm.expect(pm.response.json().status).to.eql('CHO_DUYET'));pm.test('Có correlation ID',()=>pm.expect(pm.response.headers.get('X-Correlation-Id')).to.match(/^[0-9a-f-]{36}$/i));pm.collectionVariables.set('createCorrelation',pm.response.headers.get('X-Correlation-Id'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day1}}T08:00:00\",\n  \"leaveEnd\": \"{{day1}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "45 — Chặn đơn trùng thời gian",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day1}}T08:00:00\",\n  \"leaveEnd\": \"{{day1}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "46 — Nhân viên không duyệt được đơn",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leaveId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "47 — Quản lý duyệt đơn",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leaveId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"note\": \"Đồng ý\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "48 — Không duyệt hai lần",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leaveId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "49 — Không rút đơn đã duyệt",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leaveId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Quá muộn\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "50 — Chi tiết có phân bổ 8 giờ",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('9 giờ ca trừ 1 giờ nghỉ = 8',()=>pm.expect(pm.response.json().allocations.reduce((s,x)=>s+Number(x.chargedHours),0)).to.eql(8));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leaveId}}"
+          }
+        },
+        {
+          "name": "51 — Số giờ đã dùng và còn lại",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Đã dùng 8 còn 8',()=>{const row=pm.response.json().find(x=>String(x.entitlementId)===String(pm.collectionVariables.get('entitlementId')));pm.expect(Number(row.usedHours)).to.eql(8);pm.expect(Number(row.remainingHours)).to.eql(8);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/balances/{{employeeId}}"
+          }
+        },
+        {
+          "name": "52 — Không giảm hạn mức dưới số đã dùng",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/leave-entitlements/{{entitlementId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"periodStart\": \"{{periodStart}}\",\n  \"periodEnd\": \"{{periodEnd}}\",\n  \"entitledHours\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "53 — Đổi chính sách sau khi có đơn bị chặn",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave-policies/{{leaveTypeId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumesEntitlement\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "54 — Nộp đơn ngày thứ hai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('leave2',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day2}}T08:00:00\",\n  \"leaveEnd\": \"{{day2}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "55 — Từ chối phải có lý do",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leave2}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \" \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "56 — Từ chối đơn",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leave2}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cần điều chỉnh\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "57 — Nộp lại sau khi từ chối",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('leave2',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day2}}T08:00:00\",\n  \"leaveEnd\": \"{{day2}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "58 — Duyệt ngày thứ hai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{leave2}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "59 — Hết phép không nộp thêm",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/leave",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"leaveTypeId\": {{leaveTypeId}},\n  \"leaveStart\": \"{{day3}}T08:00:00\",\n  \"leaveEnd\": \"{{day3}}T17:00:00\",\n  \"reason\": \"nhân sự Postman nghỉ trọn ca\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "60 — Xem danh sách cá nhân",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/mine?page=0&size=10"
+          }
+        },
+        {
+          "name": "61 — Quản lý lọc đơn đã duyệt",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests?status=DA_DUYET&type=NGHI_PHEP"
+          }
+        },
+        {
+          "name": "62 — Phân trang sai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/mine?page=-1"
+          }
+        },
+        {
+          "name": "63 — Bộ lọc trạng thái sai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests?status=SAI"
+          }
+        },
+        {
+          "name": "64 — Nhân viên không xem số dư của người khác",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/balances/9007199254740991"
+          }
+        },
+        {
+          "name": "65 — Quản lý nộp đơn của chính mình",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('managerResignId',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/resignation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedLastWorkingDate\": \"{{lastDay}}\",\n  \"reason\": \"Postman nhân sự xin nghỉ việc tương lai\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "66 — Nhân viên không xem đơn của người khác",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{managerResignId}}"
+          }
+        },
+        {
+          "name": "67 — ADMIN cũng không được tự duyệt",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{managerResignId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "68 — ADMIN cũng không được tự từ chối",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 403',()=>pm.response.to.have.status(403));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{managerResignId}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Tự xử lý\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "69 — Chủ đơn rút đơn nghỉ việc",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{managerResignId}}/withdraw",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Tiếp tục làm việc\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "70 — Nhân viên nộp đơn nghỉ việc",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('resignId',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/resignation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedLastWorkingDate\": \"{{lastDay}}\",\n  \"reason\": \"Postman nhân sự xin nghỉ việc tương lai\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "71 — Không nộp trùng đơn nghỉ việc",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 409',()=>pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/resignation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedLastWorkingDate\": \"{{lastDay}}\",\n  \"reason\": \"Postman nhân sự xin nghỉ việc tương lai\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "72 — Từ chối đơn nghỉ việc",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{resignId}}/reject",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"reason\": \"Cần bàn giao lại\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "73 — Nộp lại đơn nghỉ việc",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 201',()=>pm.response.to.have.status(201));",
+                  "if(pm.response.code===201)pm.collectionVariables.set('resignId',pm.response.json()['requestId']);"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/resignation",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedLastWorkingDate\": \"{{lastDay}}\",\n  \"reason\": \"Postman nhân sự xin nghỉ việc tương lai\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "74 — Duyệt ngày làm cuối tương lai",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{resignId}}/approve",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"approvedLastWorkingDate\": \"{{lastDay}}\",\n  \"note\": \"Đồng ý ngày dự kiến\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          }
+        },
+        {
+          "name": "75 — Chưa thực thi nghỉ việc ngay",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('employeeToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Đã duyệt, chưa tới ngày nghỉ',()=>{pm.expect(pm.response.json().status).to.eql('DA_DUYET');pm.expect(pm.response.json().executedAt).to.eql(null);});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{employeeToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/employee-requests/{{resignId}}"
+          }
+        },
+        {
+          "name": "76 — Audit đơn phép",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Có audit tạo và duyệt',()=>{const a=pm.response.json().content.map(x=>x.action);pm.expect(a).to.include('LEAVE_REQUEST_CREATE');pm.expect(a).to.include('REQUEST_APPROVE');});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/personnel/audit?targetTable=employee_requests&recordId={{leaveId}}"
+          }
+        },
+        {
+          "name": "77 — Audit bằng cấp",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/personnel/audit?targetTable=employee_qualifications&recordId={{q1}}"
+          }
+        },
+        {
+          "name": "78 — ADMIN tra cứu audit dùng chung",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));",
+                  "pm.test('Lưu correlation của lần tạo đơn',()=>{const row=pm.response.json().content.find(x=>x.action==='LEAVE_REQUEST_CREATE');pm.expect(row).to.exist;pm.expect(row.correlationId.toLowerCase()).to.eql(pm.collectionVariables.get('createCorrelation').toLowerCase());});"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/audit-logs?targetTable=employee_requests&recordKey={{leaveId}}"
+          }
+        },
+        {
+          "name": "79 — Audit không nhận tên bảng tùy ý",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/audit-logs?targetTable=invalid-table"
+          }
+        },
+        {
+          "name": "80 — Audit kiểm tra phân trang",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 400',()=>pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/audit-logs?size=101"
+          }
+        },
+        {
+          "name": "81 — Route audit cũ còn hoạt động",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "if(!pm.environment.get('managerToken')){pm.execution.skipRequest();throw new Error('Import environment runtime mới');}",
+                  "if(String(pm.environment.get('runMutations')).toLowerCase()!=='true')pm.execution.skipRequest();"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('HTTP 200',()=>pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "auth": {
+              "type": "bearer",
+              "bearer": [
+                {
+                  "key": "token",
+                  "value": "{{managerToken}}",
+                  "type": "string"
+                }
+              ]
+            },
+            "url": "{{baseUrl}}/g2/audit?targetTable=employee_requests&recordId={{leaveId}}"
+          }
+        }
+      ]
+    }
+  ]
+}
