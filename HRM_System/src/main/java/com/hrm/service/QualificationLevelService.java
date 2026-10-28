@@ -47,7 +47,7 @@ public class QualificationLevelService {
         level.setLevelName(request.getLevelName().trim());
         level.setDescription(request.getDescription());
         level.setIsActive(true);
-        level.setCreatedAt(LocalDateTime.now());
+        level.setCreatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         return toDTO(repository.saveAndFlush(level));
     }
 
@@ -61,7 +61,7 @@ public class QualificationLevelService {
         level.setLevelName(request.getLevelName().trim());
         level.setDescription(request.getDescription());
         if (request.getIsActive() != null) level.setIsActive(request.getIsActive());
-        level.setUpdatedAt(LocalDateTime.now());
+        level.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         return toDTO(repository.saveAndFlush(level));
     }
 
@@ -69,7 +69,7 @@ public class QualificationLevelService {
     public void deleteQualificationLevel(Long id) {
         QualificationLevel level = getRequired(id);
         level.setIsActive(false);
-        level.setUpdatedAt(LocalDateTime.now());
+        level.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         repository.saveAndFlush(level);
     }
 

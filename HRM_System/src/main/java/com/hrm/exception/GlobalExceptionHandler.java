@@ -17,11 +17,21 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<Object> invalidArgument(IllegalArgumentException ex) {
+        return buildErrorResponse(HttpStatus.BAD_REQUEST, "Tham số hoặc dữ liệu nghiệp vụ không hợp lệ");
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Object> handleMethodValidation(HandlerMethodValidationException ex) {
+        return buildErrorResponse(ex.getStatusCode(), "Tham số yêu cầu không hợp lệ");
+    }
 
     @ExceptionHandler(org.springframework.dao.ConcurrencyFailureException.class)
     public ResponseEntity<Object> handleConcurrentChange(org.springframework.dao.ConcurrencyFailureException ex) {
@@ -31,8 +41,8 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(org.springframework.jdbc.UncategorizedSQLException.class)
     public ResponseEntity<Object> handleAssignmentConstraint(org.springframework.jdbc.UncategorizedSQLException ex) {
         int code=ex.getSQLException().getErrorCode();
-        if(code>=51100 && code<=51199) return buildErrorResponse(HttpStatus.CONFLICT,
-                "Phân công/trưởng phòng không hợp lệ hoặc chồng hiệu lực; hãy kiểm tra dữ liệu và thử lại");
+        if(code>=51000 && code<=51399) return buildErrorResponse(HttpStatus.CONFLICT,
+                "Dữ liệu nghiệp vụ không hợp lệ, chồng hiệu lực hoặc lịch sử đang được bảo vệ");
         log.error("Loi SQL chua duoc xu ly",ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR,"Máy chủ không xử lý được yêu cầu");
     }
