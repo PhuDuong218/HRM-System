@@ -27,6 +27,15 @@ import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    // Compatibility entry point; only handleIllegalArgumentException is registered as a handler.
+    public ResponseEntity<Object> invalidArgument(IllegalArgumentException ex) {
+        return handleIllegalArgumentException(ex);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<Object> handleMethodValidation(HandlerMethodValidationException ex) {
+        return buildErrorResponse(ex.getStatusCode(), "Tham số yêu cầu không hợp lệ");
+    }
 
     private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
@@ -41,6 +50,10 @@ public class GlobalExceptionHandler {
         if (code >= 51100 && code <= 51199) {
             return buildErrorResponse(HttpStatus.CONFLICT,
                     "Phân công/trưởng phòng không hợp lệ hoặc chồng hiệu lực; hãy kiểm tra dữ liệu và thử lại");
+        }
+        if (code >= 51000 && code <= 51399) {
+            return buildErrorResponse(HttpStatus.CONFLICT,
+                    "Dữ liệu nghiệp vụ không hợp lệ, chồng hiệu lực hoặc lịch sử đang được bảo vệ");
         }
         log.error("Loi SQL chua duoc xu ly", ex);
         return buildErrorResponse(HttpStatus.INTERNAL_SERVER_ERROR, "Máy chủ không xử lý được yêu cầu");
@@ -175,11 +188,6 @@ public class GlobalExceptionHandler {
                 ex.getStatusCode(),
                 message
         );
-    }
-
-    @ExceptionHandler(HandlerMethodValidationException.class)
-    public ResponseEntity<Object> handleMethodValidation(HandlerMethodValidationException ex) {
-        return buildErrorResponse(ex.getStatusCode(), "Tham số yêu cầu không hợp lệ");
     }
 
     // 11. Những lỗi RuntimeException chưa được xử lý

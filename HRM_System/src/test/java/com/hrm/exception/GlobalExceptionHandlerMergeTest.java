@@ -60,8 +60,12 @@ class GlobalExceptionHandlerMergeTest {
                 Arguments.of(new ConcurrencyFailureException("concurrent update"), 409),
                 Arguments.of(sqlFailure(51100), 409),
                 Arguments.of(sqlFailure(51199), 409),
-                Arguments.of(sqlFailure(51099), 500),
-                Arguments.of(sqlFailure(51200), 500));
+                Arguments.of(sqlFailure(51000), 409),
+                Arguments.of(sqlFailure(51099), 409),
+                Arguments.of(sqlFailure(51200), 409),
+                Arguments.of(sqlFailure(51399), 409),
+                Arguments.of(sqlFailure(50999), 500),
+                Arguments.of(sqlFailure(51400), 500));
     }
 
     @ParameterizedTest

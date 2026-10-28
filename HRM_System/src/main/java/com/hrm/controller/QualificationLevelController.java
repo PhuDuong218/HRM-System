@@ -1,62 +1,25 @@
 package com.hrm.controller;
 
-import java.util.List;
-
+import java.security.Principal;
+import com.hrm.dto.*;
+import com.hrm.service.*;
 import jakarta.validation.Valid;
-
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
-
-import com.hrm.dto.PositionDTO;
-import com.hrm.dto.QualificationLevelDTO;
-import com.hrm.dto.QualificationLevelRequestDTO;
-import com.hrm.service.QualificationLevelService;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/qualification-levels")
 public class QualificationLevelController {
     private final QualificationLevelService service;
-
-    public QualificationLevelController(QualificationLevelService service) {
-        this.service = service;
-    }
-
-    @GetMapping
-public Page<QualificationLevelDTO> getAllQualificationLevels(
-        @RequestParam(defaultValue = "0") int page,
-        @RequestParam(defaultValue = "10") int size) {
-
-    return service.getLevelsPage(page, size);
-}
-    @GetMapping("/{id}")
-    public QualificationLevelDTO getQualificationLevelById(@PathVariable Long id) { return service.getQualificationLevelById(id); }
-
-    @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public QualificationLevelDTO addQualificationLevel(@Valid @RequestBody QualificationLevelRequestDTO request) {
-        return service.addQualificationLevel(request);
-    }
-
-    @PutMapping("/{id}")
-    public QualificationLevelDTO updateQualificationLevel(@PathVariable Long id,
-            @Valid @RequestBody QualificationLevelRequestDTO request) {
-        return service.updateQualificationLevel(id, request);
-    }
-
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> deleteQualificationLevel(@PathVariable Long id) {
-        service.deleteQualificationLevel(id);
-        return ResponseEntity.noContent().build();
-    }
+    private final PersonnelAccessService access;
+    private final PersonnelCatalogService writes;
+    public QualificationLevelController(QualificationLevelService service,PersonnelAccessService access,PersonnelCatalogService writes){this.service=service;this.access=access;this.writes=writes;}
+    @GetMapping public Page<QualificationLevelDTO> getAllQualificationLevels(@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){access.actor(p);return service.getLevelsPage(page,size);}
+    @GetMapping("/{id}") public QualificationLevelDTO getQualificationLevelById(@PathVariable Long id,Principal p){access.actor(p);return service.getQualificationLevelById(id);}
+    @PostMapping @ResponseStatus(HttpStatus.CREATED)
+    public QualificationLevelDTO addQualificationLevel(@Valid @RequestBody QualificationLevelRequestDTO request,Principal p){return writes.write(p,"qualification_levels",null,"QUALIFICATION_LEVEL_CREATE",()->service.addQualificationLevel(request),QualificationLevelDTO::qualificationLevelId);}
+    @PutMapping("/{id}") public QualificationLevelDTO updateQualificationLevel(@PathVariable Long id,@Valid @RequestBody QualificationLevelRequestDTO request,Principal p){return writes.write(p,"qualification_levels",id,"QUALIFICATION_LEVEL_UPDATE",()->service.updateQualificationLevel(id,request),QualificationLevelDTO::qualificationLevelId);}
+    @DeleteMapping("/{id}") @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteQualificationLevel(@PathVariable Long id,Principal p){writes.write(p,"qualification_levels",id,"QUALIFICATION_LEVEL_DEACTIVATE",()->{service.deleteQualificationLevel(id);return id;},Long::longValue);}
 }
