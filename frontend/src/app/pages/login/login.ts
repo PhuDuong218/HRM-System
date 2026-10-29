@@ -16,6 +16,8 @@ export class LoginPage {
   showPassword = false;
   loading = false;
   error = '';
+  notice = this.router.getCurrentNavigation()?.extras.state?.['passwordChanged']
+    ? 'Đổi mật khẩu thành công. Vui lòng đăng nhập lại bằng mật khẩu mới.' : '';
 
   submit(event: Event, username: string, password: string) {
     event.preventDefault();

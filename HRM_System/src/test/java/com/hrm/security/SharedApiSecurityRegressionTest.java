@@ -9,6 +9,7 @@ import com.hrm.repository.AccountRepository;
 import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PermissionRepository;
 import com.hrm.enums.EmploymentStatus;
+import com.hrm.exception.GlobalExceptionHandler;
 import com.hrm.service.AuthService;
 import com.hrm.service.DetailedWorkTimeService;
 import com.hrm.service.ScheduleQueryService;
@@ -112,6 +113,11 @@ class SharedApiSecurityRegressionTest {
         }
 
         @Bean
+        GlobalExceptionHandler globalExceptionHandler() {
+            return new GlobalExceptionHandler();
+        }
+
+        @Bean
         WorkScheduleController workScheduleController(
                 WorkScheduleService service, ScheduleQueryService queries, DetailedWorkTimeService detailed) {
             return new WorkScheduleController(service, queries, detailed);
@@ -208,6 +214,19 @@ class SharedApiSecurityRegressionTest {
                 .content("{\"currentPassword\":\"old\",\"newPassword\":\"12345678\",\"confirmPassword\":\"12345678\"}"))
                 .andExpect(status().isUnauthorized());
         verifyNoInteractions(auth);
+    }
+
+    @Test
+    void wrongCurrentPasswordGets400WithoutInvalidatingAuthentication() throws Exception {
+        validAccount(51L);
+        doThrow(new IllegalArgumentException("Mật khẩu hiện tại không đúng"))
+                .when(auth).changePassword(eq(51L), any());
+        mvc.perform(post("/api/auth/change-password")
+                .header("Authorization", "Bearer " + token(51L))
+                .contentType("application/json")
+                .content("{\"currentPassword\":\"wrong\",\"newPassword\":\"12345678\",\"confirmPassword\":\"12345678\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.loi_chi_tiet").value("Mật khẩu hiện tại không đúng"));
     }
 
     @Test

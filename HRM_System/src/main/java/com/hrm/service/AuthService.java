@@ -2,15 +2,19 @@
 package com.hrm.service;
 
 import com.hrm.dto.ChangePasswordRequest;
+import com.hrm.dto.CurrentUserResponse;
 import com.hrm.dto.LoginRequest;
 import com.hrm.dto.LoginResponse;
 import com.hrm.dto.ResetPasswordRequest;
 import com.hrm.enums.EmploymentStatus;
+import com.hrm.exception.ResourceNotFoundException;
 import com.hrm.model.Account;
 import com.hrm.model.AuditLog;
 import com.hrm.repository.AccountRepository;
 import com.hrm.repository.AuditLogRepository;
+import com.hrm.repository.EmployeeAssignmentRepository;
 import com.hrm.repository.EmployeeRepository;
+import com.hrm.security.AuthenticatedAccount;
 import com.hrm.security.JwtService;
 
 import jakarta.transaction.Transactional;
@@ -25,6 +29,7 @@ public class AuthService {
 
     private final AccountRepository accountRepository;
     private final EmployeeRepository employeeRepository;
+    private final EmployeeAssignmentRepository assignmentRepository;
     private final AuditLogRepository auditLogRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
@@ -32,12 +37,14 @@ public class AuthService {
     public AuthService(
             AccountRepository accountRepository,
             EmployeeRepository employeeRepository,
+            EmployeeAssignmentRepository assignmentRepository,
             AuditLogRepository auditLogRepository,
             PasswordEncoder passwordEncoder,
             JwtService jwtService) {
 
         this.accountRepository = accountRepository;
         this.employeeRepository = employeeRepository;
+        this.assignmentRepository = assignmentRepository;
         this.auditLogRepository = auditLogRepository;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
@@ -73,6 +80,19 @@ public class AuthService {
                 jwtService.getExpirationSeconds());
     }
 
+    public CurrentUserResponse currentUser(AuthenticatedAccount account) {
+        var employee = employeeRepository.findById(account.employeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên của tài khoản"));
+        var assignments = assignmentRepository.findCurrentAssignments(account.employeeId());
+        var assignment = assignments.size() == 1 ? assignments.get(0) : null;
+        return new CurrentUserResponse(
+                account.username(), account.roleCode(), employee.getEmployeeCode(), employee.getFullName(),
+                employee.getBirthDate(), employee.getEmail(), employee.getPhone(), employee.getAddress(),
+                employee.getHireDate(), employee.getEmploymentStatus() == null ? null : employee.getEmploymentStatus().name(),
+                assignment == null ? null : assignment.getDepartment().getDepartmentName(),
+                assignment == null ? null : assignment.getPosition().getPositionName());
+    }
+
     @Transactional
     public void logout(Long accountId) {
         if (accountRepository.incrementTokenVersion(accountId) != 1) {
@@ -96,7 +116,7 @@ public class AuthService {
                 request.currentPassword(),
                 account.getPasswordHash())) {
 
-            throw new BadCredentialsException(
+            throw new IllegalArgumentException(
                     "Mật khẩu hiện tại không đúng");
         }
 

@@ -64,3 +64,4 @@
   .login-content h2 { font-size: 30px; }
   .login-icon { margin-bottom: 22px; }
 }
+.login-success { margin: 18px 0 0; padding: 12px 14px; border-radius: 8px; background: #e8f7ed; color: #21643a; font-size: 14px; }

@@ -29,6 +29,7 @@
       <p class="form-label-top">CHÀO MỪNG TRỞ LẠI</p>
       <h2 id="login-title">Đăng nhập</h2>
       <p class="form-description">Nhập thông tin tài khoản để truy cập không gian quản lý của bạn.</p>
+      @if (notice) { <p class="login-success" role="status">{{ notice }}</p> }
 
       <form class="login-form" (submit)="submit($event, username.value, password.value)">
         <div class="field">
