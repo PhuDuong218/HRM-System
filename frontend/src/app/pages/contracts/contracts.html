@@ -274,6 +274,202 @@
         {{ c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc' }}
       </dd>
     </dl>
+    <div class="d-flex flex-wrap gap-2 mt-3">
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        [disabled]="saving || renewTypesLoading || !c.endDate"
+        (click)="openLifecycle('renew')"
+      >
+        Gia hạn
+      </button>
+
+      <button
+        type="button"
+        class="btn btn-outline-danger"
+        [disabled]="saving || renewTypesLoading || c.status !== 'DA_KY'"
+        (click)="openLifecycle('terminate')"
+      >
+        Chấm dứt
+      </button>
+    </div>
   </div>
 </section>
-}
+} @if (lifecycleError) {
+<div class="alert alert-danger mt-3" role="alert">{{ lifecycleError }}</div>
+} @if (lifecycleContract; as old) { @if (lifecycleMode === 'renew') {
+<section class="card mt-3">
+  <div class="card-body">
+    <h2 class="h4">Gia hạn hợp đồng {{ old.contractNumber }}</h2>
+
+    <p>
+      Nhân viên: {{ old.employeeCode }} — {{ old.employeeName }}. Ngày cuối hợp
+      đồng cũ: {{ old.endDate }}. Gia hạn sẽ tạo hợp đồng mới và giữ lại hợp
+      đồng cũ.
+    </p>
+
+    @if (renewTypesLoading) {
+    <p role="status">Đang tải loại hợp đồng…</p>
+    } @if (!renewTypesLoading && !renewTypes.length) {
+    <p class="text-warning">Chưa tải được loại hợp đồng đang hoạt động.</p>
+    }
+
+    <form class="row g-3" (submit)="saveRenew($event)">
+      <div class="col-md-6">
+        <label for="renew-number" class="form-label"> Số hợp đồng mới </label>
+        <input
+          id="renew-number"
+          name="contractNumber"
+          class="form-control"
+          maxlength="50"
+          required
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-6">
+        <label for="renew-type" class="form-label"> Loại hợp đồng mới </label>
+        <select
+          id="renew-type"
+          name="contractTypeId"
+          class="form-select"
+          required
+          [disabled]="saving || renewTypesLoading"
+        >
+          <option value="">Chọn loại hợp đồng</option>
+          @for (type of renewTypes; track type.contractTypeId) {
+          <option [value]="type.contractTypeId">
+            {{ type.typeCode }} — {{ type.typeName }}
+          </option>
+          }
+        </select>
+      </div>
+
+      <div class="col-md-4">
+        <label for="renew-signed" class="form-label">Ngày ký mới</label>
+        <input
+          id="renew-signed"
+          name="signedDate"
+          type="date"
+          class="form-control"
+          required
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-4">
+        <label for="renew-start" class="form-label"> Ngày bắt đầu mới </label>
+        <input
+          id="renew-start"
+          name="startDate"
+          type="date"
+          class="form-control"
+          required
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-md-4">
+        <label for="renew-end" class="form-label"> Ngày cuối mới </label>
+        <input
+          id="renew-end"
+          name="endDate"
+          type="date"
+          class="form-control"
+          [disabled]="saving"
+        />
+        <small>Để trống nếu không xác định thời hạn.</small>
+      </div>
+
+      <div class="col-12">
+        <label for="renew-reason" class="form-label"> Lý do gia hạn </label>
+        <textarea
+          id="renew-reason"
+          name="reason"
+          class="form-control"
+          maxlength="500"
+          required
+          [disabled]="saving"
+        ></textarea>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="saving || renewTypesLoading || !renewTypes.length"
+        >
+          {{ saving ? 'Đang lưu…' : 'Xác nhận gia hạn' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [disabled]="saving || renewTypesLoading"
+          (click)="cancelLifecycle()"
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+} @if (lifecycleMode === 'terminate') {
+<section class="card mt-3">
+  <div class="card-body">
+    <h2 class="h4">Chấm dứt hợp đồng {{ old.contractNumber }}</h2>
+
+    <p>
+      Ngày chọn là ngày cuối hợp đồng còn hiệu lực. Backend không cho chấm dứt
+      hồi tố.
+    </p>
+
+    <form class="row g-3" (submit)="saveTerminate($event)">
+      <div class="col-md-6">
+        <label for="terminate-date" class="form-label">
+          Ngày cuối còn hiệu lực
+        </label>
+        <input
+          id="terminate-date"
+          name="terminationDate"
+          type="date"
+          class="form-control"
+          [min]="old.startDate"
+          [attr.max]="old.endDate"
+          required
+          [disabled]="saving"
+        />
+      </div>
+
+      <div class="col-12">
+        <label for="terminate-reason" class="form-label">
+          Lý do chấm dứt
+        </label>
+        <textarea
+          id="terminate-reason"
+          name="reason"
+          class="form-control"
+          maxlength="500"
+          required
+          [disabled]="saving"
+        ></textarea>
+      </div>
+
+      <div class="d-flex gap-2">
+        <button type="submit" class="btn btn-danger" [disabled]="saving">
+          {{ saving ? 'Đang lưu…' : 'Xác nhận chấm dứt' }}
+        </button>
+
+        <button
+          type="button"
+          class="btn btn-outline-secondary"
+          [disabled]="saving"
+          (click)="cancelLifecycle()"
+        >
+          Hủy
+        </button>
+      </div>
+    </form>
+  </div>
+</section>
+} }

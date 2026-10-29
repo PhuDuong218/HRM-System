@@ -1,10 +1,30 @@
 <div class="app-shell">
   <aside class="sidebar" [class.is-open]="menuOpen" id="main-menu">
-    <a class="brand" routerLink="/overview"><span class="brand-mark">H</span><span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span></a>
+    <a class="brand" routerLink="/overview" (click)="menuOpen = false"><span class="brand-mark">H</span><span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span></a>
     <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
     <nav aria-label="Điều hướng chính">
-      @for (item of menu; track item.path) {
-        <a [routerLink]="['/', item.path]" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="menuOpen = false">{{ item.label }}</a>
+      @for (item of menu; track item.id) {
+        @if (item.children; as children) {
+          <div class="nav-group">
+            <button type="button" class="nav-group-toggle"
+                    [class.group-active]="isGroupActive(item)"
+                    [attr.aria-expanded]="expandedGroup === item.id"
+                    [attr.aria-controls]="'nav-group-' + item.id"
+                    (click)="toggleGroup(item.id)">
+              <span>{{ item.label }}</span>
+              <span class="chevron" [class.expanded]="expandedGroup === item.id" aria-hidden="true"></span>
+            </button>
+            <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="expandedGroup !== item.id">
+              @for (child of children; track child.path) {
+                <a [routerLink]="['/', child.path]" routerLinkActive="active"
+                   ariaCurrentWhenActive="page" (click)="menuOpen = false">{{ child.label }}</a>
+              }
+            </div>
+          </div>
+        } @else {
+          <a class="nav-single" [routerLink]="['/', item.path]" routerLinkActive="active"
+             ariaCurrentWhenActive="page" (click)="menuOpen = false">{{ item.label }}</a>
+        }
       }
     </nav>
     <div class="sidebar-note">Web dành cho ADMIN / HR<br><span>Bộ khung để phát triển</span></div>

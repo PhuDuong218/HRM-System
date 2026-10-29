@@ -9,6 +9,8 @@ import {
   ContractResponse,
   ContractStatus,
   ContractTypeResponse,
+  ContractRenewRequest,
+  ContractTerminateRequest,
 } from "../../models/contract.model";
 
 @Component({
@@ -28,6 +30,13 @@ export class ContractsPage implements OnInit {
   employeeId?: number;
   status?: ContractStatus;
   q = "";
+
+  lifecycleMode: "renew" | "terminate" | null = null;
+  lifecycleContract: ContractResponse | null = null;
+  lifecycleError = "";
+
+  renewTypes: ContractTypeResponse[] = [];
+  renewTypesLoading = false;
 
   ngOnInit(): void {
     this.load(0);
@@ -77,6 +86,8 @@ export class ContractsPage implements OnInit {
   message = "";
 
   viewDetail(id: number): void {
+    if (this.saving || this.renewTypesLoading) return;
+    this.cancelLifecycle();
     // Khi bấm liên tiếp hai hợp đồng, hủy request chi tiết trước.
     this.detailRequest?.unsubscribe();
 
@@ -103,6 +114,9 @@ export class ContractsPage implements OnInit {
   }
 
   closeDetail(): void {
+    if (this.saving || this.renewTypesLoading) return;
+    this.cancelLifecycle();
+    
     this.detailRequest?.unsubscribe();
     this.selected = null;
     this.detailLoading = false;
@@ -128,6 +142,9 @@ export class ContractsPage implements OnInit {
   }
 
   openCreate(): void {
+    if (this.renewTypesLoading) return;
+    this.cancelLifecycle();
+
     if (this.saving || this.typesLoading) return;
 
     this.showCreate = true;
@@ -229,6 +246,218 @@ export class ContractsPage implements OnInit {
         error: (e: HttpErrorResponse) => {
           this.saving = false;
           this.createError = this.readError(e, "Không tạo được hợp đồng.");
+        },
+      });
+  }
+
+  //Phương thức mở form
+  openLifecycle(mode: "renew" | "terminate"): void {
+    if (!this.selected || this.saving || this.renewTypesLoading) {
+      return;
+    }
+
+    const contract = this.selected;
+
+    this.lifecycleError = "";
+    this.message = "";
+
+    if (mode === "renew" && !contract.endDate) {
+      this.lifecycleError =
+        "Hợp đồng không xác định thời hạn không dùng chức năng gia hạn.";
+      return;
+    }
+
+    if (mode === "terminate" && contract.status !== "DA_KY") {
+      this.lifecycleError = "Chỉ chấm dứt hợp đồng có trạng thái Đã ký.";
+      return;
+    }
+
+    this.showCreate = false;
+    this.lifecycleContract = contract;
+    this.lifecycleMode = mode;
+
+    if (mode === "renew") {
+      this.renewTypes = [];
+      this.renewTypesLoading = true;
+
+      this.api
+        .types()
+        .pipe(takeUntilDestroyed(this.destroyRef))
+        .subscribe({
+          next: (types) => {
+            this.renewTypes = types.filter((type) => type.isActive);
+            this.renewTypesLoading = false;
+          },
+          error: (e: HttpErrorResponse) => {
+            this.renewTypesLoading = false;
+            this.lifecycleError = this.readError(
+              e,
+              "Không tải được loại hợp đồng.",
+            );
+          },
+        });
+    }
+  }
+
+  cancelLifecycle(): void {
+    if (this.saving || this.renewTypesLoading) return;
+
+    this.lifecycleMode = null;
+    this.lifecycleContract = null;
+    this.lifecycleError = "";
+  }
+
+  //Phương thức lưu gia hạn
+  saveRenew(event: Event): void {
+    event.preventDefault();
+
+    const old = this.lifecycleContract;
+
+    if (
+      !old ||
+      !old.endDate ||
+      this.lifecycleMode !== "renew" ||
+      this.saving ||
+      this.renewTypesLoading
+    ) {
+      return;
+    }
+
+    const form = event.target as HTMLFormElement;
+    if (!form.reportValidity()) return;
+
+    const data = new FormData(form);
+    const value = (name: string) => String(data.get(name) ?? "").trim();
+
+    const contractTypeId = Number(value("contractTypeId"));
+    const contractNumber = value("contractNumber");
+    const signedDate = value("signedDate");
+    const startDate = value("startDate");
+    const endDate = value("endDate") || null;
+    const reason = value("reason");
+
+    this.lifecycleError = "";
+    this.message = "";
+
+    if (
+      !this.renewTypes.some((type) => type.contractTypeId === contractTypeId)
+    ) {
+      this.lifecycleError = "Hãy chọn loại hợp đồng đang hoạt động.";
+      return;
+    }
+
+    if (!contractNumber || !reason) {
+      this.lifecycleError = "Cần nhập số hợp đồng mới và lý do gia hạn.";
+      return;
+    }
+
+    if (startDate <= old.endDate) {
+      this.lifecycleError =
+        "Ngày bắt đầu hợp đồng mới phải sau ngày cuối của hợp đồng cũ.";
+      return;
+    }
+
+    if (endDate && endDate < startDate) {
+      this.lifecycleError = "Ngày kết thúc không được trước ngày bắt đầu.";
+      return;
+    }
+
+    const request: ContractRenewRequest = {
+      newContract: {
+        employeeId: old.employeeId,
+        contractTypeId,
+        contractNumber,
+        signedDate,
+        startDate,
+        endDate,
+      },
+      reason,
+    };
+
+    this.saving = true;
+
+    this.api
+      .renew(old.contractId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (created) => {
+          this.saving = false;
+          this.cancelLifecycle();
+
+          this.message = `Đã gia hạn thành hợp đồng mới ${created.contractNumber}.`;
+
+          this.load(this.page);
+          this.viewDetail(created.contractId);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.saving = false;
+          this.lifecycleError = this.readError(
+            e,
+            "Không gia hạn được hợp đồng.",
+          );
+        },
+      });
+  }
+
+  //Phương thức chấm dứt
+  saveTerminate(event: Event): void {
+    event.preventDefault();
+
+    const contract = this.lifecycleContract;
+
+    if (!contract || this.lifecycleMode !== "terminate" || this.saving) {
+      return;
+    }
+
+    const form = event.target as HTMLFormElement;
+    if (!form.reportValidity()) return;
+
+    const data = new FormData(form);
+    const terminationDate = String(data.get("terminationDate") ?? "").trim();
+    const reason = String(data.get("reason") ?? "").trim();
+
+    this.lifecycleError = "";
+    this.message = "";
+
+    if (!terminationDate || !reason) {
+      this.lifecycleError = "Cần nhập ngày chấm dứt và lý do.";
+      return;
+    }
+
+    if (
+      terminationDate < contract.startDate ||
+      (contract.endDate !== null && terminationDate > contract.endDate)
+    ) {
+      this.lifecycleError = "Ngày chấm dứt phải nằm trong thời hạn hợp đồng.";
+      return;
+    }
+
+    const request: ContractTerminateRequest = {
+      terminationDate,
+      reason,
+    };
+
+    this.saving = true;
+
+    this.api
+      .terminate(contract.contractId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (updated) => {
+          this.saving = false;
+          this.cancelLifecycle();
+
+          this.selected = updated;
+          this.message = `Đã ghi nhận ngày cuối còn hiệu lực: ${updated.endDate}.`;
+
+          this.load(this.page);
+        },
+        error: (e: HttpErrorResponse) => {
+          this.saving = false;
+          this.lifecycleError = this.readError(
+            e,
+            "Không chấm dứt được hợp đồng.",
+          );
         },
       });
   }

@@ -37,3 +37,13 @@ export interface ContractTypeResponse {
   typeName: string;
   isActive: boolean;
 }
+
+export interface ContractRenewRequest {
+  newContract: ContractCreateRequest;
+  reason: string;
+}
+
+export interface ContractTerminateRequest {
+  terminationDate: string;
+  reason: string;
+}
