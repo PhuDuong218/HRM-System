@@ -7,9 +7,11 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.hrm.service.ContractLifecycleService;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/contracts")
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class ContractController {
     private final ContractService service;
     private final ContractLifecycleService lifecycle;

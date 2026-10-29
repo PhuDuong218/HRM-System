@@ -6,9 +6,11 @@ import com.hrm.service.*;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/employee-decisions")
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class EmployeeDecisionController {
     private final EmployeeDecisionService service;
 

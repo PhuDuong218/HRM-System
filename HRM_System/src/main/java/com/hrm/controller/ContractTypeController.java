@@ -7,9 +7,11 @@ import com.hrm.service.ContractTypeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/contract-types")
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class ContractTypeController {
     private final ContractTypeService service;
     public ContractTypeController(ContractTypeService service) { this.service = service; }

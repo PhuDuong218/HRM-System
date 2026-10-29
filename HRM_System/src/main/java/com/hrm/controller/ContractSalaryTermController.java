@@ -11,8 +11,10 @@ import jakarta.validation.constraints.Size;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class ContractSalaryTermController {
     private final ContractSalaryTermService terms;
     private final SalaryRateService rates;
