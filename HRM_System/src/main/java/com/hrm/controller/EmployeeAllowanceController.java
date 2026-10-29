@@ -6,9 +6,11 @@ import com.hrm.service.EmployeeAllowanceService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/employees/{employeeId}/allowances")
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class EmployeeAllowanceController {
     private final EmployeeAllowanceService service;
 

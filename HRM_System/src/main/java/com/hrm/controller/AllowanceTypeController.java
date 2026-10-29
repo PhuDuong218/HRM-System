@@ -6,9 +6,11 @@ import com.hrm.service.AllowanceTypeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.security.access.prepost.PreAuthorize;
 
 @RestController
 @RequestMapping("/allowance-types")
+@PreAuthorize("hasAnyRole('ADMIN','HR')")
 public class AllowanceTypeController {
     private final AllowanceTypeService service;
     public AllowanceTypeController(AllowanceTypeService service) { this.service=service; }
