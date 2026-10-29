@@ -2,7 +2,9 @@ package com.hrm.security;
 
 import com.hrm.model.Account;
 import com.hrm.model.Role;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.repository.AccountRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PermissionRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
@@ -26,8 +28,9 @@ import static org.mockito.Mockito.*;
 class JwtAuthenticationFilterTest {
     private final JwtService jwtService = mock(JwtService.class);
     private final AccountRepository accounts = mock(AccountRepository.class);
+    private final EmployeeRepository employees = mock(EmployeeRepository.class);
     private final PermissionRepository permissions = mock(PermissionRepository.class);
-    private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, accounts, permissions);
+    private final JwtAuthenticationFilter filter = new JwtAuthenticationFilter(jwtService, accounts, employees, permissions);
 
     @BeforeEach
     void clearBefore() {
@@ -130,6 +133,7 @@ class JwtAuthenticationFilterTest {
         mockClaims(42L, 3);
         Account testAccount = account(true, 3);
         when(accounts.findById(42L)).thenReturn(Optional.of(testAccount));
+        when(employees.existsByEmployeeIdAndEmploymentStatus(17L, EmploymentStatus.DANG_LAM)).thenReturn(true);
         when(permissions.findCodesByRoleId(2L)).thenReturn(Set.of("SELF_READ"));
         Authentication authentication = send("Bearer valid-token");
         assertNotNull(authentication);
@@ -141,5 +145,15 @@ class JwtAuthenticationFilterTest {
         assertEquals("HR", principal.roleCode());
         assertTrue(authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("ROLE_HR")));
         assertTrue(authentication.getAuthorities().stream().anyMatch(a -> a.getAuthority().equals("SELF_READ")));
+    }
+
+    @Test
+    void employeeNoLongerWorkingDoesNotAuthenticate() throws Exception {
+        mockClaims(42L, 3);
+        Account testAccount = account(true, 3);
+        when(accounts.findById(42L)).thenReturn(Optional.of(testAccount));
+        when(employees.existsByEmployeeIdAndEmploymentStatus(17L, EmploymentStatus.DANG_LAM)).thenReturn(false);
+        assertNull(send("Bearer valid-token"));
+        verifyNoInteractions(permissions);
     }
 }

@@ -3,7 +3,7 @@
 > **Đồ án môn học | Backend đang phát triển**  
 > Mục tiêu: xây dựng hệ thống quản lý nhân sự cho trung tâm giáo dục, tập trung vào nghiệp vụ **tính lương**. Thư mục này chứa backend Java Spring Boot; Web Angular nằm ở `../frontend`.
 
-**Cập nhật 23/10/2026:** Đã bổ sung quản lý trưởng phòng theo lịch sử phân công, migration, audit và trang Phòng ban. Xem [hướng dẫn triển khai và thử API](C:/NguyenXuanAnh/Git-Nhom-HRM/HUONG_DAN_TRUONG_PHONG.md). Các API phòng ban yêu cầu phiên ADMIN/HR có quyền EMPLOYEE_MANAGE; repo chưa có login/JWT nên gọi chưa xác thực nhận 401. Các hướng dẫn cũ bên dưới cần đối chiếu với cập nhật này.
+**Đăng nhập và tài khoản thử nghiệm:** Xem [hướng dẫn mở khóa và đặt mật khẩu tài khoản](database/README_TAI_KHOAN.md). Dự án đã có API đăng nhập và xác thực JWT; API phòng ban yêu cầu ADMIN/HR có quyền `DEPARTMENT_MANAGE`.
 
 ## 1. Tổng quan
 
