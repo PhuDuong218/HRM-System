@@ -17,6 +17,24 @@ interface Session {
 
 const SESSION_KEY = 'hrm.session';
 
+export class ManagementAccessDeniedError extends Error {
+  constructor() {
+    super('Cổng quản lý chỉ dành cho tài khoản ADMIN hoặc HR.');
+  }
+}
+
+function managementRole(token: string): boolean {
+  try {
+    const parts = token.split('.');
+    if (parts.length !== 3) return false;
+    const payload: unknown = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
+    if (!payload || typeof payload !== 'object' || !('role' in payload)) return false;
+    return payload.role === 'ADMIN' || payload.role === 'HR';
+  } catch {
+    return false;
+  }
+}
+
 @Injectable({ providedIn: 'root' })
 export class AuthService {
   private http = inject(HttpClient);
@@ -30,6 +48,10 @@ export class AuthService {
             response.tokenType?.toLowerCase() !== 'bearer' ||
             !Number.isFinite(response.expiresInSeconds) || response.expiresInSeconds <= 0) {
           throw new Error('Phản hồi đăng nhập không hợp lệ.');
+        }
+        if (!managementRole(response.accessToken)) {
+          this.clear();
+          throw new ManagementAccessDeniedError();
         }
         const session: Session = {
           accessToken: response.accessToken,
@@ -76,7 +98,8 @@ export class AuthService {
       if (session && typeof session === 'object' &&
           'accessToken' in session && typeof session.accessToken === 'string' && session.accessToken &&
           'username' in session && typeof session.username === 'string' &&
-          'expiresAt' in session && typeof session.expiresAt === 'number' && session.expiresAt > Date.now()) {
+          'expiresAt' in session && typeof session.expiresAt === 'number' && session.expiresAt > Date.now() &&
+          managementRole(session.accessToken)) {
         return session as Session;
       }
       sessionStorage.removeItem(SESSION_KEY);

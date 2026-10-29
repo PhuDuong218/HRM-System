@@ -2,7 +2,7 @@ import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
-import { AuthService } from '../../services/auth.service';
+import { AuthService, ManagementAccessDeniedError } from '../../services/auth.service';
 
 @Component({
   selector: 'app-login',
@@ -31,7 +31,9 @@ export class LoginPage {
     this.auth.login(username, password).pipe(finalize(() => this.loading = false)).subscribe({
       next: () => void this.router.navigateByUrl('/overview'),
       error: (error: unknown) => {
-        if (error instanceof HttpErrorResponse && error.status === 401) {
+        if (error instanceof ManagementAccessDeniedError) {
+          this.error = error.message;
+        } else if (error instanceof HttpErrorResponse && error.status === 401) {
           this.error = 'Tên đăng nhập hoặc mật khẩu không đúng.';
         } else if (error instanceof HttpErrorResponse && error.status === 400) {
           this.error = 'Vui lòng kiểm tra lại thông tin đăng nhập.';

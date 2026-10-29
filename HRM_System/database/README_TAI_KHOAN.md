@@ -40,7 +40,7 @@ WHERE r.role_code IN ('ADMIN', 'HR', 'EMPLOYEE')
 ORDER BY r.role_code, a.username;
 ```
 
-Với tài khoản có `is_active = 1` và `employment_status = DANG_LAM`, đăng nhập bằng `username` trong kết quả và mật khẩu `Admin@123`. Nhân viên đã nghỉ không được cập nhật và không thể đăng nhập theo điều kiện hiện tại của backend.
+Với tài khoản có `is_active = 1` và `employment_status = DANG_LAM`, dùng `username` trong kết quả và mật khẩu `Admin@123`. Nhân viên đã nghỉ không được cập nhật và không thể đăng nhập theo điều kiện hiện tại của backend.
 
 Trong VS Code, chạy backend tại thư mục `HRM_System`:
 
@@ -54,6 +54,6 @@ Mở terminal khác tại thư mục `frontend`, chạy:
 npm.cmd start
 ```
 
-Mở `http://localhost:4200/login` để đăng nhập. Các tài khoản phải có sẵn trong database; nếu thiếu, kiểm tra lại dữ liệu mẫu.
+Mở `http://localhost:4200/login` để đăng nhập bằng tài khoản ADMIN hoặc HR. Tài khoản EMPLOYEE dùng API đăng nhập chung để kiểm thử và dành cho ứng dụng nhân viên; không vào cổng web quản lý. Các tài khoản phải có sẵn trong database; nếu thiếu, kiểm tra lại dữ liệu mẫu.
 
 Chỉ dùng đoạn SQL và mật khẩu này cho **database thử nghiệm cục bộ**. Lệnh thay mật khẩu cũ và thu hồi các phiên đăng nhập cũ của tất cả tài khoản được cập nhật. Mật khẩu gốc không thể đọc ngược từ mã băm BCrypt trong database.

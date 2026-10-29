@@ -4,7 +4,7 @@
 
 Dựa trên PROJECT_SPEC(2).md được cung cấp: Web Angular + TypeScript + Bootstrap. Đây là khung giao diện để học và phát triển. Có layout quản lý, menu 15 module, trang tổng quan, bảng nhân viên rỗng, trang kiểm tra API, các trang chờ phát triển và trang 404.
 
-Đăng nhập đã kết nối với API của backend. Trang quản lý yêu cầu phiên đăng nhập và token được gửi đến các API qua interceptor. ADMIN, HR và EMPLOYEE dùng cùng một menu; quyền đối với dữ liệu và chức năng vẫn do backend kiểm soát.
+Đăng nhập đã kết nối với API của backend. Cổng quản lý dành cho ADMIN và HR; tài khoản EMPLOYEE không vào được giao diện này. Token được gửi đến các API qua interceptor, còn quyền đối với dữ liệu và chức năng do backend kiểm soát.
 
 ## 2. Chạy trên Windows
 
@@ -129,7 +129,7 @@ Ví dụ phòng ban: tạo pages/departments/departments.ts và departments.html
 
 Muốn đổi tên menu: navigation.ts. Muốn đổi sidebar: layout/admin-layout.html. Muốn đổi trang mặc định: redirectTo trong app.routes.ts.
 
-Trang `/login` gửi tên đăng nhập và mật khẩu tới `POST /api/auth/login`. Token được lưu trong `sessionStorage` của tab, đính kèm vào các yêu cầu `/api/` và bị xóa khi hết hạn, bị backend từ chối hoặc đăng xuất thành công. Nút đăng xuất gọi `POST /api/auth/logout`, làm backend vô hiệu các token hiện tại của tài khoản. Cần dùng tài khoản ứng dụng HRM, không phải tài khoản SQL Server. Guard frontend không thay thế phân quyền backend; menu chưa được lọc theo vai trò.
+Trang `/login` gửi tên đăng nhập và mật khẩu tới `POST /api/auth/login`. Chỉ token có vai trò ADMIN hoặc HR được dùng vào cổng web; phiên EMPLOYEE cũ cũng bị loại khi tải lại. Token được lưu trong `sessionStorage` của tab, đính kèm vào các yêu cầu `/api/` và bị xóa khi hết hạn, bị backend từ chối hoặc đăng xuất thành công. Nút đăng xuất gọi `POST /api/auth/logout`, làm backend vô hiệu các token hiện tại của tài khoản. Cần dùng tài khoản ứng dụng HRM, không phải tài khoản SQL Server. Kiểm tra vai trò trên frontend chỉ điều khiển giao diện, không thay thế phân quyền backend; menu ADMIN/HR chưa được lọc theo quyền chi tiết.
 
 ## 9. Giới hạn bộ khung
 
