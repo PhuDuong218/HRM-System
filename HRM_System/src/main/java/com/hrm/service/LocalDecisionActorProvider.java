@@ -6,9 +6,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.env.*;
 import org.springframework.http.HttpStatus;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.stereotype.Component;
 
-@Component
 public class LocalDecisionActorProvider implements DecisionActorProvider {
     private final JdbcTemplate jdbc;
     private final Environment environment;
