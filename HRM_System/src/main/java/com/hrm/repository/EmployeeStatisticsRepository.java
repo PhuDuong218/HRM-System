@@ -1,3 +1,4 @@
+
 package com.hrm.repository;
 
 import com.hrm.model.Employee;
@@ -7,80 +8,122 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.List;
 
-public interface EmployeeStatisticsRepository extends JpaRepository<Employee, Long> {
+public interface EmployeeStatisticsRepository
+        extends JpaRepository<Employee, Long> {
 
+    // Thong ke nhan vien theo phong ban tai ngay duoc chon
     @Query(value = """
-            with effective_assignments as (
-                select ea.employee_id, ea.department_id,
-                       row_number() over (
-                           partition by ea.employee_id
-                           order by ea.effective_from desc, ea.assignment_id desc
-                       ) as assignmentRank
-                from employee_assignments ea
-                where ea.effective_from <= :asOfDate
-                  and (ea.effective_to is null or ea.effective_to > :asOfDate)
+            WITH effective_assignments AS (
+                SELECT ea.employee_id,
+                       ea.department_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY ea.employee_id
+                           ORDER BY ea.effective_from DESC,
+                                    ea.assignment_id DESC
+                       ) AS assignmentRank
+                FROM employee_assignments ea
+                WHERE ea.effective_from <= :asOfDate
+                  AND (
+                      ea.effective_to IS NULL
+                      OR ea.effective_to > :asOfDate
+                  )
             )
-            select d.department_id as groupId,
-                   coalesce(d.department_code, 'CHUA_PHAN_CONG') as groupCode,
-                   coalesce(d.department_name, N'Chưa có phân công hiệu lực') as groupName,
-                   count(distinct e.employee_id) as employeeCount
-            from employees e
-            left join effective_assignments ea on ea.employee_id = e.employee_id and ea.assignmentRank = 1
-            left join departments d on d.department_id = ea.department_id
-            group by d.department_id, d.department_code, d.department_name
-            order by d.department_name
+            SELECT d.department_id AS groupId,
+                   COALESCE(d.department_code, 'CHUA_PHAN_CONG') AS groupCode,
+                   COALESCE(d.department_name, N'Chưa có phân công hiệu lực') AS groupName,
+                   COUNT(DISTINCT e.employee_id) AS employeeCount
+            FROM employees e
+            LEFT JOIN effective_assignments ea
+                ON ea.employee_id = e.employee_id
+               AND ea.assignmentRank = 1
+            LEFT JOIN departments d
+                ON d.department_id = ea.department_id
+            GROUP BY d.department_id,
+                     d.department_code,
+                     d.department_name
+            ORDER BY d.department_name
             """, nativeQuery = true)
-    List<EmployeeStatisticsRow> countByDepartment(@Param("asOfDate") LocalDate asOfDate);
+    List<EmployeeStatisticsRow> countByDepartment(
+            @Param("asOfDate") LocalDate asOfDate);
 
+    // Tuong thich voi Service cu cua Nhi
+    default List<EmployeeStatisticsRow> countByDepartment() {
+        return countByDepartment(
+                LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+    }
+
+    // Thong ke nhan vien theo chuc vu tai ngay duoc chon
     @Query(value = """
-            with effective_assignments as (
-                select ea.employee_id, ea.position_id,
-                       row_number() over (
-                           partition by ea.employee_id
-                           order by ea.effective_from desc, ea.assignment_id desc
-                       ) as assignmentRank
-                from employee_assignments ea
-                where ea.effective_from <= :asOfDate
-                  and (ea.effective_to is null or ea.effective_to > :asOfDate)
+            WITH effective_assignments AS (
+                SELECT ea.employee_id,
+                       ea.position_id,
+                       ROW_NUMBER() OVER (
+                           PARTITION BY ea.employee_id
+                           ORDER BY ea.effective_from DESC,
+                                    ea.assignment_id DESC
+                       ) AS assignmentRank
+                FROM employee_assignments ea
+                WHERE ea.effective_from <= :asOfDate
+                  AND (
+                      ea.effective_to IS NULL
+                      OR ea.effective_to > :asOfDate
+                  )
             )
-            select p.position_id as groupId,
-                   coalesce(p.position_code, 'CHUA_PHAN_CONG') as groupCode,
-                   coalesce(p.position_name, N'Chưa có phân công hiệu lực') as groupName,
-                   count(distinct e.employee_id) as employeeCount
-            from employees e
-            left join effective_assignments ea on ea.employee_id = e.employee_id and ea.assignmentRank = 1
-            left join positions p on p.position_id = ea.position_id
-            group by p.position_id, p.position_code, p.position_name
-            order by p.position_name
+            SELECT p.position_id AS groupId,
+                   COALESCE(p.position_code, 'CHUA_PHAN_CONG') AS groupCode,
+                   COALESCE(p.position_name, N'Chưa có phân công hiệu lực') AS groupName,
+                   COUNT(DISTINCT e.employee_id) AS employeeCount
+            FROM employees e
+            LEFT JOIN effective_assignments ea
+                ON ea.employee_id = e.employee_id
+               AND ea.assignmentRank = 1
+            LEFT JOIN positions p
+                ON p.position_id = ea.position_id
+            GROUP BY p.position_id,
+                     p.position_code,
+                     p.position_name
+            ORDER BY p.position_name
             """, nativeQuery = true)
-    List<EmployeeStatisticsRow> countByPosition(@Param("asOfDate") LocalDate asOfDate);
+    List<EmployeeStatisticsRow> countByPosition(
+            @Param("asOfDate") LocalDate asOfDate);
 
+    // Tuong thich voi Service cu cua Nhi
+    default List<EmployeeStatisticsRow> countByPosition() {
+        return countByPosition(
+                LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
+    }
+
+    // Thong ke theo trang thai lam viec
     @Query(value = """
-            select cast(null as bigint) as groupId,
-                   e.employment_status as groupCode,
-                   e.employment_status as groupName,
-                   count(distinct e.employee_id) as employeeCount
-            from employees e
-            group by e.employment_status
-            order by e.employment_status
+            SELECT CAST(NULL AS BIGINT) AS groupId,
+                   e.employment_status AS groupCode,
+                   e.employment_status AS groupName,
+                   COUNT(DISTINCT e.employee_id) AS employeeCount
+            FROM employees e
+            GROUP BY e.employment_status
+            ORDER BY e.employment_status
             """, nativeQuery = true)
     List<EmployeeStatisticsRow> countByEmploymentStatus();
 
+    // Thong ke theo trinh do chuyen mon
     @Query(value = """
-            select ql.qualification_level_id as groupId,
-                   ql.level_code as groupCode,
-                   ql.level_name as groupName,
-                   count(distinct e.employee_id) as employeeCount
-            from employees e
-            join employee_qualifications eq
-                on eq.employee_id = e.employee_id
-                and eq.is_primary = 1
-            join qualification_levels ql
-                on ql.qualification_level_id = eq.qualification_level_id
-            group by ql.qualification_level_id, ql.level_code, ql.level_name
-            order by ql.level_name
+            SELECT ql.qualification_level_id AS groupId,
+                   ql.level_code AS groupCode,
+                   ql.level_name AS groupName,
+                   COUNT(DISTINCT e.employee_id) AS employeeCount
+            FROM employees e
+            JOIN employee_qualifications eq
+                ON eq.employee_id = e.employee_id
+               AND eq.is_primary = 1
+            JOIN qualification_levels ql
+                ON ql.qualification_level_id = eq.qualification_level_id
+            GROUP BY ql.qualification_level_id,
+                     ql.level_code,
+                     ql.level_name
+            ORDER BY ql.level_name
             """, nativeQuery = true)
     List<EmployeeStatisticsRow> countByQualification();
 }

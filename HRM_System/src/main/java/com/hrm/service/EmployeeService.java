@@ -39,15 +39,16 @@ import com.hrm.repository.EmployeeAssignmentRepository;
 import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PositionRepository;
 import com.hrm.security.AuthenticatedAccount;
+
 import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeService {
 
-    private static final Comparator<EmployeeAssignment> ASSIGNMENT_ORDER =
-            Comparator.comparing(EmployeeAssignment::getEffectiveFrom)
-                    .thenComparing(EmployeeAssignment::getAssignmentId,
-                            Comparator.nullsFirst(Comparator.naturalOrder()));
+    private static final Comparator<EmployeeAssignment> ASSIGNMENT_ORDER = Comparator
+            .comparing(EmployeeAssignment::getEffectiveFrom)
+            .thenComparing(EmployeeAssignment::getAssignmentId,
+                    Comparator.nullsFirst(Comparator.naturalOrder()));
 
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
@@ -129,7 +130,8 @@ public class EmployeeService {
             return employees.map(employee -> convertToSearchDTO(employee, null));
         }
 
-        // Keep the same deterministic choice as detail/statistics for overlapping legacy assignments.
+        // Keep the same deterministic choice as detail/statistics for overlapping
+        // legacy assignments.
         Map<Long, EmployeeAssignment> assignments = assignmentRepository
                 .findCurrentByEmployeeIds(employeeIds, asOf).stream()
                 .collect(Collectors.toMap(
@@ -170,6 +172,9 @@ public class EmployeeService {
         validateHireDateForCreation(requestDTO.getHireDate());
         guard.lockTimeline();
 
+        if (requestDTO.getEmployeeCode() == null || requestDTO.getEmployeeCode().isBlank()) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã nhân viên không được để trống");
+        }
         String employeeCode = requestDTO.getEmployeeCode().trim();
         if (employeeRepository.existsByEmployeeCode(employeeCode)) {
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã nhân viên đã tồn tại: " + employeeCode);
@@ -246,7 +251,10 @@ public class EmployeeService {
         return getEmployeeDetailById(id);
     }
 
-    /** Keeps the original profile-update API without changing assignment or identity data. */
+    /**
+     * Keeps the original profile-update API without changing assignment or identity
+     * data.
+     */
     @Transactional
     public EmployeeDTO updateEmployee(Long id, EmployeeRequestDTO requestDTO) {
         Employee employee = employeeRepository.findById(id)
@@ -256,6 +264,7 @@ public class EmployeeService {
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
         employee.setPhone(normalizeContactText(requestDTO.getPhone()));
+        employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
         employee.setUpdatedAt(auditNow());
         return convertToDTO(employeeRepository.save(employee));
     }
@@ -368,4 +377,5 @@ public class EmployeeService {
                     "Chưa hỗ trợ tạo nhân viên có ngày vào làm trong tương lai");
         }
     }
+
 }

@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import com.hrm.dto.ResetPasswordRequest;
@@ -5,8 +6,8 @@ import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.AuthService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -29,6 +30,7 @@ public class AdminAccountController {
             @AuthenticationPrincipal AuthenticatedAccount account,
             @PathVariable Long accountId,
             @Valid @RequestBody ResetPasswordRequest request) {
+
         authService.resetPassword(account.accountId(), accountId, request);
         return ResponseEntity.noContent().build();
     }

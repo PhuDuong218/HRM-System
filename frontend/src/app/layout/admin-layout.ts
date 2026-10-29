@@ -1,7 +1,8 @@
 import { Component, DestroyRef, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { filter } from 'rxjs';
+import { filter, finalize } from 'rxjs';
+import { AuthService } from '../services/auth.service';
 import { navigation, NavigationItem } from '../navigation';
 
 @Component({
@@ -14,6 +15,9 @@ import { navigation, NavigationItem } from '../navigation';
 export class AdminLayout {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
+  auth = inject(AuthService);
+  loggingOut = false;
+  logoutError = '';
   menu = navigation;
   menuOpen = false;
   expandedGroup: string | null = null;
@@ -41,5 +45,15 @@ export class AdminLayout {
 
   private expandCurrentGroup(): void {
     this.expandedGroup = this.menu.find(item => this.isGroupActive(item))?.id ?? null;
+  }
+
+  logout(): void {
+    if (this.loggingOut) return;
+    this.loggingOut = true;
+    this.logoutError = '';
+    this.auth.logout().pipe(finalize(() => this.loggingOut = false)).subscribe({
+      next: () => void this.router.navigateByUrl('/login'),
+      error: () => this.logoutError = 'Không thể đăng xuất. Vui lòng kiểm tra kết nối và thử lại.'
+    });
   }
 }

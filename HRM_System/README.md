@@ -1,7 +1,9 @@
 # HRM System — Hệ thống quản lý nhân sự và tính lương cho trung tâm giáo dục
 
 > **Đồ án môn học | Backend đang phát triển**  
-> Mục tiêu: xây dựng hệ thống quản lý nhân sự cho trung tâm giáo dục, tập trung vào nghiệp vụ **tính lương**. Hiện tại repository được hướng dẫn ở đây là **backend Java Spring Boot**; chưa có giao diện frontend.
+> Mục tiêu: xây dựng hệ thống quản lý nhân sự cho trung tâm giáo dục, tập trung vào nghiệp vụ **tính lương**. Thư mục này chứa backend Java Spring Boot; Web Angular nằm ở `../frontend`.
+
+**Đăng nhập và tài khoản thử nghiệm:** Xem [hướng dẫn mở khóa và đặt mật khẩu tài khoản](database/README_TAI_KHOAN.md). Dự án đã có API đăng nhập và xác thực JWT; API phòng ban yêu cầu ADMIN/HR có quyền `DEPARTMENT_MANAGE`.
 
 ## 1. Tổng quan
 

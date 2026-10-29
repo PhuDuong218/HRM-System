@@ -73,7 +73,7 @@ public class LeaveTypeService {
                         : request.getIsActive()
         );
 
-        leaveType.setCreatedAt(LocalDateTime.now());
+        leaveType.setCreatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
 
         return toDTO(leaveTypeRepository.saveAndFlush(leaveType));
     }
@@ -111,7 +111,7 @@ public class LeaveTypeService {
             leaveType.setIsActive(request.getIsActive());
         }
 
-        leaveType.setUpdatedAt(LocalDateTime.now());
+        leaveType.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
 
         return toDTO(leaveTypeRepository.saveAndFlush(leaveType));
     }
@@ -123,7 +123,7 @@ public class LeaveTypeService {
         LeaveType leaveType = findRequired(id);
 
         leaveType.setIsActive(false);
-        leaveType.setUpdatedAt(LocalDateTime.now());
+        leaveType.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
 
         leaveTypeRepository.saveAndFlush(leaveType);
     }

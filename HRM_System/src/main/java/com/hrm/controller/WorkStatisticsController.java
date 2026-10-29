@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import com.hrm.dto.WorkStatisticsResponse;
@@ -25,7 +26,9 @@ public class WorkStatisticsController {
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
     public WorkStatisticsResponse getWorkStatistics(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
+
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
+
         return statisticsService.summarize(fromDate, toDate);
     }
 }

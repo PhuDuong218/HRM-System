@@ -12,7 +12,8 @@ export class DepartmentsPage implements OnInit, OnDestroy {
   heads: Head[] = []; candidates: Assignment[] = []; positions: Position[] = [];
   page = 0; pages = 0; historyPage = 0; historyPages = 0; candidatePage = 0; candidatePages = 0;
   loading = false; saving = false; error = ''; message = '';
-  private positionsLoaded = false;
+  positionsLoading = false; positionsError = '';
+  positionsLoaded = false;
   today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
   ngOnInit() { this.load(); }
@@ -37,12 +38,23 @@ export class DepartmentsPage implements OnInit, OnDestroy {
     this.heads = []; this.candidates = []; this.historyPages = 0; this.candidatePages = 0;
     this.historyPage = 0; this.candidatePage = 0;
     this.loadHistory(0); if (department.isActive) this.loadCandidates(0);
-    if (!this.positionsLoaded) {
-      this.api.positions(0).pipe(
-        expand((result, index) => index + 1 < result.totalPages ? this.api.positions(index + 1) : EMPTY),
-        reduce((all, result) => [...all, ...result.content], [] as Position[]), takeUntil(this.destroyed)
-      ).subscribe({ next: rows => { this.positions = rows.filter(p => p.isActive && p.positionCode !== 'TRUONG_PHONG'); this.positionsLoaded = true; }, error: e => this.fail(e) });
-    }
+    if (department.headEmployeeId) this.loadPositions();
+  }
+  loadPositions() {
+    if (this.positionsLoaded || this.positionsLoading) return;
+    this.positionsLoading = true; this.positionsError = '';
+    this.api.positions(0).pipe(
+      expand((result, index) => index + 1 < result.totalPages ? this.api.positions(index + 1) : EMPTY),
+      reduce((all, result) => [...all, ...result.content], [] as Position[]), takeUntil(this.destroyed)
+    ).subscribe({
+      next: rows => { this.positions = rows.filter(p => p.isActive && p.positionCode !== 'TRUONG_PHONG'); this.positionsLoaded = true; this.positionsLoading = false; },
+      error: e => {
+        this.positionsLoading = false;
+        this.positionsError = e instanceof HttpErrorResponse && e.status === 403
+          ? 'Tài khoản chưa có quyền xem danh sách chức vụ. Hãy liên hệ quản trị viên.'
+          : 'Không tải được danh sách chức vụ. Hãy thử lại.';
+      }
+    });
   }
   clearSelection() { this.selectionChanged.next(); this.selected = null; this.heads = []; this.candidates = []; }
   loadHistory(page: number) {

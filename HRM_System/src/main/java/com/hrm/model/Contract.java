@@ -1,8 +1,10 @@
+
 package com.hrm.model;
 
 import java.time.LocalDate;
 
 import com.hrm.enums.ContractStatus;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -18,6 +20,7 @@ import jakarta.persistence.Table;
 @Entity
 @Table(name = "contracts", schema = "dbo")
 public class Contract extends BaseEntity {
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "contract_id")
@@ -47,20 +50,66 @@ public class Contract extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private ContractStatus status;
 
-    public Contract() {}
-    public Long getContractId() { return contractId; }
-    public Employee getEmployee() { return employee; }
-    public void setEmployee(Employee value) { employee = value; }
-    public ContractType getContractType() { return contractType; }
-    public void setContractType(ContractType value) { contractType = value; }
-    public String getContractNumber() { return contractNumber; }
-    public void setContractNumber(String value) { contractNumber = value; }
-    public LocalDate getSignedDate() { return signedDate; }
-    public void setSignedDate(LocalDate value) { signedDate = value; }
-    public LocalDate getStartDate() { return startDate; }
-    public void setStartDate(LocalDate value) { startDate = value; }
-    public LocalDate getEndDate() { return endDate; }
-    public void setEndDate(LocalDate value) { endDate = value; }
-    public ContractStatus getStatus() { return status; }
-    public void setStatus(ContractStatus value) { status = value; }
+    public Contract() {
+    }
+
+    public Long getContractId() {
+        return contractId;
+    }
+
+    public Employee getEmployee() {
+        return employee;
+    }
+
+    public void setEmployee(Employee value) {
+        employee = value;
+    }
+
+    public ContractType getContractType() {
+        return contractType;
+    }
+
+    public void setContractType(ContractType value) {
+        contractType = value;
+    }
+
+    public String getContractNumber() {
+        return contractNumber;
+    }
+
+    public void setContractNumber(String value) {
+        contractNumber = value;
+    }
+
+    public LocalDate getSignedDate() {
+        return signedDate;
+    }
+
+    public void setSignedDate(LocalDate value) {
+        signedDate = value;
+    }
+
+    public LocalDate getStartDate() {
+        return startDate;
+    }
+
+    public void setStartDate(LocalDate value) {
+        startDate = value;
+    }
+
+    public LocalDate getEndDate() {
+        return endDate;
+    }
+
+    public void setEndDate(LocalDate value) {
+        endDate = value;
+    }
+
+    public ContractStatus getStatus() {
+        return status;
+    }
+
+    public void setStatus(ContractStatus value) {
+        status = value;
+    }
 }

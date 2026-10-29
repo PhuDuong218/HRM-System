@@ -34,3 +34,4 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
   .page-content { padding: 24px 16px; }
   footer { padding: 16px; }
 }
+.account-actions{display:flex;align-items:center;gap:12px}.account-name{color:#506278;overflow-wrap:anywhere}@media(max-width:480px){.account-name{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}}

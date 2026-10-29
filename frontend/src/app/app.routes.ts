@@ -5,19 +5,14 @@ import { EmployeesPage } from "./pages/employees/employees";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { DepartmentsPage } from "./pages/departments/departments";
+import { LoginPage } from "./pages/login/login";
+import { authGuard } from "./services/auth.guard";
 export const routes: Routes = [
-  {
-    path: "login",
-    component: PlaceholderPage,
-    data: {
-      title: "Đăng nhập",
-      message:
-        "Chờ đối chiếu API và chính sách phiên của backend để tích hợp đăng nhập thật.",
-    },
-  },
+  { path: "login", component: LoginPage },
   {
     path: "",
     component: AdminLayout,
+    canActivate: [authGuard],
     children: [
       { path: "", redirectTo: "overview", pathMatch: "full" },
       { path: "overview", component: OverviewPage },

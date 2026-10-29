@@ -1,17 +1,20 @@
+
 package com.hrm.service;
 
+import java.time.Clock;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
-import java.time.Clock;
-import org.springframework.beans.factory.annotation.Qualifier;
+
 import com.hrm.dto.EmployeeAssignmentDTO;
 import com.hrm.dto.EmployeeTransferRequestDTO;
 import com.hrm.enums.EmploymentStatus;
@@ -52,6 +55,7 @@ public class EmployeeAssignmentService {
                 this.businessClock = businessClock;
         }
 
+        // 1. Lay toan bo danh sach phan cong
         @Transactional(readOnly = true)
         public List<EmployeeAssignmentDTO> getAllAssignments() {
                 return assignmentRepository.findAllWithDetails()
@@ -60,6 +64,7 @@ public class EmployeeAssignmentService {
                                 .toList();
         }
 
+        // 2. Lay lich su phan cong cua nhan vien
         @Transactional(readOnly = true)
         public List<EmployeeAssignmentDTO> getEmployeeHistory(Long employeeId) {
 
@@ -74,7 +79,9 @@ public class EmployeeAssignmentService {
                                 .toList();
         }
 
+        // 3. Chuyen EmployeeAssignment thanh DTO
         private EmployeeAssignmentDTO convertToDTO(EmployeeAssignment ea) {
+
                 return new EmployeeAssignmentDTO(
                                 ea.getAssignmentId(),
                                 ea.getEmployee().getEmployeeId(),
@@ -88,56 +95,57 @@ public class EmployeeAssignmentService {
                                 ea.getEffectiveTo());
         }
 
+        // 4. Dieu chuyen nhan vien
         @Transactional
         public EmployeeAssignmentDTO transferEmployee(
                         Long employeeId,
                         EmployeeTransferRequestDTO request) {
 
+                // Khoa timeline de tranh xu ly dong thoi
                 guard.lockTimeline();
+
                 LocalDate asOf = LocalDate.now(businessClock);
 
-                // 1. Tìm và khóa nhân viên
+                // Tim va khoa nhan vien
                 Employee employee = employeeRepository
                                 .findByIdForUpdate(employeeId)
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Không tìm thấy nhân viên: " + employeeId));
 
-                // 2. Chỉ cho phép điều chuyển nhân viên đang làm việc
+                // Chi dieu chuyen nhan vien dang lam viec
                 if (employee.getEmploymentStatus() != EmploymentStatus.DANG_LAM) {
                         throw new ResponseStatusException(
                                         HttpStatus.CONFLICT,
                                         "Nhân viên không còn đang làm việc");
                 }
 
-                // 3. Kiểm tra phòng ban mới
+                // Kiem tra phong ban moi
                 Department newDepartment = departmentRepository
                                 .findById(request.departmentId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Phòng ban mới không tồn tại: "
                                                                 + request.departmentId()));
 
-                // 4. Kiểm tra chức vụ mới
+                // Kiem tra chuc vu moi
                 Position newPosition = positionRepository
                                 .findById(request.positionId())
                                 .orElseThrow(() -> new ResourceNotFoundException(
                                                 "Chức vụ mới không tồn tại: "
                                                                 + request.positionId()));
 
-                // Kiểm tra trạng thái phòng ban
                 if (!Boolean.TRUE.equals(newDepartment.getIsActive())) {
                         throw new ResponseStatusException(
                                         HttpStatus.CONFLICT,
                                         "Phòng ban đã ngừng hoạt động");
                 }
 
-                // Kiểm tra trạng thái chức vụ
                 if (!Boolean.TRUE.equals(newPosition.getIsActive())) {
                         throw new ResponseStatusException(
                                         HttpStatus.CONFLICT,
                                         "Chức vụ đã ngừng hoạt động");
                 }
 
-                // 5. Kiểm tra ngày điều chuyển
+                // Kiem tra ngay dieu chuyen
                 LocalDate transferDate = request.effectiveFrom();
 
                 if (transferDate == null) {
@@ -146,7 +154,8 @@ public class EmployeeAssignmentService {
                                         "Ngày điều chuyển không được để trống");
                 }
 
-                if (transferDate.isBefore(employee.getHireDate())) {
+                if (employee.getHireDate() != null
+                                && transferDate.isBefore(employee.getHireDate())) {
                         throw new ResponseStatusException(
                                         HttpStatus.BAD_REQUEST,
                                         "Ngày điều chuyển không được trước ngày vào làm");
@@ -158,9 +167,9 @@ public class EmployeeAssignmentService {
                                         "Chưa hỗ trợ điều chuyển trong tương lai");
                 }
 
-                // 6. Tìm phân công hiện tại
-                List<EmployeeAssignment> currentList =
-        assignmentRepository.findCurrentAssignments(employeeId, asOf);
+                // Tim phan cong hien tai theo thoi diem
+                List<EmployeeAssignment> currentList = assignmentRepository.findCurrentAssignments(
+                                employeeId, asOf);
 
                 if (currentList.size() != 1) {
                         throw new ResponseStatusException(
@@ -169,20 +178,26 @@ public class EmployeeAssignmentService {
                 }
 
                 EmployeeAssignment oldAssignment = currentList.get(0);
-                if (AssignmentGuardService.HEAD_CODE.equals(oldAssignment.getPosition().getPositionCode())
-                                || AssignmentGuardService.HEAD_CODE.equals(newPosition.getPositionCode())) {
-                        throw new ResponseStatusException(HttpStatus.CONFLICT,
+
+                // Truong phong phai theo nghiep vu rieng
+                if (AssignmentGuardService.HEAD_CODE.equals(
+                                oldAssignment.getPosition().getPositionCode())
+                                || AssignmentGuardService.HEAD_CODE.equals(
+                                                newPosition.getPositionCode())) {
+
+                        throw new ResponseStatusException(
+                                        HttpStatus.CONFLICT,
                                         "Hãy dùng nghiệp vụ bổ nhiệm/kết thúc trưởng phòng trước khi điều chuyển");
                 }
 
-                // 7. Kiểm tra ngày hiệu lực
+                // Kiem tra ngay bat dau phan cong
                 if (!transferDate.isAfter(oldAssignment.getEffectiveFrom())) {
                         throw new ResponseStatusException(
                                         HttpStatus.BAD_REQUEST,
                                         "Ngày điều chuyển phải sau ngày bắt đầu phân công cũ");
                 }
 
-                // 8. Kiểm tra có thay đổi phòng ban/chức vụ hay không
+                // Kiem tra co thay doi phong ban/chuc vu
                 boolean sameDepartment = oldAssignment.getDepartment().getDepartmentId()
                                 .equals(request.departmentId());
 
@@ -195,11 +210,13 @@ public class EmployeeAssignmentService {
                                         "Phòng ban và chức vụ mới không thay đổi");
                 }
 
-                // 9. Kết thúc phân công cũ
+                // Ket thuc phan cong cu
+                // Quy uoc main: effectiveTo la ngay KHONG con hieu luc
                 oldAssignment.setEffectiveTo(transferDate);
-                oldAssignment.setUpdatedAt(LocalDateTime.now(businessClock.withZone(java.time.ZoneOffset.UTC)));
+                oldAssignment.setUpdatedAt(
+                                LocalDateTime.now(businessClock.withZone(ZoneOffset.UTC)));
 
-                // 10. Tạo phân công mới
+                // Tao phan cong moi
                 EmployeeAssignment newAssignment = new EmployeeAssignment();
 
                 newAssignment.setEmployee(employee);
@@ -207,20 +224,23 @@ public class EmployeeAssignmentService {
                 newAssignment.setPosition(newPosition);
                 newAssignment.setEffectiveFrom(transferDate);
                 newAssignment.setEffectiveTo(null);
-                newAssignment.setCreatedAt(LocalDateTime.now(businessClock.withZone(java.time.ZoneOffset.UTC)));
+                newAssignment.setCreatedAt(
+                                LocalDateTime.now(businessClock.withZone(ZoneOffset.UTC)));
 
-                // 11. Lưu dữ liệu
+                // Luu phan cong cu truoc
                 assignmentRepository.saveAndFlush(oldAssignment);
 
+                // Luu phan cong moi
                 EmployeeAssignment savedAssignment = assignmentRepository.save(newAssignment);
 
-                // 12. Trả kết quả
                 return convertToDTO(savedAssignment);
         }
 
+        // 5. Phan trang danh sach phan cong
         @Transactional(readOnly = true)
         public Page<EmployeeAssignmentDTO> getAssignmentsPage(
-                        int page, int size) {
+                        int page,
+                        int size) {
 
                 return assignmentRepository.findAllPagedWithDetails(
                                 PagingUtils.create(
@@ -232,6 +252,7 @@ public class EmployeeAssignmentService {
                                 .map(this::convertToDTO);
         }
 
+        // 6. Phan trang lich su phan cong
         @Transactional(readOnly = true)
         public Page<EmployeeAssignmentDTO> getHistoryPage(
                         Long employeeId,
@@ -253,5 +274,4 @@ public class EmployeeAssignmentService {
                                                                 Sort.Order.desc("assignmentId"))))
                                 .map(this::convertToDTO);
         }
-
 }

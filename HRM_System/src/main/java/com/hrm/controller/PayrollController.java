@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import com.hrm.repository.projection.EmployeePayrollLineView;
@@ -23,14 +24,20 @@ public class PayrollController {
     }
 
     @GetMapping("/salary")
-    @PreAuthorize("hasAuthority('PAYSLIP_SELF_READ')")
-    public List<EmployeePayrollLineView> getMySalary(Authentication authentication) {
-        return payrollService.getMySalary((AuthenticatedAccount) authentication.getPrincipal());
+    @PreAuthorize("hasAuthority('payroll.self.view')")
+    public List<EmployeePayrollLineView> getMySalary(
+            Authentication authentication) {
+
+        return payrollService.getMySalary(
+                (AuthenticatedAccount) authentication.getPrincipal());
     }
 
     @GetMapping("/payslips")
-    @PreAuthorize("hasAuthority('PAYSLIP_SELF_READ')")
-    public List<EmployeePayslipView> getMyPayslips(Authentication authentication) {
-        return payrollService.getMyPayslips((AuthenticatedAccount) authentication.getPrincipal());
+    @PreAuthorize("hasAuthority('payslip.self.view')")
+    public List<EmployeePayslipView> getMyPayslips(
+            Authentication authentication) {
+
+        return payrollService.getMyPayslips(
+                (AuthenticatedAccount) authentication.getPrincipal());
     }
 }

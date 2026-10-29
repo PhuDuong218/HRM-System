@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import java.security.Principal;
@@ -40,67 +41,111 @@ public class EmployeeController {
     private final EmployeeTerminationAuditService terminationAudit;
     private final EmployeeCreationAuditService creationAudit;
 
-    public EmployeeController(EmployeeService employeeService, DepartmentHeadAccessService accessService,
-            EmployeeTerminationAuditService terminationAudit, EmployeeCreationAuditService creationAudit) {
+    public EmployeeController(
+            EmployeeService employeeService,
+            DepartmentHeadAccessService accessService,
+            EmployeeTerminationAuditService terminationAudit,
+            EmployeeCreationAuditService creationAudit) {
+
         this.employeeService = employeeService;
         this.accessService = accessService;
         this.terminationAudit = terminationAudit;
         this.creationAudit = creationAudit;
     }
 
-    @GetMapping(params = {"!page", "!size"})
+    // 1. Lay danh sach nhan vien
+    // Giu kiem tra pham vi theo tai khoan dang nhap
+    @GetMapping(params = { "!page", "!size" })
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public List<EmployeeDTO> listEmployees(Principal principal) {
-        actorAccountId(principal);
+
         AuthenticatedAccount actor = authenticatedAccount(principal);
-        return actor == null ? employeeService.getAllEmployees() : employeeService.getAllEmployees(actor);
+
+        if (actor != null) {
+            return employeeService.getAllEmployees(actor);
+        }
+
+        actorAccountId(principal);
+        return employeeService.getAllEmployees();
     }
 
-    @GetMapping
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    // 2. Lay danh sach phan trang
+    // Tam gioi han ADMIN cho den khi Service ho tro loc pham vi HR
+    @GetMapping(params = { "page" })
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('EMPLOYEE_MANAGE')")
     public Page<EmployeeDTO> getEmployeesPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
+
         actorAccountId(principal);
+
         return employeeService.getEmployeesPage(page, size);
     }
 
+    // 3. Xem chi tiet nhan vien
     @GetMapping("/{id}")
     @PreAuthorize("(hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE'))"
             + " or (hasAuthority('SELF_READ') and #id == authentication.principal.employeeId())")
-    public EmployeeDTO getEmployeeDetails(@PathVariable Long id, Principal principal) {
+    public EmployeeDTO getEmployeeDetails(
+            @PathVariable Long id,
+            Principal principal) {
+
         AuthenticatedAccount actor = authenticatedAccount(principal);
+
         if (actor != null) {
             return employeeService.getEmployeeById(id, actor);
         }
+
         actorAccountId(principal);
         return employeeService.getEmployeeById(id);
     }
 
+    // 4. Tao nhan vien moi va ghi audit
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
-    public EmployeeDTO createEmployee(@Valid @RequestBody EmployeeRequestDTO requestDTO, Principal principal) {
-        return creationAudit.create(requestDTO, actorAccountId(principal));
+    public EmployeeDTO createEmployee(
+            @Valid @RequestBody EmployeeRequestDTO requestDTO,
+            Principal principal) {
+
+        return creationAudit.create(
+                requestDTO,
+                actorAccountId(principal));
     }
 
+    // 5. Cap nhat nhan vien va ghi audit
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
-    public EmployeeDTO replaceEmployee(@PathVariable Long id,
-            @Valid @RequestBody EmployeeUpdateRequestDTO requestDTO, Principal principal) {
-        return creationAudit.update(id, requestDTO, actorAccountId(principal));
+    public EmployeeDTO replaceEmployee(
+            @PathVariable Long id,
+            @Valid @RequestBody EmployeeUpdateRequestDTO requestDTO,
+            Principal principal) {
+
+        return creationAudit.update(
+                id,
+                requestDTO,
+                actorAccountId(principal));
     }
 
+    // 6. Xu ly nhan vien nghi viec
     @DeleteMapping(value = "/{id}", produces = "text/plain;charset=UTF-8")
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
-    public String terminateEmployee(@PathVariable Long id, Principal principal) {
-        terminationAudit.terminateIfActive(id, actorAccountId(principal));
+    public String terminateEmployee(
+            @PathVariable Long id,
+            Principal principal) {
+
+        terminationAudit.terminateIfActive(
+                id,
+                actorAccountId(principal));
+
         return "Đã xử lý nghỉ việc cho nhân viên có ID: " + id;
     }
 
+    // 7. Tim kiem nhan vien
+    // Tam gioi han ADMIN de tranh HR xem nhan vien ngoai pham vi
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('EMPLOYEE_MANAGE')")
     public Page<EmployeeDTO> searchEmployees(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) EmploymentStatus status,
@@ -109,65 +154,110 @@ public class EmployeeController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
+
         actorAccountId(principal);
-        return employeeService.searchEmployees(keyword, status, departmentId, positionId, page, size);
+
+        return employeeService.searchEmployees(
+                keyword,
+                status,
+                departmentId,
+                positionId,
+                page,
+                size);
     }
+
+    // 8. Giu cac phuong thuc Java cu cua Nhi
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public List<EmployeeDTO> getAllEmployees(Authentication authentication) {
-        return employeeService.getAllEmployees((AuthenticatedAccount) authentication.getPrincipal());
+        return employeeService.getAllEmployees(
+                (AuthenticatedAccount) authentication.getPrincipal());
     }
 
     @PreAuthorize("(hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE'))"
             + " or (hasAuthority('SELF_READ') and #id == authentication.principal.employeeId())")
-    public EmployeeDTO getEmployee(Long id, Authentication authentication) {
-        return employeeService.getEmployeeById(id, (AuthenticatedAccount) authentication.getPrincipal());
+    public EmployeeDTO getEmployee(
+            Long id,
+            Authentication authentication) {
+
+        return employeeService.getEmployeeById(
+                id,
+                (AuthenticatedAccount) authentication.getPrincipal());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public EmployeeDTO addEmployee(EmployeeRequestDTO requestDTO) {
-        return creationAudit.create(requestDTO, currentActorAccountId());
+        return creationAudit.create(
+                requestDTO,
+                currentActorAccountId());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
-    public EmployeeDTO updateEmployee(Long id, EmployeeRequestDTO requestDTO) {
-        return creationAudit.update(id, toUpdateRequest(requestDTO), currentActorAccountId());
+    public EmployeeDTO updateEmployee(
+            Long id,
+            EmployeeRequestDTO requestDTO) {
+
+        return creationAudit.update(
+                id,
+                toUpdateRequest(requestDTO),
+                currentActorAccountId());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public String deleteEmployee(Long id) {
-        employeeService.deleteEmployee(id);
-        return "Đã xóa nhân viên có mã: " + id;
+
+        terminationAudit.terminateIfActive(
+                id,
+                currentActorAccountId());
+
+        return "Đã xử lý nghỉ việc cho nhân viên có ID: " + id;
     }
 
-    private EmployeeUpdateRequestDTO toUpdateRequest(EmployeeRequestDTO request) {
+    // 9. Chuyen DTO cu sang DTO cap nhat moi
+
+    private EmployeeUpdateRequestDTO toUpdateRequest(
+            EmployeeRequestDTO request) {
+
         if (request == null) {
             return null;
         }
+
         EmployeeUpdateRequestDTO update = new EmployeeUpdateRequestDTO();
+
         update.setFullName(request.getFullName());
         update.setBirthDate(request.getBirthDate());
         update.setEmail(request.getEmail());
         update.setPhone(request.getPhone());
         update.setIdentityNumber(request.getIdentityNumber());
+
         return update;
     }
 
+    // 10. Xac dinh tai khoan dang nhap
+
     private Long currentActorAccountId() {
-        return actorAccountId(SecurityContextHolder.getContext().getAuthentication());
+        return actorAccountId(
+                SecurityContextHolder.getContext().getAuthentication());
     }
 
     private Long actorAccountId(Principal principal) {
+
         AuthenticatedAccount actor = authenticatedAccount(principal);
-        return actor == null ? accessService.requireManager(principal) : actor.accountId();
+
+        return actor == null
+                ? accessService.requireManager(principal)
+                : actor.accountId();
     }
 
     private AuthenticatedAccount authenticatedAccount(Principal principal) {
+
         if (principal instanceof Authentication authentication
                 && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof AuthenticatedAccount actor) {
+
             return actor;
         }
+
         return null;
     }
 }

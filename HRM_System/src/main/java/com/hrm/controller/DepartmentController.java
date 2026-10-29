@@ -1,3 +1,4 @@
+
 package com.hrm.controller;
 
 import java.security.Principal;
@@ -36,21 +37,25 @@ public class DepartmentController {
     private final DepartmentHeadAccessService access;
     private final CatalogAuditService catalog;
 
-    public DepartmentController(DepartmentService departmentService, DepartmentHeadAccessService access,
+    public DepartmentController(
+            DepartmentService departmentService,
+            DepartmentHeadAccessService access,
             CatalogAuditService catalog) {
         this.departmentService = departmentService;
         this.access = access;
         this.catalog = catalog;
     }
 
-    @GetMapping(params = {"!page", "!size", "!keyword", "!active"})
+    // 1. Lay danh sach phong ban
+    @GetMapping(params = { "!page", "!size", "!keyword", "!active" })
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public List<DepartmentDTO> listDepartments(Principal principal) {
         actorAccountId(principal);
         return departmentService.getAllDepartment();
     }
 
-    @GetMapping({"", "/search"})
+    // 2. Tim kiem va phan trang
+    @GetMapping({ "", "/search" })
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public Page<DepartmentDTO> searchDepartments(
             @RequestParam(defaultValue = "0") int page,
@@ -58,40 +63,65 @@ public class DepartmentController {
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) Boolean active,
             Principal principal) {
+
         actorAccountId(principal);
         return departmentService.searchDepartments(keyword, active, page, size);
     }
 
+    // 3. Xem chi tiet phong ban
     @GetMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public DepartmentDTO getDepartmentDetails(@PathVariable Long id, Principal principal) {
+    public DepartmentDTO getDepartmentDetails(
+            @PathVariable Long id,
+            Principal principal) {
+
         actorAccountId(principal);
         return departmentService.getDepartment(id);
     }
 
+    // 4. Tao phong ban va ghi audit
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public DepartmentDTO createDepartment(@Valid @RequestBody DepartmentRequestDTO requestDTO,
+    public DepartmentDTO createDepartment(
+            @Valid @RequestBody DepartmentRequestDTO requestDTO,
             Principal principal) {
-        return catalog.createDepartment(requestDTO, actorAccountId(principal));
+
+        return catalog.createDepartment(
+                requestDTO,
+                actorAccountId(principal));
     }
 
+    // 5. Cap nhat phong ban va ghi audit
     @PutMapping("/{id}")
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public DepartmentDTO replaceDepartment(@PathVariable Long id,
-            @Valid @RequestBody DepartmentRequestDTO requestDTO, Principal principal) {
-        return catalog.updateDepartment(id, requestDTO, actorAccountId(principal));
+    public DepartmentDTO replaceDepartment(
+            @PathVariable Long id,
+            @Valid @RequestBody DepartmentRequestDTO requestDTO,
+            Principal principal) {
+
+        return catalog.updateDepartment(
+                id,
+                requestDTO,
+                actorAccountId(principal));
     }
 
+    // 6. Ngung su dung phong ban
     @DeleteMapping(value = "/{id}", produces = "text/plain;charset=UTF-8")
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public String deactivateDepartment(@PathVariable Long id, Principal principal) {
-        catalog.deactivateDepartment(id, actorAccountId(principal));
+    public String deactivateDepartment(
+            @PathVariable Long id,
+            Principal principal) {
+
+        catalog.deactivateDepartment(
+                id,
+                actorAccountId(principal));
+
         return "Đã ngừng sử dụng phòng ban có mã: " + id;
     }
 
-    // Preserve the personal branch's public controller API for existing callers.
+    // 7. Giu cac phuong thuc cu de tuong thich code Nhi
+
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public List<DepartmentDTO> getAllDepartments() {
         return departmentService.getAllDepartment();
@@ -103,31 +133,48 @@ public class DepartmentController {
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public DepartmentDTO addDepartment(DepartmentRequestDTO requestDTO) {
-        return catalog.createDepartment(requestDTO, currentActorAccountId());
+    public DepartmentDTO addDepartment(
+            DepartmentRequestDTO requestDTO) {
+
+        return catalog.createDepartment(
+                requestDTO,
+                currentActorAccountId());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
-    public DepartmentDTO updateDepartment(Long id, DepartmentRequestDTO requestDTO) {
-        return catalog.updateDepartment(id, requestDTO, currentActorAccountId());
+    public DepartmentDTO updateDepartment(
+            Long id,
+            DepartmentRequestDTO requestDTO) {
+
+        return catalog.updateDepartment(
+                id,
+                requestDTO,
+                currentActorAccountId());
     }
 
     @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('DEPARTMENT_MANAGE')")
     public String deleteDepartment(Long id) {
-        return deactivateDepartment(id, SecurityContextHolder.getContext().getAuthentication());
+        catalog.deactivateDepartment(
+                id,
+                currentActorAccountId());
+
+        return "Đã ngừng sử dụng phòng ban có mã: " + id;
     }
 
+    // 8. Xac dinh tai khoan thuc hien thao tac
+
     private Long currentActorAccountId() {
-        return actorAccountId(SecurityContextHolder.getContext().getAuthentication());
+        return actorAccountId(
+                SecurityContextHolder.getContext().getAuthentication());
     }
 
     private Long actorAccountId(Principal principal) {
         if (principal instanceof Authentication authentication
                 && authentication.isAuthenticated()
                 && authentication.getPrincipal() instanceof AuthenticatedAccount actor) {
-            // JWT authentication already checked the active account, employee and SQL permissions.
             return actor.accountId();
         }
+
         return access.requireManager(principal);
     }
 }

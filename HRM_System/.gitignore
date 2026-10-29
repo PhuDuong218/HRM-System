@@ -1,3 +1,4 @@
+
 # Maven / Java
 target/
 *.class
@@ -14,8 +15,12 @@ Thumbs.db
 .env
 .env.*
 !.env.example
+
+# Cau hinh database rieng cua tung thanh vien
 **/application-local.properties
 application-*.local.properties
+
+# Khong day mat khau SQL Server len GitHub
 
 # Local SQL backups / generated dumps
 *.bak

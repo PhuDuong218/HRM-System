@@ -1,3 +1,4 @@
+
 package com.hrm.repository;
 
 import java.time.LocalDate;
@@ -21,28 +22,35 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
-    boolean existsByEmployeeIdAndEmploymentStatus(Long employeeId, EmploymentStatus employmentStatus);
-
+    // Kiem tra ma nhan vien da ton tai hay chua
     boolean existsByEmployeeCode(String employeeCode);
 
-    // Fetch full history so employees without a current assignment are not dropped.
+    // Kiem tra nhan vien theo ID va trang thai lam viec
+    boolean existsByEmployeeIdAndEmploymentStatus(
+            Long employeeId,
+            EmploymentStatus employmentStatus);
+
+    // Lay tat ca nhan vien kem lich su phan cong
     @Query("""
-            select distinct e from Employee e
-            left join fetch e.assignments a
-            left join fetch a.department
-            left join fetch a.position
+            SELECT DISTINCT e FROM Employee e
+            LEFT JOIN FETCH e.assignments a
+            LEFT JOIN FETCH a.department
+            LEFT JOIN FETCH a.position
             """)
     List<Employee> findAllWithAssignments();
 
+    // Lay nhan vien theo ID kem lich su phan cong
     @Query("""
-            select distinct e from Employee e
-            left join fetch e.assignments a
-            left join fetch a.department
-            left join fetch a.position
-            where e.employeeId = :employeeId
+            SELECT DISTINCT e FROM Employee e
+            LEFT JOIN FETCH e.assignments a
+            LEFT JOIN FETCH a.department
+            LEFT JOIN FETCH a.position
+            WHERE e.employeeId = :employeeId
             """)
-    Optional<Employee> findByIdWithAssignments(@Param("employeeId") Long employeeId);
+    Optional<Employee> findByIdWithAssignments(
+            @Param("employeeId") Long employeeId);
 
+    // Lay danh sach nhan vien kem phan cong chua co ngay ket thuc
     @Query("""
             SELECT DISTINCT e FROM Employee e
             LEFT JOIN FETCH e.assignments a
@@ -52,10 +60,13 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             """)
     List<Employee> findAllWithCurrentAssignments();
 
+    // Khoa ban ghi nhan vien khi cap nhat
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Employee e WHERE e.employeeId = :id")
     Optional<Employee> findByIdForUpdate(@Param("id") Long id);
 
+    // Tim kiem nhan vien co loc theo trang thai,
+    // phong ban, chuc vu va thoi diem hieu luc
     @Query(value = """
             SELECT e
             FROM Employee e
@@ -105,13 +116,23 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             @Param("asOf") LocalDate asOf,
             Pageable pageable);
 
+    // Ham tien ich: mac dinh tim kiem theo ngay hien tai tai Viet Nam
     default Page<Employee> searchEmployees(
             String keyword,
             EmploymentStatus status,
             Long departmentId,
             Long positionId,
             Pageable pageable) {
-        LocalDate today = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-        return searchEmployees(keyword, status, departmentId, positionId, today, pageable);
+
+        LocalDate today = LocalDate.now(
+                ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        return searchEmployees(
+                keyword,
+                status,
+                departmentId,
+                positionId,
+                today,
+                pageable);
     }
 }
