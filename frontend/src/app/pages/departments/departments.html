@@ -16,6 +16,8 @@
 @if (selected; as d) {
   <section class="surface mb-4">
     <h2>{{ d.departmentName }}</h2><p>Trưởng phòng hiện tại: <strong>{{ d.headFullName || 'Chưa bổ nhiệm' }}</strong></p>
+    @if (d.headEmployeeId && positionsLoading) { <p role="status">Đang tải danh sách chức vụ…</p> }
+    @if (d.headEmployeeId && positionsError) { <div class="alert alert-warning" role="alert">{{ positionsError }} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadPositions()">Thử lại</button></div> }
     @if (d.isActive) {
       <h3>{{ d.headEmployeeId ? 'Thay trưởng phòng' : 'Bổ nhiệm trưởng phòng' }}</h3>
       <p>Ngày hiệu lực phải sau ngày bắt đầu phân công của người liên quan và không ở tương lai. Nếu mới phân công hôm nay, cần thực hiện từ ngày sau.</p>
@@ -24,18 +26,18 @@
           <div class="d-flex gap-2 mt-2"><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="candidatePage === 0 || saving" (click)="loadCandidates(candidatePage - 1)">Nhân viên trước</button><span>{{ candidatePages ? candidatePage + 1 : 0 }}/{{ candidatePages }}</span><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="candidatePage + 1 >= candidatePages || saving" (click)="loadCandidates(candidatePage + 1)">Nhân viên sau</button></div>
         </div>
         <div class="col-md-6"><label for="appoint-date" class="form-label">Có hiệu lực từ ngày</label><input id="appoint-date" #appointDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
-        <div class="col-md-6"><label for="previous-position" class="form-label">Chức vụ tiếp theo của trưởng phòng cũ</label><select id="previous-position" #previousPosition class="form-select" [required]="!!d.headEmployeeId" [disabled]="!d.headEmployeeId || saving"><option value="">{{ d.headEmployeeId ? 'Chọn chức vụ cho người cũ' : 'Không có người cũ' }}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
+        <div class="col-md-6"><label for="previous-position" class="form-label">Chức vụ tiếp theo của trưởng phòng cũ</label><select id="previous-position" #previousPosition class="form-select" [required]="!!d.headEmployeeId" [disabled]="!d.headEmployeeId || saving || !positionsLoaded"><option value="">{{ d.headEmployeeId ? 'Chọn chức vụ cho người cũ' : 'Không có người cũ' }}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
         <div class="col-md-6"><label for="appoint-reason" class="form-label">Lý do bổ nhiệm / thay người</label><textarea id="appoint-reason" #appointReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
-        <div><button type="submit" class="btn btn-primary" [disabled]="saving || !candidates.length">{{ saving ? 'Đang lưu…' : 'Lưu bổ nhiệm' }}</button></div>
+        <div><button type="submit" class="btn btn-primary" [disabled]="saving || !candidates.length || (!!d.headEmployeeId && (!positionsLoaded || !positions.length))">{{ saving ? 'Đang lưu…' : 'Lưu bổ nhiệm' }}</button></div>
       </form>
     }
     @if (d.headEmployeeId) {
       <hr><h3>Kết thúc nhiệm kỳ</h3><p>Người cũ tiếp tục làm việc tại phòng với chức vụ được chọn; phòng sẽ tạm thời chưa có trưởng phòng.</p>
       <form (submit)="end($event, endDate.value, nextPosition.value, endReason.value)" class="row g-3">
         <div class="col-md-4"><label for="end-date" class="form-label">Ngày đầu không còn đảm nhiệm</label><input id="end-date" #endDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
-        <div class="col-md-4"><label for="next-position" class="form-label">Chức vụ tiếp theo</label><select id="next-position" #nextPosition class="form-select" required [disabled]="saving"><option value="">Chọn chức vụ</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
+        <div class="col-md-4"><label for="next-position" class="form-label">Chức vụ tiếp theo</label><select id="next-position" #nextPosition class="form-select" required [disabled]="saving || !positionsLoaded"><option value="">Chọn chức vụ</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
         <div class="col-md-4"><label for="end-reason" class="form-label">Lý do kết thúc</label><textarea id="end-reason" #endReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
-        <div><button type="submit" class="btn btn-outline-danger" [disabled]="saving">Kết thúc nhiệm kỳ</button></div>
+        <div><button type="submit" class="btn btn-outline-danger" [disabled]="saving || !positionsLoaded || !positions.length">Kết thúc nhiệm kỳ</button></div>
       </form>
     }
   </section>

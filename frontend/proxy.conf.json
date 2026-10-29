@@ -1,4 +1,14 @@
 {
+  "/api/health": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/auth": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:2005",
     "pathRewrite": { "^/api": "" },

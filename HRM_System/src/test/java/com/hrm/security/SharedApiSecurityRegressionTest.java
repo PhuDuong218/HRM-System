@@ -6,8 +6,11 @@ import com.hrm.dto.LoginResponse;
 import com.hrm.model.Account;
 import com.hrm.model.Role;
 import com.hrm.repository.AccountRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PermissionRepository;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.service.AuthService;
+import com.hrm.service.DetailedWorkTimeService;
 import com.hrm.service.ScheduleQueryService;
 import com.hrm.service.WorkScheduleService;
 import jakarta.servlet.Filter;
@@ -68,14 +71,19 @@ class SharedApiSecurityRegressionTest {
         }
 
         @Bean
+        EmployeeRepository employeeRepository() {
+            return mock(EmployeeRepository.class);
+        }
+
+        @Bean
         PermissionRepository permissionRepository() {
             return mock(PermissionRepository.class);
         }
 
         @Bean
         JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwt,
-                AccountRepository accounts, PermissionRepository permissions) {
-            return new JwtAuthenticationFilter(jwt, accounts, permissions);
+                AccountRepository accounts, EmployeeRepository employees, PermissionRepository permissions) {
+            return new JwtAuthenticationFilter(jwt, accounts, employees, permissions);
         }
 
         @Bean
@@ -94,14 +102,19 @@ class SharedApiSecurityRegressionTest {
         }
 
         @Bean
+        DetailedWorkTimeService detailedWorkTimeService() {
+            return mock(DetailedWorkTimeService.class);
+        }
+
+        @Bean
         AuthController authController(AuthService service) {
             return new AuthController(service);
         }
 
         @Bean
         WorkScheduleController workScheduleController(
-                WorkScheduleService service, ScheduleQueryService queries) {
-            return new WorkScheduleController(service, queries);
+                WorkScheduleService service, ScheduleQueryService queries, DetailedWorkTimeService detailed) {
+            return new WorkScheduleController(service, queries, detailed);
         }
 
         @Bean
@@ -123,13 +136,15 @@ class SharedApiSecurityRegressionTest {
     @Autowired
     AccountRepository accounts;
     @Autowired
+    EmployeeRepository employees;
+    @Autowired
     PermissionRepository permissions;
 
     private MockMvc mvc;
 
     @BeforeEach
     void setUp() {
-        reset(auth, schedules, queries, accounts, permissions);
+        reset(auth, schedules, queries, accounts, employees, permissions);
         Filter securityChain = context.getBean("springSecurityFilterChain", Filter.class);
         assertNotNull(securityChain, "Real Spring Security filter chain must be installed");
         mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(securityChain).build();
@@ -156,6 +171,7 @@ class SharedApiSecurityRegressionTest {
         when(role.getRoleCode()).thenReturn("HR");
         when(role.getRoleId()).thenReturn(3L);
         when(accounts.findById(id)).thenReturn(Optional.of(account));
+        when(employees.existsByEmployeeIdAndEmploymentStatus(12L, EmploymentStatus.DANG_LAM)).thenReturn(true);
         when(permissions.findCodesByRoleId(3L)).thenReturn(Set.of());
     }
 

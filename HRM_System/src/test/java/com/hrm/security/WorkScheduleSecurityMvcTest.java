@@ -1,9 +1,10 @@
 package com.hrm.security;
 
 import com.hrm.controller.WorkScheduleController;
-import com.hrm.dto.WorkTimeDTOs.ScheduleInput;
+import com.hrm.dto.DetailedWorkTimeDTOs.ScheduleWithBreaks;
 import com.hrm.dto.WorkTimeDTOs.ScheduleView;
 import com.hrm.service.ScheduleQueryService;
+import com.hrm.service.DetailedWorkTimeService;
 import com.hrm.service.WorkScheduleService;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -37,6 +38,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 class WorkScheduleSecurityMvcTest {
     private WorkScheduleService schedules;
+    private DetailedWorkTimeService detailed;
     private ScheduleQueryService queries;
     private MockMvc mvc;
 
@@ -45,8 +47,9 @@ class WorkScheduleSecurityMvcTest {
     private static final AuthenticatedAccount EMPLOYEE = new AuthenticatedAccount(1L, 3L, "employee.a", "EMPLOYEE");
 
     private static final String VALID_INPUT = """
-            {"employeeId":3,"shiftId":null,"plannedStart":"2030-05-01T08:00:00",
-             "plannedEnd":"2030-05-01T17:00:00","plannedBreakMinutes":60,"note":"mvc-test"}
+            {"schedule":{"employeeId":3,"shiftId":null,"plannedStart":"2030-05-01T08:00:00",
+             "plannedEnd":"2030-05-01T17:00:00","plannedBreakMinutes":60,"note":"mvc-test"},
+             "breaks":[{"start":"2030-05-01T12:00:00","end":"2030-05-01T13:00:00"}]}
             """;
 
     private static ScheduleView view(long id) {
@@ -58,8 +61,9 @@ class WorkScheduleSecurityMvcTest {
     @BeforeEach
     void setUp() {
         schedules = mock(WorkScheduleService.class);
+        detailed = mock(DetailedWorkTimeService.class);
         queries = mock(ScheduleQueryService.class);
-        mvc = MockMvcBuilders.standaloneSetup(new WorkScheduleController(schedules, queries))
+        mvc = MockMvcBuilders.standaloneSetup(new WorkScheduleController(schedules, queries, detailed))
                 .setCustomArgumentResolvers(new AuthenticationPrincipalArgumentResolver())
                 .build();
     }
@@ -77,79 +81,79 @@ class WorkScheduleSecurityMvcTest {
     @Test
     void adminPostDelegatesAuthenticatedPrincipalAndValidatedBody() throws Exception {
         authenticateAs(ADMIN);
-        when(schedules.create(eq(ADMIN), any(ScheduleInput.class))).thenReturn(view(101L));
+        when(detailed.createSchedule(eq(ADMIN), any(ScheduleWithBreaks.class))).thenReturn(view(101L));
         mvc.perform(post("/api/management/schedules")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.scheduleId").value(101));
-        verify(schedules).create(eq(ADMIN), argThat(v -> v.employeeId().equals(3L)
-                && v.plannedBreakMinutes() == 60));
+        verify(detailed).createSchedule(eq(ADMIN), argThat(v -> v.schedule().employeeId().equals(3L)
+                && v.schedule().plannedBreakMinutes() == 60 && v.breaks().size() == 1));
     }
 
     @Test
     void hrPostDelegatesCorrectPrincipal() throws Exception {
         authenticateAs(HR);
-        when(schedules.create(eq(HR), any(ScheduleInput.class))).thenReturn(view(102L));
+        when(detailed.createSchedule(eq(HR), any(ScheduleWithBreaks.class))).thenReturn(view(102L));
         mvc.perform(post("/api/management/schedules")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isOk());
-        verify(schedules).create(eq(HR), any(ScheduleInput.class));
+        verify(detailed).createSchedule(eq(HR), any(ScheduleWithBreaks.class));
     }
 
     @Test
     void adminPutDelegatesCorrectPrincipalAndScheduleId() throws Exception {
         authenticateAs(ADMIN);
-        when(schedules.update(eq(ADMIN), eq(44L), any(ScheduleInput.class))).thenReturn(view(44L));
+        when(detailed.updateSchedule(eq(ADMIN), eq(44L), any(ScheduleWithBreaks.class))).thenReturn(view(44L));
         mvc.perform(put("/api/management/schedules/44")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.scheduleId").value(44));
-        verify(schedules).update(eq(ADMIN), eq(44L), any(ScheduleInput.class));
+        verify(detailed).updateSchedule(eq(ADMIN), eq(44L), any(ScheduleWithBreaks.class));
     }
 
     @Test
     void hrPutDelegatesCorrectPrincipalAndScheduleId() throws Exception {
         authenticateAs(HR);
-        when(schedules.update(eq(HR), eq(45L), any(ScheduleInput.class))).thenReturn(view(45L));
+        when(detailed.updateSchedule(eq(HR), eq(45L), any(ScheduleWithBreaks.class))).thenReturn(view(45L));
         mvc.perform(put("/api/management/schedules/45")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isOk());
-        verify(schedules).update(eq(HR), eq(45L), any(ScheduleInput.class));
+        verify(detailed).updateSchedule(eq(HR), eq(45L), any(ScheduleWithBreaks.class));
     }
 
     @Test
     void employeePostPropagatesServiceForbidden() throws Exception {
         authenticateAs(EMPLOYEE);
-        when(schedules.create(eq(EMPLOYEE), any(ScheduleInput.class)))
+        when(detailed.createSchedule(eq(EMPLOYEE), any(ScheduleWithBreaks.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "No schedule permission"));
         mvc.perform(post("/api/management/schedules")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isForbidden());
-        verify(schedules).create(eq(EMPLOYEE), any(ScheduleInput.class));
+        verify(detailed).createSchedule(eq(EMPLOYEE), any(ScheduleWithBreaks.class));
     }
 
     @Test
     void employeePutPropagatesServiceForbidden() throws Exception {
         authenticateAs(EMPLOYEE);
-        when(schedules.update(eq(EMPLOYEE), eq(45L), any(ScheduleInput.class)))
+        when(detailed.updateSchedule(eq(EMPLOYEE), eq(45L), any(ScheduleWithBreaks.class)))
                 .thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN, "No schedule permission"));
         mvc.perform(put("/api/management/schedules/45")
                 .contentType(MediaType.APPLICATION_JSON).content(VALID_INPUT))
                 .andExpect(status().isForbidden());
-        verify(schedules).update(eq(EMPLOYEE), eq(45L), any(ScheduleInput.class));
+        verify(detailed).updateSchedule(eq(EMPLOYEE), eq(45L), any(ScheduleWithBreaks.class));
     }
 
     @Test
     void missingEmployeeIdReturns400WithoutInvokingService() throws Exception {
         authenticateAs(ADMIN);
         String invalid = """
-                {"plannedStart":"2030-05-01T08:00:00",
-                 "plannedEnd":"2030-05-01T17:00:00","plannedBreakMinutes":60}
+                {"schedule":{"plannedStart":"2030-05-01T08:00:00",
+                 "plannedEnd":"2030-05-01T17:00:00","plannedBreakMinutes":60},"breaks":[]}
                 """;
         mvc.perform(post("/api/management/schedules")
                 .contentType(MediaType.APPLICATION_JSON).content(invalid))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(schedules);
+        verifyNoInteractions(schedules, detailed);
     }
 
     @Test
@@ -158,6 +162,6 @@ class WorkScheduleSecurityMvcTest {
         mvc.perform(put("/api/management/schedules/45")
                 .contentType(MediaType.APPLICATION_JSON).content("{not-json}"))
                 .andExpect(status().isBadRequest());
-        verifyNoInteractions(schedules);
+        verifyNoInteractions(schedules, detailed);
     }
 }

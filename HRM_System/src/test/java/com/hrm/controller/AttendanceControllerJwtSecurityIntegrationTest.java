@@ -4,7 +4,9 @@ import com.hrm.model.Account;
 import com.hrm.model.Role;
 import java.util.Set;
 import com.hrm.repository.AccountRepository;
+import com.hrm.repository.EmployeeRepository;
 import com.hrm.repository.PermissionRepository;
+import com.hrm.enums.EmploymentStatus;
 import com.hrm.security.JwtAuthenticationFilter;
 import com.hrm.security.JwtService;
 import com.hrm.security.SecurityConfig;
@@ -67,13 +69,18 @@ class AttendanceControllerJwtSecurityIntegrationTest {
 
         @Bean
         JwtAuthenticationFilter jwtAuthenticationFilter(JwtService jwt,
-                AccountRepository accounts, PermissionRepository permissions) {
-            return new JwtAuthenticationFilter(jwt, accounts, permissions);
+                AccountRepository accounts, EmployeeRepository employees, PermissionRepository permissions) {
+            return new JwtAuthenticationFilter(jwt, accounts, employees, permissions);
         }
 
         @Bean
         AccountRepository accountRepository() {
             return mock(AccountRepository.class);
+        }
+
+        @Bean
+        EmployeeRepository employeeRepository() {
+            return mock(EmployeeRepository.class);
         }
 
         @Bean
@@ -104,6 +111,8 @@ class AttendanceControllerJwtSecurityIntegrationTest {
     @Autowired
     AccountRepository accounts;
     @Autowired
+    EmployeeRepository employees;
+    @Autowired
     PermissionRepository permissions;
     @Autowired
     AttendanceService attendance;
@@ -112,7 +121,7 @@ class AttendanceControllerJwtSecurityIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        reset(accounts, permissions, attendance);
+        reset(accounts, employees, permissions, attendance);
         Filter chain = context.getBean("springSecurityFilterChain", Filter.class);
         assertNotNull(chain, "Must use the real Spring Security filter chain");
         mvc = MockMvcBuilders.webAppContextSetup(context).addFilters(chain).build();
@@ -139,6 +148,7 @@ class AttendanceControllerJwtSecurityIntegrationTest {
         when(role.getRoleCode()).thenReturn(roleCode);
         when(role.getRoleId()).thenReturn(3L);
         when(accounts.findById(id)).thenReturn(Optional.of(account));
+        when(employees.existsByEmployeeIdAndEmploymentStatus(10L, EmploymentStatus.DANG_LAM)).thenReturn(true);
         when(permissions.findCodesByRoleId(3L)).thenReturn(Set.copyOf(codes));
     }
 

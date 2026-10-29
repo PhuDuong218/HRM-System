@@ -2,9 +2,9 @@
 
 ## 1. Bản này có gì?
 
-Dựa trên PROJECT_SPEC(2).md được cung cấp: Web Angular + TypeScript + Bootstrap dành cho ADMIN/HR. Đây là khung giao diện chạy độc lập để học. Có layout quản trị, menu 15 module, trang tổng quan, bảng nhân viên rỗng, trang kiểm tra API, các trang chờ phát triển và trang 404.
+Dựa trên PROJECT_SPEC(2).md được cung cấp: Web Angular + TypeScript + Bootstrap. Đây là khung giao diện để học và phát triển. Có layout quản lý, menu 15 module, trang tổng quan, bảng nhân viên rỗng, trang kiểm tra API, các trang chờ phát triển và trang 404.
 
-Chưa có mã nguồn backend trong gói đầu vào nên chưa đối chiếu API nghiệp vụ, DTO, đăng nhập và phân quyền. Những đoạn mô tả tiến độ backend trong đặc tả không được xem là tiến độ hiện tại. Không có đăng nhập giả hoặc token mẫu. Các trang khung được mở công khai để xem; chưa dùng bản này để triển khai hệ thống nhân sự thực tế. Backend phải kiểm soát mọi quyền và dữ liệu.
+Đăng nhập đã kết nối với API của backend. Cổng quản lý dành cho ADMIN và HR; tài khoản EMPLOYEE không vào được giao diện này. Token được gửi đến các API qua interceptor, còn quyền đối với dữ liệu và chức năng do backend kiểm soát.
 
 ## 2. Chạy trên Windows
 
@@ -98,7 +98,7 @@ Trang placeholder dùng ActivatedRoute.data và AsyncPipe để hiển thị ti�
 ## 6. Thử kết nối backend của bạn
 
 1. Chạy Spring Boot của bạn.
-2. Mở proxy.conf.json, đổi target từ http://localhost:8080 sang địa chỉ backend thực tế nếu khác.
+2. Mở proxy.conf.json, đổi các target từ http://localhost:2005 sang địa chỉ backend thực tế nếu khác.
 3. Dừng và chạy lại npm start sau khi đổi proxy.
 4. Mở trang Kiểm tra kết nối rồi bấm nút.
 
@@ -129,10 +129,10 @@ Ví dụ phòng ban: tạo pages/departments/departments.ts và departments.html
 
 Muốn đổi tên menu: navigation.ts. Muốn đổi sidebar: layout/admin-layout.html. Muốn đổi trang mặc định: redirectTo trong app.routes.ts.
 
-Đăng nhập/phân quyền là bước tích hợp riêng: đọc API thật trước, sau đó thêm auth service, interceptor, guard và menu theo quyền được backend cung cấp. Chỉ đính kèm token cho backend dự án; guard/ẩn menu không thay thế phân quyền backend. /login hiện chỉ giải thích phần chờ tích hợp và không có form gửi mật khẩu.
+Trang `/login` gửi tên đăng nhập và mật khẩu tới `POST /api/auth/login`. Chỉ token có vai trò ADMIN hoặc HR được dùng vào cổng web; phiên EMPLOYEE cũ cũng bị loại khi tải lại. Token được lưu trong `sessionStorage` của tab, đính kèm vào các yêu cầu `/api/` và bị xóa khi hết hạn, bị backend từ chối hoặc đăng xuất thành công. Nút đăng xuất gọi `POST /api/auth/logout`, làm backend vô hiệu các token hiện tại của tài khoản. Cần dùng tài khoản ứng dụng HRM, không phải tài khoản SQL Server. Kiểm tra vai trò trên frontend chỉ điều khiển giao diện, không thay thế phân quyền backend; menu ADMIN/HR chưa được lọc theo quyền chi tiết.
 
 ## 9. Giới hạn bộ khung
 
-Không có dữ liệu nhân sự giả, CRUD, tính lương, chấm công, duyệt đơn, tài khoản hoặc kiểm soát quyền đã hoàn chỉnh. Bảng nhân viên rỗng là khung giao diện, không phải kết quả truy vấn trả về rỗng. Trang tổng quan không có số liệu thống kê giả. 15 mục menu thể hiện phạm vi 15 module; authentication mới là trang chờ tích hợp.
+Không có dữ liệu nhân sự giả; các chức năng CRUD, tính lương, chấm công, duyệt đơn và quản lý tài khoản chưa hoàn chỉnh trên frontend. Bảng nhân viên rỗng là khung giao diện, không phải kết quả truy vấn trả về rỗng. Trang tổng quan không có số liệu thống kê giả. Các mục menu thể hiện phạm vi module và chưa phản ánh quyền của người dùng.
 
 Tài liệu tham khảo chính thức: https://angular.dev/reference/versions và https://angular.dev/cli/build.

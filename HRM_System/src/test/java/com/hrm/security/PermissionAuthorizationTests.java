@@ -115,7 +115,12 @@ class PermissionAuthorizationTests {
     void managementRequiresTheSqlPermissionAndAManagementRole(ProtectedOperation operation) {
         for (String role : List.of("ADMIN", "HR")) {
             authenticate(role, operation.permission());
-            assertDoesNotThrow(operation.action());
+            if (operation.adminOnly() && role.equals("HR")) {
+                assertThrows(AccessDeniedException.class, operation.action());
+                verifyNoInteractions(services);
+            } else {
+                assertDoesNotThrow(operation.action());
+            }
 
             clearInvocations(services);
             authenticate(role);
@@ -163,15 +168,20 @@ class PermissionAuthorizationTests {
 
     @ParameterizedTest
     @ValueSource(strings = {"ADMIN", "HR", "EMPLOYEE"})
-    void publishedPersonalSalaryAndPayslipsRequirePayslipSelfRead(String role) {
+    void personalSalaryAndPayslipsRequireTheirRespectivePermissions(String role) {
         PayrollController controller = context.getBean(PayrollController.class);
-        Authentication authentication = authenticate(role, "PAYSLIP_SELF_READ");
+        Authentication authentication = authenticate(role, "payroll.self.view");
         AuthenticatedAccount actor = (AuthenticatedAccount) authentication.getPrincipal();
 
         assertDoesNotThrow(() -> controller.getMySalary(authentication));
-        assertDoesNotThrow(() -> controller.getMyPayslips(authentication));
         verify(context.getBean(PayrollService.class)).getMySalary(actor);
+        assertThrows(AccessDeniedException.class, () -> controller.getMyPayslips(authentication));
+
+        clearInvocations(services);
+        Authentication payslip = authenticate(role, "payslip.self.view");
+        assertDoesNotThrow(() -> controller.getMyPayslips(payslip));
         verify(context.getBean(PayrollService.class)).getMyPayslips(actor);
+        assertThrows(AccessDeniedException.class, () -> controller.getMySalary(payslip));
 
         clearInvocations(services);
         Authentication readOnlyProfile = authenticate(role, "SELF_READ");
@@ -183,6 +193,24 @@ class PermissionAuthorizationTests {
         assertThrows(AccessDeniedException.class, () -> controller.getMySalary(payrollManagement));
         assertThrows(AccessDeniedException.class, () -> controller.getMyPayslips(payrollManagement));
         verifyNoInteractions(services);
+    }
+
+    @ParameterizedTest(name = "{0}")
+    @MethodSource("positionOperations")
+    void positionOperationsRequireTheSpecificPermission(ProtectedOperation operation) {
+        for (String role : List.of("ADMIN", "HR", "EMPLOYEE")) {
+            authenticate(role, operation.permission());
+            assertDoesNotThrow(operation.action());
+
+            clearInvocations(services);
+            authenticate(role);
+            assertThrows(AccessDeniedException.class, operation.action());
+            verifyNoInteractions(services);
+
+            authenticate(role, "POSITION_MANAGE");
+            assertThrows(AccessDeniedException.class, operation.action());
+            verifyNoInteractions(services);
+        }
     }
 
     @Test
@@ -230,7 +258,6 @@ class PermissionAuthorizationTests {
     Stream<ProtectedOperation> managementOperations() {
         EmployeeController employee = context.getBean(EmployeeController.class);
         DepartmentController department = context.getBean(DepartmentController.class);
-        PositionController position = context.getBean(PositionController.class);
         return Stream.of(
                 new ProtectedOperation("GET /employees", "EMPLOYEE_MANAGE",
                         () -> employee.getAllEmployees(SecurityContextHolder.getContext().getAuthentication())),
@@ -250,18 +277,13 @@ class PermissionAuthorizationTests {
                         () -> department.updateDepartment(1L, null)),
                 new ProtectedOperation("DELETE /departments/{id}", "DEPARTMENT_MANAGE",
                         () -> department.deleteDepartment(1L)),
-                new ProtectedOperation("GET /positions", "POSITION_MANAGE", position::getAllPositions),
-                new ProtectedOperation("GET /positions/{id}", "POSITION_MANAGE", () -> position.getPositionById(1L)),
-                new ProtectedOperation("POST /positions", "POSITION_MANAGE", () -> position.addPosition(null)),
-                new ProtectedOperation("PUT /positions/{id}", "POSITION_MANAGE", () -> position.updatePosition(1L, null)),
-                new ProtectedOperation("DELETE /positions/{id}", "POSITION_MANAGE", () -> position.deletePosition(1L)),
                 new ProtectedOperation("HTTP GET /employees", "EMPLOYEE_MANAGE",
                         () -> employee.listEmployees(SecurityContextHolder.getContext().getAuthentication())),
                 new ProtectedOperation("HTTP GET /employees?page=0", "EMPLOYEE_MANAGE",
-                        () -> employee.getEmployeesPage(0, 10, SecurityContextHolder.getContext().getAuthentication())),
+                        () -> employee.getEmployeesPage(0, 10, SecurityContextHolder.getContext().getAuthentication()), true),
                 new ProtectedOperation("HTTP GET /employees/search", "EMPLOYEE_MANAGE",
                         () -> employee.searchEmployees(null, null, null, null, 0, 10,
-                                SecurityContextHolder.getContext().getAuthentication())),
+                                SecurityContextHolder.getContext().getAuthentication()), true),
                 new ProtectedOperation("HTTP GET /employees/{id}", "EMPLOYEE_MANAGE",
                         () -> employee.getEmployeeDetails(OTHER_EMPLOYEE_ID,
                                 SecurityContextHolder.getContext().getAuthentication())),
@@ -287,20 +309,6 @@ class PermissionAuthorizationTests {
                                 SecurityContextHolder.getContext().getAuthentication())),
                 new ProtectedOperation("HTTP DELETE /departments/{id}", "DEPARTMENT_MANAGE",
                         () -> department.deactivateDepartment(1L, SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP GET /positions", "POSITION_MANAGE",
-                        () -> position.listPositions(SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP GET /positions/search", "POSITION_MANAGE",
-                        () -> position.searchPositions(0, 10, null, null,
-                                SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP GET /positions/{id}", "POSITION_MANAGE",
-                        () -> position.getPositionDetails(1L, SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP POST /positions", "POSITION_MANAGE",
-                        () -> position.createPosition(null, SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP PUT /positions/{id}", "POSITION_MANAGE",
-                        () -> position.replacePosition(1L, null,
-                                SecurityContextHolder.getContext().getAuthentication())),
-                new ProtectedOperation("HTTP DELETE /positions/{id}", "POSITION_MANAGE",
-                        () -> position.deactivatePosition(1L, SecurityContextHolder.getContext().getAuthentication())),
                 new ProtectedOperation("GET /api/reports/employees", "REPORT_VIEW",
                         () -> context.getBean(EmployeeStatisticsController.class).getEmployeeStatistics()),
                 new ProtectedOperation("GET /api/reports/contracts", "REPORT_VIEW",
@@ -310,7 +318,23 @@ class PermissionAuthorizationTests {
                         () -> context.getBean(WorkStatisticsController.class).getWorkStatistics(FROM, TO)));
     }
 
-    private record ProtectedOperation(String endpoint, String permission, Executable action) {
+    Stream<ProtectedOperation> positionOperations() {
+        PositionController position = context.getBean(PositionController.class);
+        return Stream.of(
+                new ProtectedOperation("GET /positions", "position.view", position::getAllPositions),
+                new ProtectedOperation("GET /positions/{id}", "position.view", () -> position.getPositionById(1L)),
+                new ProtectedOperation("GET /positions/search", "position.view",
+                        () -> position.searchPositions(0, 10, null, null,
+                                SecurityContextHolder.getContext().getAuthentication())),
+                new ProtectedOperation("POST /positions", "position.create", () -> position.addPosition(null)),
+                new ProtectedOperation("PUT /positions/{id}", "position.update", () -> position.updatePosition(1L, null)),
+                new ProtectedOperation("DELETE /positions/{id}", "position.delete", () -> position.deletePosition(1L)));
+    }
+
+    private record ProtectedOperation(String endpoint, String permission, Executable action, boolean adminOnly) {
+        ProtectedOperation(String endpoint, String permission, Executable action) {
+            this(endpoint, permission, action, false);
+        }
         @Override
         public String toString() {
             return endpoint;
