@@ -173,3 +173,12 @@ Phạm vi Angular theo bảng phân công nhóm là cổng ADMIN/HR quản lý. 
 - Các lỗi test toàn hệ thống ở module nhóm được ghi ở phần trước chưa được coi là đã sửa trong lượt frontend này. Không tuyên bố toàn bộ hệ thống 100% pass.
 
 Chốt kiểm tra: 2/2 EmployeeTransferReasonTest pass (lý do đến audit và constructor cũ tương thích). Backend cuối đã khởi động thành công trên 2005/hrm_db với source mới. Đăng nhập ADMIN và kiểm tra 10 API đọc cho nhân viên, phòng ban, chức vụ, trình độ, loại nghỉ, phân công, bằng cấp, quỹ phép, đơn từ, audit trung tâm đều trả 200. Sau khi backend được khởi động lại, cần đăng nhập lại trên web để nhận phiên mới. Không cần mở thêm backend thứ hai.
+
+## Responsive và phân trang thống nhất
+
+- Menu <=800px là drawer fixed cao 100dvh; có hamburger ở topbar sticky, nút đóng riêng, nền che và Escape. Chọn mục tự đóng; không còn đưa menu vào luồng trang để đẩy nội dung xuống. Menu giữ cuộn riêng, chặn cuộn nền khi mở và hỗ trợ Tab trong menu.
+- Nút thu desktop cách mép phải 28px, tránh vùng scrollbar; desktop vẫn thu vào chỉ còn mũi tên.
+- Pagination dùng chung cho nhân viên, phòng ban/lịch sử/ứng viên, hợp đồng, danh mục và workspace nghiệp vụ. Cùng nhãn Trang x/y, nút Trước/Sau, chiều cao chạm 44px; khóa trong lúc tải/lưu và ở đầu/cuối.
+- Bảng điện thoại cuộn ngang trong khung, có gợi ý vuốt; không ép cả trang tràn ngang.
+
+Đã kiểm tra trình duyệt thật: 390x844 mở menu, chọn Điều chuyển tự đóng. Menu position=fixed, top=0, cao844; sau đóng mainTop khoảng64.8px ngay dưới topbar, menu visibility=hidden. Kiểm tra 320/768/1280px: document scrollWidth lần lượt305/753/1265, đều không vượt viewport; menu mobile chỉ hiện <=800px. Nhân viên bấm Sau chuyển đúng Trang2/4 và dữ liệu đổi. Không ghi database trong lượt sửa responsive.

@@ -1,7 +1,9 @@
-<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed">
-  <div class="sidebar-rail">
-  <aside class="sidebar" [class.is-open]="menuOpen" id="main-menu">
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" [class.mobile-menu-open]="menuOpen">
+  @if(menuOpen){<button type="button" class="menu-backdrop" aria-label="Đóng danh mục" tabindex="-1" (click)="closeMobileMenu()"></button>}
+  <div class="sidebar-rail" (keydown)="menuKeydown($event)">
+  <aside #mobilePanel class="sidebar" [class.is-open]="menuOpen" id="main-menu">
     <a class="brand" routerLink="/overview" (click)="menuOpen = false"><span class="brand-mark">H</span><span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span></a>
+    <button type="button" class="mobile-close" aria-label="Đóng danh mục" (click)="closeMobileMenu()">×</button>
     <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
     <nav aria-label="Điều hướng chính">
       @for (item of menu; track item.id) {
@@ -40,7 +42,7 @@
   </div>
   <div class="workspace">
     <header class="topbar">
-      <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-controls="main-menu">Menu</button><span>Quản lý nhân sự <span class="muted">/ HRM-CENTER</span></span></div>
+      <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" #menuTrigger (click)="toggleMobileMenu()" [attr.aria-expanded]="menuOpen" aria-controls="main-menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Menu</span></button><span class="topbar-title">Quản lý nhân sự <span class="muted">/ HRM-CENTER</span></span></div>
       <div class="account-actions">
         <button type="button" class="profile-trigger" (click)="openProfile()" aria-haspopup="dialog" aria-controls="profile-dialog">
           <span class="profile-avatar" aria-hidden="true">{{ auth.displayName().charAt(0).toUpperCase() }}</span>

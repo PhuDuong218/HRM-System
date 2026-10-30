@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
@@ -7,7 +8,7 @@ import { EmployeeService, Employee, EmployeeForm, errorMessage } from '../../ser
 import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
-@Component({ selector: 'app-employees', standalone: true, imports: [FormsModule, DatePipe, RecordWorkspace], templateUrl: './employees.html', styleUrl: './employees.css' })
+@Component({ selector: 'app-employees', standalone: true, imports: [Pagination,FormsModule, DatePipe, RecordWorkspace], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage implements OnInit {
     private api = inject(EmployeeService);
     private auth = inject(AuthService);

@@ -54,7 +54,7 @@
 } @if (error) {
 <div class="alert alert-danger" role="alert">{{ error }}</div>
 } @if (!loading && !error) {
-<table class="table table-striped">
+<div class="table-responsive"><table class="table table-striped">
   <thead>
     <tr>
       <th>Số hợp đồng</th>
@@ -90,23 +90,9 @@
     </tr>
     }
   </tbody>
-</table>
+</table></div>
 
-<button
-  class="btn btn-outline-secondary me-2"
-  [disabled]="page === 0"
-  (click)="load(page - 1)"
->
-  Trước
-</button>
-<span>Trang {{ totalPages ? page + 1 : 0 }} / {{ totalPages }}</span>
-<button
-  class="btn btn-outline-secondary ms-2"
-  [disabled]="page + 1 >= totalPages"
-  (click)="load(page + 1)"
->
-  Sau
-</button>
+<app-pagination [page]="page" [pages]="totalPages" [busy]="loading||saving" (pageChange)="load($event)" />
 } </section>
 <div recordDetail class="contract-panel">
 @if (showCreate) {

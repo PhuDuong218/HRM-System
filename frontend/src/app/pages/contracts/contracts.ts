@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import { EmployeeService, Employee, errorMessage } from '../../services/employee.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
@@ -18,7 +19,7 @@ import {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [RecordWorkspace],
+  imports: [Pagination,RecordWorkspace],
   styles: [`.contract-panel{padding:16px}.contract-panel .card{border:0!important;margin-top:0!important}.contract-panel .col-md-6{width:100%}`],
   templateUrl: "./contracts.html",
 })

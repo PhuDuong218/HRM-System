@@ -11,7 +11,7 @@
       <tr><td>{{ d.departmentCode }}</td><td>{{ d.departmentName }}</td><td>{{ d.headFullName || 'Chưa bổ nhiệm' }}</td><td>{{ d.headEffectiveFrom || '—' }}</td><td>{{ d.isActive ? 'Hoạt động' : 'Ngừng sử dụng' }}</td><td><button class="btn btn-sm btn-outline-primary" (click)="select(d)" [disabled]="saving">Chi tiết</button></td></tr>
     } @empty { <tr><td colspan="6">Chưa có dữ liệu để hiển thị.</td></tr> }</tbody>
   </table></div>
-  <div class="d-flex gap-3 align-items-center"><button class="btn btn-sm btn-outline-secondary" [disabled]="page === 0 || loading || saving" (click)="load(page - 1)">Trước</button><span>Trang {{ pages ? page + 1 : 0 }} / {{ pages }}</span><button class="btn btn-sm btn-outline-secondary" [disabled]="page + 1 >= pages || loading || saving" (click)="load(page + 1)">Sau</button></div>
+  <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" />
 </section>
 <div recordDetail>@if (selected; as d) {
   <section class="surface mb-4">
@@ -23,7 +23,7 @@
       <p>Ngày hiệu lực phải sau ngày bắt đầu phân công của người liên quan và không ở tương lai. Nếu mới phân công hôm nay, cần thực hiện từ ngày sau.</p>
       <form (submit)="appoint($event, employee.value, appointDate.value, previousPosition.value, appointReason.value)" class="row g-3">
         <div class="col-md-6"><label for="new-head" class="form-label">Người được bổ nhiệm</label><select id="new-head" #employee class="form-select" required [disabled]="saving"><option value="">Chọn nhân viên trong phòng</option>@for (e of candidates; track e.employeeId) {<option [value]="e.employeeId">{{ e.employeeCode }} — {{ e.employeeName }} (phân công từ {{ e.effectiveFrom }})</option>}</select>
-          <div class="d-flex gap-2 mt-2"><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="candidatePage === 0 || saving" (click)="loadCandidates(candidatePage - 1)">Nhân viên trước</button><span>{{ candidatePages ? candidatePage + 1 : 0 }}/{{ candidatePages }}</span><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="candidatePage + 1 >= candidatePages || saving" (click)="loadCandidates(candidatePage + 1)">Nhân viên sau</button></div>
+          <app-pagination [page]="candidatePage" [pages]="candidatePages" [busy]="saving" label="Phân trang ứng viên trưởng phòng" (pageChange)="loadCandidates($event)" />
         </div>
         <div class="col-md-6"><label for="appoint-date" class="form-label">Có hiệu lực từ ngày</label><input id="appoint-date" #appointDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
         <div class="col-md-6"><label for="previous-position" class="form-label">Chức vụ tiếp theo của trưởng phòng cũ</label><select id="previous-position" #previousPosition class="form-select" [required]="!!d.headEmployeeId" [disabled]="!d.headEmployeeId || saving || !positionsLoaded"><option value="">{{ d.headEmployeeId ? 'Chọn chức vụ cho người cũ' : 'Không có người cũ' }}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
@@ -42,7 +42,7 @@
     }
   </section>
   <section class="surface"><h2>Lịch sử trưởng phòng</h2><div class="table-responsive"><table class="table"><thead><tr><th>Mã nhân viên</th><th>Họ tên</th><th>Từ ngày</th><th>Đến trước ngày</th></tr></thead><tbody>@for (h of heads; track h.assignmentId) {<tr><td>{{ h.employeeCode }}</td><td>{{ h.fullName }}</td><td>{{ h.effectiveFrom }}</td><td>{{ h.effectiveTo || 'Chưa kết thúc' }}</td></tr>} @empty {<tr><td colspan="4">Chưa có lịch sử.</td></tr>}</tbody></table></div>
-    <div class="d-flex gap-3 align-items-center"><button class="btn btn-sm btn-outline-secondary" [disabled]="historyPage === 0 || saving" (click)="loadHistory(historyPage - 1)">Trước</button><span>{{ historyPages ? historyPage + 1 : 0 }}/{{ historyPages }}</span><button class="btn btn-sm btn-outline-secondary" [disabled]="historyPage + 1 >= historyPages || saving" (click)="loadHistory(historyPage + 1)">Sau</button></div>
+    <app-pagination [page]="historyPage" [pages]="historyPages" [busy]="saving" label="Phân trang lịch sử trưởng phòng" (pageChange)="loadHistory($event)" />
   </section>
 }
 </div></app-record-workspace>

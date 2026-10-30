@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import {RouterLink} from '@angular/router';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
@@ -5,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, expand, reduce, takeUntil } from 'rxjs';
 import { DepartmentService, Department, Head, Assignment, Position } from '../../services/department.service';
 
-@Component({ selector: 'app-departments', standalone: true, imports: [RecordWorkspace,RouterLink], templateUrl: './departments.html' })
+@Component({ selector: 'app-departments', standalone: true, imports: [Pagination,RecordWorkspace,RouterLink], templateUrl: './departments.html' })
 export class DepartmentsPage implements OnInit, OnDestroy {
   private api = inject(DepartmentService);
   private destroyed = new Subject<void>();

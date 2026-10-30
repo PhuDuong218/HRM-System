@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import {Component,DestroyRef,inject} from '@angular/core';
 import {FormsModule,NgForm} from '@angular/forms';
 import {ActivatedRoute} from '@angular/router';
@@ -12,7 +13,7 @@ const catalogs={
  qualifications:{path:'qualification-levels',title:'Danh mục trình độ',id:'qualificationLevelId',code:'levelCode',name:'levelName',paid:false},
  leaveTypes:{path:'leave-types',title:'Loại nghỉ phép',id:'leaveTypeId',code:'typeCode',name:'typeName',paid:true}
 };
-@Component({standalone:true,imports:[FormsModule,RecordWorkspace],templateUrl:'./catalog.html'})
+@Component({standalone:true,imports:[Pagination,FormsModule,RecordWorkspace],templateUrl:'./catalog.html'})
 export class CatalogPage {
  private api=inject(CatalogService);private route=inject(ActivatedRoute);private destroy=inject(DestroyRef);private request?:Subscription;
  keyword='';active='';config=catalogs.positions; rows:CatalogRow[]=[];selected:CatalogRow|null=null;mode='';consumes:boolean|null=null;policyError='';body:CatalogRow={};page=0;pages=0;total=0;loading=false;saving=false;error='';message='';
