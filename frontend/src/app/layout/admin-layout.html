@@ -1,4 +1,5 @@
-<div class="app-shell">
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed">
+  <div class="sidebar-rail">
   <aside class="sidebar" [class.is-open]="menuOpen" id="main-menu">
     <a class="brand" routerLink="/overview" (click)="menuOpen = false"><span class="brand-mark">H</span><span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span></a>
     <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
@@ -8,13 +9,13 @@
           <div class="nav-group">
             <button type="button" class="nav-group-toggle"
                     [class.group-active]="isGroupActive(item)"
-                    [attr.aria-expanded]="expandedGroup === item.id"
+                    [attr.aria-expanded]="expandedGroups.has(item.id)"
                     [attr.aria-controls]="'nav-group-' + item.id"
                     (click)="toggleGroup(item.id)">
               <span>{{ item.label }}</span>
-              <span class="chevron" [class.expanded]="expandedGroup === item.id" aria-hidden="true"></span>
+              <span class="chevron" [class.expanded]="expandedGroups.has(item.id)" aria-hidden="true"></span>
             </button>
-            <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="expandedGroup !== item.id">
+            <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="!expandedGroups.has(item.id)">
               @for (child of children; track child.path) {
                 <a [routerLink]="['/', child.path]" routerLinkActive="active"
                    ariaCurrentWhenActive="page" (click)="menuOpen = false">{{ child.label }}</a>
@@ -27,8 +28,16 @@
         }
       }
     </nav>
-    <div class="sidebar-note">Dành cho ADMIN / HR / nhân viên<br><span>Bộ khung để phát triển</span></div>
+    <div class="sidebar-note">Không gian quản lý nhân sự<br><span>HRM Center · ADMIN / HR</span></div>
   </aside>
+  <button type="button" class="sidebar-handle"
+          (click)="sidebarCollapsed = !sidebarCollapsed"
+          [attr.aria-expanded]="!sidebarCollapsed" aria-controls="main-menu"
+          [attr.aria-label]="sidebarCollapsed ? 'Mở danh mục' : 'Thu gọn danh mục'"
+          [title]="sidebarCollapsed ? 'Mở danh mục' : 'Thu gọn danh mục'">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" [class.points-right]="sidebarCollapsed"><path d="m14 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+  </div>
   <div class="workspace">
     <header class="topbar">
       <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" (click)="menuOpen = !menuOpen" [attr.aria-expanded]="menuOpen" aria-controls="main-menu">Menu</button><span>Quản lý nhân sự <span class="muted">/ HRM-CENTER</span></span></div>

@@ -33,7 +33,8 @@ export class AdminLayout {
   showConfirmPassword = false;
   menu = navigation;
   menuOpen = false;
-  expandedGroup: string | null = null;
+  sidebarCollapsed = false;
+  expandedGroups = new Set<string>();
 
   constructor() {
     this.refreshProfile();
@@ -125,7 +126,7 @@ export class AdminLayout {
   }
 
   toggleGroup(id: string): void {
-    this.expandedGroup = this.expandedGroup === id ? null : id;
+    if (this.expandedGroups.has(id)) this.expandedGroups.delete(id); else this.expandedGroups.add(id);
   }
 
   isGroupActive(item: NavigationItem): boolean {
@@ -135,7 +136,8 @@ export class AdminLayout {
   }
 
   private expandCurrentGroup(): void {
-    this.expandedGroup = this.menu.find(item => this.isGroupActive(item))?.id ?? null;
+    const current = this.menu.find(item => this.isGroupActive(item));
+    if (current) this.expandedGroups.add(current.id);
   }
 
   confirmLogout(): void {

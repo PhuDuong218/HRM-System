@@ -21,6 +21,10 @@ public class EmployeeAuditService {
     @Transactional(propagation=Propagation.MANDATORY)
     public void recordTransfer(Long actor,Long id,Map<String,String> before,Map<String,String> after){change("EMPLOYEE_TRANSFER","employees",actor,id,before,after);}
     @Transactional(propagation=Propagation.MANDATORY)
+    public void recordTransferWithReason(Long actor,Long id,Map<String,String> before,Map<String,String> after,String reason){
+        audit.record(new AuditEvent(actor,"EMPLOYEE_TRANSFER","employees",id.toString(),reason,before,after));
+    }
+    @Transactional(propagation=Propagation.MANDATORY)
     public void recordContactUpdate(Long actor,Long id,Map<String,String> before,Map<String,String> after){change("EMPLOYEE_CONTACT_UPDATE","employees",actor,id,before,after);}
     @Transactional(propagation=Propagation.MANDATORY)
     public void recordTermination(Long actor,Long id,Map<String,String> before,Map<String,String> after){change("EMPLOYEE_TERMINATE","employees",actor,id,before,after);}

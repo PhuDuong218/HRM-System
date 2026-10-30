@@ -1,9 +1,9 @@
 <p class="eyebrow">CƠ CẤU NHÂN SỰ</p>
-<h1>Phòng ban và trưởng phòng</h1>
+<div class="d-flex justify-content-between gap-3"><h1>Phòng ban và trưởng phòng</h1><a class="btn btn-outline-primary" routerLink="/department-catalog">Thêm / sửa phòng ban</a></div>
 <p class="page-description">Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.</p>
 @if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
 @if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
-<section class="surface mb-4">
+<app-record-workspace [open]="!!selected" [busy]="saving" (dismiss)="clearSelection()"><section recordList class="surface mb-4">
   <div class="d-flex justify-content-between align-items-center mb-3"><h2>Danh sách phòng ban</h2><button class="btn btn-outline-primary" (click)="load()" [disabled]="loading || saving">Tải lại</button></div>
   @if (loading) { <p role="status">Đang tải…</p> }
   <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã</th><th>Phòng ban</th><th>Trưởng phòng</th><th>Từ ngày</th><th>Trạng thái</th><th></th></tr></thead>
@@ -13,9 +13,9 @@
   </table></div>
   <div class="d-flex gap-3 align-items-center"><button class="btn btn-sm btn-outline-secondary" [disabled]="page === 0 || loading || saving" (click)="load(page - 1)">Trước</button><span>Trang {{ pages ? page + 1 : 0 }} / {{ pages }}</span><button class="btn btn-sm btn-outline-secondary" [disabled]="page + 1 >= pages || loading || saving" (click)="load(page + 1)">Sau</button></div>
 </section>
-@if (selected; as d) {
+<div recordDetail>@if (selected; as d) {
   <section class="surface mb-4">
-    <h2>{{ d.departmentName }}</h2><p>Trưởng phòng hiện tại: <strong>{{ d.headFullName || 'Chưa bổ nhiệm' }}</strong></p>
+    <div class="d-flex justify-content-between align-items-center gap-2"><h2>{{ d.departmentName }}</h2></div><p>Trưởng phòng hiện tại: <strong>{{ d.headFullName || 'Chưa bổ nhiệm' }}</strong></p>
     @if (d.headEmployeeId && positionsLoading) { <p role="status">Đang tải danh sách chức vụ…</p> }
     @if (d.headEmployeeId && positionsError) { <div class="alert alert-warning" role="alert">{{ positionsError }} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadPositions()">Thử lại</button></div> }
     @if (d.isActive) {
@@ -45,3 +45,4 @@
     <div class="d-flex gap-3 align-items-center"><button class="btn btn-sm btn-outline-secondary" [disabled]="historyPage === 0 || saving" (click)="loadHistory(historyPage - 1)">Trước</button><span>{{ historyPages ? historyPage + 1 : 0 }}/{{ historyPages }}</span><button class="btn btn-sm btn-outline-secondary" [disabled]="historyPage + 1 >= historyPages || saving" (click)="loadHistory(historyPage + 1)">Sau</button></div>
   </section>
 }
+</div></app-record-workspace>

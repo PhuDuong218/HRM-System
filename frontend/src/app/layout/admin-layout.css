@@ -81,3 +81,26 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
   .profile-dialog-header { padding: 20px; }
   .profile-identity, .profile-section-title, .profile-details { margin-left: 20px; margin-right: 20px; }
 }
+
+.topbar>div:first-child { flex-wrap: wrap; }
+.sidebar-rail { position: sticky; top: 0; width: 270px; height: 100dvh; flex-shrink: 0; transition: width .2s ease; z-index: 40; }
+.sidebar-rail .sidebar { width: 270px; height: 100%; }
+.sidebar-handle { position: absolute; right: 12px; top: 29px; width: 32px; height: 36px; display: grid; place-items: center; padding: 0; border: 1px solid #ccdbea; border-radius: 9px; background: #fff; color: #004581; box-shadow: 0 2px 8px #17365316; cursor: pointer; }
+.sidebar-handle:hover { background: #e8f2fd; }
+.sidebar-handle:focus-visible { outline: 3px solid #e9ad45; outline-offset: 3px; }
+.sidebar-handle svg { transition: transform .2s ease; }
+.sidebar-handle .points-right { transform: rotate(180deg); }
+@media(min-width:801px) {
+ .sidebar-collapsed .sidebar-rail { width: 0; background: transparent; border: 0; }
+ .sidebar-collapsed .sidebar { display: none; }
+ .sidebar-collapsed .sidebar-handle { left: 8px; right: auto; }
+ .sidebar-collapsed .topbar { padding-left: 60px; }
+}
+@media(max-width:800px) {
+ .sidebar-rail { position: relative; width: 100%; height: auto; }
+ .sidebar-rail .sidebar { width: 100%; height: auto; }
+ .sidebar-handle { display: none; }
+}
+@media(prefers-reduced-motion:reduce) { .sidebar-rail,.sidebar-handle svg { transition: none; } }
+
+.sidebar-rail .brand { padding-right: 30px; font-size: 19px; }
