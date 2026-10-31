@@ -18,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly=true)
 public class EmployeeRequestService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
     private final JdbcTemplate jdbc;
     private final PersonnelAccessService access;
     private final PersonnelWorkflowSupport support;
@@ -58,6 +60,7 @@ public class EmployeeRequestService {
         if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
         String where=" WHERE (?=0 OR r.employee_id=?) AND (? IS NULL OR r.status=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
         Object[] params={mine?1:0,actor.employeeId(),status,status,type,type,mine?1:0};
         long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,params);
         var args=new ArrayList<Object>(Arrays.asList(params));args.add((long)page*size);args.add(size);

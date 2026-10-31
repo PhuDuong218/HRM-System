@@ -120,6 +120,11 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
  footer { padding:16px 12px; }
 }
 @media(max-width:360px){.account-name,.profile-trigger-arrow{display:none}.profile-trigger{padding:4px}.menu-button{padding:8px}.account-actions{gap:4px}}
+@media(max-width:480px){
+ .account-name,.profile-trigger-arrow{display:none}
+ .profile-trigger{padding:4px}
+ .account-actions{gap:4px}
+}
 @media(prefers-reduced-motion:reduce){.sidebar-rail{transition:none}}
 
 /* Keep account controls visible while scrolling on desktop as well as mobile. */
@@ -174,3 +179,5 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
 @media (max-width:800px) { .language-toggle { width:72px; min-width:72px; height:44px; } }
 @media (max-width:360px) { .language-toggle { width:64px; min-width:64px; } }
 @media (prefers-reduced-motion:reduce) { .language-thumb,.language-option { transition:none; } }
+
+@media(max-width:360px){.menu-button span{display:none}.menu-button{width:44px;justify-content:center}.account-actions>.btn{padding:8px;font-size:12px}}

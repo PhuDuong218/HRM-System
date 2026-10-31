@@ -1,3 +1,4 @@
+@import './app/shared/management-page.css';
 :root{--bs-primary:#004581;--bs-primary-rgb:0,69,129}body{margin:0;background:#f5f7fb;color:#1e344c;font-family:Arial,Helvetica,sans-serif}h1{font-size:28px;font-weight:750;letter-spacing:-.7px;margin-bottom:10px}h2{font-size:18px;font-weight:700}h3{font-size:16px}.muted,.page-description{color:#738397}.page-description{font-size:14px;margin-bottom:28px}.eyebrow{color:#7390ac;font-size:10px;font-weight:700;letter-spacing:1.7px;margin-bottom:10px}.surface,.feature-card{background:#fff;border:1px solid #e4eaf2;border-radius:12px;padding:25px}.hero-panel{background:#e5f0fb;border:1px solid #d6e6f6;border-radius:14px;padding:30px}.hero-panel h2{font-size:25px;color:#004581}.hero-panel p{font-size:14px;max-width:620px;color:#506a85;line-height:1.8}.feature-card{display:block;text-decoration:none;height:100%;color:inherit;transition:border-color .15s}.feature-card:hover{border-color:#004581}.feature-card p{font-size:13px;color:#738397}.tile-number{display:block;color:#7c9ebf;font-size:13px;font-weight:700;margin-bottom:22px}.card-link{color:#004581;font-size:12px;font-weight:700}.btn-primary{--bs-btn-bg:#004581;--bs-btn-border-color:#004581;--bs-btn-hover-bg:#003561;--bs-btn-hover-border-color:#003561}.btn-outline-primary{--bs-btn-color:#004581;--bs-btn-border-color:#b5cce1;--bs-btn-hover-bg:#004581;--bs-btn-hover-border-color:#004581}.btn{font-size:13px;padding:10px 16px}.table th{font-size:12px;color:#738397;font-weight:600;background:#f8fafc}.table{font-size:13px}pre{padding:16px;background:#f4f7fb;border-radius:8px;white-space:pre-wrap;overflow-wrap:anywhere}a:focus-visible,button:focus-visible{outline:3px solid #f1ae45;outline-offset:3px}
 
 @media(max-width:800px){
@@ -54,3 +55,12 @@ html[data-bs-theme="dark"] .sidebar-flyout a.active { background:#34557e; color:
 html[data-bs-theme="dark"] .sidebar-flyout .flyout-heading { color:#e4ebf5; border-color:#35465d; }
 html[data-bs-theme="dark"] .language-toggle { background:#273a53; color:#e4ebf5; border-color:#506580; }
 html[data-bs-theme="dark"] .language-toggle:hover { background:#34557e; }
+
+@media(max-width:800px){html[lang="en"] .table-responsive::before{content:"Swipe horizontally to view the full table"}}
+
+/* Common form contract for pages inheriting ManagementPageBase. */
+.management-page .record-detail form .form-label{display:block;width:100%}
+.management-page .editor{display:grid;gap:14px;border:0;padding:0;min-width:0}
+.management-page .editor>label{display:grid;gap:6px;min-width:0}
+.management-page .editor>.btn{justify-self:start}
+.management-page .record-detail .form-control,.management-page .record-detail .form-select{width:100%}

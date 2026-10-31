@@ -1,0 +1,4330 @@
+[
+  {
+    "className": "com.hrm.AttendanceAuthorizationTest",
+    "name": "missingPermissionServiceCannotCreateAttendanceService",
+    "seconds": "3.737",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceAuthorizationTest",
+    "name": "correctRejectedDoesNotWriteOrAudit",
+    "seconds": "0.538",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceAuthorizationTest",
+    "name": "confirmRejectedDoesNotWriteOrAudit",
+    "seconds": "0.023",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCannotAccessIneligibleEmployee",
+    "seconds": "0.091",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCannotManageWithoutScope",
+    "seconds": "0.028",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "missingGrantDenied",
+    "seconds": "0.032",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCanManageScopedEmployee",
+    "seconds": "0.094",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCannotManageOwnAttendance",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCannotUnconfirmOwnAttendance",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "adminCanManageEligibleEmployee",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "adminCannotConfirmOwnAttendance",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "inactiveAccountDenied",
+    "seconds": "0.04",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "employeeCannotManage",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "invalidInputDoesNotReachDb",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "adminCannotManageOwnAttendance",
+    "seconds": "0.02",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "adminNullEmployeeCanManage",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrCannotManageWithoutActiveEmployeeAccount",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendancePermissionServiceTest",
+    "name": "hrNullEmployeeDenied",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceRbacIntegrationTest",
+    "name": "seededPermissionsAndInactiveActors",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration test was not opted in\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.AttendanceRbacIntegrationTest.seededPermissionsAndInactiveActors(AttendanceRbacIntegrationTest.java:20)\n"
+  },
+  {
+    "className": "com.hrm.AttendanceRbacScopeAndSeparationTest",
+    "name": "hrCannotConfirmLastOwnCorrection",
+    "seconds": "0.031",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceRbacScopeAndSeparationTest",
+    "name": "hrCannotConfirmLegacyWithoutCreator",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceRbacScopeAndSeparationTest",
+    "name": "deniedPermissionStopsBeforeApprovalQuery",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceRbacScopeAndSeparationTest",
+    "name": "hrCannotConfirmOwnCreation",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceRbacSqlServerIntegrationTest",
+    "name": "rbacSqlServerMatrixRollbackOnly",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: SQL write test has NOT been approved; skip\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.AttendanceRbacSqlServerIntegrationTest.rbacSqlServerMatrixRollbackOnly(AttendanceRbacSqlServerIntegrationTest.java:449)\n"
+  },
+  {
+    "className": "com.hrm.AttendanceServiceIntegrationTest",
+    "name": "kiemTraTaoCongVaChongTrung",
+    "seconds": "0.099",
+    "status": "FAIL",
+    "message": "Khong tim thay lich kiem thu so 4 ==> expected: <1> but was: <0>",
+    "detail": "org.opentest4j.AssertionFailedError: Khong tim thay lich kiem thu so 4 ==> expected: <1> but was: <0>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)\n\tat org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)\n\tat org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:184)\n\tat org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:598)\n\tat com.hrm.AttendanceServiceIntegrationTest.kiemTraTaoCongVaChongTrung(AttendanceServiceIntegrationTest.java:67)\n"
+  },
+  {
+    "className": "com.hrm.AttendanceServiceTest",
+    "name": "khongChoPhepNhapCongNgoaiLich",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmAuditRollbackSqlServerTest",
+    "name": "auditFailureAndExplicitSavepointRollback",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: IT-02 DB writes not separately approved; skipped\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.AttendanceUnconfirmAuditRollbackSqlServerTest.auditFailureAndExplicitSavepointRollback(AttendanceUnconfirmAuditRollbackSqlServerTest.java:163)\n"
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmExtendedIntegrationTest",
+    "name": "springProxyRequestsRollbackWhenRbacDeniesAccess",
+    "seconds": "0.515",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmExtendedIntegrationTest",
+    "name": "springProxyRequestsRollbackWhenAuditInsertFails",
+    "seconds": "0.081",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmSqlServerIntegrationTest",
+    "name": "fixtureAndUnconfirmRollbackTogether",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: SQL write test has NOT been approved; skip\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.AttendanceUnconfirmSqlServerIntegrationTest.fixtureAndUnconfirmRollbackTogether(AttendanceUnconfirmSqlServerIntegrationTest.java:369)\n"
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "nullReasonIsRejectedBeforeRead",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "anotherHrCanUnconfirm",
+    "seconds": "0.031",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "adminCanUnconfirmAndAuditWithTrimmedReason",
+    "seconds": "0.04",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "hrCannotUnconfirmOwnApproval",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "unconfirmedRecordReturnsConflict",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "blankReasonIsRejectedBeforeRead",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "permissionDenialStopsBeforeUpdate",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "zeroUpdatedRowsReturnConflictWithoutAudit",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "missingAttendanceReturnsNotFound",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceUnconfirmTest",
+    "name": "auditFailureIsPropagatedForTransactionalRollback",
+    "seconds": "0.029",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.AttendanceWorkflowIntegrationTest",
+    "name": "kiemTraDieuChinhVaXacNhanCong",
+    "seconds": "0.113",
+    "status": "FAIL",
+    "message": "Tai khoan kiem thu khong phai ADMIN hop le! ==> expected: <1> but was: <0>",
+    "detail": "org.opentest4j.AssertionFailedError: Tai khoan kiem thu khong phai ADMIN hop le! ==> expected: <1> but was: <0>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertionFailureBuilder.buildAndThrow(AssertionFailureBuilder.java:139)\n\tat org.junit.jupiter.api.AssertEquals.failNotEqual(AssertEquals.java:201)\n\tat org.junit.jupiter.api.AssertEquals.assertEquals(AssertEquals.java:184)\n\tat org.junit.jupiter.api.Assertions.assertEquals(Assertions.java:598)\n\tat com.hrm.AttendanceWorkflowIntegrationTest.kiemTraDieuChinhVaXacNhanCong(AttendanceWorkflowIntegrationTest.java:69)\n"
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "staleTokenVersionCannotReachController",
+    "seconds": "2.597",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "validJwtPassesRealFilterAndUsesStoredActorId",
+    "seconds": "0.16",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "expiredJwtMustReturn401ByApiContract",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "wrongSignatureMustReturn401ByApiContract",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "unconfirmIgnoresSpoofedActorIdFromClient",
+    "seconds": "0.418",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "inactiveAccountCannotReachController",
+    "seconds": "0.037",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "noBearerTokenMustReturn401ByApiContract",
+    "seconds": "0.021",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "name": "missingPermissionDeniedByServiceAndPropagatedAs403",
+    "seconds": "0.044",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "confirmDelegatesAuthenticatedActor",
+    "seconds": "0.188",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "malformedJsonReturns400WithoutServiceCall",
+    "seconds": "0.082",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "blankReasonReturns400WithoutServiceCall",
+    "seconds": "0.109",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "invalidManualPayloadReturns400WithoutServiceCall",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "manualUsesTrustedPrincipalNotClientActorId",
+    "seconds": "0.24",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "employeeForbiddenIsPropagatedFromService",
+    "seconds": "0.038",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "hrSeparationOfDutiesForbiddenIsPropagated",
+    "seconds": "0.029",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "missingAuthenticatedPrincipalReturns401BeforeService",
+    "seconds": "0.026",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "correctDelegatesPathIdAndAuthenticatedActor",
+    "seconds": "0.054",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "hrSelfUnconfirmForbiddenIsPropagated",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "unconfirmDelegatesReasonAndAuthenticatedActor",
+    "seconds": "0.039",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "name": "alreadyUnconfirmedConflictIsPropagated",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "dailyCalculationCountsHalfDaysExactlyAndDoesNotRound",
+    "seconds": "0.444",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "hourlyCalculationUsesHoursInsteadOfDays",
+    "seconds": "0.014",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "unconfirmedPeriodPolicyFailsExplicitly",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "wrongEmployeeWorkDataIsRejected",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "missingWorkAdapterIs503",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "confirmedFullCoverageUsesOneUnitWithSyntheticPolicyOnly",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "unimplementedTextConditionIsNotIgnored",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "overlappingSameTypeCannotBePaidTwice",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "partialPeriodCoverageIsNotSilentlyProrated",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "missingOrDuplicateDaysAreRejected",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "noAssignmentsReturnsZeroWithoutCallingWorkSource",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "invalidUnitsAreRejected",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.AllowanceCalculationTest",
+    "name": "countsOnlyIntersectionOfAssignmentAndPeriod",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "contractTypeCodeIsUnique",
+    "seconds": "0.215",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "contractTypeCodeCannotChange",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "allowanceTypeCodeIsUnique",
+    "seconds": "0.285",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "allowanceTypeDeleteIsSoftAndAudited",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "deactivationRequiresReason",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.CatalogServicesTest",
+    "name": "contractTypeDeleteDeactivatesAndPreservesRow",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "futureRenewalPreservesOldDatesAndStatus",
+    "seconds": "0.665",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "expiryChangesStatusOnlyAfterLastDay",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "indefiniteContractCannotRenew",
+    "seconds": "0.016",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "renewalCannotStartOnOldLastDay",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "retroactiveTerminationRejected",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "futureTerminationRetainsLastDayAndProtectsOnlyRemovedDays",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "cannotTerminateParentWithRenewal",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractLifecycleTest",
+    "name": "repeatedTerminationRejected",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "missingTypeIs404",
+    "seconds": "0.122",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "overlappingDatesDoNotSave",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "inactiveTypeIsRejected",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "createsSignedDtoAndGuardsHistory",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "duplicateNumberDoesNotSave",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "closedPayrollBlocksCreation",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "searchEscapesSqlServerWildcardsAndReturnsPaging",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "missingEmployeeIs404",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "invalidPagingIsRejected",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "formerEmployeeIsRejected",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ContractServiceTest",
+    "name": "reversedDatesAre400",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "repeatedReadIsStableAndDoesNotSaveOrConsume",
+    "seconds": "0.234",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "duplicateDecisionIdCannotBeCountedTwice",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "noEligibleItemsReturnsZeroEvenWhenMoneyPolicyUnconfirmed",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "outOfPeriodDecisionIsRejected",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "bothPeriodBoundaryDatesAreIncluded",
+    "seconds": "0.023",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "monetaryItemsRequireConfirmedPolicy",
+    "seconds": "0.026",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "overlappingPayrollPeriodsAreNotGuessed",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "unapprovedOrNoneSourceIsRejected",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "totalsAreExactAndDirectionIsNotInferredFromDecisionType",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.DecisionPayrollServiceTest",
+    "name": "wrongEmployeeIsRejectedEvenIfRepositoryReturnsIt",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "inactiveTypeCannotBeAssigned",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "stopFromDayIsNotPaid",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "cannotEndRetroactively",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "formerEmployeeCannotGetNewAllowance",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "changePreservesOldAmountAndClosesAtPreviousDay",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "effectiveRowCannotBeRewrittenOrDeleted",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "employeeScopePreventsReadingOtherEmployeesRecord",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "duplicateEffectiveIntervalIs409AndDoesNotSave",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "singleDayAssignmentRejectedBySchemaRule",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "name": "futureAssignmentCanBeUpdatedAndDeleted",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "pendingDeleteHasAudit",
+    "seconds": "0.236",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "rejectStillRecordsReviewerAndDoesNotRequireMoneyPolicy",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "applyDateCannotPrecedeIssue",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "issuerCannotApproveOwnDecision",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "cannotChangeNumberOrEmployee",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "duplicateNumberIs409",
+    "seconds": "0.017",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "noneMustNotHaveMoneyOrApplyDate",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "approveSetsStatusActorAndTimestampTogether",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "recipientCannotReviewOwnDecision",
+    "seconds": "0.016",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "moneyRequiresPositiveAmountAndDate",
+    "seconds": "0.031",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "missingActorDoesNotReadRepositories",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "reviewedRecordCannotBeChangedOrReviewedAgain(DecisionApprovalStatus)[1]",
+    "seconds": "0.057",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "reviewedRecordCannotBeChangedOrReviewedAgain(DecisionApprovalStatus)[2]",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "closedPayrollPreventsApproval",
+    "seconds": "0.022",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "createIsAlwaysPendingWithServerActor",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "name": "unconfirmedMoneyPolicyDoesNotChangeApprovalFields",
+    "seconds": "0.018",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "disabledSimulationDoesNotTouchJdbc",
+    "seconds": "0.028",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "unknownInactiveOrNonManagerAccountIsForbidden",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "cannotEnableDevActorOutsideLocal(String)[1]",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "cannotEnableDevActorOutsideLocal(String)[2]",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "cannotEnableDevActorOutsideLocal(String)[3]",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "configuredAccountIdIsUsedAndQueryChecksActiveRole",
+    "seconds": "0.036",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "name": "localAlongWithProductionStillBlocked",
+    "seconds": "0.057",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "forgedHeaderDoesNotAllowIssuerToApprove",
+    "seconds": "0.284",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "reviewHttpFlowSetsServerReviewerAndBlocksSecondReview",
+    "seconds": "0.127",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "createContractRunsRealServiceAndSerializesDto",
+    "seconds": "0.319",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "duplicateContractUsesGlobal409Envelope",
+    "seconds": "0.168",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "invalidEnumAndQueryNumberAre400",
+    "seconds": "0.114",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "malformedJsonIs400",
+    "seconds": "0.048",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "deleteDraftReturns204WithoutBody",
+    "seconds": "0.091",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "invalidDtoRejectedBeforeRepository",
+    "seconds": "0.082",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "createDecisionIgnoresClientApprovalBecauseDtoHasNoSuchFields",
+    "seconds": "0.135",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "forbiddenMethodIs405",
+    "seconds": "0.053",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "futureDecisionDateIsRejectedByDtoValidation",
+    "seconds": "0.133",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "name": "missingIdentityProduces503WithoutFetchingDecision",
+    "seconds": "0.088",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.ModuleRepositoryIntegrationTest",
+    "name": "",
+    "seconds": "4.212",
+    "status": "ERROR",
+    "message": "StatementCallback; bad SQL grammar [create table dbo.payroll_periods(period_id bigint primary key,period_start date,period_end date)]",
+    "detail": "org.springframework.jdbc.BadSqlGrammarException: StatementCallback; bad SQL grammar [create table dbo.payroll_periods(period_id bigint primary key,period_start date,period_end date)]\n\tat org.springframework.jdbc.support.SQLExceptionSubclassTranslator.doTranslate(SQLExceptionSubclassTranslator.java:112)\n\tat org.springframework.jdbc.support.AbstractFallbackSQLExceptionTranslator.translate(AbstractFallbackSQLExceptionTranslator.java:102)\n\tat org.springframework.jdbc.core.JdbcTemplate.translateException(JdbcTemplate.java:1549)\n\tat org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:427)\n\tat org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:461)\n\tat com.hrm.duong.ModuleRepositoryIntegrationTest.startOnlyInMemoryDatabase(ModuleRepositoryIntegrationTest.java:43)\nCaused by: org.h2.jdbc.JdbcSQLSyntaxErrorException: Table \"PAYROLL_PERIODS\" already exists; SQL statement:\ncreate table dbo.payroll_periods(period_id bigint primary key,period_start date,period_end date) [42101-240]\n\tat org.h2.message.DbException.getJdbcSQLException(DbException.java:514)\n\tat org.h2.message.DbException.getJdbcSQLException(DbException.java:489)\n\tat org.h2.message.DbException.get(DbException.java:223)\n\tat org.h2.message.DbException.get(DbException.java:199)\n\tat org.h2.command.ddl.CreateTable.update(CreateTable.java:91)\n\tat org.h2.command.CommandContainer.update(CommandContainer.java:139)\n\tat org.h2.command.Command.executeUpdate(Command.java:306)\n\tat org.h2.command.Command.executeUpdate(Command.java:250)\n\tat org.h2.jdbc.JdbcStatement.executeInternal(JdbcStatement.java:262)\n\tat org.h2.jdbc.JdbcStatement.execute(JdbcStatement.java:231)\n\tat org.springframework.jdbc.core.JdbcTemplate$1ExecuteStatementCallback.doInStatement(JdbcTemplate.java:452)\n\tat org.springframework.jdbc.core.JdbcTemplate.execute(JdbcTemplate.java:412)\n\t... 2 more\n"
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "dateAtContractEndStillApplies",
+    "seconds": "0.177",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "duplicateSalaryTermsAreRejected",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "duplicateContractsAreRejectedRatherThanChoosingFirst",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "missingSalaryIsExplicitConflict",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "invalidDatesAndOversizedPeriodAre400",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "termsFromOtherContractsCannotBeUsed",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "splitsExactlyAtNewRateAndPreservesDecimals",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "openRateDoesNotExtendPastContractEnd",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "missingContractIsExplicitConflict",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryRateServiceTest",
+    "name": "salaryGapIsRejected",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "effectiveRowCannotBeUpdatedOrDeleted",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "closedPayrollStopsChangeBeforeMutatingOldRow",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "cannotReadTermThroughWrongContract",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "changeCannotRewritePast",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "salaryOutsideContractAndSingleDayAreRejected",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "overlappingSalaryIsRejected",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "futureRowCanBeUpdatedAndDeleted",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.duong.SalaryTermServiceTest",
+    "name": "changeCreatesNewRowAndPreservesOldAmount",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "handlesMainMethodParameterValidationWithoutLosingTheErrorFormat",
+    "seconds": "0.064",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[1]",
+    "seconds": "0.029",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[2]",
+    "seconds": "0.028",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[3]",
+    "seconds": "0.026",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[4]",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[5]",
+    "seconds": "0.021",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[6]",
+    "seconds": "0.03",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[7]",
+    "seconds": "0.028",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[8]",
+    "seconds": "0.022",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[9]",
+    "seconds": "0.031",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[10]",
+    "seconds": "0.023",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[11]",
+    "seconds": "0.02",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[12]",
+    "seconds": "0.04",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[13]",
+    "seconds": "0.038",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[14]",
+    "seconds": "0.044",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[15]",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "retainsPersonalJsonParseMessage",
+    "seconds": "0.078",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "preservesInternalServerErrorForInvalidControllerReturnValues",
+    "seconds": "0.042",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "name": "retainsMainFallbackWithoutExposingInternalFailure",
+    "seconds": "0.047",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.ExternalDatabaseSmokeTest",
+    "name": "contextLoads",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "System property [hrm.tests.allow-external-db] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.HrmApplicationTests",
+    "name": "mergedEmployeeQueriesAndContractMappingUseTheTestSchema",
+    "seconds": "0.521",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.HrmApplicationTests",
+    "name": "contextLoads",
+    "seconds": "0.017",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AssignmentLockConcurrencyTest",
+    "name": "competingAssignmentTransactionsAreSerialized",
+    "seconds": "0.466",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AuditLogIntegrationTest",
+    "name": "storedSnapshotRedactsNestedSecretsAndRollbackKeepsNoRecord",
+    "seconds": "0.367",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AuditLogIntegrationTest",
+    "name": "refusesNonTransactionalAudit",
+    "seconds": "0.015",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AuditLogServiceTest",
+    "name": "rejectsInvalidActionBeforeDatabaseWrite",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AuditLogServiceTest",
+    "name": "recordsUtcActorTargetSnapshotsAndCorrelation",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.AuditLogServiceTest",
+    "name": "recursivelyRedactsCredentialsAndPreservesOrdinarySnapshots",
+    "seconds": "0.023",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "name": "bareCollectionsRemainArraysAndExplicitPaginationReturnsPages",
+    "seconds": "1.334",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "name": "jwtEmployeeReadsRetainActorScopeIncludingPersonalProfile",
+    "seconds": "0.07",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "name": "catalogAuditUsesAuthenticatedAccountIdWithoutRequiringEmployeeManage",
+    "seconds": "0.06",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "name": "searchRoutesAlwaysReturnPagesWithDefaultPagination",
+    "seconds": "0.098",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "name": "catalogFiltersSelectPagedHandlersWithoutExplicitPagination",
+    "seconds": "0.055",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "replacementDemotesPreviousHeadAndPreservesBoundary",
+    "seconds": "0.808",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "databaseRejectsHeadOverlapEvenForDirectSql",
+    "seconds": "0.417",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "candidatesAndHistoryArePagedAndExcludeCurrentHead",
+    "seconds": "0.566",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "refusesFutureAndZeroLengthAndDuplicateAppointments",
+    "seconds": "0.859",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "endLeavesVacancyAndKeepsHistoricalHead",
+    "seconds": "0.774",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "httpExposesVacancyAndValidatedAppointment",
+    "seconds": "0.71",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "migrationCanRunTwice",
+    "seconds": "0.4",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "genericTransferCannotBypassHeadWorkflow",
+    "seconds": "0.634",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "replacementRequiresExplicitNextPositionAndLeavesOldHeadUnchanged",
+    "seconds": "0.687",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "httpRejectsAnonymousAndClientClaimedRoles",
+    "seconds": "0.332",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "retirementOnAssignmentStartKeepsTheLastWorkingDay",
+    "seconds": "0.945",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "refusesEmployeeFromAnotherDepartment",
+    "seconds": "0.571",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "refusesInactiveDepartmentAndRetiredEmployee",
+    "seconds": "0.443",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "employeeRoleCannotAppointHead",
+    "seconds": "0.402",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "appointmentKeepsContiguousHistoryAndAudit",
+    "seconds": "0.755",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "accessUsesAuthenticatedPrincipalAndAccountState",
+    "seconds": "0.652",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "departmentAndRetirementCannotSilentlyRemoveAnOpenHead",
+    "seconds": "0.751",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "name": "ordinaryTransferKeepsHalfOpenBoundary",
+    "seconds": "0.523",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAccessControllerTest",
+    "name": "authorizedManagerCanUseAllFiveEndpoints",
+    "seconds": "0.43",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAccessControllerTest",
+    "name": "anonymousUserCannotAccessAnyOfTheFiveEndpoints",
+    "seconds": "0.16",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAccessControllerTest",
+    "name": "forbiddenUserCannotAccessAnyOfTheFiveEndpoints",
+    "seconds": "0.086",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "name": "includesAssignmentEndingTomorrow",
+    "seconds": "0.337",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "name": "excludesAssignmentEndingToday",
+    "seconds": "0.05",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "name": "excludesAssignmentStartingTomorrow",
+    "seconds": "0.065",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "name": "terminationPreservesEmployeeAndClosesAssignmentInDatabase",
+    "seconds": "0.237",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "name": "includesAssignmentStartingToday",
+    "seconds": "0.063",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAuditServiceTest",
+    "name": "rejectsMissingActor",
+    "seconds": "0.173",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAuditServiceTest",
+    "name": "doesNotRecordUnchangedContact",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeAuditServiceTest",
+    "name": "recordsActorEmployeeAndContactSnapshot",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactAuditIntegrationTest",
+    "name": "auditFailureRollsBackEntireTransaction",
+    "seconds": "0.262",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactAuditIntegrationTest",
+    "name": "auditWriterRequiresAnExistingTransaction",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactAuditIntegrationTest",
+    "name": "writesContactAndCorrectAuditInSameTransaction",
+    "seconds": "0.108",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactAuditIntegrationTest",
+    "name": "unchangedContactDoesNotWriteOrCreateAudit",
+    "seconds": "0.048",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactServiceTest",
+    "name": "auditFailureIsPropagatedInsteadOfBeingIgnored",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactServiceTest",
+    "name": "unchangedContactDoesNotWriteOrCreateAudit",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactServiceTest",
+    "name": "updatesContactAndRecordsBeforeAfterWithAuthenticatedActor",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeContactServiceTest",
+    "name": "unauthorizedRequestCannotReadOrUpdateEmployee",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeCreationAuditServiceTest",
+    "name": "rejectsMissingActorBeforeCreatingEmployee",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeCreationAuditServiceTest",
+    "name": "propagatesAuditFailure",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeCreationAuditServiceTest",
+    "name": "recordsCreatorAndCreationSnapshot",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "returnsBasicAndDetailedInformation",
+    "seconds": "0.993",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "createsEmployeeWithAddressAndReturnsItInDetail",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "updatesAddressWithoutErasingOtherContactFields",
+    "seconds": "0.024",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "rejectsEmployeeThatDoesNotExist",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "clearsAddressWhenExplicitlyGivenEmptyString",
+    "seconds": "0.017",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "selectsAssignmentUsingVietnamDateAtUtcDayBoundary",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "name": "searchUsesSameVietnamDateForFilteringAndAssignments",
+    "seconds": "0.026",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "adjacentPartialIntervalsWithoutBreakDoNotOverlap",
+    "seconds": "0.871",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "approvalsFreezeSchedules",
+    "seconds": "0.184",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "ownQueueAndManagerQueueHaveValidatedPaging",
+    "seconds": "0.134",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "cannotReduceEntitlementBelowApprovedUsage",
+    "seconds": "0.263",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "overnightLeaveUsesScheduleWorkDateAndDeductsNetHours",
+    "seconds": "0.177",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "unauthenticatedAndInactiveAccountsDenied",
+    "seconds": "0.078",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "rejectsPastAndReversedDates",
+    "seconds": "0.102",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "employeeCannotApproveOrReadOtherEmployeesRequest",
+    "seconds": "0.14",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "insufficientEntitlementRejected",
+    "seconds": "0.132",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "missingPolicyAndInactiveTypeDenied",
+    "seconds": "0.136",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "ownerWithdrawsPendingRequestWithoutInventingAnotherStatus",
+    "seconds": "0.198",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "preventsOverlapButAllowsRejectedIntervalAgain",
+    "seconds": "0.187",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "preventsSelfApprovalAndSelfRejection",
+    "seconds": "0.182",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "policyCannotChangeAfterRequestsExist",
+    "seconds": "0.119",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "createsHeaderSubtypeAndAuditAtomically",
+    "seconds": "0.127",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "resignationStaysWorkingUntilDayAfterLastDateAndRunsOnce",
+    "seconds": "0.251",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "rejectionDoesNotConsumeAndCannotProcessAgain",
+    "seconds": "0.152",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "resignationRejectsPastDateAndScheduleBeyondLastDay",
+    "seconds": "0.119",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "approvesAndCountsNetScheduledHoursOnce",
+    "seconds": "0.134",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "withdrawalDatabaseGuardRejectsImpersonatingTheOwner",
+    "seconds": "0.087",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "leaveAuditFailureRollsBackHeaderAndSubtype",
+    "seconds": "0.1",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "withdrawnRequestStaysInOwnerHistoryAndLeavesManagerQueue",
+    "seconds": "0.141",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "policyMustBeExplicitAndNotInferredFromPaidFlag",
+    "seconds": "0.353",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "resignationCannotBeApprovedWhileEmployeeIsHead",
+    "seconds": "0.312",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "startedLeaveCannotBeApprovedThroughOrdinaryWorkflow",
+    "seconds": "0.519",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "approvalRevalidatesBalanceAfterOtherApproval",
+    "seconds": "0.995",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "nobodyWithdrawsAnothersRequestOrAnApprovedRequest",
+    "seconds": "0.786",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "qualificationCatalogAndSoftDeleteKeepMetadataAndSinglePrimary",
+    "seconds": "1.018",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "scheduleChangesWhilePendingAreRecomputedAtApproval",
+    "seconds": "0.325",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "missingScheduleAndPartialBreakAreNotGuessed",
+    "seconds": "0.216",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "withdrawnResignationDoesNotBlockNewSubmission",
+    "seconds": "0.174",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "name": "rejectedResignationAllowsNewSubmission",
+    "seconds": "0.136",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "name": "ownProfileUsesBusinessDateAndDeterministicCurrentAssignment",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "name": "newProfileUpdateCanReplaceIdentityWithoutErasingContactAddress",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "name": "legacyProfileUpdateRetainsIdentityAndAssignments",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "name": "employeeCannotReadDirectoryOrAnotherEmployeesProfile",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "name": "searchChoosesSameLatestAssignmentAsProfileWhenLegacyAssignmentsOverlap",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditIntegrationTest",
+    "name": "auditFailureRollsBackEmployeeAssignmentAndAudit",
+    "seconds": "0.251",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditIntegrationTest",
+    "name": "repeatedTerminationDoesNotCreateAnotherAudit",
+    "seconds": "0.088",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditIntegrationTest",
+    "name": "writesTerminationAssignmentAndCorrectAudit",
+    "seconds": "0.166",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditServiceTest",
+    "name": "propagatesAuditFailure",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditServiceTest",
+    "name": "rejectsMissingActorBeforeAccessingEmployee",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationAuditServiceTest",
+    "name": "recordsActorAndBeforeAfterState",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "name": "authorizedPostTerminatesAndReturnsNoContent",
+    "seconds": "0.025",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "name": "forbiddenPostCannotTerminate",
+    "seconds": "0.033",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "name": "legacyDeleteAlsoRequiresLogin",
+    "seconds": "0.024",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "name": "anonymousPostCannotTerminate",
+    "seconds": "0.026",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "name": "authorizedLegacyDeleteRemainsAvailable",
+    "seconds": "0.022",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "name": "rejectsEmployeeWithoutCurrentAssignment",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "name": "rejectsDepartmentHeadUntilHeadWorkflowIsCompleted",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "name": "repeatedTerminationStillRevokesAccountWithoutChangingEmploymentHistory",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "name": "rejectsMissingEmployee",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "name": "preservesEmployeeAndEndsAssignmentAfterLastWorkingDay",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1EndpointAccessTest",
+    "name": "forbiddenEmployeeCannotReadOrWriteAnyG1CatalogOrAssignment",
+    "seconds": "0.468",
+    "status": "FAIL",
+    "message": "Status expected:<403> but was:<200>",
+    "detail": "java.lang.AssertionError: Status expected:<403> but was:<200>\n\tat org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:62)\n\tat org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:129)\n\tat org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$0(StatusResultMatchers.java:600)\n\tat org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)\n\tat com.hrm.hrm.service.G1EndpointAccessTest.forbiddenEmployeeCannotReadOrWriteAnyG1CatalogOrAssignment(G1EndpointAccessTest.java:62)\n"
+  },
+  {
+    "className": "com.hrm.hrm.service.G1EndpointAccessTest",
+    "name": "anonymousCannotReadOrWriteAnyG1CatalogOrAssignment",
+    "seconds": "0.056",
+    "status": "FAIL",
+    "message": "Status expected:<401> but was:<200>",
+    "detail": "java.lang.AssertionError: Status expected:<401> but was:<200>\n\tat org.springframework.test.util.AssertionErrors.fail(AssertionErrors.java:62)\n\tat org.springframework.test.util.AssertionErrors.assertEquals(AssertionErrors.java:129)\n\tat org.springframework.test.web.servlet.result.StatusResultMatchers.lambda$matcher$0(StatusResultMatchers.java:600)\n\tat org.springframework.test.web.servlet.MockMvc$1.andExpect(MockMvc.java:212)\n\tat com.hrm.hrm.service.G1EndpointAccessTest.anonymousCannotReadOrWriteAnyG1CatalogOrAssignment(G1EndpointAccessTest.java:56)\n"
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotCreateWithFutureHireDate",
+    "seconds": "0.188",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "creationAuditFailureRollsBackEmployeeAndAssignment",
+    "seconds": "0.181",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotTransferRetiredEmployee",
+    "seconds": "0.287",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "searchFiltersAndPagingWorkForCatalogs",
+    "seconds": "0.232",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "departmentCodeIsImmutable",
+    "seconds": "0.065",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "transferKeepsContiguousHistoryAndCatalogCanThenBeDeactivated",
+    "seconds": "0.458",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "duplicatePositionCodeIsConflict",
+    "seconds": "0.039",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "positionCodeIsImmutable",
+    "seconds": "0.046",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "putPreservesIdentityAndCanBeUpdatedTwiceWithDatabaseRowVersion",
+    "seconds": "0.176",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotDeactivateDepartmentWithCurrentAssignments",
+    "seconds": "0.154",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotDeactivatePositionWithCurrentAssignments",
+    "seconds": "0.126",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "transferAuditFailureRollsBackBothHistoryRows",
+    "seconds": "0.237",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "creationPersistsActorAssignmentAndJson",
+    "seconds": "0.244",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "profileAuditFailureRollsBackFlushedUpdate",
+    "seconds": "0.2",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotCreateInInactiveDepartment",
+    "seconds": "0.183",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotCreateWithInactivePosition",
+    "seconds": "0.1",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "duplicateDepartmentCodeIsConflict",
+    "seconds": "0.029",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "name": "cannotCreateWithBirthDateAfterHireDate",
+    "seconds": "0.02",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.PersonnelWorkflowLockConcurrencyTest",
+    "name": "competingApprovalTransactionsWaitForEachOther",
+    "seconds": "0.291",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.QualificationLevelServiceTest",
+    "name": "kiemTraJUnitHoatDong",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.hrm.service.ResignationExecutionServiceTest",
+    "name": "blockedFirstPageDoesNotStarveLaterRequests",
+    "seconds": "0.396",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAdminPolicyTest",
+    "name": "adminMayHandleEmployeeAndHr",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAdminPolicyTest",
+    "name": "adminCannotApproveAdminOt",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAdminPolicyTest",
+    "name": "adminDoesNotRegisterOt",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAdminPolicyTest",
+    "name": "hrCannotSelfApprove",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAdminPolicyTest",
+    "name": "employeeAndHrMayRegister",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAuthorizationRulesTest",
+    "name": "employeeCannotApprove",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAuthorizationRulesTest",
+    "name": "adminCannotApproveOrConfirmOwnOvertime",
+    "seconds": "0.0",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAuthorizationRulesTest",
+    "name": "confirmationRequiresDifferentApproverAndApplicantUnlessAdmin",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeAuthorizationRulesTest",
+    "name": "hrOnlyForEmployeesInScope",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeMetadataDiagnosticTest",
+    "name": "diagnoseConstraintVisibility",
+    "seconds": "0.116",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimePolicyTest",
+    "name": "netBreakAndLimit",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimePolicyTest",
+    "name": "overlapHalfOpen",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimePolicyTest",
+    "name": "validateInputs",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimePolicyTest",
+    "name": "deadlineThreeCalendarDays",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "requiredOvertimeTablesExist",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "overtimeCheckConstraintsAreEnabledAndTrusted",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "overtimeForeignKeysAreEnabledAndTrusted",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "workflowTriggersPresentAndEnabled",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "existingOverflowDecisionsRespectRequestedBounds",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.OvertimeSchemaReadOnlyIntegrationTest",
+    "name": "decidedRequestsHaveCorrectSubtypeAndOwner",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "Environment variable [HRM_OT_SCHEMA_IT] does not exist",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.AuthenticatedAccountNameTest",
+    "name": "springAuthenticationExposesLoginNameInsteadOfRecordToString",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.ChangePasswordServiceTest",
+    "name": "successfulChangeStoresHashAndRevokesOldTokens",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.ChangePasswordServiceTest",
+    "name": "incorrectCurrentPasswordIsAValidationErrorAndChangesNothing",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "employeeNoLongerWorkingDoesNotAuthenticate",
+    "seconds": "0.294",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "inactiveAccountDoesNotAuthenticate",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "malformedTokenDoesNotAuthenticate",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "missingClaimsDoNotAuthenticate",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "tokenVersionMismatchDoesNotAuthenticate",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "wrongAuthorizationSchemeDoesNotAuthenticate",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "missingAuthorizationHeaderDoesNotAuthenticate",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "activeAccountWithMatchingVersionAuthenticatesAndLoadsAuthorities",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtAuthenticationFilterTest",
+    "name": "unknownAccountDoesNotAuthenticate",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtDatabaseTransactionIntegrationTest",
+    "name": "validAdminTokenUsesRealJpaRepositories",
+    "seconds": "1.593",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtServiceTest",
+    "name": "rejectsTokenSignedWithDifferentKey",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtServiceTest",
+    "name": "rejectsTooShortSecret",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtServiceTest",
+    "name": "issueAndParseRoundTrip",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtServiceTest",
+    "name": "rejectsMalformedToken",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.JwtServiceTest",
+    "name": "rejectsExpiredToken",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PermissionAuthorizationTests",
+    "name": "",
+    "seconds": "0.079",
+    "status": "ERROR",
+    "message": "Error creating bean with name 'employeeService': Unsatisfied dependency expressed through field 'personnelScope': No qualifying bean of type 'com.hrm.service.PersonnelScopeService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}",
+    "detail": "org.springframework.beans.factory.UnsatisfiedDependencyException: Error creating bean with name 'employeeService': Unsatisfied dependency expressed through field 'personnelScope': No qualifying bean of type 'com.hrm.service.PersonnelScopeService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}\n\tat org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:767)\n\tat org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.inject(AutowiredAnnotationBeanPostProcessor.java:748)\n\tat org.springframework.beans.factory.annotation.InjectionMetadata.inject(InjectionMetadata.java:146)\n\tat org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor.postProcessProperties(AutowiredAnnotationBeanPostProcessor.java:493)\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.populateBean(AbstractAutowireCapableBeanFactory.java:1444)\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.doCreateBean(AbstractAutowireCapableBeanFactory.java:602)\n\tat org.springframework.beans.factory.support.AbstractAutowireCapableBeanFactory.createBean(AbstractAutowireCapableBeanFactory.java:525)\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.lambda$doGetBean$0(AbstractBeanFactory.java:333)\n\tat org.springframework.beans.factory.support.DefaultSingletonBeanRegistry.getSingleton(DefaultSingletonBeanRegistry.java:371)\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.doGetBean(AbstractBeanFactory.java:331)\n\tat org.springframework.beans.factory.support.AbstractBeanFactory.getBean(AbstractBeanFactory.java:196)\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.instantiateSingleton(DefaultListableBeanFactory.java:1225)\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingleton(DefaultListableBeanFactory.java:1191)\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.preInstantiateSingletons(DefaultListableBeanFactory.java:1121)\n\tat org.springframework.context.support.AbstractApplicationContext.finishBeanFactoryInitialization(AbstractApplicationContext.java:994)\n\tat org.springframework.context.support.AbstractApplicationContext.refresh(AbstractApplicationContext.java:621)\n\tat com.hrm.security.PermissionAuthorizationTests.startMethodSecurity(PermissionAuthorizationTests.java:86)\nCaused by: org.springframework.beans.factory.NoSuchBeanDefinitionException: No qualifying bean of type 'com.hrm.service.PersonnelScopeService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.raiseNoMatchingBeanFound(DefaultListableBeanFactory.java:2304)\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.doResolveDependency(DefaultListableBeanFactory.java:1732)\n\tat org.springframework.beans.factory.support.DefaultListableBeanFactory.resolveDependency(DefaultListableBeanFactory.java:1658)\n\tat org.springframework.beans.factory.annotation.AutowiredAnnotationBeanPostProcessor$AutowiredFieldElement.resolveFieldValue(AutowiredAnnotationBeanPostProcessor.java:764)\n\t... 16 more\n"
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminAndHrCannotEditOwnContacts",
+    "seconds": "0.457",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "profileUpdateDoesNotEraseHiddenIdentity",
+    "seconds": "0.355",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminAndScopedHrCanSelectPrimaryAndKeepOnlyOnePrimary",
+    "seconds": "0.825",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "oversizedRecordIdReturnsBadRequest",
+    "seconds": "0.072",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminCanCreateUpdateAndTerminateWithoutDeletingHistory",
+    "seconds": "0.498",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "auditCannotLeakPrivateFields",
+    "seconds": "0.081",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminCanTransferAcrossDepartmentsAndPreserveHistory",
+    "seconds": "0.252",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "ownProfileUpdateCannotChangeContactOrEraseHiddenIdentity",
+    "seconds": "0.133",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "scopedHrCanTransferButInvalidReasonAndFutureDateAreRejected",
+    "seconds": "0.23",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "publicContactPatchPreservesPrivateFields",
+    "seconds": "0.082",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "hrCannotReadOrUpdateOutsideScope",
+    "seconds": "0.083",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "managerCannotWriteAnotherEmployeesPrivateFields",
+    "seconds": "0.196",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "hrCannotMoveEmployeeToUnassignedDepartment",
+    "seconds": "0.15",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminCatalogCrudUsesSoftDeactivation",
+    "seconds": "1.151",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "hrCannotReadOutsideDepartmentOrAudit",
+    "seconds": "0.184",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "entitlementCrudRejectsOverlapZeroHoursAndEmptyPeriods",
+    "seconds": "0.891",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "adminCannotReadOthersPrivateFields",
+    "seconds": "0.692",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "hrSearchIsScopedBeforeCountingAndPaging",
+    "seconds": "0.475",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "employeeCanReadOwnPrivateFieldsButNotAnotherEmployee",
+    "seconds": "0.152",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "name": "anonymousCannotReadPersonnel",
+    "seconds": "0.089",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "invalidLoginBodyGets400WithoutJwt",
+    "seconds": "0.02",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "validJwtReachesScheduleController",
+    "seconds": "0.02",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "authenticatedButForbiddenScheduleGets403",
+    "seconds": "0.016",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "logoutWithoutJwtGets401",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "wrongCurrentPasswordGets400WithoutInvalidatingAuthentication",
+    "seconds": "0.019",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "healthPublicRouteIsNotBlockedBySecurity",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "changePasswordWithoutJwtGets401",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "protectedScheduleWithoutJwtGets401",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "name": "loginWithoutJwtIsAllowedThroughSecurity",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "missingEmployeeIdReturns400WithoutInvokingService",
+    "seconds": "0.125",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "hrPostDelegatesCorrectPrincipal",
+    "seconds": "0.056",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "adminPutDelegatesCorrectPrincipalAndScheduleId",
+    "seconds": "0.081",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "employeePostPropagatesServiceForbidden",
+    "seconds": "0.059",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "hrPutDelegatesCorrectPrincipalAndScheduleId",
+    "seconds": "0.054",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "malformedJsonReturns400WithoutInvokingService",
+    "seconds": "0.034",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "adminPostDelegatesAuthenticatedPrincipalAndValidatedBody",
+    "seconds": "0.057",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "name": "employeePutPropagatesServiceForbidden",
+    "seconds": "0.044",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "preservesPlainServerPrincipalSupport",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingOrAmbiguousDatabaseAuthorization(List)[1]",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingOrAmbiguousDatabaseAuthorization(List)[2]",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "preservesAuthenticatedStringPrincipalSupport",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "usesJwtAccountUsernameAndReturnsDatabaseAuthorizedAccountId",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[1]",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[2]",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[3]",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[4]",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[5]",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[6]",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "headAppointmentMustBeSeparate",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "cannotRehireAnActiveEmployee",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "actorRequired",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "missingTerminationHistoryNeedsReconciliation",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "preservesOriginalHireDateAndRecordsNewAssignmentAndAudit",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "cannotRehireInFuture",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "reasonRequired",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "pendingResignationMustBeResolved",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "openOldAssignmentBlocksRehire",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "overlappingOldAssignmentBlocksRehire",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "inactiveDepartmentBlocksRehire",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireServiceTest",
+    "name": "cannotRehireOnTerminationDay",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeRehireSqlServerIntegrationTest",
+    "name": "rehirePersistsANewPeriodWithoutReopeningTheOldPeriodOrAccount",
+    "seconds": "0.669",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTerminationAuditMergeTest",
+    "name": "idempotentTerminationAuditsFirstChangeAndOnlyRevokesOnRepeat",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTerminationAuditMergeTest",
+    "name": "idempotentTerminationStillRevokesAlreadyRetiredEmployeesWithoutChangingAuditActor",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTerminationAuditMergeTest",
+    "name": "strictTerminationRejectsRepeatWithoutMutationOrDelegation",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTerminationAuditMergeTest",
+    "name": "idempotentTerminationRequiresActorBeforeLocksOrChanges",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTransferReasonTest",
+    "name": "oldCallerRemainsCompatible",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.EmployeeTransferReasonTest",
+    "name": "newReasonReachesSharedAuditWriter",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it12_forcedFailureRollsBackScopeAndAudit",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it01_inactiveAdminDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it08_activeStartCannotBeChanged",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it10_revokeImmediatelyAndBlockReactivation",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it07_changeFutureStartAudited",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it11_auditBeforeAndAfterAreValidJson",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it05_futureGrantNotActive",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it09_extendActiveEnd",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it02_adminGrantAndAudit",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it04_unknownDepartmentDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it06_overlapDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeIntegrationTest",
+    "name": "it03_nonHrRecipientDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Integration tests disabled. Explicitly set HRM_IT_ENABLE=true to opt in.\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.HrDepartmentScopeIntegrationTest.before(HrDepartmentScopeIntegrationTest.java:43)\n"
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "rejectGrantToNonHr",
+    "seconds": "0.245",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "canChangeFutureStartWithAudit",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "cannotChangeStartAfterEffective",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "revokeWritesAudit",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "denyInactiveAdmin",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "denyMissingActor",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "denyHrEvenIfAuthenticated",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "rejectOverlappingGrant",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "rejectGrantWithInvalidEnd",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "name": "doNotReactivateRevokedScope",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.PositionPermissionCompatibilityTest",
+    "name": "detailedReadPermissionStillWorks",
+    "seconds": "0.053",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.PositionPermissionCompatibilityTest",
+    "name": "existingManagePermissionCanRead",
+    "seconds": "0.043",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.PositionPermissionCompatibilityTest",
+    "name": "roleAloneDoesNotBypassPermission",
+    "seconds": "0.046",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "anonymousActorIsDenied",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "adminWithoutEmployeeIdCanSearchAllSchedules",
+    "seconds": "0.016",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "missingAccountIdIsDenied",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "hrWithoutEmployeeIdIsDenied",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "employeeWithoutEmployeeIdIsDenied",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "unsupportedRoleIsDenied",
+    "seconds": "0.009",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "name": "adminWithoutEmployeeIdCanReadScheduleDetail",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "name": "hrSearchUsesAssignedScopeAndAccountIdOnly",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "name": "personalQueryDoesNotUseHrDepartmentScopes",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "name": "departmentUsesExclusiveEndDateAndShiftStartDate",
+    "seconds": "0.07",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "name": "hrDetailChecksSameScopeUsingAccountId",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryServiceTest",
+    "name": "invalidDateRangeRejected",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryServiceTest",
+    "name": "invalidPageRejected",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryServiceTest",
+    "name": "anonymousCannotQuery",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryServiceTest",
+    "name": "employeeCannotUseManagementQuery",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleQueryServiceTest",
+    "name": "paginationAlwaysUsesTenRows",
+    "seconds": "0.016",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "hrPrincipalEmployeeIdButDatabaseNullIsForbidden",
+    "seconds": "0.501",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "hrPrincipalMissingEmployeeIdButDatabaseHasOneIsForbidden",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "adminWithDifferentEmployeeIdsIsForbidden",
+    "seconds": "0.017",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "adminPrincipalEmployeeButDatabaseNullIsForbidden",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "changedRoleInDatabaseIsForbidden",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "inactiveOrMissingAccountIsForbidden",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "adminPrincipalNullButDatabaseEmployeeNotNullIsForbidden",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "adminWithMatchingEmployeeIdIsAccepted",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "name": "adminWithoutEmployeeIdInPrincipalAndDatabaseIsAccepted",
+    "seconds": "0.012",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "adminMayWriteForAnyRoleIfEmployeeIsWorking",
+    "seconds": "0.013",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "actorWithUnknownAccountIsDenied",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "employeeRoleCannotManageSchedules",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "hrOutsideAssignedScopeIsDenied",
+    "seconds": "0.011",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "anonymousIsDeniedWithoutDatabaseAccess",
+    "seconds": "0.001",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "name": "hrWithAssignedScopeMayWrite",
+    "seconds": "0.046",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it02_hrCanCreateWithinCurrentScope",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it04_hrDeniedWhenScopeNotYetEffective",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it12_nonAdminNonHrCannotCreate",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it06_hrDeniedOutsideAssignedDepartment",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it07_adminDeniedForResignedEmployee",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it09_hrDeniedUpdateAfterScopeRevoked",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it01_adminCanCreateScheduleForEmployee",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it05_hrDeniedWhenTargetAccountInactive",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it10_overlapDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it03_hrDeniedAfterRevocation",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it11_ownerChangeDenied",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkSchedulePermissionIntegrationTest",
+    "name": "it08_hrCanUpdateFutureScheduleWithinScope",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Opt-in required: HRM_IT_ENABLE=true\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkSchedulePermissionIntegrationTest.setup(WorkSchedulePermissionIntegrationTest.java:47)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkScheduleShiftReferenceTest",
+    "name": "activeAccepted",
+    "seconds": "0.01",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkScheduleShiftReferenceTest",
+    "name": "missingRejected",
+    "seconds": "0.007",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkScheduleShiftReferenceTest",
+    "name": "inactiveRejected",
+    "seconds": "0.004",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftDurationTest",
+    "name": "exactly24HoursPassesValidation",
+    "seconds": "0.115",
+    "status": "FAIL",
+    "message": "\nWanted but not invoked:\njdbcTemplate.queryForObject(\n    startsWith(\"INSERT INTO dbo.work_shifts\"),\n    class java.lang.Long,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>\n);\n-> at org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:912)\nActually, there were zero interactions with this mock.\n",
+    "detail": "Wanted but not invoked:\njdbcTemplate.queryForObject(\n    startsWith(\"INSERT INTO dbo.work_shifts\"),\n    class java.lang.Long,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>\n);\n-> at org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:912)\nActually, there were zero interactions with this mock.\n\n\tat org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:912)\n\tat com.hrm.service.WorkShiftDurationTest.exactly24HoursPassesValidation(WorkShiftDurationTest.java:32)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftDurationTest",
+    "name": "longerThan24HoursRejected",
+    "seconds": "0.004",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftDurationTest.longerThan24HoursRejected(WorkShiftDurationTest.java:22)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftDurationTest.lambda$0(WorkShiftDurationTest.java:22)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 3 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "inactiveShiftCannotBeAssignedToNewSchedule",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "unchangedInactiveShiftIsAllowedForUnstartedSchedule",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "durationExactly24HoursAndOver24Rejected",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "unreferencedShiftIsDeactivated",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "referencedShiftBecomesInactiveAndTimeCannotChange",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest",
+    "name": "cannotSwitchScheduleToAnotherInactiveShift",
+    "seconds": "0.0",
+    "status": "SKIP",
+    "message": "",
+    "detail": "org.opentest4j.TestAbortedException: Assumption failed: Disabled by default: requires separate approval to run\n\tat org.junit.jupiter.api.Assumptions.throwAssumptionFailed(Assumptions.java:340)\n\tat org.junit.jupiter.api.Assumptions.assumeTrue(Assumptions.java:127)\n\tat com.hrm.service.WorkShiftLifecycleSqlServerIntegrationTest.prepare(WorkShiftLifecycleSqlServerIntegrationTest.java:41)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleTest",
+    "name": "changingReferencedTimeDenied",
+    "seconds": "0.008",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleTest",
+    "name": "unreferencedShiftDeactivatedInsteadOfDeleted",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftLifecycleTest",
+    "name": "referencedShiftDeactivated",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "differentEmployeeDenied",
+    "seconds": "0.006",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "roleMismatchDenied",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "hrAllowed",
+    "seconds": "0.008",
+    "status": "FAIL",
+    "message": "Unexpected exception thrown: org.springframework.web.server.ResponseStatusException: 403 FORBIDDEN \"Không có quyền quản lý danh mục ca\"",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception thrown: org.springframework.web.server.ResponseStatusException: 403 FORBIDDEN \"Không có quyền quản lý danh mục ca\"\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:159)\n\tat org.junit.jupiter.api.AssertDoesNotThrow.createAssertionFailedError(AssertDoesNotThrow.java:90)\n\tat org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:56)\n\tat org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:39)\n\tat org.junit.jupiter.api.Assertions.assertDoesNotThrow(Assertions.java:3295)\n\tat com.hrm.service.WorkShiftPermissionTest.hrAllowed(WorkShiftPermissionTest.java:37)\nCaused by: org.springframework.web.server.ResponseStatusException: 403 FORBIDDEN \"Không có quyền quản lý danh mục ca\"\n\tat com.hrm.service.WorkShiftPermissionService.deny(WorkShiftPermissionService.java:61)\n\tat com.hrm.service.WorkShiftPermissionService.requireManage(WorkShiftPermissionService.java:38)\n\tat com.hrm.service.WorkShiftPermissionTest.lambda$2(WorkShiftPermissionTest.java:37)\n\tat org.junit.jupiter.api.AssertDoesNotThrow.assertDoesNotThrow(AssertDoesNotThrow.java:52)\n\t... 3 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "employeeDenied",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "adminWithoutEmployeeAllowed",
+    "seconds": "0.005",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftPermissionTest",
+    "name": "noAccountDenied",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsMoreThanOneDayOffset",
+    "seconds": "0.004",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsMoreThanOneDayOffset(WorkShiftValidationTest.java:58)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsBackwardSameDayShift",
+    "seconds": "0.004",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsBackwardSameDayShift(WorkShiftValidationTest.java:48)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsBreakLongerThanShift",
+    "seconds": "0.003",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsBreakLongerThanShift(WorkShiftValidationTest.java:68)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsBlankShiftCode",
+    "seconds": "0.012",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsBlankShiftCode(WorkShiftValidationTest.java:88)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsNegativeDayOffset",
+    "seconds": "0.002",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsNegativeDayOffset(WorkShiftValidationTest.java:53)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsBreakLongerThanOvernightShift",
+    "seconds": "0.005",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsBreakLongerThanOvernightShift(WorkShiftValidationTest.java:73)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsMissingStartTime",
+    "seconds": "0.002",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsMissingStartTime(WorkShiftValidationTest.java:78)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsNegativeBreakMinutes",
+    "seconds": "0.002",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsNegativeBreakMinutes(WorkShiftValidationTest.java:63)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsMissingEndTime",
+    "seconds": "0.003",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsMissingEndTime(WorkShiftValidationTest.java:83)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidationTest",
+    "name": "rejectsZeroLengthSameDayShift",
+    "seconds": "0.003",
+    "status": "FAIL",
+    "message": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>",
+    "detail": "org.opentest4j.AssertionFailedError: Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>\n\tat org.junit.jupiter.api.AssertionFailureBuilder.build(AssertionFailureBuilder.java:158)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:68)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:35)\n\tat org.junit.jupiter.api.Assertions.assertThrows(Assertions.java:3223)\n\tat com.hrm.service.WorkShiftValidationTest.rejected(WorkShiftValidationTest.java:37)\n\tat com.hrm.service.WorkShiftValidationTest.rejectsZeroLengthSameDayShift(WorkShiftValidationTest.java:43)\nCaused by: org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidationTest.lambda$0(WorkShiftValidationTest.java:37)\n\tat org.junit.jupiter.api.AssertThrows.assertThrows(AssertThrows.java:54)\n\t... 4 more\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "overnightIntervalOverlapsNextMorning",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "normalShiftIsAccepted",
+    "seconds": "0.038",
+    "status": "ERROR",
+    "message": "409 CONFLICT \"Use detailed break-aware work time API\"",
+    "detail": "org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidCasesTest.createSuccessfully(WorkShiftValidCasesTest.java:46)\n\tat com.hrm.service.WorkShiftValidCasesTest.normalShiftIsAccepted(WorkShiftValidCasesTest.java:55)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "updateOfExistingShiftPreservesRequestedFields",
+    "seconds": "0.056",
+    "status": "ERROR",
+    "message": "409 CONFLICT \"Use detailed break-aware work time API\"",
+    "detail": "org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.update(WorkShiftService.java:79)\n\tat com.hrm.service.WorkShiftValidCasesTest.updateOfExistingShiftPreservesRequestedFields(WorkShiftValidCasesTest.java:115)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "shiftWithNoBreakIsAccepted",
+    "seconds": "0.012",
+    "status": "ERROR",
+    "message": "409 CONFLICT \"Use detailed break-aware work time API\"",
+    "detail": "org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidCasesTest.createSuccessfully(WorkShiftValidCasesTest.java:46)\n\tat com.hrm.service.WorkShiftValidCasesTest.shiftWithNoBreakIsAccepted(WorkShiftValidCasesTest.java:69)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "netMinutesOfOvernightShift",
+    "seconds": "0.003",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "overnightShiftIsAccepted",
+    "seconds": "0.032",
+    "status": "ERROR",
+    "message": "409 CONFLICT \"Use detailed break-aware work time API\"",
+    "detail": "org.springframework.web.server.ResponseStatusException: 409 CONFLICT \"Use detailed break-aware work time API\"\n\tat com.hrm.service.WorkShiftService.create(WorkShiftService.java:63)\n\tat com.hrm.service.WorkShiftValidCasesTest.createSuccessfully(WorkShiftValidCasesTest.java:46)\n\tat com.hrm.service.WorkShiftValidCasesTest.overnightShiftIsAccepted(WorkShiftValidCasesTest.java:62)\n"
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "netMinutesOfNormalShift",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  },
+  {
+    "className": "com.hrm.service.WorkShiftValidCasesTest",
+    "name": "adjacentIntervalsDoNotOverlapAtBoundary",
+    "seconds": "0.002",
+    "status": "PASS",
+    "message": "",
+    "detail": ""
+  }
+]

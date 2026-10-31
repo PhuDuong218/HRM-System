@@ -76,5 +76,41 @@ Page<LeaveEntitlement> searchEntitlements(
         @Param("toDate") LocalDate toDate,
         Pageable pageable
 );
+
+    @Query(
+    value = """
+        SELECT le
+        FROM LeaveEntitlement le
+        JOIN FETCH le.employee
+        JOIN FETCH le.leaveType
+        WHERE le.employee.employeeId IN :scopeIds AND (:employeeId IS NULL
+               OR le.employee.employeeId = :employeeId)
+          AND (:leaveTypeId IS NULL
+               OR le.leaveType.leaveTypeId = :leaveTypeId)
+          AND (:fromDate IS NULL
+               OR le.periodEnd > :fromDate)
+          AND (:toDate IS NULL
+               OR le.periodStart < :toDate)
+        """,
+    countQuery = """
+        SELECT COUNT(le)
+        FROM LeaveEntitlement le
+        WHERE le.employee.employeeId IN :scopeIds AND (:employeeId IS NULL
+               OR le.employee.employeeId = :employeeId)
+          AND (:leaveTypeId IS NULL
+               OR le.leaveType.leaveTypeId = :leaveTypeId)
+          AND (:fromDate IS NULL
+               OR le.periodEnd > :fromDate)
+          AND (:toDate IS NULL
+               OR le.periodStart < :toDate)
+        """
+)
+Page<LeaveEntitlement> searchEntitlementsScoped(
+        @Param("employeeId") Long employeeId,
+        @Param("leaveTypeId") Long leaveTypeId,
+        @Param("fromDate") LocalDate fromDate,
+        @Param("toDate") LocalDate toDate,
+        @org.springframework.data.repository.query.Param("scopeIds") java.util.Collection<Long> scopeIds, org.springframework.data.domain.Pageable pageable
+);
         
 }

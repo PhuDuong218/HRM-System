@@ -169,7 +169,7 @@ Phạm vi Angular theo bảng phân công nhóm là cổng ADMIN/HR quản lý. 
 
 - Bằng cấp hiện có năm tốt nghiệp, số chứng chỉ, nơi cấp; API chưa có ngày cấp/ngày hết hạn. UI không tự gửi/lưu các trường không tồn tại.
 - API hồ sơ/liên hệ nhân viên hiện chưa có reason; UI không tạo trường lý do giả. Lý do đã có ở điều chuyển, trưởng phòng, đơn từ và audit theo DTO tương ứng.
-- HR chưa có search/phân trang nhân viên server hoặc tái tuyển theo scope; UI giữ giới hạn backend.
+- Cập nhật 31/10: HR đã có tìm kiếm/phân trang nhân viên theo phạm vi server. Tái tuyển vẫn dành cho ADMIN theo API hiện hành.
 - Các lỗi test toàn hệ thống ở module nhóm được ghi ở phần trước chưa được coi là đã sửa trong lượt frontend này. Không tuyên bố toàn bộ hệ thống 100% pass.
 
 Chốt kiểm tra: 2/2 EmployeeTransferReasonTest pass (lý do đến audit và constructor cũ tương thích). Backend cuối đã khởi động thành công trên 2005/hrm_db với source mới. Đăng nhập ADMIN và kiểm tra 10 API đọc cho nhân viên, phòng ban, chức vụ, trình độ, loại nghỉ, phân công, bằng cấp, quỹ phép, đơn từ, audit trung tâm đều trả 200. Sau khi backend được khởi động lại, cần đăng nhập lại trên web để nhận phiên mới. Không cần mở thêm backend thứ hai.
@@ -182,3 +182,77 @@ Chốt kiểm tra: 2/2 EmployeeTransferReasonTest pass (lý do đến audit và 
 - Bảng điện thoại cuộn ngang trong khung, có gợi ý vuốt; không ép cả trang tràn ngang.
 
 Đã kiểm tra trình duyệt thật: 390x844 mở menu, chọn Điều chuyển tự đóng. Menu position=fixed, top=0, cao844; sau đóng mainTop khoảng64.8px ngay dưới topbar, menu visibility=hidden. Kiểm tra 320/768/1280px: document scrollWidth lần lượt305/753/1265, đều không vượt viewport; menu mobile chỉ hiện <=800px. Nhân viên bấm Sau chuyển đúng Trang2/4 và dữ liệu đổi. Không ghi database trong lượt sửa responsive.
+
+## Kiểm tra sau merge ngày 31/10/2026
+
+Các ghi nhận trong mục này là kết quả mới nhất; các kết quả ở phần trước là lịch sử kiểm tra.
+
+### Phạm vi thay đổi
+
+- Đã ghép conflict của `app.routes.ts` và `layout/admin-layout.html`, giữ giao diện/menu/ngôn ngữ/theme và route ca làm, lịch, chấm công, tổng hợp công, tăng ca mới của nhóm. Hai file đã đánh dấu resolved; chưa commit hoặc push merge.
+- `ManagementPageBase` dùng chung trạng thái tải/lưu/lỗi, xác nhận có dịch và vòng đời lệnh ghi. EmployeesPage, DepartmentsPage, CatalogPage và PersonnelWorkspacePage kế thừa. `PageHeader`, `RecordWorkspace`, `Pagination` là các component chung cho tiêu đề, danh sách/chi tiết và phân trang.
+- `TranslatePipe` + `LanguageService` dùng chung từ điển, đổi ngôn ngữ ngay trên menu, tiêu đề, nhãn, trạng thái rỗng, biểu mẫu, phân trang và các trang chấm công mới. Tên nhân viên, tên phòng, nội dung người dùng nhập và thông báo chưa có bản dịch từ backend vẫn giữ nguyên dữ liệu gốc.
+- Proxy giữ `/api/management`, `/api/auth`, `/api/me`, `/api/admin`, `/api/overtime`, `/api/attendance`, `/api/reports`, `/api/health`; nhóm endpoint nhân sự cũ vẫn bỏ tiền tố `/api`. Phải restart Angular khi sửa proxy.
+
+### Quyền theo ma trận đã xác nhận
+
+- ADMIN quản lý thông tin công việc toàn trung tâm. HR chỉ quản lý nhân viên/phòng ban được giao qua `hr_department_scopes`; phạm vi kiểm tra ở server, không tin ID/vai trò client tự gửi.
+- Danh sách/phân trang nhân viên, phòng ban, phân công, quỹ phép và đơn quản lý lọc phạm vi trước khi trả kết quả và tổng số bản ghi.
+- CCCD và địa chỉ nhà chỉ chủ hồ sơ được đọc. API chi tiết lẫn snapshot audit đều lọc các trường này đối với người khác, kể cả ADMIN. Form sửa người khác không gửi lại giá trị private đang bị ẩn; PUT giữ nguyên CCCD đã lưu.
+- Không tự sửa liên hệ: chặn PATCH tự sửa và PUT đổi email/điện thoại chính mình. Thông tin công việc vẫn xem/sửa theo quyền nghiệp vụ.
+- Tài khoản/phân quyền và trang cấu hình kết nối chỉ ADMIN, có guard và lọc menu; backend vẫn là nơi quyết định quyền thực tế.
+- Không thay đổi quy trình duyệt đơn hay tự cấp quyền mới cho HR. Các module lương/công của nhóm được giữ; việc ghép giao diện không phải chứng nhận toàn bộ ma trận module khác đã nghiệm thu.
+
+### Kết quả kiểm thử
+
+1. `PersonnelScopePrivacyIntegrationTest`: 14/14 đạt trên SQL Server `hrm_test`, dùng JWT và security filter thật. Test có giao dịch rollback và kiểm tra DB_NAME trước khi tạo fixture.
+2. `EmployeeTransferReasonTest` + `AuthenticatedAccountNameTest`: 3/3 đạt. Bộ kiểm tra cuối gồm riêng tư, hồ sơ, lý do điều chuyển và tên Principal: 22/22 đạt.
+3. Hồi quy 15 lớp nhân sự/đơn từ/trưởng phòng: 111/112 đạt ban đầu. Một lỗi cũ ở overload `updateEmployee(EmployeeRequestDTO)` làm thay đổi CCCD trái hợp đồng legacy đã sửa. Chạy lại `EmployeeServiceMergeTest`: 5/5 đạt; các lớp còn lại đã đạt ở lần hồi quy đó.
+4. Build Angular production đạt. Các trang nghiệp vụ được lazy-load để giảm gói khởi động.
+5. Trình duyệt thật trên `hrm_db`: đăng nhập ADMIN thành công; tải danh sách 34 nhân viên, xem chi tiết cạnh danh sách và thông báo private; mở chức vụ, phòng ban, trình độ, điều chuyển, bằng cấp, loại nghỉ, quỹ phép, đơn và audit; kiểm tra đổi VI/EN. Không dùng CRUD thử trên hồ sơ thật để chứng minh nghiệp vụ.
+
+Log local: `HRM_System/target/merge-personnel-policy-tests.log`, `merge-personnel-regression.log`, `merge-profile-regression.log`, `frontend/.angular/merge-build.log`. Không commit log, tài khoản/mật khẩu hay file cấu hình local.
+
+### Tự chạy và nghiệm thu
+
+1. Khởi động backend tại 2005 với profile/config database đã chọn. Khi dùng `hrm_db`, đặt `HRM_DB_URL` trỏ rõ `databaseName=hrm_db`; không dựa vào tên profile để đoán database. Giữ mật khẩu SQL trong cấu hình local hoặc biến môi trường.
+2. Tại `frontend`, chạy `npm start`, mở `http://localhost:4200/login`, đăng nhập tài khoản được nhóm cấp. Sau restart backend cần đăng nhập lại vì phiên JWT có thể hết hiệu lực.
+3. Chuyển VI/EN, mở từng mục ở trên, mở chi tiết, đóng bằng nút hoặc Escape; danh sách và bộ lọc phải được giữ. Thử từ khóa không tồn tại rồi xóa lọc. Đổi bộ lọc phải về trang đầu.
+4. Mở Thêm mới nhưng để trống trường bắt buộc: Lưu bị khóa, không tạo dữ liệu. Kiểm tra ngày ngược, email/số điện thoại sai, gửi lặp, bản ghi bị người khác thay đổi; hiển thị lỗi backend và không báo thành công khi API thất bại.
+5. Kiểm tra HR trong/ngoài scope, ADMIN xem hồ sơ người khác không thấy CCCD/địa chỉ; nhân viên gọi API hồ sơ riêng thấy dữ liệu mình, không thấy người khác. Luồng nhân viên tự phục vụ vẫn thuộc ứng dụng theo phân công nhóm, không tự mở rộng web quản lý cho EMPLOYEE.
+6. Dữ liệu tạo/sửa/duyệt/tái tuyển thử dùng `hrm_test` hoặc hồ sơ thử do nhóm xác nhận; không chạy các test fixture vào `hrm_db`.
+
+Ghi nhận responsive cuối: viewport yêu cầu 390/320 được trình duyệt báo kích thước CSS thực tế 434/356; document scrollWidth lần lượt 434/356, không tràn ngang. Menu là fixed và khi chọn mục tự đóng, main bắt đầu khoảng 64.9px dưới topbar. Biểu mẫu danh mục trống khóa Lưu.
+
+Backend do lượt kiểm tra này khởi động trên cổng 2005/hrm_db có tạm tắt ba job tự động (hết hạn hợp đồng, thực thi nghỉ việc đến hạn, quét thiếu checkout) để tránh ghi dữ liệu nền lúc đối chiếu. Đây là tham số của tiến trình kiểm tra, không sửa cấu hình mặc định. Khi chuyển sang chạy nghiệp vụ bình thường, dừng tiến trình kiểm tra rồi chạy backend theo lệnh thông thường của nhóm để bật lại các job theo cấu hình gốc.
+
+## Chuẩn hóa nút và đối chiếu quyền ADMIN — 31/10/2026
+
+### Kết luận về hai nút người dùng phản ánh
+
+- Bằng Đại học của EMP002 đã có `isPrimary=true`. Thao tác chọn lại không cần thiết; UI hiện nhãn “Đang là trình độ chính” và hướng dẫn mở bằng khác để đổi. ADMIN và HR trong scope chọn được bằng chưa là chính; backend hạ bằng cũ, chỉ giữ tối đa một bằng chính, ghi audit. Kiểm thử dùng hai bằng và cả hai vai trò đã đạt.
+- Nút điều chuyển trước đây bị khóa khi chưa chọn bộ lọc nhân viên, làm người dùng hiểu là thiếu quyền. Nay có thể mở form từ nút đầu trang hoặc từ dòng phân công, chọn nhân viên đang làm trong form. Employee ID được dùng ở URL, không thêm trường ngoài DTO chuyển phòng/chức vụ.
+- ADMIN quản lý nhân sự toàn trung tâm; HR cần quyền quản lý và scope được giao. EMPLOYEE/trưởng phòng không mặc nhiên có quyền điều chuyển. Trưởng phòng đang giữ nhiệm kỳ phải đi luồng thay/kết thúc nhiệm kỳ ở Phòng ban, không chuyển thẳng bằng thao tác điều chuyển thường. Không đổi quyền để bỏ qua quy tắc này.
+- Quy tắc CCCD/địa chỉ chỉ chủ hồ sơ đọc và không tự sửa liên hệ vẫn giữ nguyên. Không cấp thêm permission hoặc sửa dữ liệu nhân sự thật để làm nút sáng lên.
+
+### Quy ước dùng chung
+
+`src/app/shared/management-page.css` áp dụng qua class của ManagementPageBase: bộ lọc chia cột đều; nút tìm/xóa lọc/tải lại nằm trên hàng riêng, căn phải. Tiêu đề danh sách, nút chi tiết, nhóm thao tác và hàng Hủy/Lưu dùng cùng cách bố trí. Nút nhóm chính cao 42px ở desktop, nút trên điện thoại ít nhất 44px. Thao tác xóa/ngừng sử dụng tách khỏi nút chính, có xác nhận theo luồng hiện có.
+
+Các trang áp dụng: Nhân viên; Phòng ban/trưởng phòng; Danh mục phòng ban; Chức vụ; Trình độ; Phân công/điều chuyển; Bằng cấp/chứng chỉ; Loại nghỉ; Quỹ phép; Đơn nghỉ phép/nghỉ việc; Audit. Nghiệp vụ module của thành viên khác được giữ.
+
+### Sửa lỗi giao diện/nghiệp vụ liên quan
+
+- Caption ẩn của bảng nhân viên được đặt absolute đúng cách, không làm cả trang tràn ngang trên điện thoại; bảng vẫn cuộn trong khung.
+- Hủy sửa danh mục/bằng cấp khôi phục bản sao từ dữ liệu gốc, không hiển thị hoặc giữ lại nội dung chưa lưu.
+- Kỳ phép theo API là `[periodStart, periodEnd)`: nhãn đổi thành “Đến trước ngày”, có hướng dẫn; ngày kết thúc bằng/trước ngày bắt đầu khóa Lưu. Khi sửa quỹ phép, nhân viên và loại nghỉ không đổi được, đúng hợp đồng backend.
+- Đơn nghỉ việc chờ duyệt yêu cầu ngày làm cuối trước khi bấm Duyệt; từ chối yêu cầu lý do. Backend vẫn quyết định cuối cùng về quyền, trạng thái và xung đột.
+
+### Kiểm thử đã thực hiện
+
+- Bộ hồi quy nhân sự/đơn từ/trưởng phòng: 105/105 test đạt.
+- Bổ sung kiểm tra HTTP thật trên SQL Server + JWT: PersonnelScopePrivacyIntegrationTest 20/20 đạt, gồm chọn/chuyển bằng chính, CRUD 4 danh mục, tạo/sửa/liên hệ/nghỉ việc nhân viên, điều chuyển ADMIN/HR, quỹ phép, lỗi 400/403/404/409, không xóa lịch sử và bảo vệ dữ liệu riêng tư. Bộ 20 có 18 test nằm trong bộ 105; tổng cộng 107 test khác nhau đã chạy đạt trong lượt này.
+- CRUD thử chạy trong hrm_test, mỗi fixture có rollback; không tạo/duyệt/nghỉ việc thử trên hồ sơ thật trong hrm_db.
+- Trình duyệt ADMIN: 11 màn hình × 1440/768/390/320 = 44 phép đo, không tràn ngang trang và không có cảnh báo lỗi API sau khi tải xong. Bộ nút lọc cùng hàng có cùng mốc đáy. Các bảng rộng cuộn bên trong khung.
+- Kiểm tra form thêm của 7 loại trang: Hủy/Lưu cùng hàng, nút Lưu khóa khi thiếu bắt buộc. Kiểm tra riêng trạng thái bằng chính của EMP002, Hủy sửa danh mục không lưu, và kỳ phép bằng ngày bị chặn trên UI.
+- Build Angular production thành công. File số đo local: `.angular/personnel-layout-measurements.json`, `.angular/personnel-form-measurements.json`; log backend `target/personnel-actions-regression.log`, `target/personnel-crud-http-tests.log`. Không commit log/ảnh/số đo local hoặc thông tin tài khoản.

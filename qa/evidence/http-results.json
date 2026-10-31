@@ -1,0 +1,2592 @@
+[
+  {
+    "id": "AUTH-01-health",
+    "method": "GET",
+    "path": "/api/health",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "status": "UP"
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-admin",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_admin",
+      "password": "***"
+    },
+    "response": {
+      "accessToken": "***",
+      "tokenType": "***",
+      "expiresInSeconds": 3600
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-hrA",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_hrA",
+      "password": "***"
+    },
+    "response": {
+      "accessToken": "***",
+      "tokenType": "***",
+      "expiresInSeconds": 3600
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-hrB",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_hrB",
+      "password": "***"
+    },
+    "response": {
+      "accessToken": "***",
+      "tokenType": "***",
+      "expiresInSeconds": 3600
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-employeeA",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_employeeA",
+      "password": "***"
+    },
+    "response": {
+      "accessToken": "***",
+      "tokenType": "***",
+      "expiresInSeconds": 3600
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-employeeB",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_employeeB",
+      "password": "***"
+    },
+    "response": {
+      "accessToken": "***",
+      "tokenType": "***",
+      "expiresInSeconds": 3600
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-login-retired",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_retired",
+      "password": "***"
+    },
+    "response": {
+      "loi_chi_tiet": "Tên đăng nhập hoặc mật khẩu không đúng.",
+      "thoi_gian": "2026-10-31T19:04:52.9838876",
+      "trang_thai": 401
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-02-wrong",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": {
+      "username": "QA_20261031_190406_4398_admin",
+      "password": "***"
+    },
+    "response": {
+      "loi_chi_tiet": "Tên đăng nhập hoặc mật khẩu không đúng.",
+      "thoi_gian": "2026-10-31T19:04:53.159885",
+      "trang_thai": 401
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-03-missing",
+    "method": "POST",
+    "path": "/api/auth/login",
+    "role": "anonymous",
+    "expected": [
+      400
+    ],
+    "actualStatus": 400,
+    "status": "PASS",
+    "request": {},
+    "response": {
+      "loi_chi_tiet": "Mật khẩu không được để trống",
+      "thoi_gian": "2026-10-31T19:04:53.1878863",
+      "trang_thai": 400
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-04-invalid",
+    "method": "GET",
+    "path": "/api/auth/me",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "AUTH-05-expired",
+    "method": "GET",
+    "path": "/api/auth/me",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-own-details-admin",
+    "method": "GET",
+    "path": "/employees/2552744/detail",
+    "role": "admin",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "address": null,
+      "birthDate": null,
+      "currentDepartmentId": 2551140,
+      "currentDepartmentName": "QA_20261031_190406_4398 department A",
+      "currentPositionId": 2551073,
+      "currentPositionName": "QA_20261031_190406_4398 regular position",
+      "email": null,
+      "employeeCode": "QA_20261031_190406_4398_employeeA",
+      "employeeId": 2552744,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261031_190406_4398 employeeA",
+      "hireDate": "2020-01-01",
+      "identityNumber": null,
+      "phone": null,
+      "terminationDate": null
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-private-admin",
+    "status": "PASS",
+    "actual": {
+      "privateVisible": false
+    },
+    "expected": {
+      "privateVisible": false
+    }
+  },
+  {
+    "id": "RBAC-own-details-hrA",
+    "method": "GET",
+    "path": "/employees/2552744/detail",
+    "role": "hrA",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "address": null,
+      "birthDate": null,
+      "currentDepartmentId": 2551140,
+      "currentDepartmentName": "QA_20261031_190406_4398 department A",
+      "currentPositionId": 2551073,
+      "currentPositionName": "QA_20261031_190406_4398 regular position",
+      "email": null,
+      "employeeCode": "QA_20261031_190406_4398_employeeA",
+      "employeeId": 2552744,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261031_190406_4398 employeeA",
+      "hireDate": "2020-01-01",
+      "identityNumber": null,
+      "phone": null,
+      "terminationDate": null
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-private-hrA",
+    "status": "PASS",
+    "actual": {
+      "privateVisible": false
+    },
+    "expected": {
+      "privateVisible": false
+    }
+  },
+  {
+    "id": "RBAC-own-details-employeeA",
+    "method": "GET",
+    "path": "/employees/2552744/detail",
+    "role": "employeeA",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "address": "QA_PRIVATE_HOME_employeeA",
+      "birthDate": null,
+      "currentDepartmentId": 2551140,
+      "currentDepartmentName": "QA_20261031_190406_4398 department A",
+      "currentPositionId": 2551073,
+      "currentPositionName": "QA_20261031_190406_4398 regular position",
+      "email": null,
+      "employeeCode": "QA_20261031_190406_4398_employeeA",
+      "employeeId": 2552744,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261031_190406_4398 employeeA",
+      "hireDate": "2020-01-01",
+      "identityNumber": "QA_PRIVATE_ID_employeeA",
+      "phone": null,
+      "terminationDate": null
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-private-employeeA",
+    "status": "PASS",
+    "actual": {
+      "privateVisible": true
+    },
+    "expected": {
+      "privateVisible": true
+    }
+  },
+  {
+    "id": "RBAC-other-employee",
+    "method": "GET",
+    "path": "/employees/2552745/detail",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Đối tượng nằm ngoài phạm vi phòng ban được giao",
+      "thoi_gian": "2026-10-31T19:04:54.2215828",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-hr-outside",
+    "method": "GET",
+    "path": "/employees/2552745/detail",
+    "role": "hrA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Đối tượng nằm ngoài phạm vi phòng ban được giao",
+      "thoi_gian": "2026-10-31T19:04:54.3445893",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-hr-search",
+    "method": "GET",
+    "path": "/employees/search?keyword=QA_20261031_190406_4398&page=0&size=100",
+    "role": "hrA",
+    "expected": [
+      200
+    ],
+    "actualStatus": 200,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "content": [
+        {
+          "birthDate": null,
+          "currentDepartmentId": 2551140,
+          "currentDepartmentName": "QA_20261031_190406_4398 department A",
+          "currentPositionId": 2551073,
+          "currentPositionName": "QA_20261031_190406_4398 regular position",
+          "email": null,
+          "employeeCode": "QA_20261031_190406_4398_employeeA",
+          "employeeId": 2552744,
+          "employmentStatus": "DANG_LAM",
+          "fullName": "QA_20261031_190406_4398 employeeA",
+          "hireDate": "2020-01-01",
+          "phone": null
+        },
+        {
+          "birthDate": null,
+          "currentDepartmentId": 2551140,
+          "currentDepartmentName": "QA_20261031_190406_4398 department A",
+          "currentPositionId": 2551073,
+          "currentPositionName": "QA_20261031_190406_4398 regular position",
+          "email": null,
+          "employeeCode": "QA_20261031_190406_4398_hrA",
+          "employeeId": 2552742,
+          "employmentStatus": "DANG_LAM",
+          "fullName": "QA_20261031_190406_4398 hrA",
+          "hireDate": "2020-01-01",
+          "phone": null
+        },
+        {
+          "birthDate": null,
+          "currentDepartmentId": 2551140,
+          "currentDepartmentName": "QA_20261031_190406_4398 department A",
+          "currentPositionId": 2551073,
+          "currentPositionName": "QA_20261031_190406_4398 regular position",
+          "email": null,
+          "employeeCode": "QA_20261031_190406_4398_admin",
+          "employeeId": 2552741,
+          "employmentStatus": "DANG_LAM",
+          "fullName": "QA_20261031_190406_4398 admin",
+          "hireDate": "2020-01-01",
+          "phone": null
+        }
+      ],
+      "empty": false,
+      "first": true,
+      "last": true,
+      "number": 0,
+      "numberOfElements": 3,
+      "pageable": {
+        "offset": 0,
+        "pageNumber": 0,
+        "pageSize": 100,
+        "paged": true,
+        "sort": {
+          "empty": false,
+          "sorted": true,
+          "unsorted": false
+        },
+        "unpaged": false
+      },
+      "size": 100,
+      "sort": {
+        "empty": false,
+        "sorted": true,
+        "unsorted": false
+      },
+      "totalElements": 3,
+      "totalPages": 1
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-payroll-batches",
+    "method": "GET",
+    "path": "/payroll-batches",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 200,
+    "status": "FAIL",
+    "request": null,
+    "response": [
+      {
+        "batchId": 1,
+        "periodId": 1,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 2,
+        "periodId": 2,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "DA_CHOT",
+        "adjustmentReason": null,
+        "lockedBy": 5,
+        "lockedAt": "2026-10-20T02:00:00",
+        "publishedBy": 5,
+        "publishedAt": "2026-10-20T02:01:00"
+      },
+      {
+        "batchId": 3,
+        "periodId": 3,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 6,
+        "periodId": 6,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 11,
+        "periodId": 10,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 16,
+        "periodId": 14,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 23,
+        "periodId": 20,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "NHAP",
+        "adjustmentReason": null,
+        "lockedBy": null,
+        "lockedAt": null,
+        "publishedBy": null,
+        "publishedAt": null
+      },
+      {
+        "batchId": 24,
+        "periodId": 21,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "DA_CHOT",
+        "adjustmentReason": null,
+        "lockedBy": 1207,
+        "lockedAt": "2026-10-28T08:45:59.472",
+        "publishedBy": 1207,
+        "publishedAt": "2026-10-28T08:45:59.89"
+      },
+      {
+        "batchId": 25,
+        "periodId": 21,
+        "versionNo": 2,
+        "previousBatchId": 24,
+        "status": "DA_CHOT",
+        "adjustmentReason": "Postman controlled correction",
+        "lockedBy": 1207,
+        "lockedAt": "2026-10-28T08:46:00.971",
+        "publishedBy": 1207,
+        "publishedAt": "2026-10-28T08:46:01.04"
+      },
+      {
+        "batchId": 26,
+        "periodId": 22,
+        "versionNo": 1,
+        "previousBatchId": null,
+        "status": "DA_CHOT",
+        "adjustmentReason": null,
+        "lockedBy": 1228,
+        "lockedAt": "2026-10-29T01:40:17.604",
+        "publishedBy": 1228,
+        "publishedAt": "2026-10-29T01:40:18.069"
+      },
+      {
+        "batchId": 27,
+        "periodId": 22,
+        "versionNo": 2,
+        "previousBatchId": 26,
+        "status": "DA_CHOT",
+        "adjustmentReason": "Postman controlled correction",
+        "lockedBy": 1228,
+        "lockedAt": "2026-10-29T01:40:19.392",
+        "publishedBy": 1228,
+        "publishedAt": "2026-10-29T01:40:19.503"
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-payroll-periods",
+    "method": "GET",
+    "path": "/payroll-periods",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 200,
+    "status": "FAIL",
+    "request": null,
+    "response": [
+      {
+        "periodId": 1,
+        "periodCode": "2026-09",
+        "periodStart": "2026-09-01",
+        "periodEnd": "2026-10-01"
+      },
+      {
+        "periodId": 2,
+        "periodCode": "2026-08",
+        "periodStart": "2026-08-01",
+        "periodEnd": "2026-09-01"
+      },
+      {
+        "periodId": 3,
+        "periodCode": "2026-10",
+        "periodStart": "2026-10-01",
+        "periodEnd": "2026-11-01"
+      },
+      {
+        "periodId": 6,
+        "periodCode": "SYS-53EA3C22-C61",
+        "periodStart": "2001-01-01",
+        "periodEnd": "2001-02-01"
+      },
+      {
+        "periodId": 10,
+        "periodCode": "SYS-473DFEE2-EC7",
+        "periodStart": "2001-02-01",
+        "periodEnd": "2001-03-01"
+      },
+      {
+        "periodId": 14,
+        "periodCode": "SYS-DE4B7A05-A32",
+        "periodStart": "2001-03-01",
+        "periodEnd": "2001-04-01"
+      },
+      {
+        "periodId": 20,
+        "periodCode": "SYS-123C20AB-F16",
+        "periodStart": "2001-04-01",
+        "periodEnd": "2001-05-01"
+      },
+      {
+        "periodId": 21,
+        "periodCode": "SYS-83CCC056-55C",
+        "periodStart": "2001-05-01",
+        "periodEnd": "2001-06-01"
+      },
+      {
+        "periodId": 22,
+        "periodCode": "SYS-BD7A347B-785",
+        "periodStart": "2001-08-01",
+        "periodEnd": "2001-09-01"
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-audit-logs",
+    "method": "GET",
+    "path": "/audit-logs",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Không có quyền quản lý nhân sự",
+      "thoi_gian": "2026-10-31T19:04:55.1038164",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-api-admin-hr-scopes",
+    "method": "GET",
+    "path": "/api/admin/hr-scopes",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Chỉ ADMIN đang hoạt động được quản lý phạm vi HR",
+      "thoi_gian": "2026-10-31T19:04:55.145826",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-employee-assignments",
+    "method": "GET",
+    "path": "/employee-assignments",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Không có quyền quản lý nhân sự",
+      "thoi_gian": "2026-10-31T19:04:55.1738196",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-api-management-shifts",
+    "method": "GET",
+    "path": "/api/management/shifts",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 200,
+    "status": "FAIL",
+    "request": null,
+    "response": [
+      {
+        "shiftId": 1,
+        "shiftCode": "NGAY",
+        "shiftName": "Ca ngày",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 2,
+        "shiftCode": "SANG",
+        "shiftName": "Ca sáng",
+        "startTime": "07:30:00",
+        "endTime": "11:30:00",
+        "endDayOffset": 0,
+        "breakMinutes": 0,
+        "active": true
+      },
+      {
+        "shiftId": 3,
+        "shiftCode": "CHIEU",
+        "shiftName": "Ca chiều",
+        "startTime": "13:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 0,
+        "active": true
+      },
+      {
+        "shiftId": 4,
+        "shiftCode": "TOI",
+        "shiftName": "Ca tối",
+        "startTime": "17:30:00",
+        "endTime": "21:30:00",
+        "endDayOffset": 0,
+        "breakMinutes": 0,
+        "active": true
+      },
+      {
+        "shiftId": 5,
+        "shiftCode": "HANH_CHINH",
+        "shiftName": "Ca hành chính",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 6,
+        "shiftCode": "QUA_DEM",
+        "shiftName": "Ca qua đêm",
+        "startTime": "22:00:00",
+        "endTime": "06:00:00",
+        "endDayOffset": 1,
+        "breakMinutes": 30,
+        "active": true
+      },
+      {
+        "shiftId": 7,
+        "shiftCode": "SYS_53ea3c22-c61",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 8,
+        "shiftCode": "SYS_473dfee2-ec7",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 9,
+        "shiftCode": "SYS_de4b7a05-a32",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 10,
+        "shiftCode": "SYS_123c20ab-f16",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 11,
+        "shiftCode": "SYS_83ccc056-55c",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      },
+      {
+        "shiftId": 12,
+        "shiftCode": "SYS_bd7a347b-785",
+        "shiftName": "System day shift",
+        "startTime": "08:00:00",
+        "endTime": "17:00:00",
+        "endDayOffset": 0,
+        "breakMinutes": 60,
+        "active": true
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-api-management-schedules",
+    "method": "GET",
+    "path": "/api/management/schedules",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 401,
+    "status": "FAIL",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-api-management-attendance",
+    "method": "GET",
+    "path": "/api/management/attendance",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 401,
+    "status": "FAIL",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-employee-api-reports-employees",
+    "method": "GET",
+    "path": "/api/reports/employees",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 403,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Bạn không có quyền thực hiện thao tác này.",
+      "thoi_gian": "2026-10-31T19:04:55.3528166",
+      "trang_thai": 403
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-0",
+    "method": "GET",
+    "path": "/employees/2552744/salary-rates",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-1",
+    "method": "GET",
+    "path": "/departments/2552744/head/history",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-2",
+    "method": "GET",
+    "path": "/api/reports/work/export",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-3",
+    "method": "GET",
+    "path": "/positions",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-4",
+    "method": "GET",
+    "path": "/departments/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-5",
+    "method": "GET",
+    "path": "/employee-requests/balances/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-6",
+    "method": "GET",
+    "path": "/employees/2552744/detail",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-7",
+    "method": "GET",
+    "path": "/leave-types",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-8",
+    "method": "GET",
+    "path": "/payslips/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-9",
+    "method": "GET",
+    "path": "/contract-types/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-10",
+    "method": "GET",
+    "path": "/employees/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-11",
+    "method": "GET",
+    "path": "/departments/2552744/head",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-12",
+    "method": "GET",
+    "path": "/g1/audit",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-13",
+    "method": "GET",
+    "path": "/api/management/work-time-details/shifts/2552744/breaks",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-14",
+    "method": "GET",
+    "path": "/employee-requests",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-15",
+    "method": "GET",
+    "path": "/leave-types/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-16",
+    "method": "GET",
+    "path": "/payslips/my-payslips",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-17",
+    "method": "GET",
+    "path": "/qualification-levels",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-18",
+    "method": "GET",
+    "path": "/positions",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-19",
+    "method": "GET",
+    "path": "/positions/search",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-20",
+    "method": "GET",
+    "path": "/api/reports/contracts/export",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-21",
+    "method": "GET",
+    "path": "/departments/search",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-22",
+    "method": "GET",
+    "path": "/departments",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-23",
+    "method": "GET",
+    "path": "/employee-assignments",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-24",
+    "method": "GET",
+    "path": "/employee-qualifications/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-25",
+    "method": "GET",
+    "path": "/payroll-batches/2552744/details",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-26",
+    "method": "GET",
+    "path": "/payroll-batches",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-27",
+    "method": "GET",
+    "path": "/api/management/work-time-details/schedules/2552744/breaks",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-28",
+    "method": "GET",
+    "path": "/payslips/2552744/html",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-29",
+    "method": "GET",
+    "path": "/api/auth/me",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-30",
+    "method": "GET",
+    "path": "/allowance-types/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-31",
+    "method": "GET",
+    "path": "/api/overtime/requests",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-32",
+    "method": "GET",
+    "path": "/qualification-levels/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-33",
+    "method": "GET",
+    "path": "/api/management/shifts",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-34",
+    "method": "GET",
+    "path": "/contracts/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-35",
+    "method": "GET",
+    "path": "/employee-requests/leave-policies/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-36",
+    "method": "GET",
+    "path": "/employees/search",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-37",
+    "method": "GET",
+    "path": "/g2/audit",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-38",
+    "method": "GET",
+    "path": "/personnel/audit",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-39",
+    "method": "GET",
+    "path": "/departments/2552744/head/candidates",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-40",
+    "method": "GET",
+    "path": "/api/attendance/self/history",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-41",
+    "method": "GET",
+    "path": "/employees/2552744/allowances",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-42",
+    "method": "GET",
+    "path": "/api/management/attendance",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-43",
+    "method": "GET",
+    "path": "/api/admin/hr-scopes",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-44",
+    "method": "GET",
+    "path": "/api/management/workflow-requests/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-45",
+    "method": "GET",
+    "path": "/api/reports/contracts",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-46",
+    "method": "GET",
+    "path": "/api/overtime/workflows/requests/2552744/intervals",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-47",
+    "method": "GET",
+    "path": "/contracts/2552744/salary-terms",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-48",
+    "method": "GET",
+    "path": "/payroll-integration-test/attendance/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-49",
+    "method": "GET",
+    "path": "/api/management/shifts/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-50",
+    "method": "GET",
+    "path": "/payroll-periods",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-51",
+    "method": "GET",
+    "path": "/employees",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-52",
+    "method": "GET",
+    "path": "/employee-requests/mine",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-53",
+    "method": "GET",
+    "path": "/payroll-periods/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-54",
+    "method": "GET",
+    "path": "/api/reports/employees/export",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-55",
+    "method": "GET",
+    "path": "/payroll-integration-test/salary-profile/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-56",
+    "method": "GET",
+    "path": "/api/overtime/requests/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-57",
+    "method": "GET",
+    "path": "/employees/2552744/qualifications",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-58",
+    "method": "GET",
+    "path": "/health",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-59",
+    "method": "GET",
+    "path": "/employees/2552744/assignments",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-60",
+    "method": "GET",
+    "path": "/payroll-batches/period/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-61",
+    "method": "GET",
+    "path": "/allowance-types",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-62",
+    "method": "GET",
+    "path": "/contract-types",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-63",
+    "method": "GET",
+    "path": "/leave-entitlements/employee/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-64",
+    "method": "GET",
+    "path": "/salary-components/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-65",
+    "method": "GET",
+    "path": "/api/me/payslips",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-66",
+    "method": "GET",
+    "path": "/departments",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-67",
+    "method": "GET",
+    "path": "/api/me/salary",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-68",
+    "method": "GET",
+    "path": "/api/management/schedules/search",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-69",
+    "method": "GET",
+    "path": "/employee-requests/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-70",
+    "method": "GET",
+    "path": "/employees/2552744/allowance-calculations",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-71",
+    "method": "GET",
+    "path": "/api/overtime/payroll-inputs",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-72",
+    "method": "GET",
+    "path": "/api/management/schedules/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-73",
+    "method": "GET",
+    "path": "/api/reports/work",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-74",
+    "method": "GET",
+    "path": "/api/reports/employees",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-75",
+    "method": "GET",
+    "path": "/salary-components",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-76",
+    "method": "GET",
+    "path": "/employees/2552744/decision-payroll-items",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-77",
+    "method": "GET",
+    "path": "/api/reports/payroll",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-78",
+    "method": "GET",
+    "path": "/contracts",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-79",
+    "method": "GET",
+    "path": "/audit-logs",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-80",
+    "method": "GET",
+    "path": "/api/management/workflow-requests",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-81",
+    "method": "GET",
+    "path": "/leave-entitlements",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-82",
+    "method": "GET",
+    "path": "/positions/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-83",
+    "method": "GET",
+    "path": "/employees/2552744/allowances/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-84",
+    "method": "GET",
+    "path": "/leave-entitlements/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-85",
+    "method": "GET",
+    "path": "/api/management/attendance/confirmed-summary",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-86",
+    "method": "GET",
+    "path": "/employee-decisions",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-87",
+    "method": "GET",
+    "path": "/api/management/schedules",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-88",
+    "method": "GET",
+    "path": "/contracts/2552744/salary-terms/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-89",
+    "method": "GET",
+    "path": "/api/me/schedules",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-90",
+    "method": "GET",
+    "path": "/api/reports/payroll/export",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-91",
+    "method": "GET",
+    "path": "/employees",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "RBAC-anonymous-92",
+    "method": "GET",
+    "path": "/employee-decisions/2552744",
+    "role": "anonymous",
+    "expected": [
+      401
+    ],
+    "actualStatus": 401,
+    "status": "PASS",
+    "request": null,
+    "response": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "note": ""
+  },
+  {
+    "id": "PAY-period-QA",
+    "method": "POST",
+    "path": "/payroll-periods",
+    "role": "admin",
+    "expected": [
+      201
+    ],
+    "actualStatus": 201,
+    "status": "PASS",
+    "request": {
+      "periodCode": "QA_20261031_190406_4398_PAY",
+      "periodStart": "2597-01-01",
+      "periodEnd": "2597-02-01"
+    },
+    "response": {
+      "periodId": 33,
+      "periodCode": "QA_20261031_190406_4398_PAY",
+      "periodStart": "2597-01-01",
+      "periodEnd": "2597-02-01"
+    },
+    "note": ""
+  },
+  {
+    "id": "PAY-employee-create-draft",
+    "method": "POST",
+    "path": "/payroll-batches/draft",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 201,
+    "status": "FAIL",
+    "request": {
+      "periodId": 33
+    },
+    "response": {
+      "batchId": 40,
+      "periodId": 33,
+      "versionNo": 1,
+      "previousBatchId": null,
+      "status": "NHAP",
+      "adjustmentReason": null,
+      "lockedBy": null,
+      "lockedAt": null,
+      "publishedBy": null,
+      "publishedAt": null
+    },
+    "note": ""
+  },
+  {
+    "id": "PAY-other-details",
+    "method": "GET",
+    "path": "/payroll-batches/40/details",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 200,
+    "status": "FAIL",
+    "request": null,
+    "response": [
+      {
+        "employeeId": 2552745,
+        "lines": [],
+        "netSalary": 0,
+        "payrollDetailId": 137,
+        "totalDeduction": 0,
+        "totalGross": 0
+      }
+    ],
+    "note": ""
+  },
+  {
+    "id": "PAY-employee-lock-spoof",
+    "method": "POST",
+    "path": "/payroll-batches/40/lock?actorAccountId=2588",
+    "role": "employeeA",
+    "expected": [
+      403
+    ],
+    "actualStatus": 500,
+    "status": "FAIL",
+    "request": null,
+    "response": {
+      "loi_chi_tiet": "Máy chủ không xử lý được yêu cầu",
+      "thoi_gian": "2026-10-31T19:04:57.8622492",
+      "trang_thai": 500
+    },
+    "note": ""
+  },
+  {
+    "id": "PAY-lock-actor-evidence",
+    "status": "OBSERVED",
+    "actual": "NHAP|NULL",
+    "note": "Only newly created QA batch; employee caller must not lock or choose actor."
+  }
+]

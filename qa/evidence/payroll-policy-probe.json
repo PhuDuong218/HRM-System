@@ -1,0 +1,372 @@
+{
+  "engineCases" : [ {
+    "case" : "TC-01",
+    "input" : [ "TC-01", "15000000", "21", "1", "4.5", "730000", "500000", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 15000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "Làm thêm giờ: 4.5 giờ x hệ số 1.5",
+      "amount" : 575284,
+      "direction" : "ADD",
+      "code" : "TANG_CA"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 730000,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 500000,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 1575000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 175014,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 16805284,
+    "deduct" : 1750014,
+    "net" : 15055270
+  }, {
+    "case" : "TC-02",
+    "input" : [ "TC-02", "8000000", "22", "0", "0", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 8000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 840000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 8000000,
+    "deduct" : 840000,
+    "net" : 7160000
+  }, {
+    "case" : "TC-03",
+    "input" : [ "TC-03", "30000000", "22", "0", "0", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 30000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 3150000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 1627500,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 30000000,
+    "deduct" : 4777500,
+    "net" : 25222500
+  }, {
+    "case" : "TC-04",
+    "input" : [ "TC-04", "15000000", "11", "0", "0", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 11/22 ngày",
+      "amount" : 7500000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 1575000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 7500000,
+    "deduct" : 1575000,
+    "net" : 5925000
+  }, {
+    "case" : "TC-05",
+    "input" : [ "TC-05", "22000000", "22", "0", "8", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 22000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "Làm thêm giờ: 8 giờ x hệ số 1.5",
+      "amount" : 1500000,
+      "direction" : "ADD",
+      "code" : "TANG_CA"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 2310000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 778500,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 23500000,
+    "deduct" : 3088500,
+    "net" : 20411500
+  }, {
+    "case" : "TC-06",
+    "input" : [ "TC-06", "10000000", "22", "0", "0", "800000", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 10000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 800000,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 1050000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 10800000,
+    "deduct" : 1050000,
+    "net" : 9750000
+  }, {
+    "case" : "TC-07",
+    "input" : [ "TC-07", "20000000", "22", "0", "0", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 20000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 2100000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 440000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 20000000,
+    "deduct" : 2540000,
+    "net" : 17460000
+  }, {
+    "case" : "TC-08",
+    "input" : [ "TC-08", "60000000", "22", "0", "0", "0", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 60000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 6300000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 7425000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 60000000,
+    "deduct" : 13725000,
+    "net" : 46275000
+  }, {
+    "case" : "MEAL-CAP-01",
+    "input" : [ "MEAL-CAP-01", "15000000", "22", "0", "0", "800000", "0", "THANG" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 15000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 800000,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 1575000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    }, {
+      "explanation" : "Thuế TNCN tạm tính theo biểu thuế lũy tiến từng phần",
+      "amount" : 121250,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 15800000,
+    "deduct" : 1696250,
+    "net" : 14103750
+  }, {
+    "case" : "DAILY-01",
+    "input" : [ "DAILY-01", "1000000", "22", "0", "0", "0", "0", "NGAY" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 1000000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 105000,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 1000000,
+    "deduct" : 105000,
+    "net" : 895000
+  }, {
+    "case" : "HOURLY-01",
+    "input" : [ "HOURLY-01", "100000", "22", "0", "0", "0", "0", "GIO" ],
+    "lines" : [ {
+      "explanation" : "Lương theo công: 22/22 ngày",
+      "amount" : 100000,
+      "direction" : "ADD",
+      "code" : "LUONG_CONG"
+    }, {
+      "explanation" : "QA lunch (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "QA travel (THEO_KY)",
+      "amount" : 0,
+      "direction" : "ADD",
+      "code" : "PHU_CAP"
+    }, {
+      "explanation" : "Trích đóng bảo hiểm 10.5% trên lương cơ bản",
+      "amount" : 10500,
+      "direction" : "DEDUCT",
+      "code" : "KHAU_TRU"
+    } ],
+    "gross" : 100000,
+    "deduct" : 10500,
+    "net" : 89500
+  } ],
+  "clock" : [ {
+    "allowed" : false,
+    "lateMinutes" : 0,
+    "offsetMinutes" : -31
+  }, {
+    "allowed" : false,
+    "lateMinutes" : 0,
+    "offsetMinutes" : -30
+  }, {
+    "allowed" : false,
+    "lateMinutes" : 0,
+    "offsetMinutes" : -16
+  }, {
+    "allowed" : true,
+    "lateMinutes" : 0,
+    "offsetMinutes" : -15
+  }, {
+    "allowed" : true,
+    "lateMinutes" : 0,
+    "offsetMinutes" : 0
+  }, {
+    "allowed" : true,
+    "lateMinutes" : 15,
+    "offsetMinutes" : 15
+  }, {
+    "allowed" : false,
+    "lateMinutes" : 0,
+    "offsetMinutes" : 16
+  } ],
+  "snapshotWithQuotesValid" : false,
+  "snapshotWithQuotes" : "{\"employeeId\":1,\"employeeCode\":\"QA_ENGINE\",\"fullName\":\"QA quote \" newline\n\",\"baseSalary\":100000,\"standardWorkDays\":22,\"actualWorkDays\":22,\"overtimeHours\":0,\"paidLeaveDays\":0,\"calculatedAt\":\"2026-10-31T18:51:42.082540700\"}",
+  "missingComponentsProducesLines" : 4
+}

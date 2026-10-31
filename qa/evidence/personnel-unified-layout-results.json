@@ -1,0 +1,420 @@
+[
+  {
+    "path": "employees",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1440,
+    "width": 1440
+  },
+  {
+    "path": "assignments",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "certificates",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1440,
+    "width": 1440
+  },
+  {
+    "path": "requests",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "leave-types",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "leave-entitlements",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "departments",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "department-catalog",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "positions",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "qualifications",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1427,
+    "width": 1440
+  },
+  {
+    "path": "audit",
+    "state": "list",
+    "alerts": [],
+    "filtersInside": true,
+    "pagination": true,
+    "scroll": 1440,
+    "width": 1440
+  },
+  {
+    "path": "employees",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "assignments",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "certificates",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "requests",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "leave-types",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "leave-entitlements",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "departments",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "department-catalog",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "positions",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "qualifications",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "audit",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "sticky",
+    "scroll": 1427,
+    "unlabelled": 0,
+    "width": 1440
+  },
+  {
+    "path": "employees",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "assignments",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "certificates",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "requests",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "leave-types",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "leave-entitlements",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "departments",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "department-catalog",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "positions",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "qualifications",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "audit",
+    "state": "detail",
+    "alerts": [],
+    "filtersInside": true,
+    "panel": "fixed",
+    "scroll": 377,
+    "unlabelled": 0,
+    "width": 390
+  },
+  {
+    "path": "employees",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "assignments",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "certificates",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "requests",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "leave-types",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "leave-entitlements",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "departments",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "department-catalog",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "positions",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "qualifications",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  },
+  {
+    "path": "audit",
+    "state": "detail",
+    "alerts": [],
+    "panel": "fixed",
+    "scroll": 307,
+    "unlabelled": 0,
+    "width": 320
+  }
+]

@@ -1,39 +1,38 @@
 <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
   <div>
-    <p class="eyebrow">HỢP ĐỒNG</p>
-    <h1 class="mb-0">Loại hợp đồng</h1>
+    <p class="eyebrow">{{ "HỢP ĐỒNG" | translate }}</p>
+    <h1 class="mb-0">{{ "Loại hợp đồng" | translate }}</h1>
   </div>
 
   <button type="button"
           class="btn btn-primary"
           [disabled]="loading || saving"
           (click)="openCreate()">
-    Thêm loại hợp đồng
-  </button>
+    {{ " Thêm loại hợp đồng " | translate }}</button>
 </div>
 
 @if (message) {
   <div class="alert alert-success" role="status">
-    {{ message }}
+    {{(message) | translate}}
   </div>
 }
 
 @if (error) {
   <div class="alert alert-danger" role="alert">
-    {{ error }}
+    {{(error) | translate}}
   </div>
 }
 
 @if (showForm) {
   <section class="surface mb-4">
-    <h2>{{ editing ? 'Sửa loại hợp đồng' : 'Thêm loại hợp đồng' }}</h2>
+    <h2>{{(editing ? 'Sửa loại hợp đồng' : 'Thêm loại hợp đồng') | translate}}</h2>
 
     <form #typeForm="ngForm"
           class="row g-3"
           (ngSubmit)="save()">
 
       <div class="col-md-6">
-        <label for="type-code" class="form-label">Mã loại</label>
+        <label for="type-code" class="form-label">{{ "Mã loại" | translate }}</label>
 
         <input id="type-code"
                name="typeCode"
@@ -45,17 +44,15 @@
 
         @if (editing) {
           <div class="form-text">
-            Mã loại không thể thay đổi sau khi tạo.
-          </div>
+            {{ " Mã loại không thể thay đổi sau khi tạo. " | translate }}</div>
         } @else {
           <div class="form-text">
-            Chỉ nhập chữ không dấu, số, dấu _ hoặc dấu -.
-          </div>
+            {{ " Chỉ nhập chữ không dấu, số, dấu _ hoặc dấu -. " | translate }}</div>
         }
       </div>
 
       <div class="col-md-6">
-        <label for="type-name" class="form-label">Tên loại</label>
+        <label for="type-name" class="form-label">{{ "Tên loại" | translate }}</label>
 
         <input id="type-name"
                name="typeName"
@@ -74,7 +71,7 @@
                    class="form-check-input"
                    [(ngModel)]="form.isActive"
                    [disabled]="saving">
-            <span class="form-check-label">Đang hoạt động</span>
+            <span class="form-check-label">{{ "Đang hoạt động" | translate }}</span>
           </label>
         </div>
       }
@@ -83,15 +80,14 @@
         <button type="submit"
                 class="btn btn-primary"
                 [disabled]="saving || typeForm.invalid">
-          {{ saving ? 'Đang lưu…' : 'Lưu' }}
+          {{(saving ? 'Đang lưu…' : 'Lưu') | translate}}
         </button>
 
         <button type="button"
                 class="btn btn-outline-secondary"
                 [disabled]="saving"
                 (click)="cancel()">
-          Hủy
-        </button>
+          {{ " Hủy " | translate }}</button>
       </div>
     </form>
   </section>
@@ -99,37 +95,36 @@
 
 <section class="surface">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Danh sách loại hợp đồng</h2>
+    <h2 class="mb-0">{{ "Danh sách loại hợp đồng" | translate }}</h2>
 
     <button type="button"
             class="btn btn-outline-secondary"
             [disabled]="loading || saving"
             (click)="load()">
-      Tải lại
-    </button>
+      {{ " Tải lại " | translate }}</button>
   </div>
 
   @if (loading) {
-    <p role="status">Đang tải danh sách…</p>
+    <p role="status">{{ "Đang tải danh sách…" | translate }}</p>
   } @else if (!error) {
     <div class="table-responsive">
       <table class="table align-middle">
         <thead>
           <tr>
-            <th>Mã loại</th>
-            <th>Tên loại</th>
-            <th>Trạng thái</th>
-            <th>Thao tác</th>
+            <th>{{ "Mã loại" | translate }}</th>
+            <th>{{ "Tên loại" | translate }}</th>
+            <th>{{ "Trạng thái" | translate }}</th>
+            <th>{{ "Thao tác" | translate }}</th>
           </tr>
         </thead>
 
         <tbody>
           @for (row of rows; track row.contractTypeId) {
             <tr>
-              <td>{{ row.typeCode }}</td>
-              <td>{{ row.typeName }}</td>
+              <td>{{row.typeCode}}</td>
+              <td>{{row.typeName}}</td>
               <td>
-                {{ row.isActive ? 'Hoạt động' : 'Ngừng sử dụng' }}
+                {{(row.isActive ? 'Hoạt động' : 'Ngừng sử dụng') | translate}}
               </td>
               <td>
                 <div class="d-flex flex-wrap gap-2">
@@ -137,21 +132,19 @@
                           class="btn btn-sm btn-outline-primary"
                           [disabled]="saving"
                           (click)="openEdit(row)">
-                    Sửa
-                  </button>
+                    {{ " Sửa " | translate }}</button>
 
                   <button type="button"
                           class="btn btn-sm btn-outline-danger"
                           [disabled]="saving || !row.isActive"
                           (click)="deactivate(row)">
-                    Ngừng sử dụng
-                  </button>
+                    {{ " Ngừng sử dụng " | translate }}</button>
                 </div>
               </td>
             </tr>
           } @empty {
             <tr>
-              <td colspan="4">Chưa có loại hợp đồng.</td>
+              <td colspan="4">{{ 'Chưa có loại hợp đồng.' | translate }}</td>
             </tr>
           }
         </tbody>

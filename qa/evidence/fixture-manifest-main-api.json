@@ -1,0 +1,37 @@
+{
+  "prefix": "QA_20261031_190406_4398",
+  "ids": {
+    "admin": {
+      "account": 2586,
+      "employee": 2552741
+    },
+    "hrA": {
+      "account": 2587,
+      "employee": 2552742
+    },
+    "hrB": {
+      "account": 2588,
+      "employee": 2552743
+    },
+    "employeeA": {
+      "account": 2589,
+      "employee": 2552744
+    },
+    "employeeB": {
+      "account": 2590,
+      "employee": 2552745
+    },
+    "other": {
+      "account": 2591,
+      "employee": 2552746
+    },
+    "retired": {
+      "account": 2592,
+      "employee": 2552747
+    },
+    "departmentA": 2551140,
+    "departmentB": 2551141,
+    "position": 2551073
+  },
+  "credentials": "ephemeral outside repository; removed on shutdown"
+}

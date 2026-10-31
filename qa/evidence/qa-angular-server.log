@@ -1,0 +1,34 @@
+> Building...
+√ Building...
+Initial chunk files | Names               |  Raw size
+styles.css          | styles              | 288.00 kB | 
+main.js             | main                | 192.82 kB | 
+chunk-KSIBC4DR.js   | -                   |  53.02 kB | 
+chunk-K2LNHLPD.js   | -                   |   4.57 kB | 
+chunk-QMOWMBOR.js   | -                   | 132 bytes | 
+polyfills.js        | polyfills           |  95 bytes | 
+
+                    | Initial total       | 538.63 kB
+
+Lazy chunk files    | Names               |  Raw size
+chunk-PWLJ6QTU.js   | personnel-workspace | 108.03 kB | 
+chunk-25TSIUY5.js   | contracts           |  89.77 kB | 
+chunk-5NL3BSR2.js   | employees           |  85.69 kB | 
+chunk-33SX7A2P.js   | work-shifts         |  65.11 kB | 
+chunk-TAZTMVEJ.js   | departments         |  49.44 kB | 
+chunk-ZG6AGBBL.js   | catalog             |  48.05 kB | 
+chunk-J5LTCCYF.js   | contract-types      |  29.54 kB | 
+chunk-726KH3OH.js   | schedules           |  25.37 kB | 
+chunk-GYASRQAU.js   | overtime            |  25.27 kB | 
+chunk-WMID4DGI.js   | attendance-summary  |  24.08 kB | 
+chunk-3YOVY6SI.js   | -                   |  21.69 kB | 
+chunk-XYNYHSNH.js   | attendance          |  11.09 kB | 
+chunk-ZFBXDYAQ.js   | -                   |   6.03 kB | 
+chunk-SOWE2WRW.js   | -                   |   2.65 kB | 
+chunk-3GVSXAS4.js   | -                   |   2.02 kB | 
+
+Application bundle generation complete. [12.020 seconds] - 2026-10-31T12:10:30.455Z
+
+Watch mode enabled. Watching for file changes...
+NOTE: Raw file sizes do not reflect development server per-request transformations.
+  ➜  Local:   http://127.0.0.1:4202/

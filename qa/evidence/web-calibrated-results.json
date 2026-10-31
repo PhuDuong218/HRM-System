@@ -1,0 +1,938 @@
+[
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "overview",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "connection",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "employees",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "departments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "department-catalog",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "positions",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "qualifications",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "assignments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "certificates",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "leave-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "leave-entitlements",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "requests",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "audit",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "contracts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "contract-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "work-shifts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1265,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "schedules",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "attendance",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "attendance/summary",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "overtime",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "accounts",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "allowances",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "decisions",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "payroll",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "payslips",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 1280,
+    "nativeWidth": 1359,
+    "path": "reports",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 1280,
+    "width": 1280
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "overview",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "connection",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "employees",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "departments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "department-catalog",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "positions",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "qualifications",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "assignments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "certificates",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "leave-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "leave-entitlements",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "requests",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "audit",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "contracts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "contract-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "work-shifts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 754,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "schedules",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "attendance",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "attendance/summary",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "overtime",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "accounts",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "allowances",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "decisions",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "payroll",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "payslips",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 768,
+    "nativeWidth": 816,
+    "path": "reports",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 768,
+    "width": 768
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "overview",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "connection",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "employees",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "departments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "department-catalog",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "positions",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "qualifications",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "assignments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "certificates",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "leave-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "leave-entitlements",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "requests",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "audit",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "contracts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "contract-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "work-shifts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "schedules",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "attendance",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "attendance/summary",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "overtime",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 377,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "accounts",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "allowances",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "decisions",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "payroll",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "payslips",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 390,
+    "nativeWidth": 460,
+    "path": "reports",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 390,
+    "width": 390
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "overview",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "connection",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "employees",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "departments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "department-catalog",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "positions",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "qualifications",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "assignments",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "certificates",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "leave-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "leave-entitlements",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "requests",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "audit",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "contracts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "contract-types",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "work-shifts",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "schedules",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "attendance",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "attendance/summary",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "overtime",
+    "kind": "IMPLEMENTED",
+    "alerts": [],
+    "scroll": 307,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "accounts",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "allowances",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "decisions",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "payroll",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "payslips",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  },
+  {
+    "requestedCssWidth": 320,
+    "nativeWidth": 377,
+    "path": "reports",
+    "kind": "NOT-IMPLEMENTED",
+    "alerts": [],
+    "scroll": 320,
+    "width": 320
+  }
+]

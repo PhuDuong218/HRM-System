@@ -1,0 +1,9 @@
+{
+  "started": "2026-10-31T18:45:34.5394984+07:00",
+  "finished": "2026-10-31T18:49:01.5279644+07:00",
+  "state": "FINISHED",
+  "exitCode": 1,
+  "javaHome": "C:/Program Files/Java/jdk-23",
+  "command": "mvnw -o test with cached Mockito javaagent",
+  "backgroundJobs": "Existing test configuration; see separate job assessment"
+}

@@ -1,0 +1,148 @@
+<p class="eyebrow">{{ "QUẢN LÝ LỊCH LÀM VIỆC" | translate }}</p>
+<h1>{{ "Danh mục ca làm việc" | translate }}</h1>
+<p class="page-description">{{ "Danh sách mẫu ca, thời gian làm việc và trạng thái sử dụng." | translate }}</p>
+<section class="surface mb-3" *ngIf="canManage">
+    <div class="d-flex justify-content-between align-items-center">
+        <strong>{{ "Quản lý mẫu ca" | translate }}</strong>
+        <button type="button" class="btn btn-primary btn-sm" (click)="openCreate()">{{ "Thêm ca" | translate }}</button>
+    </div>
+    <p class="text-muted small mb-2">{{ "Sửa ca cần xác minh đầy đủ các khoảng nghỉ hiện hành. Khóa/mở khóa phải có lý do. " | translate }}</p>
+    <div *ngIf="actionError" class="alert alert-warning">{{actionError}}</div>
+    <div class="row g-2 align-items-end">
+        <div class="col-md-9"><label class="form-label">{{ "Lý do khóa / mở khóa" | translate }}</label><input class="form-control"
+                [(ngModel)]="actionReason" maxlength="1000" [attr.placeholder]="&quot;Bắt buộc nhập trước khi khóa/mở khóa&quot; | translate" /></div>
+    </div>
+</section>
+<section class="surface mb-3" *ngIf="editor === 'create'">
+    <h2 class="h6">{{ "Thêm mẫu ca" | translate }}</h2>
+    <div class="row g-2">
+        <div class="col-md-3"><label class="form-label">{{ "Mã ca" | translate }}</label><input class="form-control"
+                [(ngModel)]="shiftCode" /></div>
+        <div class="col-md-3"><label class="form-label">{{ "Tên ca" | translate }}</label><input class="form-control"
+                [(ngModel)]="shiftName" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ bắt đầu" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="startTime" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ kết thúc" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="endTime" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Qua ngày (0/1)" | translate }}</label><select class="form-select"
+                [(ngModel)]="endDayOffset">
+                <option [ngValue]="0">0</option>
+                <option [ngValue]="1">1</option>
+            </select></div>
+    </div>
+    <div class="mt-3"><strong>{{ "Khoảng nghỉ chi tiết (phút tính từ lúc bắt đầu ca)" | translate }}</strong>
+        <button class="btn btn-sm btn-outline-secondary ms-2" type="button" (click)="addBreak()">{{ "Thêm khoảng nghỉ" | translate }}</button>
+    </div>
+    <div *ngFor="let b of breaks; let i=index" class="row g-2 align-items-end mt-1">
+        <div class="col-md-3"><label class="form-label">{{ "Phút bắt đầu nghỉ" | translate }}</label><input type="number"
+                class="form-control" [(ngModel)]="b.startMinute" min="0" /></div>
+        <div class="col-md-3"><label class="form-label">{{ "Phút kết thúc nghỉ" | translate }}</label><input type="number"
+                class="form-control" [(ngModel)]="b.endMinute" min="0" /></div>
+        <div class="col-md-2"><button type="button" class="btn btn-outline-danger btn-sm"
+                (click)="removeBreak(i)">{{ "Xóa" | translate }}</button></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" (click)="save()" [disabled]="saving">{{ "Lưu ca" | translate }}</button><button class="btn btn-outline-secondary" (click)="editor=null">{{ "Hủy" | translate }}</button></div>
+</section>
+<section class="surface mb-3">
+    <h2 class="h6">{{ "Tìm kiếm và lọc" | translate }}</h2>
+    <div class="row g-3 align-items-end">
+        <div class="col-md-4"><label class="form-label">{{ "Mã ca hoặc tên ca" | translate }}</label><input class="form-control"
+                [(ngModel)]="query" (ngModelChange)="onSearchChange()" [attr.placeholder]="&quot;Nhập mã/tên ca&quot; | translate" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ bắt đầu từ" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="startFrom" (ngModelChange)="onSearchChange()" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ bắt đầu đến" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="startTo" (ngModelChange)="onSearchChange()" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ kết thúc từ" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="endFrom" (ngModelChange)="onSearchChange()" /></div>
+        <div class="col-md-2"><label class="form-label">{{ "Giờ kết thúc đến" | translate }}</label><input type="time" class="form-control"
+                [(ngModel)]="endTo" (ngModelChange)="onSearchChange()" /></div>
+        <div class="col-md-3"><label class="form-label">{{ "Trạng thái" | translate }}</label><select class="form-select"
+                [(ngModel)]="activeFilter" (ngModelChange)="onSearchChange()">
+                <option value="all">{{ "Tất cả" | translate }}</option>
+                <option value="active">{{ "Đang hoạt động" | translate }}</option>
+                <option value="inactive">{{ "Đã khóa" | translate }}</option>
+            </select></div>
+        <div class="col-md-3"><label class="form-label">{{ "Được sử dụng từ ngày" | translate }}</label><input type="date"
+                class="form-control" [(ngModel)]="usedFrom" /></div>
+        <div class="col-md-3"><label class="form-label">{{ "Đến ngày" | translate }}</label><input type="date" class="form-control"
+                [(ngModel)]="usedTo" /></div>
+        <div class="col-md-3 d-flex gap-2"><button type="button" class="btn btn-outline-primary" (click)="load()"
+                [disabled]="loading">{{ "Áp dụng / làm mới" | translate }}</button><button type="button" class="btn btn-outline-secondary"
+                (click)="clearFilters()" [disabled]="loading">{{ "Xóa lọc" | translate }}</button></div>
+    </div>
+</section>
+<div *ngIf="error" class="alert alert-warning" role="alert">{{(error) | translate}}</div>
+<section class="surface">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">{{ "Danh sách ca (" | translate }}{{filtered.length}})</h2><span class="text-muted small">10 ca / trang</span>
+    </div>
+    <div *ngIf="loading" class="text-muted mb-2">{{ "Đang tải dữ liệu…" | translate }}</div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>{{ "Mã ca" | translate }}</th>
+                    <th>{{ "Tên ca" | translate }}</th>
+                    <th>{{ "Giờ bắt đầu" | translate }}</th>
+                    <th>{{ "Giờ kết thúc" | translate }}</th>
+                    <th>{{ "Qua ngày" | translate }}</th>
+                    <th>{{ "Trạng thái" | translate }}</th>
+                    <th>{{ "Thao tác" | translate }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of pageRows">
+                    <td>{{v(item,'shiftCode')}}</td>
+                    <td>{{v(item,'shiftName')}}</td>
+                    <td>{{v(item,'startTime')}}</td>
+                    <td>{{v(item,'endTime')}}</td>
+                    <td>{{v(item,'endDayOffset')}}</td>
+                    <td>{{(item['active'] ? 'Hoạt động' : 'Đã khóa') | translate}}</td>
+                    <td>
+                        <div class="d-flex flex-wrap gap-1"><button type="button" class="btn btn-sm btn-outline-primary"
+                                (click)="selected=item">Xem</button>
+                            <ng-container *ngIf="canManage"><button class="btn btn-sm btn-outline-secondary"
+                                    type="button" [disabled]="!item['active']" (click)="openEdit(item)">{{ "Sửa" | translate }}</button>
+                                <button class="btn btn-sm btn-outline-secondary" type="button"
+                                    [disabled]="saving || !actionReason.trim()"
+                                    (click)="changeActive(item)">{{(item['active'] ? 'Khóa' : 'Mở
+                                    khóa') | translate}}</button></ng-container>
+                        </div>
+                    </td>
+                </tr>
+                <tr *ngIf="!loading && !pageRows.length">
+                    <td colspan="7" class="text-center text-muted py-4">{{ "Không có ca phù hợp điều kiện lọc." | translate }}</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <nav [attr.aria-label]="&quot;Phân trang danh mục ca&quot; | translate" class="d-flex justify-content-end mt-3" *ngIf="totalPages > 0">
+        <div class="d-flex gap-1 align-items-center flex-wrap">
+            <ng-container *ngIf="totalPages > 1">
+                <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="&quot;Trang đầu&quot; | translate"
+                    [disabled]="page === 0" (click)="goPage(0)">&lt;&lt;</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="&quot;Trang trước&quot; | translate"
+                    [disabled]="page === 0" (click)="goPage(page - 1)">&lt;</button>
+            </ng-container>
+            <button type="button" class="btn btn-sm" *ngFor="let number of pageNumbers"
+                [ngClass]="number === page ? 'btn-primary' : 'btn-outline-secondary'"
+                [attr.aria-current]="number === page ? 'page' : null" (click)="goPage(number)">{{number + 1}}</button>
+            <ng-container *ngIf="totalPages > 1">
+                <button type="button" class="btn btn-sm btn-outline-secondary" aria-label="Trang sau"
+                    [disabled]="page + 1 >= totalPages" (click)="goPage(page + 1)">&gt;</button>
+                <button type="button" class="btn btn-sm btn-outline-secondary" [attr.aria-label]="&quot;Trang cuối&quot; | translate"
+                    [disabled]="page + 1 >= totalPages" (click)="goPage(totalPages - 1)">&gt;&gt;</button>
+            </ng-container>
+        </div>
+    </nav>
+</section>
+<section *ngIf="selected" class="surface mt-3">
+    <div class="d-flex justify-content-between">
+        <h2 class="h5">{{ "Thông tin chi tiết" | translate }}</h2><button type="button" class="btn btn-outline-secondary btn-sm"
+            (click)="selected=null">{{ "Đóng" | translate }}</button>
+    </div>
+    <dl class="row mb-0"><ng-container *ngFor="let field of selected | keyvalue">
+            <dt class="col-md-4 text-break">{{field.key}}</dt>
+            <dd class="col-md-8 text-break">{{field.value===null?'—':(field.value | json)}}</dd>
+        </ng-container></dl>
+</section>

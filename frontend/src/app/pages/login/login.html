@@ -2,23 +2,23 @@
   <section class="intro" aria-labelledby="intro-title">
     <div class="brand">
       <span class="brand-mark">H</span>
-      <span class="brand-name">HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span>
+      <span class="brand-name">HRM Center<small>{{ "TRUNG TÂM GIÁO DỤC" | translate }}</small></span>
     </div>
 
     <div class="intro-content">
-      <p class="intro-label"><span></span> KHÔNG GIAN QUẢN LÝ NHÂN SỰ</p>
-      <h1 id="intro-title">Mọi điều về nhân sự,<br><em>trong một nơi.</em></h1>
-      <p class="intro-description">Một không gian dành cho đội ngũ quản lý, giúp công việc nhân sự mỗi ngày trở nên đơn giản và rõ ràng hơn.</p>
+      <p class="intro-label"><span></span> {{ " KHÔNG GIAN QUẢN LÝ NHÂN SỰ" | translate }}</p>
+      <h1 id="intro-title">{{ "Mọi điều về nhân sự," | translate }}<br><em>{{ "trong một nơi." | translate }}</em></h1>
+      <p class="intro-description">{{ "Một không gian dành cho đội ngũ quản lý, giúp công việc nhân sự mỗi ngày trở nên đơn giản và rõ ràng hơn." | translate }}</p>
 
       <div class="intro-card" aria-hidden="true">
         <div class="card-icon">
           <svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-1.5A4.5 4.5 0 0 0 11.5 14h-2A4.5 4.5 0 0 0 5 18.5V20M10.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 8h4m-2-2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </div>
-        <div><strong>Đồng hành cùng đội ngũ</strong><span>Quản lý nhân sự thuận tiện hơn mỗi ngày</span></div>
+        <div><strong>{{ "Đồng hành cùng đội ngũ" | translate }}</strong><span>{{ "Quản lý nhân sự thuận tiện hơn mỗi ngày" | translate }}</span></div>
         <span class="card-arrow">↗</span>
       </div>
     </div>
-    <p class="intro-footer">HRM CENTER <span>·</span> QUẢN LÝ NHÂN SỰ</p>
+    <p class="intro-footer">HRM CENTER <span>·</span> {{ " QUẢN LÝ NHÂN SỰ" | translate }}</p>
   </section>
 
   <section class="login-side" aria-labelledby="login-title">
@@ -26,29 +26,29 @@
       <div class="login-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10" width="15" height="10.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </div>
-      <p class="form-label-top">CHÀO MỪNG TRỞ LẠI</p>
-      <h2 id="login-title">Đăng nhập</h2>
-      <p class="form-description">Nhập thông tin tài khoản để truy cập không gian quản lý của bạn.</p>
-      @if (notice) { <p class="login-success" role="status">{{ notice }}</p> }
+      <p class="form-label-top">{{ "CHÀO MỪNG TRỞ LẠI" | translate }}</p>
+      <h2 id="login-title">{{ "Đăng nhập" | translate }}</h2>
+      <p class="form-description">{{ "Nhập thông tin tài khoản để truy cập không gian quản lý của bạn." | translate }}</p>
+      @if (notice) { <p class="login-success" role="status">{{notice}}</p> }
 
       <form class="login-form" (submit)="submit($event, username.value, password.value)">
         <div class="field">
-          <label for="username">Tên đăng nhập</label>
-          <input #username id="username" name="username" type="text" autocomplete="username" placeholder="Nhập tên đăng nhập" required [disabled]="loading">
+          <label for="username">{{ "Tên đăng nhập" | translate }}</label>
+          <input #username id="username" name="username" type="text" autocomplete="username" [attr.placeholder]="&quot;Nhập tên đăng nhập&quot; | translate" required [disabled]="loading">
         </div>
         <div class="field">
-          <label for="password">Mật khẩu</label>
+          <label for="password">{{ "Mật khẩu" | translate }}</label>
           <div class="password-field">
-            <input #password id="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" placeholder="Nhập mật khẩu" required [disabled]="loading">
-            <button class="visibility-button" type="button" (click)="showPassword = !showPassword" [attr.aria-label]="showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu'" [attr.aria-pressed]="showPassword">{{ showPassword ? 'Ẩn' : 'Hiện' }}</button>
+            <input #password id="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" [attr.placeholder]="&quot;Nhập mật khẩu&quot; | translate" required [disabled]="loading">
+            <button class="visibility-button" type="button" (click)="showPassword = !showPassword" [attr.aria-label]="(showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu') | translate" [attr.aria-pressed]="showPassword">{{(showPassword ? 'Ẩn' : 'Hiện') | translate}}</button>
           </div>
         </div>
-        @if (error) { <p class="login-error" role="alert">{{ error }}</p> }
-        <button class="submit-button" type="submit" [disabled]="loading">{{ loading ? 'Đang đăng nhập…' : 'Đăng nhập' }} <span aria-hidden="true">→</span></button>
+        @if (error) { <p class="login-error" role="alert">{{(error) | translate}}</p> }
+        <button class="submit-button" type="submit" [disabled]="loading">{{(loading ? 'Đang đăng nhập…' : 'Đăng nhập') | translate}} <span aria-hidden="true">→</span></button>
       </form>
 
-      <div class="help-note"><span class="help-icon" aria-hidden="true">?</span><p>Cần hỗ trợ tài khoản?<br><strong>Vui lòng liên hệ quản trị viên.</strong></p></div>
+      <div class="help-note"><span class="help-icon" aria-hidden="true">?</span><p>{{ "Cần hỗ trợ tài khoản?" | translate }}<br><strong>{{ "Vui lòng liên hệ quản trị viên." | translate }}</strong></p></div>
     </div>
-    <p class="side-footer">© HRM Center <span>·</span> Trung tâm giáo dục</p>
+    <p class="side-footer">© HRM Center <span>·</span> {{ " Trung tâm giáo dục" | translate }}</p>
   </section>
 </main>
