@@ -22,8 +22,10 @@ export const navigation: NavigationItem[] = [
   },
   {
     id: 'time', label: 'Thời gian & Chấm công', children: [
+      { path: 'work-shifts', label: 'Danh mục ca' },
       { path: 'schedules', label: 'Lịch làm việc' },
       { path: 'attendance', label: 'Chấm công' },
+      { path: 'attendance/summary', label: 'Tổng hợp công theo kỳ' },
       { path: 'overtime', label: 'Tăng ca' },
       { path: 'requests', label: 'Quản lý đơn từ' }
     ]

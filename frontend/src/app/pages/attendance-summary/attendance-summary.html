@@ -1,0 +1,62 @@
+<p class="eyebrow">N-11 · BẢN SAO ĐỘC LẬP</p>
+<h1>Tổng hợp công xác nhận theo kỳ</h1>
+<p class="page-description">Chỉ hiển thị công đã xác nhận, không thay thế bảng công chi tiết.</p>
+<div class="alert alert-info">Giao diện kiểm tra dữ liệu thật (chỉ đọc). Các chức năng tạo/sửa/duyệt/xác nhận đang khóa
+    chờ phê duyệt tích hợp và xác minh RBAC, DTO.</div>
+<section class="surface mb-3">
+    <div class="row g-3 align-items-end">
+        <div class="col-md-3"><label class="form-label">Từ ngày</label><input class="form-control" type="date"
+                [(ngModel)]="from"></div>
+        <div class="col-md-3"><label class="form-label">Đến ngày</label><input class="form-control" type="date"
+                [(ngModel)]="to"></div>
+        <div class="col-md-3"><label class="form-label">Mã nhân viên</label><input class="form-control" type="number"
+                min="1" [(ngModel)]="employeeId"></div>
+        <div class="col-md-auto"><button class="btn btn-primary" (click)="load()" [disabled]="loading">{{loading?'Đang
+                tải...':'Tìm kiếm / tải dữ liệu'}}</button></div>
+    </div>
+</section>
+<div *ngIf="error" class="alert alert-warning" role="alert">{{error}}</div>
+<section class="surface">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">Danh sách kết quả ({{records.length}})</h2><span class="badge text-bg-secondary">Chỉ
+            đọc</span>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover align-middle">
+            <thead>
+                <tr>
+                    <th>Nhân viên</th>
+                    <th>Ngày làm</th>
+                    <th>Bản ghi hiện diện</th>
+                    <th>Phút công thuần</th>
+                    <th>Chi tiết</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr *ngFor="let item of records">
+                    <td>{{v(item,'employeeId')}}</td>
+                    <td>{{v(item,'workDate')}}</td>
+                    <td>{{v(item,'presentRecords')}}</td>
+                    <td>{{v(item,'netMinutes')}}</td>
+                    <td><button type="button" class="btn btn-sm btn-outline-primary"
+                            (click)="selected=item">Xem</button></td>
+                </tr>
+                <tr *ngIf="!records.length">
+                    <td [attr.colspan]="5" class="text-center text-muted py-4">Chưa có bản ghi. Nhấn Tìm kiếm để tải dữ
+                        liệu.</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</section>
+<section *ngIf="selected" class="surface mt-3">
+    <div class="d-flex justify-content-between">
+        <h2 class="h5">Thông tin chi tiết</h2><button type="button" class="btn btn-outline-secondary btn-sm"
+            (click)="selected=null">Đóng</button>
+    </div>
+    <dl class="row mb-0"><ng-container *ngFor="let field of selected | keyvalue">
+            <dt class="col-md-4 text-break">{{field.key}}</dt>
+            <dd class="col-md-8 text-break">{{field.value===null?'—':(field.value | json)}}</dd>
+        </ng-container></dl>
+    <p class="small text-muted mb-0">Thông tin hiển thị trực tiếp từ API; không tự tạo dữ liệu demo.</p>
+</section>

@@ -7,6 +7,11 @@ import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { DepartmentsPage } from "./pages/departments/departments";
 import { LoginPage } from "./pages/login/login";
 import { authGuard } from "./services/auth.guard";
+import { WorkShiftsPage } from "./pages/work-shifts/work-shifts";
+import { SchedulesPage } from "./pages/schedules/schedules";
+import { AttendancePage } from "./pages/attendance/attendance";
+import { AttendanceSummaryPage } from "./pages/attendance-summary/attendance-summary";
+import { OvertimePage } from "./pages/overtime/overtime";
 export const routes: Routes = [
   { path: "login", component: LoginPage },
   {
@@ -39,26 +44,16 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./pages/contracts/contracts").then((m) => m.ContractsPage),
       },
-      {
-        path: "schedules",
-        component: PlaceholderPage,
-        data: { title: "Lịch làm việc" },
-      },
-      {
-        path: "attendance",
-        component: PlaceholderPage,
-        data: { title: "Chấm công" },
-      },
+      { path: "work-shifts", component: WorkShiftsPage },
+      { path: "schedules", component: SchedulesPage },
+      { path: "attendance", component: AttendancePage },
+      { path: "attendance/summary", component: AttendanceSummaryPage },
       {
         path: "requests",
         component: PlaceholderPage,
         data: { title: "Đơn nghỉ phép / nghỉ việc" },
       },
-      {
-        path: "overtime",
-        component: PlaceholderPage,
-        data: { title: "Tăng ca" },
-      },
+      { path: "overtime", component: OvertimePage },
       {
         path: "allowances",
         component: PlaceholderPage,
