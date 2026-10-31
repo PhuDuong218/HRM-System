@@ -2,53 +2,88 @@
   <section class="intro" aria-labelledby="intro-title">
     <div class="brand">
       <span class="brand-mark">H</span>
-      <span class="brand-name">HRM Center<small>{{ "TRUNG TÂM GIÁO DỤC" | translate }}</small></span>
+      <span class="brand-name">HRM Center<small>{{ language.t('TRUNG TÂM GIÁO DỤC') }}</small></span>
     </div>
 
     <div class="intro-content">
-      <p class="intro-label"><span></span> {{ " KHÔNG GIAN QUẢN LÝ NHÂN SỰ" | translate }}</p>
-      <h1 id="intro-title">{{ "Mọi điều về nhân sự," | translate }}<br><em>{{ "trong một nơi." | translate }}</em></h1>
-      <p class="intro-description">{{ "Một không gian dành cho đội ngũ quản lý, giúp công việc nhân sự mỗi ngày trở nên đơn giản và rõ ràng hơn." | translate }}</p>
+      <p class="intro-label"><span></span> {{ language.t('KHÔNG GIAN QUẢN LÝ NHÂN SỰ') }}</p>
+      <h1 id="intro-title">“{{ language.t('Tài sản lớn nhất của tổ chức là con người.') }}”</h1>
+      <p class="intro-description">{{ language.t('Một không gian dành cho đội ngũ quản lý, giúp công việc nhân sự mỗi ngày trở nên đơn giản và rõ ràng hơn.') }}</p>
 
-      <div class="intro-card" aria-hidden="true">
-        <div class="card-icon">
+      <button class="intro-card" type="button" (click)="guideToLogin()" [disabled]="loading" aria-controls="username">
+        <span class="card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-1.5A4.5 4.5 0 0 0 11.5 14h-2A4.5 4.5 0 0 0 5 18.5V20M10.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 8h4m-2-2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
-        </div>
-        <div><strong>{{ "Đồng hành cùng đội ngũ" | translate }}</strong><span>{{ "Quản lý nhân sự thuận tiện hơn mỗi ngày" | translate }}</span></div>
-        <span class="card-arrow">↗</span>
-      </div>
+        </span>
+        <span class="card-copy">
+          <strong>{{ language.t('Đồng hành cùng đội ngũ') }}</strong>
+          <span class="card-features">
+            <span>{{ language.t('Nhân viên') }}</span>
+            <span>{{ language.t('Phân công / Điều chuyển') }}</span>
+            <span>{{ language.t('Hợp đồng') }}</span>
+            <span>{{ language.t('Phòng ban') }}</span>
+            <span>{{ language.t('Quản lý đơn từ') }}</span>
+            <span>{{ language.t('Báo cáo') }}</span>
+          </span>
+        </span>
+        <span class="card-arrow" aria-hidden="true">↗</span>
+      </button>
     </div>
-    <p class="intro-footer">HRM CENTER <span>·</span> {{ " QUẢN LÝ NHÂN SỰ" | translate }}</p>
+    <p class="intro-footer">HRM CENTER <span>·</span> {{ language.t('QUẢN LÝ NHÂN SỰ') }}</p>
   </section>
 
   <section class="login-side" aria-labelledby="login-title">
+    <div class="preferences" role="group" [attr.aria-label]="language.t('Tùy chọn hiển thị')">
+      <button class="language-switch" type="button" role="switch" (click)="language.toggle()"
+              [attr.aria-checked]="language.current() === 'en'"
+              [attr.aria-label]="language.current() === 'vi' ? 'Ngôn ngữ: Tiếng Việt. Chuyển sang tiếng Anh' : 'Language: English. Switch to Vietnamese'">
+        <span [class.active]="language.current() === 'vi'">VI</span><span [class.active]="language.current() === 'en'">EN</span>
+      </button>
+      <button class="theme-switch" type="button" (click)="theme.toggle()" [attr.aria-pressed]="theme.darkMode()"
+              [attr.aria-label]="language.t(theme.darkMode() ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối')"
+              [attr.title]="language.t(theme.darkMode() ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối')">
+        @if (theme.darkMode()) { <span aria-hidden="true">☀</span> } @else { <span aria-hidden="true">☾</span> }
+      </button>
+    </div>
     <div class="login-content">
       <div class="login-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10" width="15" height="10.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </div>
-      <p class="form-label-top">{{ "CHÀO MỪNG TRỞ LẠI" | translate }}</p>
-      <h2 id="login-title">{{ "Đăng nhập" | translate }}</h2>
-      <p class="form-description">{{ "Nhập thông tin tài khoản để truy cập không gian quản lý của bạn." | translate }}</p>
-      @if (notice) { <p class="login-success" role="status">{{notice}}</p> }
+      <p class="form-label-top">{{ language.t('CHÀO MỪNG TRỞ LẠI') }}</p>
+      <h2 id="login-title">{{ language.t('Đăng nhập') }}</h2>
+      <p class="form-description">{{ language.t('Nhập thông tin tài khoản để truy cập không gian quản lý của bạn.') }}</p>
+      @if (notice) { <p class="login-success" role="status">{{ language.t(notice) }}</p> }
+      @if (showLoginHint) {
+        <div class="login-hint" role="status">
+          <span>{{ language.t('Vui lòng nhập tên đăng nhập và mật khẩu để tiếp tục.') }}</span>
+          <button #hintClose type="button" (click)="dismissLoginHint()" [attr.aria-label]="language.t('Đóng')">×</button>
+        </div>
+      }
 
       <form class="login-form" (submit)="submit($event, username.value, password.value)">
         <div class="field">
-          <label for="username">{{ "Tên đăng nhập" | translate }}</label>
-          <input #username id="username" name="username" type="text" autocomplete="username" [attr.placeholder]="&quot;Nhập tên đăng nhập&quot; | translate" required [disabled]="loading">
+          <label for="username">{{ language.t('Tên đăng nhập') }}</label>
+          <input #username id="username" name="username" type="text" autocomplete="username" [placeholder]="language.t('Nhập tên đăng nhập')" required [disabled]="loading">
         </div>
         <div class="field">
-          <label for="password">{{ "Mật khẩu" | translate }}</label>
+          <label for="password">{{ language.t('Mật khẩu') }}</label>
           <div class="password-field">
-            <input #password id="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" [attr.placeholder]="&quot;Nhập mật khẩu&quot; | translate" required [disabled]="loading">
-            <button class="visibility-button" type="button" (click)="showPassword = !showPassword" [attr.aria-label]="(showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu') | translate" [attr.aria-pressed]="showPassword">{{(showPassword ? 'Ẩn' : 'Hiện') | translate}}</button>
+            <input #password id="password" name="password" [type]="showPassword ? 'text' : 'password'" autocomplete="current-password" [placeholder]="language.t('Nhập mật khẩu')" required [disabled]="loading" (keydown)="checkCapsLock($event)" (keyup)="checkCapsLock($event)" (blur)="capsLock = false" [attr.aria-describedby]="capsLock ? 'caps-lock-hint' : null">
+            <button class="visibility-button" type="button" (click)="showPassword = !showPassword" [attr.aria-label]="language.t(showPassword ? 'Ẩn mật khẩu' : 'Hiện mật khẩu')" [attr.aria-pressed]="showPassword">{{ language.t(showPassword ? 'Ẩn' : 'Hiện') }}</button>
           </div>
+          @if (capsLock) { <p id="caps-lock-hint" class="caps-hint" role="status">{{ language.t('Caps Lock đang bật') }}</p> }
         </div>
-        @if (error) { <p class="login-error" role="alert">{{(error) | translate}}</p> }
-        <button class="submit-button" type="submit" [disabled]="loading">{{(loading ? 'Đang đăng nhập…' : 'Đăng nhập') | translate}} <span aria-hidden="true">→</span></button>
+        @if (error) { <p class="login-error" role="alert">{{ language.t(error) }}</p> }
+        <button class="submit-button" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang đăng nhập…' : 'Đăng nhập') }} <span aria-hidden="true">→</span></button>
       </form>
 
-      <div class="help-note"><span class="help-icon" aria-hidden="true">?</span><p>{{ "Cần hỗ trợ tài khoản?" | translate }}<br><strong>{{ "Vui lòng liên hệ quản trị viên." | translate }}</strong></p></div>
+      <div class="help-note">
+        <span class="help-icon" aria-hidden="true">?</span>
+        <div class="help-content">
+          <p>{{ language.t('Cần hỗ trợ tài khoản?') }}<br><strong>{{ language.t('Vui lòng liên hệ quản trị viên.') }}</strong></p>
+          <p class="contact-details">{{ language.t('Email') }}: chrisvietvu&#64;gmail.com<br>{{ language.t('Số điện thoại') }}: 0979583586</p>
+        </div>
+      </div>
     </div>
-    <p class="side-footer">© HRM Center <span>·</span> {{ " Trung tâm giáo dục" | translate }}</p>
+    <p class="side-footer">© HRM Center <span>·</span> {{ language.t('Trung tâm giáo dục') }}</p>
   </section>
 </main>

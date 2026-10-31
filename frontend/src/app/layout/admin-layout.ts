@@ -8,6 +8,7 @@ import { filter, finalize } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { navigation, NavigationItem } from '../navigation';
 import { LanguageService } from '../services/language.service';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -25,6 +26,8 @@ export class AdminLayout {
   private destroyRef = inject(DestroyRef);
   auth = inject(AuthService);
   language = inject(LanguageService);
+  private theme = inject(ThemeService);
+  showLoginSuccess = (this.router.getCurrentNavigation()?.extras.info as { showLoginSuccess?: boolean } | undefined)?.showLoginSuccess === true;
   loggingOut = false;
   logoutError = '';
   profileLoading = false;
@@ -34,24 +37,8 @@ export class AdminLayout {
   showCurrentPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
-  darkMode = false;
-
-  private restoreTheme(): void {
-    try { this.darkMode = localStorage.getItem('hrm.theme') === 'dark'; }
-    catch { this.darkMode = false; }
-    this.applyTheme();
-  }
-
-  toggleTheme(): void {
-    this.darkMode = !this.darkMode;
-    this.applyTheme();
-    try { localStorage.setItem('hrm.theme', this.darkMode ? 'dark' : 'light'); }
-    catch { /* The selected theme still works for this session. */ }
-  }
-
-  private applyTheme(): void {
-    document.documentElement.setAttribute('data-bs-theme', this.darkMode ? 'dark' : 'light');
-  }
+  get darkMode(): boolean { return this.theme.darkMode(); }
+  toggleTheme(): void { this.theme.toggle(); }
 
   get menu():NavigationItem[]{
     const role=this.auth.profile()?.role||'';
@@ -107,7 +94,6 @@ export class AdminLayout {
   expandedGroups = new Set<string>();
 
   constructor() {
-    this.restoreTheme();
     this.refreshProfile();
     this.expandCurrentGroup();
     this.router.events.pipe(

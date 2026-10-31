@@ -1,20 +1,18 @@
 import {adminGuard} from './services/admin.guard';
 import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
-import { OverviewPage } from "./pages/overview/overview";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
-import { LoginPage } from "./pages/login/login";
 import { authGuard } from "./services/auth.guard";
 export const routes: Routes = [
-  { path: "login", component: LoginPage },
+  { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
   {
     path: "",
     component: AdminLayout,
     canActivate: [authGuard],
     children: [
       { path: "", redirectTo: "overview", pathMatch: "full" },
-      { path: "overview", component: OverviewPage },
+      { path: "overview", loadComponent: () => import("./pages/overview/overview").then(m => m.OverviewPage) },
       { path: "employees", loadComponent: () => import("./pages/employees/employees").then(m => m.EmployeesPage) },
       {
         path: "assignments",
@@ -40,8 +38,7 @@ export const routes: Routes = [
       {
         path: "accounts",
         canActivate:[adminGuard],
-        component: PlaceholderPage,
-        data: { title: "Tài khoản và phân quyền" },
+        loadComponent: () => import("./pages/accounts/accounts").then(m => m.AccountsPage),
       },
       { path: "departments", loadComponent: () => import("./pages/departments/departments").then(m => m.DepartmentsPage) },
       {
@@ -108,8 +105,7 @@ export const routes: Routes = [
       },
       {
         path: "reports",
-        component: PlaceholderPage,
-        data: { title: "Báo cáo" },
+        loadComponent: () => import("./pages/reports/reports").then(m => m.ReportsPage),
       },
       {
         path: "forbidden",

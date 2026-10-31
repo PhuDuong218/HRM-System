@@ -45,18 +45,18 @@ class JwtDatabaseTransactionIntegrationTest {
 
     @Test
     void validAdminTokenUsesRealJpaRepositories() throws Exception {
-        db.execute("CREATE TABLE roles (role_id BIGINT PRIMARY KEY, role_code VARCHAR(50))");
+        db.execute("CREATE TABLE roles (role_id BIGINT PRIMARY KEY, role_code VARCHAR(50), role_name VARCHAR(100))");
         db.execute("CREATE TABLE accounts (account_id BIGINT PRIMARY KEY, employee_id BIGINT, role_id BIGINT, username VARCHAR(100), password_hash VARCHAR(255), is_active BOOLEAN, token_version INT, created_at TIMESTAMP, updated_at TIMESTAMP, created_by BIGINT, updated_by BIGINT, row_version VARBINARY(8))");
         db.execute("CREATE TABLE employees (employee_id BIGINT PRIMARY KEY, employee_code VARCHAR(255), full_name VARCHAR(200), birth_date DATE, email VARCHAR(255), phone VARCHAR(30), address VARCHAR(500), identity_number VARCHAR(50), hire_date DATE, employment_status VARCHAR(255), termination_date DATE, created_at TIMESTAMP, updated_at TIMESTAMP, created_by BIGINT, updated_by BIGINT, row_version VARBINARY(8))");
-        db.execute("CREATE TABLE permissions (permission_id BIGINT PRIMARY KEY, permission_code VARCHAR(100))");
+        db.execute("CREATE TABLE permissions (permission_id BIGINT PRIMARY KEY, permission_code VARCHAR(100), permission_name VARCHAR(200), description VARCHAR(1000))");
         db.execute("CREATE TABLE role_permissions (role_id BIGINT, permission_id BIGINT)");
-        db.update("INSERT INTO roles VALUES (1, 'ADMIN')");
-        db.update("INSERT INTO roles VALUES (2, 'HR')");
+        db.update("INSERT INTO roles VALUES (1, 'ADMIN', 'Admin')");
+        db.update("INSERT INTO roles VALUES (2, 'HR', 'HR')");
         db.update("INSERT INTO accounts (account_id, employee_id, role_id, username, password_hash, is_active, token_version, created_at) VALUES (4, 1, 1, 'admin.test', 'unused', TRUE, 3, CURRENT_TIMESTAMP)");
         db.update("INSERT INTO accounts (account_id, employee_id, role_id, username, password_hash, is_active, token_version, created_at) VALUES (5, 2, 2, 'hr.test', 'unused', TRUE, 3, CURRENT_TIMESTAMP)");
         db.update("INSERT INTO employees (employee_id, employee_code, full_name, hire_date, employment_status, created_at) VALUES (1, 'E1', ?, CURRENT_DATE, 'DANG_LAM', CURRENT_TIMESTAMP)", "Nguyễn An");
         db.update("INSERT INTO employees (employee_id, employee_code, full_name, hire_date, employment_status, created_at) VALUES (2, 'E2', ?, CURRENT_DATE, 'DANG_LAM', CURRENT_TIMESTAMP)", "Trần Bình");
-        db.update("INSERT INTO permissions VALUES (1, 'DEPARTMENT_MANAGE')");
+        db.update("INSERT INTO permissions VALUES (1, 'DEPARTMENT_MANAGE', 'Departments', NULL)");
         db.update("INSERT INTO role_permissions VALUES (1, 1)");
         when(departments.getAllDepartment()).thenReturn(List.of());
         EmployeeAssignment assignment = mock(EmployeeAssignment.class);

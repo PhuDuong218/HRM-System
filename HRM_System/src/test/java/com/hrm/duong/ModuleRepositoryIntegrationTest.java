@@ -39,12 +39,9 @@ class ModuleRepositoryIntegrationTest {
         // this suite deliberately makes no claims about rowversion concurrency.
         var versioned=jdbc.queryForList("select TABLE_NAME from INFORMATION_SCHEMA.COLUMNS where TABLE_SCHEMA='DBO' and COLUMN_NAME='ROW_VERSION'",String.class);
         for(var table:versioned)jdbc.execute("alter table dbo."+table+" alter column row_version set default X'0000000000000001'");
-        // The merged security entities already create roles and accounts through JPA.
-        jdbc.execute("create table dbo.payroll_periods(period_id bigint primary key,period_start date,period_end date)");
-        jdbc.execute("create table dbo.payroll_batches(batch_id bigint primary key,period_id bigint,status varchar(20))");
-        // Complete the minimal payroll entity only inside this private test database.
-        jdbc.execute("alter table dbo.payroll_details add batch_id bigint");
-        jdbc.execute("alter table dbo.payroll_details add employee_id bigint");
+        // The merged security and payroll entities are all scanned above. Hibernate
+        // creates their complete tables, including payroll detail ownership columns;
+        // the old minimal-schema DDL would create the same tables/columns twice.
         tx=new TransactionTemplate(new JpaTransactionManager(emf));
         var repositories=new JpaRepositoryFactory(SharedEntityManagerCreator.createSharedEntityManager(emf));
         contracts=repositories.getRepository(ContractRepository.class);terms=repositories.getRepository(ContractSalaryTermRepository.class);
@@ -85,7 +82,7 @@ class ModuleRepositoryIntegrationTest {
         assertEquals(0,jdbc.queryForObject("select count(*) from dbo.employee_decisions",Integer.class));
     }
     @Test void realActorQueryRejectsInactiveAndEmployeeRole(){
-        jdbc.update("insert into dbo.roles values (1,'ADMIN'),(2,'EMPLOYEE')");
+        jdbc.update("insert into dbo.roles(role_id,role_code,role_name) values (1,'ADMIN','Admin'),(2,'EMPLOYEE','Employee')");
         jdbc.update("""
             insert into dbo.accounts(account_id,employee_id,role_id,is_active,username,password_hash,token_version,created_at)
             values (10,1,1,true,'synthetic-admin','test-only-unused-hash',0,CURRENT_TIMESTAMP),
@@ -98,16 +95,16 @@ class ModuleRepositoryIntegrationTest {
         status(403,()->new LocalDecisionActorProvider(jdbc,env,true,12L).requireManager());
     }
     @Test void realHistoryGuardProtectsClosedPeriodOnlyForThatEmployee(){
-        jdbc.update("insert into dbo.payroll_periods values (8,?,?)",TODAY,TODAY.plusDays(9));
-        jdbc.update("insert into dbo.payroll_batches values (9,8,'DA_CHOT')");
-        jdbc.update("insert into dbo.payroll_details values (10,9,1)");
+        jdbc.update("insert into dbo.payroll_periods(period_id,period_code,period_start,period_end,created_at) values (8,'SYNTHETIC8',?,?,CURRENT_TIMESTAMP)",TODAY,TODAY.plusDays(9));
+        jdbc.update("insert into dbo.payroll_batches(batch_id,period_id,version_no,status,created_at) values (9,8,1,'DA_CHOT',CURRENT_TIMESTAMP)");
+        jdbc.update("insert into dbo.payroll_details(payroll_detail_id,batch_id,employee_id,created_at) values (10,9,1,CURRENT_TIMESTAMP)");
         var guard=new PayrollHistoryGuard(countBigBridge());
         status(409,()->guard.assertMutable(1L,TODAY.plusDays(9),null));
         assertDoesNotThrow(()->guard.assertMutable(1L,TODAY.plusDays(10),null));
         assertDoesNotThrow(()->guard.assertMutable(2L,TODAY,null));
     }
     @Test void actualD14ServiceReadsPeriodAndApprovedSourcesTogether(){
-        jdbc.update("insert into dbo.payroll_periods values (8,?,?)",TODAY,TODAY.plusDays(9));
+        jdbc.update("insert into dbo.payroll_periods(period_id,period_code,period_start,period_end,created_at) values (8,'SYNTHETIC8',?,?,CURRENT_TIMESTAMP)",TODAY,TODAY.plusDays(9));
         decisionRow(10,1,"DA_DUYET","ADD",TODAY);decisionRow(11,1,"CHO_DUYET","ADD",TODAY);
         var service=new DecisionPayrollService(employees,decisions,new AllowancePeriodReader(jdbc),new DecisionPayrollPolicy("TEST-ONLY-v1"),countBigBridge());
         tx.execute(s->{var result=service.getForPeriod(1L,8L);assertEquals(1,result.items().size());assertEquals(money("100.1250"),result.totalAdd());return null;});

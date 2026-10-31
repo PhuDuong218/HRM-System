@@ -1,0 +1,12 @@
+# Không đưa bài tập cá nhân lên Git nhóm
+/Python/
+/Java/
+
+# Không đưa file build Java lên Git
+**/target/
+**/bin/
+**/obj/
+/qa/
+/qa_local_backup/
+/frontend/GIAO_DIEN_NHAN_SU.md
+/frontend/KIEM_TRA.md

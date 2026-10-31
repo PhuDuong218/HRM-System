@@ -5,6 +5,8 @@
 
 **Đăng nhập và tài khoản thử nghiệm:** Xem [hướng dẫn mở khóa và đặt mật khẩu tài khoản](database/README_TAI_KHOAN.md). Dự án đã có API đăng nhập và xác thực JWT; API phòng ban yêu cầu ADMIN/HR có quyền `DEPARTMENT_MANAGE`.
 
+**API quản trị tài khoản, vai trò và quyền:** Xem [hợp đồng API và hướng dẫn migration](API_TAI_KHOAN_PHAN_QUYEN.md).
+
 ## 1. Tổng quan
 
 Hệ thống hướng tới quản lý hồ sơ nhân viên, phòng ban, chức vụ, lịch sử phân công và điều chuyển nhân viên; tiếp theo là hợp đồng, lịch làm việc, chấm công, nghỉ phép, tăng ca, phụ cấp, phân quyền và tính lương theo kỳ.

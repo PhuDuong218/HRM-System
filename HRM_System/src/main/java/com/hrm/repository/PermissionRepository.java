@@ -9,6 +9,8 @@ import java.util.Set;
 
 public interface PermissionRepository extends JpaRepository<Permission, Long> {
 
+    boolean existsByPermissionCodeIgnoreCase(String code);
+
     @Query(value = """
             select p.permission_code
             from permissions p
