@@ -153,7 +153,7 @@
   </div>
 </dialog>
 
-<dialog #passwordDialog class="profile-dialog password-dialog" aria-labelledby="password-title"
+<dialog #passwordDialog class="profile-dialog password-dialog motion-dialog" aria-labelledby="password-title"
         (cancel)="preventPasswordCloseWhileSaving($event)" (close)="resetPasswordForm()">
   <div class="profile-dialog-header">
     <div><p class="profile-eyebrow">{{ language.t("BẢO MẬT TÀI KHOẢN") }}</p><h2 id="password-title">{{ language.t("Đổi mật khẩu") }}</h2></div>
