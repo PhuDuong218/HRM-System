@@ -1,5 +1,5 @@
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0">Hợp đồng</h1>
+<div class="contracts-heading d-flex justify-content-between align-items-center mb-3">
+  <h1 class="mb-0">{{ language.t("Hợp đồng") }}</h1>
 
   <button
     type="button"
@@ -7,7 +7,7 @@
     [disabled]="saving || typesLoading"
     (click)="openCreate()"
   >
-    Tạo hợp đồng
+    {{ language.t("Tạo hợp đồng") }}
   </button>
 </div>
 
@@ -15,78 +15,80 @@
 <div class="alert alert-success" role="status">{{ message }}</div>
 } <app-record-workspace [open]="showCreate || !!selected || detailLoading || !!detailError || !!lifecycleContract"
   [busy]="saving || renewTypesLoading" (dismiss)="closeWorkspace()">
-<section recordList class="surface">
+<section recordList class="surface contract-list">
 @if(employeesLoading){<p role="status">Đang tải danh sách nhân viên…</p>}
 @if(employeesError){<p class="alert alert-warning" role="alert">{{employeesError}} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadEmployees()">Thử lại</button></p>}
 <form
-  class="row g-2 mb-3"
+  class="contract-filters"
   (submit)="$event.preventDefault(); search(employee.value, status.value, keyword.value)"
 >
-  <div class="col-md-3">
-    <label for="employee-id" class="form-label">Mã ID nhân viên</label>
+  <div class="filter-field">
+    <label for="employee-id" class="form-label">{{ language.t("Nhân viên") }}</label>
     <select id="employee-id" #employee class="form-select" [disabled]="employeesLoading">
-      <option value="">Tất cả nhân viên</option>
+      <option value="">{{ language.t("Tất cả nhân viên") }}</option>
       @for (person of employees; track person.employeeId) {<option [value]="person.employeeId">{{ person.employeeCode }} — {{ person.fullName }}</option>}
     </select>
   </div>
 
-  <div class="col-md-3">
-    <label for="contract-status" class="form-label">Trạng thái</label>
+  <div class="filter-field">
+    <label for="contract-status" class="form-label">{{ language.t("Trạng thái") }}</label>
     <select id="contract-status" #status class="form-select">
-      <option value="">Tất cả</option>
-      <option value="DA_KY">Đã ký</option>
-      <option value="DA_KET_THUC">Đã kết thúc</option>
+      <option value="">{{ language.t("Tất cả") }}</option>
+      <option value="DA_KY">{{ language.t("Đã ký") }}</option>
+      <option value="DA_KET_THUC">{{ language.t("Đã kết thúc") }}</option>
     </select>
   </div>
 
-  <div class="col-md-4">
-    <label for="keyword" class="form-label">Từ khóa</label>
+  <div class="filter-field">
+    <label for="keyword" class="form-label">{{ language.t("Từ khóa") }}</label>
     <input id="keyword" #keyword class="form-control" maxlength="50" />
   </div>
 
-  <div class="col-md-2 d-flex align-items-end">
-    <button class="btn btn-primary w-100" [disabled]="loading">Tìm</button>
+  <div class="filter-actions">
+    <button type="submit" class="btn btn-primary" [disabled]="loading || saving">{{ language.t("Tìm") }}</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading || saving"
+            (click)="clearFilters(employee, status, keyword)">{{ language.t("Xóa lọc") }}</button>
   </div>
 </form>
 
 @if (loading) {
-<p role="status">Đang tải hợp đồng…</p>
+<p role="status">{{ language.t("Đang tải hợp đồng…") }}</p>
 } @if (error) {
 <div class="alert alert-danger" role="alert">{{ error }}</div>
 } @if (!loading && !error) {
-<div class="table-responsive"><table class="table table-striped">
+<div class="table-responsive"><table class="table table-striped contracts-table">
   <thead>
     <tr>
-      <th>Số hợp đồng</th>
-      <th>Nhân viên</th>
-      <th>Loại</th>
-      <th>Hiệu lực</th>
-      <th>Trạng thái</th>
-      <th>Thao tác</th>
+      <th>{{ language.t("Số hợp đồng") }}</th>
+      <th>{{ language.t("Nhân viên") }}</th>
+      <th>{{ language.t("Loại") }}</th>
+      <th>{{ language.t("Hiệu lực") }}</th>
+      <th>{{ language.t("Trạng thái") }}</th>
+      <th>{{ language.t("Thao tác") }}</th>
     </tr>
   </thead>
   <tbody>
     @for (c of rows; track c.contractId) {
-    <tr>
-      <td>{{ c.contractNumber }}</td>
-      <td>{{ c.employeeCode }} — {{ c.employeeName }}</td>
-      <td>{{ c.contractTypeName }}</td>
-      <td>{{ c.startDate }} → {{ c.endDate ?? 'Không xác định' }}</td>
-      <td>{{ c.status }}</td>
-      <td>
+    <tr [class.is-selected]="selectedId === c.contractId">
+      <td [attr.data-label]="language.t('Số hợp đồng')">{{ c.contractNumber }}</td>
+      <td [attr.data-label]="language.t('Nhân viên')">{{ c.employeeCode }} — {{ c.employeeName }}</td>
+      <td [attr.data-label]="language.t('Loại')">{{ c.contractTypeName }}</td>
+      <td [attr.data-label]="language.t('Hiệu lực')">{{ c.startDate }} → {{ c.endDate ?? 'Không xác định' }}</td>
+      <td [attr.data-label]="language.t('Trạng thái')">{{ language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc') }}</td>
+      <td [attr.data-label]="language.t('Thao tác')">
         <button
           type="button"
           class="btn btn-sm btn-outline-primary"
           [disabled]="saving"
           (click)="viewDetail(c.contractId)"
         >
-          Chi tiết
+          {{ language.t(selectedId === c.contractId ? 'Đang xem' : 'Chi tiết') }}
         </button>
       </td>
     </tr>
     } @empty {
-    <tr>
-      <td colspan="6">Chưa có hợp đồng phù hợp.</td>
+    <tr class="empty-row">
+      <td colspan="6">{{ language.t("Chưa có hợp đồng phù hợp.") }}</td>
     </tr>
     }
   </tbody>
@@ -98,27 +100,27 @@
 @if (showCreate) {
 <section class="card mb-4">
   <div class="card-body">
-    <h2 class="h4">Tạo hợp đồng đã ký</h2>
+    <h2 class="h4">{{ language.t("Tạo hợp đồng đã ký") }}</h2>
 
     @if (typesLoading) {
-    <p role="status">Đang tải loại hợp đồng…</p>
+    <p role="status">{{ language.t("Đang tải loại hợp đồng…") }}</p>
     } @if (createError) {
     <div class="alert alert-danger" role="alert">{{ createError }}</div>
     } @if (!typesLoading && activeTypes.length === 0 && !createError) {
-    <div class="alert alert-warning">Chưa có loại hợp đồng đang hoạt động.</div>
+    <div class="alert alert-warning">{{ language.t("Chưa có loại hợp đồng đang hoạt động.") }}</div>
     }
 
     <form class="row g-3" (submit)="saveContract($event)">
       <div class="col-md-6">
-        <label for="create-employee" class="form-label"> ID nhân viên </label>
+        <label for="create-employee" class="form-label"> {{ language.t("ID nhân viên") }} </label>
         <select id="create-employee" name="employeeId" required class="form-select" [disabled]="saving || employeesLoading">
-          <option value="">Chọn nhân viên đang làm việc</option>
+          <option value="">{{ language.t("Chọn nhân viên đang làm việc") }}</option>
           @for (person of employees; track person.employeeId) {@if(person.employmentStatus==='DANG_LAM'){<option [value]="person.employeeId">{{ person.employeeCode }} — {{ person.fullName }}</option>}}
         </select>
       </div>
 
       <div class="col-md-6">
-        <label for="create-type" class="form-label"> Loại hợp đồng </label>
+        <label for="create-type" class="form-label"> {{ language.t("Loại hợp đồng") }} </label>
         <select
           id="create-type"
           name="contractTypeId"
@@ -126,7 +128,7 @@
           class="form-select"
           [disabled]="saving || typesLoading"
         >
-          <option value="">Chọn loại hợp đồng</option>
+          <option value="">{{ language.t("Chọn loại hợp đồng") }}</option>
 
           @for (type of activeTypes; track type.contractTypeId) {
           <option [value]="type.contractTypeId">
@@ -137,12 +139,12 @@
       </div>
 
       <div class="col-md-6">
-        <label for="create-number" class="form-label"> Số hợp đồng </label>
+        <label for="create-number" class="form-label"> {{ language.t("Số hợp đồng") }} </label>
         <input
           id="create-number"
           name="contractNumber"
           maxlength="50"
-          pattern="[A-Za-z0-9/_\-]+"
+          pattern="[A-Za-z0-9\/_\-]+"
           required
           class="form-control"
           [disabled]="saving"
@@ -150,7 +152,7 @@
       </div>
 
       <div class="col-md-6">
-        <label for="create-signed" class="form-label">Ngày ký</label>
+        <label for="create-signed" class="form-label">{{ language.t("Ngày ký") }}</label>
         <input
           id="create-signed"
           name="signedDate"
@@ -162,7 +164,7 @@
       </div>
 
       <div class="col-md-6">
-        <label for="create-start" class="form-label"> Ngày bắt đầu </label>
+        <label for="create-start" class="form-label"> {{ language.t("Ngày bắt đầu") }} </label>
         <input
           id="create-start"
           name="startDate"
@@ -175,7 +177,7 @@
 
       <div class="col-md-6">
         <label for="create-end" class="form-label">
-          Ngày cuối còn hiệu lực
+          {{ language.t("Ngày cuối còn hiệu lực") }}
         </label>
         <input
           id="create-end"
@@ -185,7 +187,7 @@
           [disabled]="saving"
         />
 
-        <div class="form-text">Để trống nếu không xác định thời hạn.</div>
+        <div class="form-text">{{ language.t("Để trống nếu không xác định thời hạn.") }}</div>
       </div>
 
       <div class="d-flex gap-2">
@@ -203,48 +205,49 @@
           [disabled]="saving"
           (click)="cancelCreate()"
         >
-          Hủy
+          {{ language.t("Hủy") }}
         </button>
       </div>
     </form>
   </div>
 </section>
 }
+
 @if (detailLoading) {
-<p class="mt-4" role="status">Đang tải chi tiết hợp đồng…</p>
+<p class="mt-4" role="status">{{ language.t("Đang tải chi tiết hợp đồng…") }}</p>
 } @if (detailError) {
 <div class="alert alert-danger mt-4" role="alert">{{ detailError }}</div>
 } @if (selected; as c) {
 <section class="card mt-4">
   <div class="card-body">
     <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="h4 mb-0">Chi tiết hợp đồng</h2>
+      <h2 class="h4 mb-0">{{ language.t("Chi tiết hợp đồng") }}</h2>
 
 
     </div>
 
     <dl class="row mb-0">
-      <dt class="col-sm-4">Số hợp đồng</dt>
+      <dt class="col-sm-4">{{ language.t("Số hợp đồng") }}</dt>
       <dd class="col-sm-8">{{ c.contractNumber }}</dd>
 
-      <dt class="col-sm-4">Nhân viên</dt>
+      <dt class="col-sm-4">{{ language.t("Nhân viên") }}</dt>
       <dd class="col-sm-8">{{ c.employeeCode }} — {{ c.employeeName }}</dd>
 
-      <dt class="col-sm-4">Loại hợp đồng</dt>
+      <dt class="col-sm-4">{{ language.t("Loại hợp đồng") }}</dt>
       <dd class="col-sm-8">{{ c.contractTypeName }}</dd>
 
-      <dt class="col-sm-4">Ngày ký</dt>
+      <dt class="col-sm-4">{{ language.t("Ngày ký") }}</dt>
       <dd class="col-sm-8">{{ c.signedDate }}</dd>
 
-      <dt class="col-sm-4">Ngày bắt đầu</dt>
+      <dt class="col-sm-4">{{ language.t("Ngày bắt đầu") }}</dt>
       <dd class="col-sm-8">{{ c.startDate }}</dd>
 
-      <dt class="col-sm-4">Ngày cuối còn hiệu lực</dt>
+      <dt class="col-sm-4">{{ language.t("Ngày cuối còn hiệu lực") }}</dt>
       <dd class="col-sm-8">{{ c.endDate ?? 'Không xác định thời hạn' }}</dd>
 
-      <dt class="col-sm-4">Trạng thái</dt>
+      <dt class="col-sm-4">{{ language.t("Trạng thái") }}</dt>
       <dd class="col-sm-8">
-        {{ c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc' }}
+        {{ language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc') }}
       </dd>
     </dl>
     <div class="d-flex flex-wrap gap-2 mt-3">
@@ -254,7 +257,7 @@
         [disabled]="saving || renewTypesLoading || !c.endDate"
         (click)="openLifecycle('renew')"
       >
-        Gia hạn
+        {{ language.t("Gia hạn") }}
       </button>
 
       <button
@@ -263,7 +266,7 @@
         [disabled]="saving || renewTypesLoading || c.status !== 'DA_KY'"
         (click)="openLifecycle('terminate')"
       >
-        Chấm dứt
+        {{ language.t("Chấm dứt") }}
       </button>
     </div>
   </div>
@@ -282,14 +285,14 @@
     </p>
 
     @if (renewTypesLoading) {
-    <p role="status">Đang tải loại hợp đồng…</p>
+    <p role="status">{{ language.t("Đang tải loại hợp đồng…") }}</p>
     } @if (!renewTypesLoading && !renewTypes.length) {
     <p class="text-warning">Chưa tải được loại hợp đồng đang hoạt động.</p>
     }
 
     <form class="row g-3" (submit)="saveRenew($event)">
       <div class="col-md-6">
-        <label for="renew-number" class="form-label"> Số hợp đồng mới </label>
+        <label for="renew-number" class="form-label"> {{ language.t("Số hợp đồng mới") }} </label>
         <input
           id="renew-number"
           name="contractNumber"
@@ -301,7 +304,7 @@
       </div>
 
       <div class="col-md-6">
-        <label for="renew-type" class="form-label"> Loại hợp đồng mới </label>
+        <label for="renew-type" class="form-label"> {{ language.t("Loại hợp đồng mới") }} </label>
         <select
           id="renew-type"
           name="contractTypeId"
@@ -309,7 +312,7 @@
           required
           [disabled]="saving || renewTypesLoading"
         >
-          <option value="">Chọn loại hợp đồng</option>
+          <option value="">{{ language.t("Chọn loại hợp đồng") }}</option>
           @for (type of renewTypes; track type.contractTypeId) {
           <option [value]="type.contractTypeId">
             {{ type.typeCode }} — {{ type.typeName }}
@@ -319,7 +322,7 @@
       </div>
 
       <div class="col-md-4">
-        <label for="renew-signed" class="form-label">Ngày ký mới</label>
+        <label for="renew-signed" class="form-label">{{ language.t("Ngày ký mới") }}</label>
         <input
           id="renew-signed"
           name="signedDate"
@@ -331,7 +334,7 @@
       </div>
 
       <div class="col-md-4">
-        <label for="renew-start" class="form-label"> Ngày bắt đầu mới </label>
+        <label for="renew-start" class="form-label"> {{ language.t("Ngày bắt đầu mới") }} </label>
         <input
           id="renew-start"
           name="startDate"
@@ -343,7 +346,7 @@
       </div>
 
       <div class="col-md-4">
-        <label for="renew-end" class="form-label"> Ngày cuối mới </label>
+        <label for="renew-end" class="form-label"> {{ language.t("Ngày cuối mới") }} </label>
         <input
           id="renew-end"
           name="endDate"
@@ -351,11 +354,11 @@
           class="form-control"
           [disabled]="saving"
         />
-        <small>Để trống nếu không xác định thời hạn.</small>
+        <small>{{ language.t("Để trống nếu không xác định thời hạn.") }}</small>
       </div>
 
       <div class="col-12">
-        <label for="renew-reason" class="form-label"> Lý do gia hạn </label>
+        <label for="renew-reason" class="form-label"> {{ language.t("Lý do gia hạn") }} </label>
         <textarea
           id="renew-reason"
           name="reason"
@@ -381,7 +384,7 @@
           [disabled]="saving || renewTypesLoading"
           (click)="cancelLifecycle()"
         >
-          Hủy
+          {{ language.t("Hủy") }}
         </button>
       </div>
     </form>
@@ -400,7 +403,7 @@
     <form class="row g-3" (submit)="saveTerminate($event)">
       <div class="col-md-6">
         <label for="terminate-date" class="form-label">
-          Ngày cuối còn hiệu lực
+          {{ language.t("Ngày cuối còn hiệu lực") }}
         </label>
         <input
           id="terminate-date"
@@ -416,7 +419,7 @@
 
       <div class="col-12">
         <label for="terminate-reason" class="form-label">
-          Lý do chấm dứt
+          {{ language.t("Lý do chấm dứt") }}
         </label>
         <textarea
           id="terminate-reason"
@@ -439,7 +442,7 @@
           [disabled]="saving"
           (click)="cancelLifecycle()"
         >
-          Hủy
+          {{ language.t("Hủy") }}
         </button>
       </div>
     </form>
@@ -448,3 +451,5 @@
 } }
 </div>
 </app-record-workspace>
+
+

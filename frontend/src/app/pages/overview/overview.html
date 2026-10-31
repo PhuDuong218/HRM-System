@@ -1,10 +1,10 @@
-<p class="eyebrow">TỔNG QUAN</p><h1>Không gian quản lý nhân sự</h1>
-<p class="page-description">Tổ chức hồ sơ, thời gian làm việc và thu nhập trong một hệ thống.</p>
-<section class="hero-panel mb-4"><span class="badge rounded-pill text-bg-light mb-3">HRM-CENTER</span><h2>Bắt đầu từ những phần cơ bản.</h2><p>Bộ khung đã có bố cục và điều hướng. Mỗi màn hình là một component để bạn phát triển từng chức năng.</p><a routerLink="/employees" class="btn btn-primary">Mở trang nhân viên →</a></section>
+<p class="eyebrow">{{ language.t("TỔNG QUAN") }}</p><h1>{{ language.t("Không gian quản lý nhân sự") }}</h1>
+<p class="page-description">{{ language.t("Tổ chức hồ sơ, thời gian làm việc và thu nhập trong một hệ thống.") }}</p>
+<section class="hero-panel mb-4"><span class="badge rounded-pill text-bg-light mb-3">HRM-CENTER</span><h2>{{ language.t("Bắt đầu từ những phần cơ bản.") }}</h2><p>{{ language.t("Bộ khung đã có bố cục và điều hướng. Mỗi màn hình là một component để bạn phát triển từng chức năng.") }}</p><a routerLink="/employees" class="btn btn-primary">{{ language.t("Mở trang nhân viên →") }}</a></section>
 <div class="row g-3 mb-4">
-  <div class="col-md-4"><a class="feature-card" routerLink="/employees"><span class="tile-number">01</span><h2>Hồ sơ nhân sự</h2><p>Nhân viên, danh mục và hợp đồng.</p><span class="card-link">Xem trang mẫu →</span></a></div>
-  <div class="col-md-4"><a class="feature-card" routerLink="/schedules"><span class="tile-number">02</span><h2>Thời gian làm việc</h2><p>Lịch, chấm công, đơn và tăng ca.</p><span class="card-link">Mở bộ khung →</span></a></div>
-  <div class="col-md-4"><a class="feature-card" routerLink="/payroll"><span class="tile-number">03</span><h2>Lương và báo cáo</h2><p>Phụ cấp, bảng lương và phiếu lương.</p><span class="card-link">Mở bộ khung →</span></a></div>
+  <div class="col-md-4"><a class="feature-card" routerLink="/employees"><span class="tile-number">01</span><h2>{{ language.t("Hồ sơ nhân sự") }}</h2><p>{{ language.t("Nhân viên, danh mục và hợp đồng.") }}</p><span class="card-link">{{ language.t("Xem trang mẫu →") }}</span></a></div>
+  <div class="col-md-4"><a class="feature-card" routerLink="/schedules"><span class="tile-number">02</span><h2>{{ language.t("Thời gian làm việc") }}</h2><p>{{ language.t("Lịch, chấm công, đơn và tăng ca.") }}</p><span class="card-link">{{ language.t("Mở bộ khung →") }}</span></a></div>
+  <div class="col-md-4"><a class="feature-card" routerLink="/payroll"><span class="tile-number">03</span><h2>{{ language.t("Lương và báo cáo") }}</h2><p>{{ language.t("Phụ cấp, bảng lương và phiếu lương.") }}</p><span class="card-link">{{ language.t("Mở bộ khung →") }}</span></a></div>
 </div>
-<section class="surface"><div class="d-flex flex-wrap justify-content-between gap-3 align-items-center"><div><h2>Kết nối hệ thống</h2><p class="mb-0 muted">Kiểm tra HTTP tới backend Spring Boot từ Angular.</p></div><a routerLink="/connection" class="btn btn-outline-primary">Kiểm tra API</a></div></section>
-<p class="small muted mt-3">Chưa kết nối dữ liệu nghiệp vụ nên trang này chưa hiển thị số liệu thống kê.</p>
+<section class="surface"><div class="d-flex flex-wrap justify-content-between gap-3 align-items-center"><div><h2>{{ language.t("Kết nối hệ thống") }}</h2><p class="mb-0 muted">{{ language.t("Kiểm tra HTTP tới backend Spring Boot từ Angular.") }}</p></div><a routerLink="/connection" class="btn btn-outline-primary">{{ language.t("Kiểm tra API") }}</a></div></section>
+<p class="small muted mt-3">{{ language.t("Chưa kết nối dữ liệu nghiệp vụ nên trang này chưa hiển thị số liệu thống kê.") }}</p>

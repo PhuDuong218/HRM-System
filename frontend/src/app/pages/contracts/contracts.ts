@@ -1,3 +1,4 @@
+import { LanguageService } from '../../services/language.service';
 import {Pagination} from '../../shared/pagination';
 import { EmployeeService, Employee, errorMessage } from '../../services/employee.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
@@ -20,10 +21,13 @@ import {
   selector: "app-contracts",
   standalone: true,
   imports: [Pagination,RecordWorkspace],
-  styles: [`.contract-panel{padding:16px}.contract-panel .card{border:0!important;margin-top:0!important}.contract-panel .col-md-6{width:100%}`],
+  styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
 export class ContractsPage implements OnInit {
+  language = inject(LanguageService);
+  private listRequest?: Subscription;
+  selectedId: number | null = null;
   private api = inject(ContractService);
   private personnel = inject(EmployeeService);
   employees: Employee[] = [];
@@ -63,10 +67,12 @@ export class ContractsPage implements OnInit {
   }
 
   load(page: number): void {
+    this.listRequest?.unsubscribe();
     this.loading = true;
     this.error = "";
 
-    this.api.search(page, this.employeeId, this.status, this.q).subscribe({
+    this.listRequest = this.api.search(page, this.employeeId, this.status, this.q)
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result) => {
         this.rows = result.items;
         this.page = result.page;
@@ -89,6 +95,16 @@ export class ContractsPage implements OnInit {
     this.load(0); // đổi bộ lọc thì quay về trang đầu
   }
 
+  clearFilters(employee: HTMLSelectElement, status: HTMLSelectElement, keyword: HTMLInputElement): void {
+    employee.value = '';
+    status.value = '';
+    keyword.value = '';
+    this.employeeId = undefined;
+    this.status = undefined;
+    this.q = '';
+    this.load(0);
+  }
+
   private destroyRef = inject(DestroyRef);
   private detailRequest?: Subscription;
 
@@ -108,9 +124,11 @@ export class ContractsPage implements OnInit {
   viewDetail(id: number): void {
     if (this.saving || this.renewTypesLoading) return;
     this.cancelLifecycle();
+    this.cancelCreate();
     // Khi bấm liên tiếp hai hợp đồng, hủy request chi tiết trước.
     this.detailRequest?.unsubscribe();
 
+    this.selectedId = id;
     this.selected = null;
     this.detailError = "";
     this.detailLoading = true;
@@ -125,6 +143,7 @@ export class ContractsPage implements OnInit {
         },
         error: (e: HttpErrorResponse) => {
           this.detailLoading = false;
+          this.selectedId = null;
           this.detailError =
             e.status === 404
               ? "Hợp đồng không còn tồn tại hoặc không tìm thấy."
@@ -144,6 +163,7 @@ export class ContractsPage implements OnInit {
     this.cancelLifecycle();
     
     this.detailRequest?.unsubscribe();
+    this.selectedId = null;
     this.selected = null;
     this.detailLoading = false;
     this.detailError = "";
@@ -168,6 +188,8 @@ export class ContractsPage implements OnInit {
   }
 
   openCreate(): void {
+    if (this.saving || this.typesLoading || this.renewTypesLoading) return;
+    this.closeDetail();
     if (this.renewTypesLoading) return;
     this.cancelLifecycle();
 
@@ -263,7 +285,7 @@ export class ContractsPage implements OnInit {
       .subscribe({
         next: (created) => {
           this.saving = false;
-          this.showCreate = false;
+          this.cancelCreate();
           this.message = `Đã tạo hợp đồng ${created.contractNumber}.`;
 
           this.load(0);

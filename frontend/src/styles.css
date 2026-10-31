@@ -13,3 +13,44 @@
 }
 
 @media(max-width:800px){.table-responsive::before{content:'Vuốt ngang để xem đầy đủ bảng';display:block;position:sticky;left:0;font-size:11px;color:#738397;padding:0 0 8px;width:fit-content}}
+
+
+/* Dark theme: Bootstrap variables plus surfaces used by the management layout. */
+html[data-bs-theme="dark"] { color-scheme:dark; --bs-body-bg:#101827; --bs-body-color:#e4ebf5; --bs-border-color:#35465d; }
+html[data-bs-theme="dark"] body { background:#101827; color:#e4ebf5; }
+html[data-bs-theme="dark"] .sidebar, html[data-bs-theme="dark"] .topbar, html[data-bs-theme="dark"] .sidebar-flyout,
+html[data-bs-theme="dark"] .record-detail, html[data-bs-theme="dark"] .panel-toolbar,
+html[data-bs-theme="dark"] .surface, html[data-bs-theme="dark"] .feature-card, html[data-bs-theme="dark"] .card,
+html[data-bs-theme="dark"] .profile-dialog { background:#1c2a3c; color:#e4ebf5; border-color:#35465d; }
+html[data-bs-theme="dark"] .brand, html[data-bs-theme="dark"] .account-name,
+html[data-bs-theme="dark"] .flyout-heading, html[data-bs-theme="dark"] .profile-identity strong,
+html[data-bs-theme="dark"] .profile-details dd, html[data-bs-theme="dark"] .password-form-field label { color:#e4ebf5; }
+html[data-bs-theme="dark"] .sidebar nav a, html[data-bs-theme="dark"] .nav-group-toggle { color:#c2d0e2; }
+html[data-bs-theme="dark"] .sidebar nav a:hover, html[data-bs-theme="dark"] .nav-group-toggle:hover,
+html[data-bs-theme="dark"] .nav-group-toggle.group-active, html[data-bs-theme="dark"] .profile-trigger:hover { background:#2c405b; color:#e4efff; }
+html[data-bs-theme="dark"] .sidebar nav a.active, html[data-bs-theme="dark"] .sidebar-flyout a.active { background:#34557e; color:#fff; }
+html[data-bs-theme="dark"] .theme-toggle, html[data-bs-theme="dark"] .sidebar-handle,
+html[data-bs-theme="dark"] .profile-close,
+html[data-bs-theme="dark"] .mobile-close { background:#273a53; border-color:#506580; color:#e4ebf5; }
+html[data-bs-theme="dark"] .theme-toggle:hover, html[data-bs-theme="dark"] .sidebar-handle:hover { background:#34557e; }
+html[data-bs-theme="dark"] .table { --bs-table-bg:#1c2a3c; --bs-table-color:#e4ebf5; --bs-table-striped-bg:#26364b; --bs-table-striped-color:#e4ebf5; --bs-table-border-color:#35465d; }
+html[data-bs-theme="dark"] .table th { background:#26364b; color:#c2d0e2; }
+html[data-bs-theme="dark"] .contracts-table tr.is-selected > td { --bs-table-bg:#34557e; --bs-table-striped-bg:#34557e; --bs-table-accent-bg:#34557e; background-color:#34557e; color:#fff; }
+html[data-bs-theme="dark"] .hero-panel { background:#243b57; border-color:#354f70; }
+html[data-bs-theme="dark"] .hero-panel h2, html[data-bs-theme="dark"] .hero-panel p,
+html[data-bs-theme="dark"] .feature-card, html[data-bs-theme="dark"] .card-link { color:#d4e6fa; }
+html[data-bs-theme="dark"] .muted, html[data-bs-theme="dark"] .page-description,
+html[data-bs-theme="dark"] .feature-card p, html[data-bs-theme="dark"] .profile-details dt { color:#a9bad0; }
+html[data-bs-theme="dark"] .btn-outline-primary { --bs-btn-color:#b8d7ff; --bs-btn-border-color:#7195c0; --bs-btn-hover-bg:#345d90; --bs-btn-hover-border-color:#7195c0; }
+html[data-bs-theme="dark"] .password-input { background:#26364b; border-color:#506580; }
+html[data-bs-theme="dark"] .password-input input, html[data-bs-theme="dark"] .password-input button { color:#e4ebf5; }
+html[data-bs-theme="dark"] .contracts-table td::before { color:#b3c3d6; }
+
+/* Sidebar hover popovers and language control in dark mode. */
+html[data-bs-theme="dark"] .sidebar-flyout { background:#1c2a3c; color:#e4ebf5; border-color:#35465d; }
+html[data-bs-theme="dark"] .sidebar-flyout a { color:#c2d0e2; }
+html[data-bs-theme="dark"] .sidebar-flyout a:hover, html[data-bs-theme="dark"] .sidebar-flyout a:focus-visible { background:#2c405b; color:#fff; }
+html[data-bs-theme="dark"] .sidebar-flyout a.active { background:#34557e; color:#fff; }
+html[data-bs-theme="dark"] .sidebar-flyout .flyout-heading { color:#e4ebf5; border-color:#35465d; }
+html[data-bs-theme="dark"] .language-toggle { background:#273a53; color:#e4ebf5; border-color:#506580; }
+html[data-bs-theme="dark"] .language-toggle:hover { background:#34557e; }

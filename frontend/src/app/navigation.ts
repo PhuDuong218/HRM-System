@@ -19,6 +19,7 @@ export const navigation: NavigationItem[] = [
       {path:'assignments',label:'Phân công / Điều chuyển'},
       {path:'certificates',label:'Bằng cấp / Chứng chỉ'},
       { path: 'contracts', label: 'Hợp đồng' },
+      { path: 'contract-types', label: 'Loại hợp đồng' },
       { path: 'decisions', label: 'Khen thưởng / Kỷ luật' }
     ]
   },

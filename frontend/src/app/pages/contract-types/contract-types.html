@@ -1,0 +1,161 @@
+<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
+  <div>
+    <p class="eyebrow">HỢP ĐỒNG</p>
+    <h1 class="mb-0">Loại hợp đồng</h1>
+  </div>
+
+  <button type="button"
+          class="btn btn-primary"
+          [disabled]="loading || saving"
+          (click)="openCreate()">
+    Thêm loại hợp đồng
+  </button>
+</div>
+
+@if (message) {
+  <div class="alert alert-success" role="status">
+    {{ message }}
+  </div>
+}
+
+@if (error) {
+  <div class="alert alert-danger" role="alert">
+    {{ error }}
+  </div>
+}
+
+@if (showForm) {
+  <section class="surface mb-4">
+    <h2>{{ editing ? 'Sửa loại hợp đồng' : 'Thêm loại hợp đồng' }}</h2>
+
+    <form #typeForm="ngForm"
+          class="row g-3"
+          (ngSubmit)="save()">
+
+      <div class="col-md-6">
+        <label for="type-code" class="form-label">Mã loại</label>
+
+        <input id="type-code"
+               name="typeCode"
+               class="form-control"
+               maxlength="50"
+               required
+               [(ngModel)]="form.typeCode"
+               [disabled]="!!editing || saving">
+
+        @if (editing) {
+          <div class="form-text">
+            Mã loại không thể thay đổi sau khi tạo.
+          </div>
+        } @else {
+          <div class="form-text">
+            Chỉ nhập chữ không dấu, số, dấu _ hoặc dấu -.
+          </div>
+        }
+      </div>
+
+      <div class="col-md-6">
+        <label for="type-name" class="form-label">Tên loại</label>
+
+        <input id="type-name"
+               name="typeName"
+               class="form-control"
+               maxlength="200"
+               required
+               [(ngModel)]="form.typeName"
+               [disabled]="saving">
+      </div>
+
+      @if (editing) {
+        <div class="col-12">
+          <label class="form-check">
+            <input type="checkbox"
+                   name="isActive"
+                   class="form-check-input"
+                   [(ngModel)]="form.isActive"
+                   [disabled]="saving">
+            <span class="form-check-label">Đang hoạt động</span>
+          </label>
+        </div>
+      }
+
+      <div class="col-12 d-flex gap-2">
+        <button type="submit"
+                class="btn btn-primary"
+                [disabled]="saving || typeForm.invalid">
+          {{ saving ? 'Đang lưu…' : 'Lưu' }}
+        </button>
+
+        <button type="button"
+                class="btn btn-outline-secondary"
+                [disabled]="saving"
+                (click)="cancel()">
+          Hủy
+        </button>
+      </div>
+    </form>
+  </section>
+}
+
+<section class="surface">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Danh sách loại hợp đồng</h2>
+
+    <button type="button"
+            class="btn btn-outline-secondary"
+            [disabled]="loading || saving"
+            (click)="load()">
+      Tải lại
+    </button>
+  </div>
+
+  @if (loading) {
+    <p role="status">Đang tải danh sách…</p>
+  } @else if (!error) {
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Mã loại</th>
+            <th>Tên loại</th>
+            <th>Trạng thái</th>
+            <th>Thao tác</th>
+          </tr>
+        </thead>
+
+        <tbody>
+          @for (row of rows; track row.contractTypeId) {
+            <tr>
+              <td>{{ row.typeCode }}</td>
+              <td>{{ row.typeName }}</td>
+              <td>
+                {{ row.isActive ? 'Hoạt động' : 'Ngừng sử dụng' }}
+              </td>
+              <td>
+                <div class="d-flex flex-wrap gap-2">
+                  <button type="button"
+                          class="btn btn-sm btn-outline-primary"
+                          [disabled]="saving"
+                          (click)="openEdit(row)">
+                    Sửa
+                  </button>
+
+                  <button type="button"
+                          class="btn btn-sm btn-outline-danger"
+                          [disabled]="saving || !row.isActive"
+                          (click)="deactivate(row)">
+                    Ngừng sử dụng
+                  </button>
+                </div>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="4">Chưa có loại hợp đồng.</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
+</section>
