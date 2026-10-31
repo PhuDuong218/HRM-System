@@ -10,6 +10,8 @@ import {
   ContractTerminateRequest,
   PageResponse,
   ContractTypeRequest,
+  SalaryTermResponse,
+  SalaryTermRequest,
 } from "../models/contract.model";
 
 @Injectable({ providedIn: "root" })
@@ -75,5 +77,18 @@ export class ContractService {
 
   deactivateType(id: number) {
     return this.http.delete<void>(`${API_BASE_URL}/contract-types/${id}`);
+  }
+
+  salaryTerms(contractId: number) {
+    return this.http.get<SalaryTermResponse[]>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms`,
+    );
+  }
+
+  createSalaryTerm(contractId: number, request: SalaryTermRequest) {
+    return this.http.post<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms`,
+      request,
+    );
   }
 }

@@ -1,11 +1,16 @@
-import { LanguageService } from '../../services/language.service';
-import {Pagination} from '../../shared/pagination';
-import { EmployeeService, Employee, errorMessage } from '../../services/employee.service';
-import { RecordWorkspace } from '../../shared/record-workspace';
+import { LanguageService } from "../../services/language.service";
+import { Pagination } from "../../shared/pagination";
+import {
+  EmployeeService,
+  Employee,
+  errorMessage,
+} from "../../services/employee.service";
+import { RecordWorkspace } from "../../shared/record-workspace";
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { HttpErrorResponse } from "@angular/common/http";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
 import { Subscription } from "rxjs";
+import { DecimalPipe } from "@angular/common";
 
 import { ContractService } from "../../services/contract.service";
 import {
@@ -15,12 +20,15 @@ import {
   ContractTypeResponse,
   ContractRenewRequest,
   ContractTerminateRequest,
+  SalaryTermResponse,
+  SalaryTermRequest,
+  PayBasis,
 } from "../../models/contract.model";
 
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [Pagination,RecordWorkspace],
+  imports: [Pagination, RecordWorkspace, DecimalPipe],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
@@ -32,16 +40,25 @@ export class ContractsPage implements OnInit {
   private personnel = inject(EmployeeService);
   employees: Employee[] = [];
   employeesLoading = false;
-  employeesError = '';
+  employeesError = "";
   loadEmployees(): void {
     if (this.employeesLoading) return;
     this.employeesLoading = true;
-    this.employeesError = '';
+    this.employeesError = "";
     // Unpaged endpoint applies HR scope on the server, and returns the full permitted selection.
-    this.personnel.list(false, 0, '', '', '').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: result => { this.employees = Array.isArray(result) ? result : result.content; this.employeesLoading = false; },
-      error: error => { this.employeesError = errorMessage(error); this.employeesLoading = false; }
-    });
+    this.personnel
+      .list(false, 0, "", "", "")
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.employees = Array.isArray(result) ? result : result.content;
+          this.employeesLoading = false;
+        },
+        error: (error) => {
+          this.employeesError = errorMessage(error);
+          this.employeesLoading = false;
+        },
+      });
   }
 
   rows: ContractResponse[] = [];
@@ -71,21 +88,23 @@ export class ContractsPage implements OnInit {
     this.loading = true;
     this.error = "";
 
-    this.listRequest = this.api.search(page, this.employeeId, this.status, this.q)
-      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: (result) => {
-        this.rows = result.items;
-        this.page = result.page;
-        this.totalPages = result.totalPages;
-        this.loading = false;
-      },
-      error: (e: HttpErrorResponse) => {
-        this.loading = false;
-        this.rows = [];
-        this.error =
-          e.error?.loi_chi_tiet ?? "Không tải được danh sách hợp đồng.";
-      },
-    });
+    this.listRequest = this.api
+      .search(page, this.employeeId, this.status, this.q)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (result) => {
+          this.rows = result.items;
+          this.page = result.page;
+          this.totalPages = result.totalPages;
+          this.loading = false;
+        },
+        error: (e: HttpErrorResponse) => {
+          this.loading = false;
+          this.rows = [];
+          this.error =
+            e.error?.loi_chi_tiet ?? "Không tải được danh sách hợp đồng.";
+        },
+      });
   }
 
   search(employeeIdText: string, statusText: string, q: string): void {
@@ -95,13 +114,17 @@ export class ContractsPage implements OnInit {
     this.load(0); // đổi bộ lọc thì quay về trang đầu
   }
 
-  clearFilters(employee: HTMLSelectElement, status: HTMLSelectElement, keyword: HTMLInputElement): void {
-    employee.value = '';
-    status.value = '';
-    keyword.value = '';
+  clearFilters(
+    employee: HTMLSelectElement,
+    status: HTMLSelectElement,
+    keyword: HTMLInputElement,
+  ): void {
+    employee.value = "";
+    status.value = "";
+    keyword.value = "";
     this.employeeId = undefined;
     this.status = undefined;
-    this.q = '';
+    this.q = "";
     this.load(0);
   }
 
@@ -123,6 +146,7 @@ export class ContractsPage implements OnInit {
 
   viewDetail(id: number): void {
     if (this.saving || this.renewTypesLoading) return;
+    this.clearSalaryTerms();
     this.cancelLifecycle();
     this.cancelCreate();
     // Khi bấm liên tiếp hai hợp đồng, hủy request chi tiết trước.
@@ -140,6 +164,8 @@ export class ContractsPage implements OnInit {
         next: (contract) => {
           this.selected = contract;
           this.detailLoading = false;
+
+          this.loadSalaryTerms(contract.contractId);
         },
         error: (e: HttpErrorResponse) => {
           this.detailLoading = false;
@@ -160,8 +186,9 @@ export class ContractsPage implements OnInit {
 
   closeDetail(): void {
     if (this.saving || this.renewTypesLoading) return;
+    this.clearSalaryTerms();
     this.cancelLifecycle();
-    
+
     this.detailRequest?.unsubscribe();
     this.selectedId = null;
     this.selected = null;
@@ -505,6 +532,188 @@ export class ContractsPage implements OnInit {
           this.lifecycleError = this.readError(
             e,
             "Không chấm dứt được hợp đồng.",
+          );
+        },
+      });
+  }
+
+  salaryTerms: SalaryTermResponse[] = [];
+  salaryTermsLoading = false;
+  salaryTermsError = "";
+
+  private salaryTermsRequest?: Subscription;
+
+  loadSalaryTerms(contractId: number): void {
+    this.salaryTermsRequest?.unsubscribe();
+
+    this.salaryTerms = [];
+    this.salaryTermsError = "";
+    this.salaryTermsLoading = true;
+
+    this.salaryTermsRequest = this.api
+      .salaryTerms(contractId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (rows) => {
+          this.salaryTerms = rows;
+          this.salaryTermsLoading = false;
+        },
+        error: (error: HttpErrorResponse) => {
+          this.salaryTerms = [];
+          this.salaryTermsLoading = false;
+          this.salaryTermsError = this.readError(
+            error,
+            "Không tải được lịch sử mức lương.",
+          );
+        },
+      });
+  }
+
+  private clearSalaryTerms(): void {
+    this.salaryTermsRequest?.unsubscribe();
+
+    this.salaryTerms = [];
+    this.salaryTermsLoading = false;
+    this.salaryTermsError = "";
+
+    this.showSalaryForm = false;
+    this.salaryFormError = "";
+    this.salaryMessage = "";
+  }
+
+  payBasisLabel(value: SalaryTermResponse["payBasis"]): string {
+    const labels = {
+      THANG: "Tháng",
+      NGAY: "Ngày",
+      GIO: "Giờ",
+    };
+
+    return labels[value];
+  }
+
+  showSalaryForm = false;
+  salaryFormError = "";
+  salaryMessage = "";
+
+  openSalaryForm(): void {
+    if (this.saving || !this.selected) return;
+
+    if (this.selected.status !== "DA_KY") {
+      this.salaryFormError =
+        "Chỉ thêm mức lương cho hợp đồng có trạng thái Đã ký.";
+      return;
+    }
+
+    this.salaryFormError = "";
+    this.salaryMessage = "";
+    this.showSalaryForm = true;
+  }
+
+  cancelSalaryForm(): void {
+    if (this.saving) return;
+
+    this.showSalaryForm = false;
+    this.salaryFormError = "";
+  }
+
+  saveSalaryTerm(event: Event): void {
+    event.preventDefault();
+
+    const contract = this.selected;
+
+    if (!contract || this.saving || !this.showSalaryForm) return;
+
+    const form = event.target as HTMLFormElement;
+
+    if (!form.reportValidity()) return;
+
+    const data = new FormData(form);
+    const value = (name: string): string => String(data.get(name) ?? "").trim();
+
+    const effectiveFrom = value("effectiveFrom");
+    const effectiveTo = value("effectiveTo") || null;
+    const salaryText = value("baseSalary");
+    const baseSalary = Number(salaryText);
+    const payBasisText = value("payBasis");
+    const documentReference = value("documentReference") || null;
+    const reason = value("reason");
+
+    this.salaryFormError = "";
+    this.salaryMessage = "";
+
+    if (!effectiveFrom) {
+      this.salaryFormError = "Vui lòng chọn ngày bắt đầu.";
+      return;
+    }
+
+    // Backend yêu cầu ngày cuối lớn hơn ngày bắt đầu.
+    if (effectiveTo && effectiveTo <= effectiveFrom) {
+      this.salaryFormError = "Ngày cuối phải sau ngày bắt đầu.";
+      return;
+    }
+
+    if (effectiveFrom < contract.startDate) {
+      this.salaryFormError =
+        "Ngày bắt đầu mức lương không được trước ngày bắt đầu hợp đồng.";
+      return;
+    }
+
+    if (
+      contract.endDate &&
+      (effectiveFrom > contract.endDate ||
+        (effectiveTo !== null && effectiveTo > contract.endDate))
+    ) {
+      this.salaryFormError =
+        "Khoảng mức lương không được vượt thời hạn hợp đồng.";
+      return;
+    }
+
+    if (
+      !/^\d{1,15}(\.\d{1,4})?$/.test(salaryText) ||
+      !Number.isFinite(baseSalary)
+    ) {
+      this.salaryFormError =
+        "Mức lương phải không âm, tối đa 15 chữ số nguyên và 4 chữ số thập phân.";
+      return;
+    }
+
+    if (!["THANG", "NGAY", "GIO"].includes(payBasisText)) {
+      this.salaryFormError = "Vui lòng chọn đơn vị tính lương.";
+      return;
+    }
+
+    if (!reason) {
+      this.salaryFormError = "Vui lòng nhập lý do.";
+      return;
+    }
+
+    const request: SalaryTermRequest = {
+      effectiveFrom,
+      effectiveTo,
+      baseSalary,
+      payBasis: payBasisText as PayBasis,
+      documentReference,
+      reason,
+    };
+
+    this.saving = true;
+
+    this.api
+      .createSalaryTerm(contract.contractId, request)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: () => {
+          this.saving = false;
+          this.showSalaryForm = false;
+          this.salaryMessage = "Đã thêm mức lương.";
+
+          this.loadSalaryTerms(contract.contractId);
+        },
+        error: (error: HttpErrorResponse) => {
+          this.saving = false;
+          this.salaryFormError = this.readError(
+            error,
+            "Không thêm được mức lương.",
           );
         },
       });
