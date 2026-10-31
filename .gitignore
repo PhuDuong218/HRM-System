@@ -6,3 +6,5 @@
 **/target/
 **/bin/
 **/obj/
+/qa/
+/qa_local_backup/
