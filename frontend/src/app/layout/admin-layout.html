@@ -1,3 +1,14 @@
+@if (showLoginSuccess) {
+  <div class="login-success-toast" animate.enter="login-toast-enter" animate.leave="login-toast-leave">
+    <button type="button" class="login-success-close" (click)="showLoginSuccess = false" [attr.aria-label]="language.t('Đóng')">×</button>
+    <span class="login-success-icon" aria-hidden="true">✓</span>
+    <div role="status">
+      <p class="login-success-eyebrow">{{ language.t('Đăng nhập thành công!') }}</p>
+      <h2>{{ language.t('Chào mừng bạn trở lại!') }}</h2>
+      <p class="login-success-message">{{ language.t('Chúc bạn một ngày làm việc thật hiệu quả!') }}</p>
+    </div>
+  </div>
+}
 <div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" [class.mobile-menu-open]="menuOpen">
   @if(menuOpen){<button type="button" class="menu-backdrop" [attr.aria-label]="&quot;Đóng danh mục&quot; | translate" tabindex="-1" (click)="closeMobileMenu()"></button>}
   <div class="sidebar-rail" (keydown)="menuKeydown($event)" (mouseleave)="closeFlyout()" (focusout)="railFocusOut($event)">
@@ -88,7 +99,7 @@
   </div>
 </div>
 
-<dialog #profileDialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-title">
+<dialog #profileDialog id="profile-dialog" class="profile-dialog motion-dialog" aria-labelledby="profile-title">
   <div class="profile-dialog-header">
     <div><h2 id="profile-title">{{language.t("HỒ SƠ CÁ NHÂN")}}</h2></div>
     <button type="button" class="profile-close" (click)="closeProfile()" [attr.aria-label]="&quot;Đóng hồ sơ&quot; | translate">{{ "×" | translate }}</button>
@@ -123,7 +134,7 @@
   </div>
 </dialog>
 
-<dialog #logoutDialog id="logout-dialog" class="profile-dialog logout-dialog" aria-labelledby="logout-title"
+<dialog #logoutDialog id="logout-dialog" class="profile-dialog logout-dialog motion-dialog" aria-labelledby="logout-title"
         aria-describedby="logout-description" (cancel)="preventLogoutCloseWhileSaving($event)">
   <div class="profile-dialog-header">
     <div><h2 id="logout-title">{{language.t("Xác nhận đăng xuất")}}</h2></div>
@@ -137,7 +148,7 @@
   </div>
 </dialog>
 
-<dialog #passwordDialog class="profile-dialog password-dialog" aria-labelledby="password-title"
+<dialog #passwordDialog class="profile-dialog password-dialog motion-dialog" aria-labelledby="password-title"
         (cancel)="preventPasswordCloseWhileSaving($event)" (close)="resetPasswordForm()">
   <div class="profile-dialog-header">
     <div><p class="profile-eyebrow">{{language.t("BẢO MẬT TÀI KHOẢN")}}</p><h2 id="password-title">{{language.t("Đổi mật khẩu")}}</h2></div>

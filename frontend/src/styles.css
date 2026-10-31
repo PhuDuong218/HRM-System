@@ -64,3 +64,6 @@ html[data-bs-theme="dark"] .language-toggle:hover { background:#34557e; }
 .management-page .editor>label{display:grid;gap:6px;min-width:0}
 .management-page .editor>.btn{justify-self:start}
 .management-page .record-detail .form-control,.management-page .record-detail .form-select{width:100%}
+
+pre.health-response{background:#f4f7fb;color:#1e344c}
+html[data-bs-theme="dark"] pre.health-response{background:#101d2d;color:#e4ebf5;border:1px solid #35465d}

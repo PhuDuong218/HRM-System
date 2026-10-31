@@ -1,0 +1,91 @@
+<p class="eyebrow">PHÂN TÍCH & THỐNG KÊ</p>
+<h1>Báo cáo</h1>
+<p class="page-description">Theo dõi số liệu nhân sự, hợp đồng, thời gian làm việc và quỹ lương.</p>
+
+<nav class="report-tabs" aria-label="Chọn loại báo cáo">
+  @for (tab of tabs; track tab.id) {
+    <button type="button" [class.active]="selected === tab.id" [attr.aria-pressed]="selected === tab.id" (click)="select(tab.id)">{{ tab.label }}</button>
+  }
+</nav>
+
+<section class="surface report-surface" aria-labelledby="report-title">
+  <div class="report-heading">
+    <div><p class="report-kicker">BÁO CÁO TỔNG HỢP</p><h2 id="report-title">{{ activeTab.label }}</h2><p class="muted report-description">{{ activeTab.description }}</p></div>
+    <button type="button" class="btn btn-outline-primary export-button" (click)="export()" [disabled]="!hasResult || loading || exporting">{{ exporting ? 'Đang xuất…' : 'Xuất Excel' }}</button>
+  </div>
+
+  @if (selected !== 'employees') {
+    <form class="report-filters" (submit)="submit($event)">
+      <div><label for="report-from" class="form-label">Từ ngày</label><input #fromDate id="report-from" name="fromDate" type="date" class="form-control" [value]="filters.fromDate" (input)="filters.fromDate = fromDate.value" required></div>
+      <div><label for="report-to" class="form-label">Đến ngày</label><input #toDate id="report-to" name="toDate" type="date" class="form-control" [value]="filters.toDate" (input)="filters.toDate = toDate.value" required></div>
+      @if (selected === 'contracts') {
+        <div><label for="report-date" class="form-label">Ngày báo cáo <span>(không bắt buộc)</span></label><input #reportDate id="report-date" name="reportDate" type="date" class="form-control" [value]="filters.reportDate" (input)="filters.reportDate = reportDate.value"></div>
+        <div><label for="report-expiring" class="form-label">Sắp hết hạn trong (ngày)</label><input #expiring id="report-expiring" name="expiringWithinDays" type="number" min="0" max="2147483647" step="1" class="form-control" [value]="filters.expiringWithinDays" (input)="filters.expiringWithinDays = expiring.valueAsNumber" required></div>
+        <div><label for="report-department" class="form-label">ID phòng ban <span>(không bắt buộc)</span></label><input #department id="report-department" name="departmentId" type="text" inputmode="numeric" class="form-control" [value]="filters.departmentId" (input)="filters.departmentId = department.value" placeholder="Tất cả phòng ban"></div>
+      }
+      <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">Xem báo cáo</button></div>
+    </form>
+  } @else {
+    <div class="employee-info"><span>Phân công được tính theo ngày hiện tại.</span><button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading">Tải lại</button></div>
+  }
+
+  @if (exportError) { <div class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError }}</div> }
+  <div #reportResults class="report-results" [style.min-height.px]="loading && loadingHeight ? loadingHeight : null" [attr.aria-busy]="loading">
+  @if (loading) {
+    <div class="report-state muted" role="status">Đang tải báo cáo…</div>
+  } @else if (error) {
+    <div class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
+  } @else if (employeeReport) {
+    <div class="group-grid">
+      @for (group of employeeGroups; track group.label) {
+        <article class="group-card">
+          <h3>{{ group.label }}</h3>
+          @if (!group.rows.length) { <p class="muted small mb-0">Chưa có dữ liệu.</p> }
+          @else {
+            <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ group.label }}</caption><thead><tr><th scope="col">Nhóm</th><th scope="col" class="text-end">Nhân viên</th></tr></thead><tbody>
+              @for (row of group.rows; track $index) { <tr><td>{{ row.groupName || row.groupCode || '—' }}</td><td class="text-end">{{ number(row.employeeCount) }}</td></tr> }
+            </tbody></table></div>
+          }
+        </article>
+      }
+    </div>
+  } @else if (contractReport; as report) {
+    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }} · Ngày đánh giá: {{ date(report.reportDate) }}</p>
+    <div class="metric-grid">
+      <div class="metric"><span>Tổng hợp đồng</span><strong>{{ number(report.contractCount) }}</strong><small>Trong khoảng được chọn</small></div>
+      <div class="metric"><span>Đang hiệu lực</span><strong>{{ number(report.effectiveCount) }}</strong><small>Tại ngày đánh giá</small></div>
+      <div class="metric"><span>Sắp hết hạn</span><strong>{{ number(report.expiringCount) }}</strong><small>Trong {{ report.expiringWithinDays }} ngày</small></div>
+    </div>
+    <p class="report-note">Phòng ban: {{ report.departmentId === null ? 'Tất cả' : 'ID ' + report.departmentId }}.</p>
+  } @else if (workReport; as report) {
+    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
+    <div class="metric-grid">
+      <div class="metric"><span>Bản ghi đi làm</span><strong>{{ number(report.confirmedWorkDays) }}</strong><small>Đã xác nhận</small></div>
+      <div class="metric"><span>Bản ghi vắng</span><strong>{{ number(report.confirmedAbsentDays) }}</strong><small>Đã xác nhận</small></div>
+      <div class="metric"><span>Đơn nghỉ phép</span><strong>{{ number(report.approvedLeaveRequests) }}</strong><small>Đã duyệt</small></div>
+      <div class="metric"><span>Thời lượng nghỉ phép</span><strong>{{ number(report.approvedLeaveHours) }} <em>giờ</em></strong><small>Thời gian trong kỳ</small></div>
+      <div class="metric"><span>Đơn tăng ca</span><strong>{{ number(report.approvedOvertimeRequests) }}</strong><small>Đã duyệt và xác nhận</small></div>
+      <div class="metric"><span>Thời lượng tăng ca</span><strong>{{ number(report.approvedOvertimeHours) }} <em>giờ</em></strong><small>Đã phân bổ thời gian nghỉ</small></div>
+    </div>
+    <p class="report-note">Công và vắng được tính theo bản ghi đã xác nhận; một nhân viên có thể có nhiều bản ghi trong ngày. Giờ nghỉ phép là thời lượng đơn trong kỳ, chưa quy đổi theo lịch làm việc.</p>
+  } @else if (payrollReport; as report) {
+    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
+    <div class="metric-grid payroll-metrics">
+      <div class="metric"><span>Quỹ lương trước khấu trừ</span><strong>{{ money(report.totals.grossPayroll) }} <em>đ</em></strong></div>
+      <div class="metric"><span>Phụ cấp</span><strong>{{ money(report.totals.allowances) }} <em>đ</em></strong></div>
+      <div class="metric"><span>Thưởng</span><strong>{{ money(report.totals.bonuses) }} <em>đ</em></strong></div>
+      <div class="metric"><span>Khấu trừ</span><strong>{{ money(report.totals.deductions) }} <em>đ</em></strong></div>
+      <div class="metric metric-highlight"><span>Thực nhận</span><strong>{{ money(report.totals.netPayroll) }} <em>đ</em></strong></div>
+    </div>
+    <p class="report-note">Phụ cấp và thưởng đã nằm trong quỹ lương trước khấu trừ. Chỉ tính kỳ nằm trọn trong khoảng lọc và phiên bản bảng lương đã chốt mới nhất của mỗi kỳ.</p>
+    <div class="batch-heading"><h3>Chi tiết theo kỳ lương</h3><span class="muted small">{{ number(report.batchCount) }} bảng lương · {{ number(report.payrollRecordCount) }} bản ghi lương</span></div>
+    @if (!report.batches.length) { <div class="empty-batches">Không có bảng lương đã chốt trong khoảng đã chọn.</div> }
+    @else {
+      <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">Báo cáo lương theo kỳ</caption><thead><tr><th scope="col">Kỳ lương</th><th scope="col">Bắt đầu</th><th scope="col">Kết thúc (không gồm)</th><th scope="col">Phiên bản</th><th scope="col" class="text-end">Nhân viên</th><th scope="col" class="text-end">Trước khấu trừ</th><th scope="col" class="text-end">Khấu trừ</th><th scope="col" class="text-end">Thực nhận</th></tr></thead><tbody>
+        @for (batch of report.batches; track batch.batchId) { <tr><td class="batch-code">{{ batch.periodCode }}</td><td>{{ date(batch.periodStart) }}</td><td>{{ date(batch.periodEndExclusive) }}</td><td>{{ batch.versionNo }}</td><td class="text-end">{{ number(batch.employeeCount) }}</td><td class="text-end amount">{{ money(batch.totals.grossPayroll) }}</td><td class="text-end amount">{{ money(batch.totals.deductions) }}</td><td class="text-end amount">{{ money(batch.totals.netPayroll) }}</td></tr> }
+      </tbody></table></div>
+    }
+    <p class="report-note">Số bản ghi lương là tổng qua các kỳ, không phải số nhân viên duy nhất. Giá trị tiền theo đơn vị đồng.</p>
+  }
+  </div>
+</section>

@@ -4,7 +4,10 @@
   "private": true,
   "scripts": {
     "start": "ng serve --proxy-config proxy.conf.json",
-    "build": "ng build"
+    "build": "ng build",
+    "test:reports": "node --test test-tools/report-format.test.cjs test-tools/report-service.test.cjs",
+    "test:preferences": "node --test test-tools/preferences.test.cjs",
+    "test:overview": "node --test test-tools/overview.test.cjs"
   },
   "engines": {
     "node": "^20.19.0 || ^22.12.0 || ^24.0.0"

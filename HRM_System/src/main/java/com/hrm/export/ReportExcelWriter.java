@@ -22,6 +22,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -161,7 +162,7 @@ public class ReportExcelWriter {
             List<Object[]> rows = new ArrayList<>();
             rows.add(row("Báo cáo", reportName));
             rows.addAll(filters);
-            rows.add(row("Định dạng", "Ngày theo ISO yyyy-MM-dd. ID và số vượt độ chính xác Excel được lưu dạng chữ."));
+            rows.add(row("Định dạng", "Ngày theo ISO yyyy-MM-dd. ID kỳ/batch và số vượt độ chính xác Excel được lưu dạng chữ."));
             rows.add(row("Độ chính xác", "Tiền và giờ hiển thị 4 chữ số thập phân; ô dạng chữ giữ nguyên giá trị thập phân."));
             Sheet sheet = table("Bo loc", new String[]{"Bộ lọc / quy tắc", "Giá trị áp dụng"}, rows);
             sheet.setColumnWidth(0, 48 * 256);
@@ -173,8 +174,12 @@ public class ReportExcelWriter {
 
         private void employeeGroups(String name, List<EmployeeStatisticsRow> groups) {
             List<Object[]> rows = new ArrayList<>();
-            for (EmployeeStatisticsRow group : groups) {
-                rows.add(row(textId(group.getGroupId()), group.getGroupCode(), group.getGroupName(), group.getEmployeeCount()));
+            List<EmployeeStatisticsRow> sortedGroups = groups.stream()
+                    .sorted(Comparator.comparing(EmployeeStatisticsRow::getGroupId,
+                            Comparator.nullsLast(Comparator.naturalOrder())))
+                    .toList();
+            for (EmployeeStatisticsRow group : sortedGroups) {
+                rows.add(row(group.getGroupId(), group.getGroupCode(), group.getGroupName(), group.getEmployeeCount()));
             }
             Sheet sheet = table(name, new String[]{"ID nhóm", "Mã nhóm", "Tên nhóm", "Số nhân viên"}, rows);
             sheet.setColumnWidth(0, 24 * 256);
