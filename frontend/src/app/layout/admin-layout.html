@@ -1,374 +1,617 @@
-<div class="app-shell">
-  <aside class="sidebar" [class.is-open]="menuOpen" id="main-menu">
-    <a class="brand" routerLink="/overview" (click)="menuOpen = false">
-      <span class="brand-mark">H</span>
-      <span>
-        HRM Center
-        <small>TRUNG TÂM GIÁO DỤC</small>
-      </span>
-    </a>
-
-    <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
-
-    <nav aria-label="Điều hướng chính">
-      @for (item of menu; track item.id) {
-      @if (item.children; as children) {
-      <div class="nav-group">
-        <button type="button" class="nav-group-toggle" [class.group-active]="isGroupActive(item)"
-          [attr.aria-expanded]="expandedGroup === item.id" [attr.aria-controls]="'nav-group-' + item.id"
-          (click)="toggleGroup(item.id)">
-          <span>{{ item.label }}</span>
-          <span class="chevron" [class.expanded]="expandedGroup === item.id" aria-hidden="true">
-          </span>
-        </button>
-
-        <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="expandedGroup !== item.id">
-          @for (child of children; track child.path) {
-          <a [routerLink]="'/' + child.path" routerLinkActive="active" ariaCurrentWhenActive="page"
-            (click)="menuOpen = false">
-            {{ child.label }}
-          </a>
-          }
-        </div>
-      </div>
-      } @else {
-      <a class="nav-single" [routerLink]="'/' + item.path" routerLinkActive="active" ariaCurrentWhenActive="page"
-        (click)="menuOpen = false">
-        {{ item.label }}
+<div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" [class.mobile-menu-open]="menuOpen">
+  @if (menuOpen) {
+  <button type="button" class="menu-backdrop" aria-label="Đóng danh mục" tabindex="-1"
+    (click)="closeMobileMenu()"></button>
+  }
+  <div class="sidebar-rail" (keydown)="menuKeydown($event)">
+    <aside #mobilePanel class="sidebar" [class.is-open]="menuOpen" id="main-menu">
+      <a class="brand" routerLink="/overview" (click)="closeMobileMenu()">
+        <span class="brand-mark">H</span>
+        <span>HRM Center<small>TRUNG TÂM GIÁO DỤC</small></span>
       </a>
-      }
-      }
-    </nav>
-
-    <div class="sidebar-note">
-      Dành cho ADMIN / HR
-      <br>
-      <span>Bộ khung để phát triển</span>
-    </div>
-  </aside>
-
+      <button type="button" class="mobile-close" aria-label="Đóng danh mục" (click)="closeMobileMenu()">×</button>
+      <p class="nav-heading">KHÔNG GIAN QUẢN LÝ</p>
+      <nav aria-label="Điều hướng chính">
+        @for (item of menu; track item.id) {
+        @if (item.children; as children) {
+        <div class="nav-group">
+          <button type="button" class="nav-group-toggle" [class.group-active]="isGroupActive(item)"
+            [attr.aria-expanded]="expandedGroups.has(item.id)" [attr.aria-controls]="'nav-group-' + item.id"
+            (click)="toggleGroup(item.id)">
+            <span>{{ item.label }}</span>
+            <span class="chevron" [class.expanded]="expandedGroups.has(item.id)" aria-hidden="true"></span>
+          </button>
+          <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="!expandedGroups.has(item.id)">
+            @for (child of children; track child.path) {
+            <a [routerLink]="['/', child.path]" routerLinkActive="active" ariaCurrentWhenActive="page"
+              (click)="closeMobileMenu()">{{ child.label }}</a>
+            }
+          </div>
+        </div>
+        } @else {
+        <a class="nav-single" [routerLink]="['/', item.path]" routerLinkActive="active" ariaCurrentWhenActive="page"
+          (click)="closeMobileMenu()">{{ item.label }}</a>
+        }
+        }
+      </nav>
+      <div class="sidebar-note">Không gian quản lý nhân sự<br><span>HRM Center · ADMIN / HR</span></div>
+    </aside>
+    <button type="button" class="sidebar-handle" (click)="sidebarCollapsed = !sidebarCollapsed"
+      [attr.aria-expanded]="!sidebarCollapsed" aria-controls="main-menu"
+      [attr.aria-label]="sidebarCollapsed ? 'Mở danh mục' : 'Thu gọn danh mục'"
+      [title]="sidebarCollapsed ? 'Mở danh mục' : 'Thu gọn danh mục'">
+      <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" [class.points-right]="sidebarCollapsed">
+        <path d="m14 6-6 6 6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+          stroke-linejoin="round" />
+      </svg>
+    </button>
+  </div>
   <div class="workspace">
     <header class="topbar">
       <div class="d-flex align-items-center gap-3">
-        <button type="button" class="btn btn-outline-secondary menu-button" (click)="menuOpen = !menuOpen"
+        <button type="button" class="btn btn-outline-secondary menu-button" #menuTrigger (click)="toggleMobileMenu()"
           [attr.aria-expanded]="menuOpen" aria-controls="main-menu">
-          Menu
+          <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true">
+            <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round" />
+          </svg>
+          <span>Menu</span>
         </button>
-
-        <span>
-          Quản lý nhân sự
-          <span class="muted">/ HRM-CENTER</span>
-        </span>
+        <span class="topbar-title">Quản lý nhân sự <span class="muted">/ HRM-CENTER</span></span>
       </div>
-
       <div class="account-actions">
         <button type="button" class="profile-trigger" (click)="openProfile()" aria-haspopup="dialog"
           aria-controls="profile-dialog">
-
-          <span class="profile-avatar" aria-hidden="true">
-            {{ auth.displayName().charAt(0).toUpperCase() }}
-          </span>
-
-          <span class="account-name">
-            {{ auth.displayName() }}
-          </span>
-
-          <span class="profile-trigger-arrow" aria-hidden="true">
-            ⌄
-          </span>
+          <span class="profile-avatar" aria-hidden="true">{{ auth.displayName().charAt(0).toUpperCase() }}</span>
+          <span class="account-name">{{ auth.displayName() }}</span>
+          <span class="profile-trigger-arrow" aria-hidden="true">⌄</span>
         </button>
-
         <button type="button" class="btn btn-sm btn-outline-primary" (click)="confirmLogout()" [disabled]="loggingOut"
-          aria-haspopup="dialog" aria-controls="logout-dialog">
-          Đăng xuất
-        </button>
+          aria-haspopup="dialog" aria-controls="logout-dialog">Đăng xuất</button>
       </div>
     </header>
-
-    <main class="page-content">
-      <router-outlet />
-    </main>
-
-    <footer>
-      HRM Center · Nền tảng quản lý nhân sự trung tâm giáo dục
-    </footer>
+    <main class="page-content"><router-outlet /></main>
+    <footer>HRM Center · Nền tảng quản lý nhân sự trung tâm giáo dục</footer>
   </div>
 </div>
 
 <!-- HO SO CA NHAN -->
+
 <dialog #profileDialog id="profile-dialog" class="profile-dialog" aria-labelledby="profile-title">
 
-  <div class="profile-dialog-header">
-    <div>
-      <h2 id="profile-title">HỒ SƠ CÁ NHÂN</h2>
-    </div>
 
-    <button type="button" class="profile-close" (click)="closeProfile()" aria-label="Đóng hồ sơ">
-      ×
-    </button>
-  </div>
 
-  @if (profileLoading) {
-  <p class="profile-status" role="status">
-    Đang tải thông tin…
-  </p>
-  }
+    <div class="profile-dialog-header">
 
-  @if (profileError) {
-  <div class="profile-error" role="alert">
-    {{ profileError }}
-    <button type="button" (click)="refreshProfile()">
-      Thử lại
-    </button>
-  </div>
-  }
+        <div>
 
-  @if (auth.profile(); as profile) {
-  <div class="profile-identity">
-    <span class="profile-avatar profile-avatar-large" aria-hidden="true">
-      {{ profile.fullName.charAt(0).toUpperCase() }}
-    </span>
+            <h2 id="profile-title">HỒ SƠ CÁ NHÂN</h2>
 
-    <div>
-      <strong>{{ profile.fullName }}</strong>
-      <span>
-        {{ profile.positionName || 'Chưa cập nhật chức vụ' }}
-      </span>
-    </div>
-  </div>
+          </div>
 
-  <div class="profile-section-title">
-    Thông tin công tác
-  </div>
 
-  <dl class="profile-details">
-    <div>
-      <dt>Tên đăng nhập</dt>
-      <dd>{{ profile.username }}</dd>
-    </div>
 
-    <div>
-      <dt>Vai trò</dt>
-      <dd>
-        {{
-        profile.role === 'ADMIN'
-        ? 'Quản trị viên'
-        : profile.role === 'HR'
-        ? 'Nhân sự'
-        : profile.role
-        }}
-      </dd>
-    </div>
+        <button type="button" class="profile-close" (click)="closeProfile()" aria-label="Đóng hồ sơ">
 
-    <div>
-      <dt>Mã nhân viên</dt>
-      <dd>{{ profile.employeeCode || 'Chưa cập nhật' }}</dd>
-    </div>
+            ×
 
-    <div>
-      <dt>Phòng ban</dt>
-      <dd>{{ profile.departmentName || 'Chưa cập nhật' }}</dd>
-    </div>
+          </button>
 
-    <div>
-      <dt>Ngày vào làm</dt>
-      <dd>
-        {{ (profile.hireDate | date:'dd/MM/yyyy') || 'Chưa cập nhật' }}
-      </dd>
-    </div>
+      </div>
 
-    <div>
-      <dt>Trạng thái</dt>
-      <dd>
-        {{
-        profile.employmentStatus === 'DANG_LAM'
-        ? 'Đang làm việc'
-        : profile.employmentStatus === 'DA_NGHI'
-        ? 'Đã nghỉ việc'
-        : (profile.employmentStatus || 'Chưa cập nhật')
-        }}
-      </dd>
-    </div>
-  </dl>
 
-  <div class="profile-section-title">
-    Thông tin liên hệ
-  </div>
 
-  <dl class="profile-details">
-    <div>
-      <dt>Ngày sinh</dt>
-      <dd>
-        {{ (profile.birthDate | date:'dd/MM/yyyy') || 'Chưa cập nhật' }}
-      </dd>
-    </div>
+    @if (profileLoading) {
 
-    <div>
-      <dt>Email</dt>
-      <dd>{{ profile.email || 'Chưa cập nhật' }}</dd>
-    </div>
+    <p class="profile-status" role="status">
 
-    <div>
-      <dt>Số điện thoại</dt>
-      <dd>{{ profile.phone || 'Chưa cập nhật' }}</dd>
-    </div>
+        Đang tải thông tin…
 
-    <div>
-      <dt>Địa chỉ</dt>
-      <dd>{{ profile.address || 'Chưa cập nhật' }}</dd>
-    </div>
-  </dl>
-  }
+      </p>
 
-  <div class="profile-dialog-footer">
-    <button type="button" class="btn btn-primary" (click)="openPasswordDialog()">
-      Đổi mật khẩu
-    </button>
+    }
 
-    <button type="button" class="btn btn-outline-primary" (click)="closeProfile()">
-      Đóng
-    </button>
-  </div>
+
+
+    @if (profileError) {
+
+    <div class="profile-error" role="alert">
+
+        {{ profileError }}
+
+        <button type="button" (click)="refreshProfile()">
+
+            Thử lại
+
+          </button>
+
+      </div>
+
+    }
+
+
+
+    @if (auth.profile(); as profile) {
+
+    <div class="profile-identity">
+
+        <span class="profile-avatar profile-avatar-large" aria-hidden="true">
+
+            {{ profile.fullName.charAt(0).toUpperCase() }}
+
+          </span>
+
+
+
+        <div>
+
+            <strong>{{ profile.fullName }}</strong>
+
+            <span>
+
+                {{ profile.positionName || 'Chưa cập nhật chức vụ' }}
+
+              </span>
+
+          </div>
+
+      </div>
+
+
+
+    <div class="profile-section-title">
+
+        Thông tin công tác
+
+      </div>
+
+
+
+    <dl class="profile-details">
+
+        <div>
+
+            <dt>Tên đăng nhập</dt>
+
+            <dd>{{ profile.username }}</dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Vai trò</dt>
+
+            <dd>
+
+                {{
+
+                profile.role === 'ADMIN'
+
+                ? 'Quản trị viên'
+
+                : profile.role === 'HR'
+
+                ? 'Nhân sự'
+
+                : profile.role
+
+                }}
+
+              </dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Mã nhân viên</dt>
+
+            <dd>{{ profile.employeeCode || 'Chưa cập nhật' }}</dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Phòng ban</dt>
+
+            <dd>{{ profile.departmentName || 'Chưa cập nhật' }}</dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Ngày vào làm</dt>
+
+            <dd>
+
+                {{ (profile.hireDate | date:'dd/MM/yyyy') || 'Chưa cập nhật' }}
+
+              </dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Trạng thái</dt>
+
+            <dd>
+
+                {{
+
+                profile.employmentStatus === 'DANG_LAM'
+
+                ? 'Đang làm việc'
+
+                : profile.employmentStatus === 'DA_NGHI'
+
+                ? 'Đã nghỉ việc'
+
+                : (profile.employmentStatus || 'Chưa cập nhật')
+
+                }}
+
+              </dd>
+
+          </div>
+
+      </dl>
+
+
+
+    <div class="profile-section-title">
+
+        Thông tin liên hệ
+
+      </div>
+
+
+
+    <dl class="profile-details">
+
+        <div>
+
+            <dt>Ngày sinh</dt>
+
+            <dd>
+
+                {{ (profile.birthDate | date:'dd/MM/yyyy') || 'Chưa cập nhật' }}
+
+              </dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Email</dt>
+
+            <dd>{{ profile.email || 'Chưa cập nhật' }}</dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Số điện thoại</dt>
+
+            <dd>{{ profile.phone || 'Chưa cập nhật' }}</dd>
+
+          </div>
+
+
+
+        <div>
+
+            <dt>Địa chỉ</dt>
+
+            <dd>{{ profile.address || 'Chưa cập nhật' }}</dd>
+
+          </div>
+
+      </dl>
+
+    }
+
+
+
+    <div class="profile-dialog-footer">
+
+        <button type="button" class="btn btn-primary" (click)="openPasswordDialog()">
+
+            Đổi mật khẩu
+
+          </button>
+
+
+
+        <button type="button" class="btn btn-outline-primary" (click)="closeProfile()">
+
+            Đóng
+
+          </button>
+
+      </div>
+
 </dialog>
+
+
 
 <!-- XAC NHAN DANG XUAT -->
-<dialog #logoutDialog id="logout-dialog" class="profile-dialog logout-dialog" aria-labelledby="logout-title"
+
+<dialog #logoutDialog id="logout-dialog" class="profile-dialog logout-dialog" aria-labelledby="logout-title"  
   aria-describedby="logout-description" (cancel)="preventLogoutCloseWhileSaving($event)">
 
-  <div class="profile-dialog-header">
-    <div>
-      <h2 id="logout-title">Xác nhận đăng xuất</h2>
-    </div>
 
-    <button type="button" class="profile-close" (click)="cancelLogout()" [disabled]="loggingOut"
+
+    <div class="profile-dialog-header">
+
+        <div>
+
+            <h2 id="logout-title">Xác nhận đăng xuất</h2>
+
+          </div>
+
+
+
+        <button type="button" class="profile-close" (click)="cancelLogout()" [disabled]="loggingOut"      
       aria-label="Đóng xác nhận">
-      ×
-    </button>
-  </div>
 
-  <p id="logout-description" class="logout-description">
-    Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?
-  </p>
+            ×
 
-  @if (logoutError) {
-  <p class="logout-error" role="alert">
-    {{ logoutError }}
-  </p>
-  }
+          </button>
 
-  <div class="profile-dialog-footer">
-    <button type="button" class="btn btn-outline-primary" (click)="cancelLogout()" [disabled]="loggingOut" autofocus>
-      Hủy
-    </button>
+      </div>
 
-    <button type="button" class="btn btn-primary" (click)="logout()" [disabled]="loggingOut">
-      {{ loggingOut ? 'Đang đăng xuất…' : 'Đăng xuất' }}
-    </button>
-  </div>
+
+
+    <p id="logout-description" class="logout-description">
+
+        Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?
+
+      </p>
+
+
+
+    @if (logoutError) {
+
+    <p class="logout-error" role="alert">
+
+        {{ logoutError }}
+
+      </p>
+
+    }
+
+
+
+    <div class="profile-dialog-footer">
+
+        <button type="button" class="btn btn-outline-primary" (click)="cancelLogout()" [disabled]="loggingOut"
+      autofocus>
+
+            Hủy
+
+          </button>
+
+
+
+        <button type="button" class="btn btn-primary" (click)="logout()" [disabled]="loggingOut">
+
+            {{ loggingOut ? 'Đang đăng xuất…' : 'Đăng xuất' }}
+
+          </button>
+
+      </div>
+
 </dialog>
 
+
+
 <!-- DOI MAT KHAU -->
-<dialog #passwordDialog class="profile-dialog password-dialog" aria-labelledby="password-title"
+
+<dialog #passwordDialog class="profile-dialog password-dialog" aria-labelledby="password-title"  
   (cancel)="preventPasswordCloseWhileSaving($event)" (close)="resetPasswordForm()">
 
-  <div class="profile-dialog-header">
-    <div>
-      <p class="profile-eyebrow">
-        BẢO MẬT TÀI KHOẢN
-      </p>
-      <h2 id="password-title">Đổi mật khẩu</h2>
-    </div>
 
-    <button type="button" class="profile-close" (click)="backToProfile()" [disabled]="passwordLoading"
+
+    <div class="profile-dialog-header">
+
+        <div>
+
+            <p class="profile-eyebrow">
+
+                BẢO MẬT TÀI KHOẢN
+
+              </p>
+
+            <h2 id="password-title">Đổi mật khẩu</h2>
+
+          </div>
+
+
+
+        <button type="button" class="profile-close" (click)="backToProfile()" [disabled]="passwordLoading"      
       aria-label="Quay lại hồ sơ">
-      ×
-    </button>
-  </div>
 
-  <form #passwordForm (submit)="changePassword(
-      $event,
-      currentPassword.value,
-      newPassword.value,
-      confirmPassword.value
-    )">
+            ×
 
-    <div class="password-form-body">
-      <p class="password-description">
-        Nhập mật khẩu hiện tại và chọn mật khẩu mới cho tài khoản của bạn.
-      </p>
+          </button>
 
-      <div class="password-form-field">
-        <label for="current-password">
-          Mật khẩu hiện tại
-        </label>
+      </div>
 
-        <div class="password-input">
-          <input #currentPassword id="current-password" name="currentPassword"
-            [type]="showCurrentPassword ? 'text' : 'password'" autocomplete="current-password" required
+
+
+    <form #passwordForm (submit)="changePassword(
+
+      $event,
+
+      currentPassword.value,
+
+      newPassword.value,
+
+      confirmPassword.value
+
+    )">
+
+
+
+        <div class="password-form-body">
+
+            <p class="password-description">
+
+                Nhập mật khẩu hiện tại và chọn mật khẩu mới cho tài khoản của bạn.
+
+              </p>
+
+
+
+            <div class="password-form-field">
+
+                <label for="current-password">
+
+                    Mật khẩu hiện tại
+
+                  </label>
+
+
+
+                <div class="password-input">
+
+                    <input #currentPassword id="current-password" name="currentPassword"            
+            [type]="showCurrentPassword ? 'text' : 'password'" autocomplete="current-password" required            
             [disabled]="passwordLoading">
 
-          <button type="button" (click)="showCurrentPassword = !showCurrentPassword"
-            [attr.aria-label]="showCurrentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"
+
+
+                    <button type="button" (click)="showCurrentPassword = !showCurrentPassword"            
+            [attr.aria-label]="showCurrentPassword ? 'Ẩn mật khẩu hiện tại' : 'Hiện mật khẩu hiện tại'"            
             [attr.aria-pressed]="showCurrentPassword">
-            {{ showCurrentPassword ? 'Ẩn' : 'Hiện' }}
-          </button>
-        </div>
-      </div>
 
-      <div class="password-form-field">
-        <label for="new-password">
-          Mật khẩu mới
-        </label>
+                        {{ showCurrentPassword ? 'Ẩn' : 'Hiện' }}
 
-        <div class="password-input">
-          <input #newPassword id="new-password" name="newPassword" [type]="showNewPassword ? 'text' : 'password'"
-            autocomplete="new-password" required minlength="8" maxlength="72" [disabled]="passwordLoading">
+                      </button>
 
-          <button type="button" (click)="showNewPassword = !showNewPassword"
-            [attr.aria-label]="showNewPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'"
+                  </div>
+
+              </div>
+
+
+
+            <div class="password-form-field">
+
+                <label for="new-password">
+
+                    Mật khẩu mới
+
+                  </label>
+
+
+
+                <div class="password-input">
+
+                    <input #newPassword id="new-password" name="newPassword"
+            [type]="showNewPassword ? 'text' : 'password'"             autocomplete="new-password" required
+            minlength="8" maxlength="72" [disabled]="passwordLoading">
+
+
+
+                    <button type="button" (click)="showNewPassword = !showNewPassword"            
+            [attr.aria-label]="showNewPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới'"            
             [attr.aria-pressed]="showNewPassword">
-            {{ showNewPassword ? 'Ẩn' : 'Hiện' }}
-          </button>
-        </div>
 
-        <small>
-          Mật khẩu mới cần có từ 8 đến 72 ký tự.
-        </small>
-      </div>
+                        {{ showNewPassword ? 'Ẩn' : 'Hiện' }}
 
-      <div class="password-form-field">
-        <label for="confirm-password">
-          Xác nhận mật khẩu mới
-        </label>
+                      </button>
 
-        <div class="password-input">
-          <input #confirmPassword id="confirm-password" name="confirmPassword"
-            [type]="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" required
+                  </div>
+
+
+
+                <small>
+
+                    Mật khẩu mới cần có từ 8 đến 72 ký tự.
+
+                  </small>
+
+              </div>
+
+
+
+            <div class="password-form-field">
+
+                <label for="confirm-password">
+
+                    Xác nhận mật khẩu mới
+
+                  </label>
+
+
+
+                <div class="password-input">
+
+                    <input #confirmPassword id="confirm-password" name="confirmPassword"            
+            [type]="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" required            
             [disabled]="passwordLoading">
 
-          <button type="button" (click)="showConfirmPassword = !showConfirmPassword"
-            [attr.aria-label]="showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'"
+
+
+                    <button type="button" (click)="showConfirmPassword = !showConfirmPassword"            
+            [attr.aria-label]="showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận'"            
             [attr.aria-pressed]="showConfirmPassword">
-            {{ showConfirmPassword ? 'Ẩn' : 'Hiện' }}
-          </button>
-        </div>
-      </div>
 
-      @if (passwordError) {
-      <p class="password-error" role="alert">
-        {{ passwordError }}
-      </p>
-      }
-    </div>
+                        {{ showConfirmPassword ? 'Ẩn' : 'Hiện' }}
 
-    <div class="profile-dialog-footer">
-      <button type="button" class="btn btn-outline-primary" (click)="backToProfile()" [disabled]="passwordLoading">
-        Quay lại
-      </button>
+                      </button>
 
-      <button type="submit" class="btn btn-primary" [disabled]="passwordLoading">
-        {{ passwordLoading ? 'Đang lưu…' : 'Lưu mật khẩu' }}
-      </button>
-    </div>
-  </form>
+                  </div>
+
+              </div>
+
+
+
+            @if (passwordError) {
+
+            <p class="password-error" role="alert">
+
+                {{ passwordError }}
+
+              </p>
+
+            }
+
+          </div>
+
+
+
+        <div class="profile-dialog-footer">
+
+            <button type="button" class="btn btn-outline-primary" (click)="backToProfile()"
+        [disabled]="passwordLoading">
+
+                Quay lại
+
+              </button>
+
+
+
+            <button type="submit" class="btn btn-primary" [disabled]="passwordLoading">
+
+                {{ passwordLoading ? 'Đang lưu…' : 'Lưu mật khẩu' }}
+
+              </button>
+
+          </div>
+
+      </form>
+
 </dialog>

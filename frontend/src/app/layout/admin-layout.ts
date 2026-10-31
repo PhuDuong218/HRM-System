@@ -1,6 +1,6 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, HostListener, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, finalize } from 'rxjs';
@@ -32,8 +32,24 @@ export class AdminLayout {
   showNewPassword = false;
   showConfirmPassword = false;
   menu = navigation;
+  @ViewChild('mobilePanel') private mobilePanel?: ElementRef<HTMLElement>;
+  @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   menuOpen = false;
-  expandedGroup: string | null = null;
+  toggleMobileMenu(): void {
+    this.menuOpen = !this.menuOpen;
+    if(this.menuOpen) requestAnimationFrame(()=>this.mobilePanel?.nativeElement.querySelector<HTMLButtonElement>('.mobile-close')?.focus());
+  }
+  closeMobileMenu(): void { this.menuOpen=false;this.menuTrigger?.nativeElement.focus(); }
+  @HostListener('document:keydown.escape') closeMenuOnEscape(): void { if(this.menuOpen)this.closeMobileMenu(); }
+  menuKeydown(event: KeyboardEvent): void {
+    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:800px)').matches)return;
+    const controls=Array.from(this.mobilePanel?.nativeElement.querySelectorAll<HTMLElement>('a[href],button:not(:disabled)')||[]).filter(x=>x.getClientRects().length>0);
+    const first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
+  sidebarCollapsed = false;
+  expandedGroups = new Set<string>();
 
   constructor() {
     this.refreshProfile();
@@ -125,7 +141,7 @@ export class AdminLayout {
   }
 
   toggleGroup(id: string): void {
-    this.expandedGroup = this.expandedGroup === id ? null : id;
+    if (this.expandedGroups.has(id)) this.expandedGroups.delete(id); else this.expandedGroups.add(id);
   }
 
   isGroupActive(item: NavigationItem): boolean {
@@ -135,7 +151,8 @@ export class AdminLayout {
   }
 
   private expandCurrentGroup(): void {
-    this.expandedGroup = this.menu.find(item => this.isGroupActive(item))?.id ?? null;
+    const current = this.menu.find(item => this.isGroupActive(item));
+    if (current) this.expandedGroups.add(current.id);
   }
 
   confirmLogout(): void {

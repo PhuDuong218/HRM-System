@@ -1,3 +1,6 @@
+import {Pagination} from '../../shared/pagination';
+import { EmployeeService, Employee, errorMessage } from '../../services/employee.service';
+import { RecordWorkspace } from '../../shared/record-workspace';
 import { Component, DestroyRef, OnInit, inject } from "@angular/core";
 import { HttpErrorResponse } from "@angular/common/http";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -16,10 +19,26 @@ import {
 @Component({
   selector: "app-contracts",
   standalone: true,
+  imports: [Pagination,RecordWorkspace],
+  styles: [`.contract-panel{padding:16px}.contract-panel .card{border:0!important;margin-top:0!important}.contract-panel .col-md-6{width:100%}`],
   templateUrl: "./contracts.html",
 })
 export class ContractsPage implements OnInit {
   private api = inject(ContractService);
+  private personnel = inject(EmployeeService);
+  employees: Employee[] = [];
+  employeesLoading = false;
+  employeesError = '';
+  loadEmployees(): void {
+    if (this.employeesLoading) return;
+    this.employeesLoading = true;
+    this.employeesError = '';
+    // Unpaged endpoint applies HR scope on the server, and returns the full permitted selection.
+    this.personnel.list(false, 0, '', '', '').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: result => { this.employees = Array.isArray(result) ? result : result.content; this.employeesLoading = false; },
+      error: error => { this.employeesError = errorMessage(error); this.employeesLoading = false; }
+    });
+  }
 
   rows: ContractResponse[] = [];
   loading = false;
@@ -40,6 +59,7 @@ export class ContractsPage implements OnInit {
 
   ngOnInit(): void {
     this.load(0);
+    this.loadEmployees();
   }
 
   load(page: number): void {
@@ -111,6 +131,12 @@ export class ContractsPage implements OnInit {
               : this.readError(e, "Không tải được chi tiết hợp đồng.");
         },
       });
+  }
+
+  closeWorkspace(): void {
+    if (this.saving || this.renewTypesLoading) return;
+    this.cancelCreate();
+    this.closeDetail();
   }
 
   closeDetail(): void {

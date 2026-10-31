@@ -13,7 +13,89 @@
 
 @if (message) {
 <div class="alert alert-success" role="status">{{ message }}</div>
-} @if (showCreate) {
+} <app-record-workspace [open]="showCreate || !!selected || detailLoading || !!detailError || !!lifecycleContract"
+  [busy]="saving || renewTypesLoading" (dismiss)="closeWorkspace()">
+<section recordList class="surface">
+@if(employeesLoading){<p role="status">Đang tải danh sách nhân viên…</p>}
+@if(employeesError){<p class="alert alert-warning" role="alert">{{employeesError}} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadEmployees()">Thử lại</button></p>}
+<form
+  class="row g-2 mb-3"
+  (submit)="$event.preventDefault(); search(employee.value, status.value, keyword.value)"
+>
+  <div class="col-md-3">
+    <label for="employee-id" class="form-label">Mã ID nhân viên</label>
+    <select id="employee-id" #employee class="form-select" [disabled]="employeesLoading">
+      <option value="">Tất cả nhân viên</option>
+      @for (person of employees; track person.employeeId) {<option [value]="person.employeeId">{{ person.employeeCode }} — {{ person.fullName }}</option>}
+    </select>
+  </div>
+
+  <div class="col-md-3">
+    <label for="contract-status" class="form-label">Trạng thái</label>
+    <select id="contract-status" #status class="form-select">
+      <option value="">Tất cả</option>
+      <option value="DA_KY">Đã ký</option>
+      <option value="DA_KET_THUC">Đã kết thúc</option>
+    </select>
+  </div>
+
+  <div class="col-md-4">
+    <label for="keyword" class="form-label">Từ khóa</label>
+    <input id="keyword" #keyword class="form-control" maxlength="50" />
+  </div>
+
+  <div class="col-md-2 d-flex align-items-end">
+    <button class="btn btn-primary w-100" [disabled]="loading">Tìm</button>
+  </div>
+</form>
+
+@if (loading) {
+<p role="status">Đang tải hợp đồng…</p>
+} @if (error) {
+<div class="alert alert-danger" role="alert">{{ error }}</div>
+} @if (!loading && !error) {
+<div class="table-responsive"><table class="table table-striped">
+  <thead>
+    <tr>
+      <th>Số hợp đồng</th>
+      <th>Nhân viên</th>
+      <th>Loại</th>
+      <th>Hiệu lực</th>
+      <th>Trạng thái</th>
+      <th>Thao tác</th>
+    </tr>
+  </thead>
+  <tbody>
+    @for (c of rows; track c.contractId) {
+    <tr>
+      <td>{{ c.contractNumber }}</td>
+      <td>{{ c.employeeCode }} — {{ c.employeeName }}</td>
+      <td>{{ c.contractTypeName }}</td>
+      <td>{{ c.startDate }} → {{ c.endDate ?? 'Không xác định' }}</td>
+      <td>{{ c.status }}</td>
+      <td>
+        <button
+          type="button"
+          class="btn btn-sm btn-outline-primary"
+          [disabled]="saving"
+          (click)="viewDetail(c.contractId)"
+        >
+          Chi tiết
+        </button>
+      </td>
+    </tr>
+    } @empty {
+    <tr>
+      <td colspan="6">Chưa có hợp đồng phù hợp.</td>
+    </tr>
+    }
+  </tbody>
+</table></div>
+
+<app-pagination [page]="page" [pages]="totalPages" [busy]="loading||saving" (pageChange)="load($event)" />
+} </section>
+<div recordDetail class="contract-panel">
+@if (showCreate) {
 <section class="card mb-4">
   <div class="card-body">
     <h2 class="h4">Tạo hợp đồng đã ký</h2>
@@ -29,21 +111,10 @@
     <form class="row g-3" (submit)="saveContract($event)">
       <div class="col-md-6">
         <label for="create-employee" class="form-label"> ID nhân viên </label>
-        <input
-          id="create-employee"
-          name="employeeId"
-          type="number"
-          min="1"
-          step="1"
-          required
-          class="form-control"
-          [disabled]="saving"
-        />
-
-        <div class="form-text">
-          Nhập ID nhân viên có thật. Sau này nối với bộ chọn nhân viên của Xuân
-          Anh.
-        </div>
+        <select id="create-employee" name="employeeId" required class="form-select" [disabled]="saving || employeesLoading">
+          <option value="">Chọn nhân viên đang làm việc</option>
+          @for (person of employees; track person.employeeId) {@if(person.employmentStatus==='DANG_LAM'){<option [value]="person.employeeId">{{ person.employeeCode }} — {{ person.fullName }}</option>}}
+        </select>
       </div>
 
       <div class="col-md-6">
@@ -139,99 +210,7 @@
   </div>
 </section>
 }
-<form
-  class="row g-2 mb-3"
-  (submit)="$event.preventDefault(); search(employee.value, status.value, keyword.value)"
->
-  <div class="col-md-3">
-    <label for="employee-id" class="form-label">Mã ID nhân viên</label>
-    <input
-      id="employee-id"
-      #employee
-      type="number"
-      min="1"
-      class="form-control"
-    />
-  </div>
-
-  <div class="col-md-3">
-    <label for="contract-status" class="form-label">Trạng thái</label>
-    <select id="contract-status" #status class="form-select">
-      <option value="">Tất cả</option>
-      <option value="DA_KY">Đã ký</option>
-      <option value="DA_KET_THUC">Đã kết thúc</option>
-    </select>
-  </div>
-
-  <div class="col-md-4">
-    <label for="keyword" class="form-label">Từ khóa</label>
-    <input id="keyword" #keyword class="form-control" maxlength="50" />
-  </div>
-
-  <div class="col-md-2 d-flex align-items-end">
-    <button class="btn btn-primary w-100" [disabled]="loading">Tìm</button>
-  </div>
-</form>
-
-@if (loading) {
-<p role="status">Đang tải hợp đồng…</p>
-} @if (error) {
-<div class="alert alert-danger" role="alert">{{ error }}</div>
-} @if (!loading && !error) {
-<table class="table table-striped">
-  <thead>
-    <tr>
-      <th>Số hợp đồng</th>
-      <th>Nhân viên</th>
-      <th>Loại</th>
-      <th>Hiệu lực</th>
-      <th>Trạng thái</th>
-      <th>Thao tác</th>
-    </tr>
-  </thead>
-  <tbody>
-    @for (c of rows; track c.contractId) {
-    <tr>
-      <td>{{ c.contractNumber }}</td>
-      <td>{{ c.employeeCode }} — {{ c.employeeName }}</td>
-      <td>{{ c.contractTypeName }}</td>
-      <td>{{ c.startDate }} → {{ c.endDate ?? 'Không xác định' }}</td>
-      <td>{{ c.status }}</td>
-      <td>
-        <button
-          type="button"
-          class="btn btn-sm btn-outline-primary"
-          [disabled]="saving"
-          (click)="viewDetail(c.contractId)"
-        >
-          Chi tiết
-        </button>
-      </td>
-    </tr>
-    } @empty {
-    <tr>
-      <td colspan="6">Chưa có hợp đồng phù hợp.</td>
-    </tr>
-    }
-  </tbody>
-</table>
-
-<button
-  class="btn btn-outline-secondary me-2"
-  [disabled]="page === 0"
-  (click)="load(page - 1)"
->
-  Trước
-</button>
-<span>Trang {{ totalPages ? page + 1 : 0 }} / {{ totalPages }}</span>
-<button
-  class="btn btn-outline-secondary ms-2"
-  [disabled]="page + 1 >= totalPages"
-  (click)="load(page + 1)"
->
-  Sau
-</button>
-} @if (detailLoading) {
+@if (detailLoading) {
 <p class="mt-4" role="status">Đang tải chi tiết hợp đồng…</p>
 } @if (detailError) {
 <div class="alert alert-danger mt-4" role="alert">{{ detailError }}</div>
@@ -241,13 +220,7 @@
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h2 class="h4 mb-0">Chi tiết hợp đồng</h2>
 
-      <button
-        type="button"
-        class="btn btn-outline-secondary btn-sm"
-        (click)="closeDetail()"
-      >
-        Đóng
-      </button>
+
     </div>
 
     <dl class="row mb-0">
@@ -473,3 +446,5 @@
   </div>
 </section>
 } }
+</div>
+</app-record-workspace>

@@ -1,3 +1,5 @@
+import {PersonnelWorkspacePage} from './pages/personnel-workspace/personnel-workspace';
+import {CatalogPage} from './pages/catalog/catalog';
 import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
 import { OverviewPage } from "./pages/overview/overview";
@@ -22,6 +24,10 @@ export const routes: Routes = [
       { path: "", redirectTo: "overview", pathMatch: "full" },
       { path: "overview", component: OverviewPage },
       { path: "employees", component: EmployeesPage },
+      {path:'assignments',component:PersonnelWorkspacePage,data:{workspace:'assignments'}},
+      {path:'certificates',component:PersonnelWorkspacePage,data:{workspace:'certificates'}},
+      {path:'leave-entitlements',component:PersonnelWorkspacePage,data:{workspace:'entitlements'}},
+      {path:'audit',component:PersonnelWorkspacePage,data:{workspace:'audit'}},
       { path: "connection", component: ConnectionPage },
       {
         path: "accounts",
@@ -29,15 +35,17 @@ export const routes: Routes = [
         data: { title: "Tài khoản và phân quyền" },
       },
       { path: "departments", component: DepartmentsPage },
+      {path:'department-catalog',component:CatalogPage,data:{catalog:'departments'}},
+      {path:"leave-types",component:CatalogPage,data:{catalog:"leaveTypes"}},
       {
         path: "positions",
-        component: PlaceholderPage,
-        data: { title: "Chức vụ" },
+        component: CatalogPage,
+        data: { catalog: "positions" },
       },
       {
         path: "qualifications",
-        component: PlaceholderPage,
-        data: { title: "Trình độ" },
+        component: CatalogPage,
+        data: { catalog: "qualifications" },
       },
       {
         path: "contracts",
@@ -50,8 +58,8 @@ export const routes: Routes = [
       { path: "attendance/summary", component: AttendanceSummaryPage },
       {
         path: "requests",
-        component: PlaceholderPage,
-        data: { title: "Đơn nghỉ phép / nghỉ việc" },
+        component: PersonnelWorkspacePage,
+        data: { workspace: "requests" },
       },
       { path: "overtime", component: OvertimePage },
       {
