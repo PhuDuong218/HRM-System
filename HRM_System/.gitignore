@@ -3,6 +3,7 @@
 target/
 *.class
 *.log
+/classpath.txt
 
 # IDE / OS
 .vscode/
