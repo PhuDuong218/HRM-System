@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../../shared/translate.pipe';
 import { LanguageService } from "../../services/language.service";
 import { Pagination } from "../../shared/pagination";
 import {
@@ -28,7 +29,7 @@ import {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [Pagination, RecordWorkspace, DecimalPipe],
+  imports: [Pagination, RecordWorkspace, DecimalPipe ,TranslatePipe],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })

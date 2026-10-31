@@ -1,3 +1,4 @@
+import {UI_EN} from './ui-translations';
 import { Injectable, signal } from '@angular/core';
 
 const EN: Record<string, string> = {
@@ -124,6 +125,9 @@ const EN: Record<string, string> = {
   "Chưa kết nối dữ liệu nghiệp vụ nên trang này chưa hiển thị số liệu thống kê.": "Statistics are not available on this page yet."
 };
 
+const DICTIONARY={...EN,...UI_EN};
+const LOWER_DICTIONARY=new Map(Object.entries(DICTIONARY).map(([k,v])=>[k.toLocaleLowerCase(),v]));
+
 @Injectable({ providedIn: 'root' })
 export class LanguageService {
   readonly current = signal<'vi' | 'en'>('vi');
@@ -137,5 +141,13 @@ export class LanguageService {
     document.documentElement.lang = next;
     try { localStorage.setItem('hrm.language', next); } catch {}
   }
-  t(text: string): string { return this.current() === 'en' ? (EN[text] ?? text) : text; }
+  t(text: string): string {
+    if(this.current()!=='en')return text;
+    const original=text.normalize('NFC'),key=original.trim().replace(/\s+/g,' ');
+    const dictionary=DICTIONARY;
+    let translated=dictionary[key] ?? LOWER_DICTIONARY.get(key.toLocaleLowerCase());
+    if(!translated){const match=key.match(/^(.*?)([\s:*()]+)$/);if(match&&dictionary[match[1]])translated=dictionary[match[1]]+match[2];}
+    if(!translated)return text;
+    return original.slice(0,original.length-original.trimStart().length)+translated+original.slice(original.trimEnd().length);
+  }
 }

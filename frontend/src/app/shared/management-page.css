@@ -1,0 +1,95 @@
+/* Shared layout contract for all personnel management pages. */
+.management-page { display:block; min-width:0; }
+/* One personnel workspace: filters and records left; detail/editor right.
+   Scoped to ManagementPageBase so teammates' screens keep their own layout. */
+.management-page app-record-workspace .record-list { container: personnel-list / inline-size; }
+.management-page app-record-workspace .record-detail>[recordDetail].surface,
+.management-page app-record-workspace .record-detail>[recordDetail]>.surface {
+ border:0; border-radius:0; box-shadow:none; margin:0;
+}
+.management-page app-record-workspace .record-detail>[recordDetail]>.surface+.surface { border-top:1px solid var(--bs-border-color,#e4eaf2); }
+.management-page .record-list>.surface { margin-bottom:0!important; }
+.management-page .record-list .filter-bar { padding-bottom:20px; border-bottom:1px solid var(--bs-border-color,#e4eaf2); }
+.management-page .record-list .list-toolbar h2 { font-size:16px; }
+.management-page .count { display:inline-block; margin-inline-start:6px; padding:4px 8px; border-radius:6px; font-size:12px; color:var(--bs-secondary-color,#506278); background:var(--bs-tertiary-bg,#f0f4f8); }
+.management-page .record-list .table { width:100%; margin-bottom:0; }
+.management-page .record-list .table td { vertical-align:middle; overflow-wrap:anywhere; }
+.management-page .record-list .status { justify-self:start; }
+.management-page .record-list .table th:last-child { width:100px; }
+.management-page .record-list .table tr.selected-row>td,
+.management-page .record-list .table tr.selected>td { background:var(--bs-primary-bg-subtle,#eaf3fe); }
+.management-page .record-detail h2 { font-size:20px; line-height:1.4; margin:0 0 20px; }
+.management-page .record-detail h3 { font-size:16px; line-height:1.5; }
+.management-page .record-detail dl { margin:0; }
+.management-page .record-detail dt { margin:16px 0 4px; font-size:12px; color:var(--bs-secondary-color,#60788e); font-weight:600; }
+.management-page .record-detail dd { margin:0 0 14px; overflow-wrap:anywhere; }
+.management-page .record-detail .editor { margin:0; }
+.management-page .record-detail .form-control,.management-page .record-detail .form-select { min-height:42px; }
+.management-page .record-detail textarea.form-control { min-height:88px; }
+.management-page .record-detail label { font-size:13px; font-weight:600; }
+.management-page .record-detail .editor input.ng-invalid.ng-touched,
+.management-page .record-detail .editor select.ng-invalid.ng-touched,
+.management-page .record-detail .editor textarea.ng-invalid.ng-touched { border-color:var(--bs-danger,#b42318); }
+.management-page .record-list .empty { padding:28px 16px; text-align:center; color:var(--bs-secondary-color,#60788e); }
+/* Cards depend on the available list width, not the full window. This is the
+   same interaction as the reference Contracts screen, including split view. */
+@container personnel-list (max-width:740px) {
+ .management-page .record-list .table-responsive::before { display:none; }
+ .management-page .record-list .table { display:block; min-width:0!important; }
+ .management-page .record-list .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+ .management-page .record-list .table tbody { display:grid; gap:12px; }
+ .management-page .record-list .table tbody tr { display:block; border:1px solid var(--bs-border-color,#dde6f0); border-radius:10px; overflow:hidden; }
+ .management-page .record-list .table td { display:grid; grid-template-columns:100px minmax(0,1fr); gap:12px; max-width:none; width:auto; padding:10px 12px; }
+ .management-page .record-list .table td::before { content:attr(data-label); font-size:12px; font-weight:600; color:var(--bs-secondary-color,#64788f); }
+ .management-page .record-list .table td:last-child { border-bottom:0; }
+ .management-page .record-list .table td[colspan] { display:block; padding:24px 16px; }
+ .management-page .record-list .table td[colspan]::before { display:none; }
+ .management-page .record-list .table .btn { justify-self:start; white-space:normal; }
+ .management-page .record-list .table tr.selected-row,
+ .management-page .record-list .table tr.selected { border-color:var(--bs-primary,#004581); }
+ .management-page .record-list .filter-bar { grid-template-columns:repeat(2,minmax(0,1fr)); }
+}
+@container personnel-list (max-width:420px) {
+ .management-page .record-list .filter-bar { grid-template-columns:minmax(0,1fr); }
+ .management-page .record-list .table td { grid-template-columns:85px minmax(0,1fr); gap:8px; }
+}
+@media(max-width:1250px) {
+ /* The drawer owns scrolling on small screens; do not scroll the list behind it. */
+ html:has(.management-page .record-detail) { overflow:hidden; }
+}
+.management-page .filter-bar {
+ display:grid; grid-template-columns:repeat(var(--filter-columns,3),minmax(0,1fr));
+ gap:16px; align-items:end; margin:0 0 20px;
+}
+.management-page .filter-bar:has(>label:only-of-type) { --filter-columns:1; }
+.management-page .filter-bar>label:only-of-type { max-width:560px; }
+.management-page .filter-bar:has(>label:nth-of-type(2)):not(:has(>label:nth-of-type(3))) { --filter-columns:2; }
+.management-page .filter-bar>label { display:grid; gap:7px; min-width:0; margin:0; font-size:13px; font-weight:600; }
+.management-page .filter-bar .form-control,.management-page .filter-bar .form-select { min-height:42px; width:100%; }
+.management-page .filter-actions { grid-column:1/-1; display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap; }
+.management-page .filter-help { grid-column:1/-1; margin:0; font-size:13px; color:var(--bs-secondary-color,#60788e); }
+.management-page .list-toolbar { display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; margin-bottom:16px; }
+.management-page .list-toolbar h2,.management-page .list-toolbar p { margin:0; }
+.management-page .detail-actions,.management-page .form-actions {
+ display:flex; justify-content:flex-end; align-items:center; gap:8px; flex-wrap:wrap;
+ grid-column:1/-1; border-top:1px solid var(--bs-border-color,#e4eaf2); padding-top:16px; margin-top:20px;
+}
+.management-page .detail-actions .action-danger { margin-inline-end:auto; }
+.management-page .form-actions .btn,.management-page .detail-actions .btn,.management-page .filter-actions .btn { min-width:92px; }
+.management-page .btn { display:inline-flex; justify-content:center; align-items:center; gap:6px; min-height:42px; line-height:1.35; }
+.management-page .table .btn { min-height:36px; white-space:nowrap; }
+.management-page .table-responsive { position:relative; }
+/* Bootstrap excludes captions from its absolute-position rule for visually-hidden. */
+.management-page caption.visually-hidden { position:absolute!important; inset-block-start:0; inset-inline-start:0; }
+.management-page .record-detail h2 { margin-bottom:18px; }
+.management-page .record-detail label { min-width:0; }
+.management-page .record-detail .editor>label:has(input[type=checkbox]) { display:flex; align-items:center; gap:8px; }
+.management-page .selection-note { display:flex; align-items:flex-start; gap:8px; padding:12px 14px; margin:14px 0; border-radius:8px; background:var(--bs-tertiary-bg,#f5f7fb); color:var(--bs-secondary-color,#60788e); font-size:13px; }
+.management-page .primary-indicator { display:inline-flex; align-items:center; padding:6px 10px; border-radius:6px; color:var(--bs-success-text-emphasis,#13633c); background:var(--bs-success-bg-subtle,#eaf6ee); font-size:13px; }
+@media(min-width:601px) and (max-width:1000px){.management-page .filter-bar{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){
+ .management-page .filter-bar { grid-template-columns:minmax(0,1fr); gap:12px; }
+ .management-page .btn,.management-page .table .btn { min-height:44px; }
+ .management-page .filter-actions>.btn,.management-page .form-actions>.btn,.management-page .detail-actions>.btn { flex:1 1 130px; min-height:44px; }
+ .management-page .detail-actions .action-danger { margin-inline-end:0; }
+}

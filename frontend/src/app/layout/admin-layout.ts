@@ -1,3 +1,4 @@
+import {TranslatePipe} from '../shared/translate.pipe';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, HostListener, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
@@ -11,7 +12,7 @@ import { LanguageService } from '../services/language.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [DatePipe, RouterLink, RouterLinkActive, RouterOutlet],
+  imports: [DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })
@@ -52,7 +53,10 @@ export class AdminLayout {
     document.documentElement.setAttribute('data-bs-theme', this.darkMode ? 'dark' : 'light');
   }
 
-  menu = navigation;
+  get menu():NavigationItem[]{
+    const role=this.auth.profile()?.role||'';
+    return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:item.children.filter(child=>!child.roles||child.roles.includes(role))}:item);
+  }
   @ViewChild('mobilePanel') private mobilePanel?: ElementRef<HTMLElement>;
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   menuOpen = false;

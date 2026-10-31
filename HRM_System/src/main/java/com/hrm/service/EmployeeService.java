@@ -44,6 +44,8 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
 
     private static final Comparator<EmployeeAssignment> ASSIGNMENT_ORDER = Comparator
             .comparing(EmployeeAssignment::getEffectiveFrom)
@@ -94,7 +96,8 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees() {
         LocalDate asOfDate = businessToday();
-        return employeeRepository.findAllWithAssignments().stream()
+        var allowed = PersonnelScopeService.isHr() ? personnelScope.employees() : null;
+        return employeeRepository.findAllWithAssignments().stream().filter(e -> allowed==null || allowed.contains(e.getEmployeeId()))
                 .map(employee -> convertToDTO(employee, asOfDate))
                 .collect(Collectors.toList());
     }
@@ -120,8 +123,7 @@ public class EmployeeService {
         LocalDate asOf = businessToday();
         String searchKeyword = "%" + (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT)) + "%";
         Pageable pageable = PagingUtils.create(page, size, Sort.by(Sort.Direction.DESC, "employeeId"));
-        Page<Employee> employees = employeeRepository.searchEmployees(
-                searchKeyword, status, departmentId, positionId, asOf, pageable);
+        Page<Employee> employees = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,personnelScope.employees(),pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
         List<Long> employeeIds = employees.getContent().stream()
                 .map(Employee::getEmployeeId)
                 .toList();
@@ -264,7 +266,6 @@ public class EmployeeService {
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
         employee.setPhone(normalizeContactText(requestDTO.getPhone()));
-        employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
         employee.setUpdatedAt(auditNow());
         return convertToDTO(employeeRepository.save(employee));
     }

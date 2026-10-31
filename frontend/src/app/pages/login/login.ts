@@ -1,10 +1,11 @@
+import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { finalize } from 'rxjs';
 import { AuthService, ManagementAccessDeniedError } from '../../services/auth.service';
 
-@Component({
+@Component({imports:[TranslatePipe],
   selector: 'app-login',
   standalone: true,
   templateUrl: './login.html',

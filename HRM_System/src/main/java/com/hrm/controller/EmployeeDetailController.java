@@ -36,7 +36,8 @@ private final EmployeeContactService contactService;
             @PathVariable Long id,
             Principal principal) {
 
-        accessService.requireManager(principal);
+        var actor=com.hrm.service.PersonnelScopeService.current();
+        if(actor==null || !"EMPLOYEE".equals(actor.roleCode()) || !java.util.Objects.equals(actor.employeeId(),id)) accessService.requireManager(principal);
 
         return employeeService.getEmployeeDetailById(id);
     }

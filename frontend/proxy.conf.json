@@ -9,10 +9,42 @@
     "secure": false,
     "changeOrigin": true
   },
-  "/api": {
+  "/api/management": {
     "target": "http://localhost:2005",
-    "pathRewrite": { "^/api": "" },
     "secure": false,
     "changeOrigin": true
+  },
+  "/api/overtime": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/admin": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/me": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/attendance": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/reports": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true,
+    "pathRewrite": {
+      "^/api": ""
+    }
   }
 }
