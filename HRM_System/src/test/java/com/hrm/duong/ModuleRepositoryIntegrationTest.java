@@ -85,7 +85,7 @@ class ModuleRepositoryIntegrationTest {
         assertEquals(0,jdbc.queryForObject("select count(*) from dbo.employee_decisions",Integer.class));
     }
     @Test void realActorQueryRejectsInactiveAndEmployeeRole(){
-        jdbc.update("insert into dbo.roles values (1,'ADMIN'),(2,'EMPLOYEE')");
+        jdbc.update("insert into dbo.roles(role_id,role_code,role_name) values (1,'ADMIN','Admin'),(2,'EMPLOYEE','Employee')");
         jdbc.update("""
             insert into dbo.accounts(account_id,employee_id,role_id,is_active,username,password_hash,token_version,created_at)
             values (10,1,1,true,'synthetic-admin','test-only-unused-hash',0,CURRENT_TIMESTAMP),

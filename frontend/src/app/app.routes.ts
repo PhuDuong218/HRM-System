@@ -1,43 +1,78 @@
 import { Routes } from "@angular/router";
+import { PersonnelWorkspacePage } from "./pages/personnel-workspace/personnel-workspace";
+import { CatalogPage } from "./pages/catalog/catalog";
 import { AdminLayout } from "./layout/admin-layout";
-import { OverviewPage } from "./pages/overview/overview";
 import { EmployeesPage } from "./pages/employees/employees";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { DepartmentsPage } from "./pages/departments/departments";
-import { LoginPage } from "./pages/login/login";
 import { authGuard } from "./services/auth.guard";
 export const routes: Routes = [
-  { path: "login", component: LoginPage },
+  { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
   {
     path: "",
     component: AdminLayout,
     canActivate: [authGuard],
     children: [
       { path: "", redirectTo: "overview", pathMatch: "full" },
-      { path: "overview", component: OverviewPage },
+      { path: "overview", loadComponent: () => import("./pages/overview/overview").then(m => m.OverviewPage) },
       { path: "employees", component: EmployeesPage },
+      {
+        path: "assignments",
+        component: PersonnelWorkspacePage,
+        data: { workspace: "assignments" },
+      },
+      {
+        path: "certificates",
+        component: PersonnelWorkspacePage,
+        data: { workspace: "certificates" },
+      },
+      {
+        path: "leave-entitlements",
+        component: PersonnelWorkspacePage,
+        data: { workspace: "entitlements" },
+      },
+      {
+        path: "audit",
+        component: PersonnelWorkspacePage,
+        data: { workspace: "audit" },
+      },
       { path: "connection", component: ConnectionPage },
       {
         path: "accounts",
-        component: PlaceholderPage,
-        data: { title: "Tài khoản và phân quyền" },
+        loadComponent: () =>
+          import("./pages/accounts/accounts").then((m) => m.AccountsPage),
       },
       { path: "departments", component: DepartmentsPage },
       {
+        path: "department-catalog",
+        component: CatalogPage,
+        data: { catalog: "departments" },
+      },
+      {
+        path: "leave-types",
+        component: CatalogPage,
+        data: { catalog: "leaveTypes" },
+      },
+      {
         path: "positions",
-        component: PlaceholderPage,
-        data: { title: "Chức vụ" },
+        component: CatalogPage,
+        data: { catalog: "positions" },
       },
       {
         path: "qualifications",
-        component: PlaceholderPage,
-        data: { title: "Trình độ" },
+        component: CatalogPage,
+        data: { catalog: "qualifications" },
       },
       {
         path: "contracts",
         loadComponent: () =>
           import("./pages/contracts/contracts").then((m) => m.ContractsPage),
+      },
+      {
+        path: "contract-types",
+        loadComponent: () =>
+          import("./pages/contract-types/contract-types").then((m) => m.ContractTypesPage),
       },
       {
         path: "schedules",
@@ -51,8 +86,8 @@ export const routes: Routes = [
       },
       {
         path: "requests",
-        component: PlaceholderPage,
-        data: { title: "Đơn nghỉ phép / nghỉ việc" },
+        component: PersonnelWorkspacePage,
+        data: { workspace: "requests" },
       },
       {
         path: "overtime",
@@ -81,8 +116,8 @@ export const routes: Routes = [
       },
       {
         path: "reports",
-        component: PlaceholderPage,
-        data: { title: "Báo cáo" },
+        loadComponent: () =>
+          import("./pages/reports/reports").then((m) => m.ReportsPage),
       },
       {
         path: "forbidden",

@@ -1,11 +1,13 @@
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
-import { Component, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
+import { Component, HostListener, DestroyRef, ElementRef, ViewChild, inject } from '@angular/core';
 import { NavigationEnd, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter, finalize } from 'rxjs';
 import { AuthService } from '../services/auth.service';
 import { navigation, NavigationItem } from '../navigation';
+import { LanguageService } from '../services/language.service';
+import { ThemeService } from '../services/theme.service';
 
 @Component({
   selector: 'app-admin-layout',
@@ -22,6 +24,9 @@ export class AdminLayout {
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
   auth = inject(AuthService);
+  language = inject(LanguageService);
+  private theme = inject(ThemeService);
+  showLoginSuccess = (this.router.getCurrentNavigation()?.extras.info as { showLoginSuccess?: boolean } | undefined)?.showLoginSuccess === true;
   loggingOut = false;
   logoutError = '';
   profileLoading = false;
@@ -31,9 +36,58 @@ export class AdminLayout {
   showCurrentPassword = false;
   showNewPassword = false;
   showConfirmPassword = false;
+  get darkMode(): boolean { return this.theme.darkMode(); }
+  toggleTheme(): void { this.theme.toggle(); }
+
   menu = navigation;
+  @ViewChild('mobilePanel') private mobilePanel?: ElementRef<HTMLElement>;
+  @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
   menuOpen = false;
-  expandedGroup: string | null = null;
+  toggleMobileMenu(): void {
+    this.menuOpen = !this.menuOpen;
+    if(this.menuOpen) requestAnimationFrame(()=>this.mobilePanel?.nativeElement.querySelector<HTMLButtonElement>('.mobile-close')?.focus());
+  }
+  closeMobileMenu(): void { this.menuOpen=false;this.menuTrigger?.nativeElement.focus(); }
+  @HostListener('document:keydown.escape') closeMenuOnEscape(): void { this.closeFlyout(); if(this.menuOpen)this.closeMobileMenu(); }
+  menuKeydown(event: KeyboardEvent): void {
+    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:800px)').matches)return;
+    const controls=Array.from(this.mobilePanel?.nativeElement.querySelectorAll<HTMLElement>('a[href],button:not(:disabled)')||[]).filter(x=>x.getClientRects().length>0);
+    const first=controls[0],last=controls[controls.length-1];
+    if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
+    else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first?.focus();}
+  }
+  sidebarCollapsed = false;
+  flyout: NavigationItem | null = null;
+  flyoutTop = 12;
+  readonly menuIcons: Record<string, string> = {
+    overview: 'M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z',
+    personnel: 'M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2 M9 11a4 4 0 1 0 0-8 4 4 0 0 0 0 8 M22 21v-2a4 4 0 0 0-3-3.87 M16 3.13a4 4 0 0 1 0 7.75',
+    time: 'M12 8v4l3 2 M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0',
+    pay: 'M3 6h18v14H3z M3 6l14-3v3 M16 11h5v5h-5z M17 13h1',
+    organization: 'M9 3h6v5H9z M3 16h6v5H3z M15 16h6v5h-6z M12 8v4 M6 16v-4h12v4',
+    reports: 'M4 3h12l4 4v14H4z M15 3v5h5 M8 17v-3 M12 17v-6 M16 17v-4',
+    system: 'M12 3v3 M12 18v3 M3 12h3 M18 12h3 M5.6 5.6l2.1 2.1 M16.3 16.3l2.1 2.1 M5.6 18.4l2.1-2.1 M16.3 7.7l2.1-2.1 M16 12a4 4 0 1 1-8 0 4 4 0 0 1 8 0'
+  };
+
+  toggleSidebar(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+    this.closeFlyout();
+  }
+
+  previewGroup(item: NavigationItem, event?: Event): void {
+    if (!this.sidebarCollapsed || !window.matchMedia('(min-width:801px)').matches) return;
+    const rect = (event?.currentTarget as HTMLElement | null)?.getBoundingClientRect();
+    this.flyoutTop = Math.max(12, Math.min(rect?.top ?? 100, window.innerHeight - 360));
+    this.flyout = item;
+  }
+
+  closeFlyout(): void { this.flyout = null; }
+
+  railFocusOut(event: FocusEvent): void {
+    if (!(event.currentTarget as HTMLElement).contains(event.relatedTarget as Node | null)) this.closeFlyout();
+  }
+
+  expandedGroups = new Set<string>();
 
   constructor() {
     this.refreshProfile();
@@ -43,6 +97,7 @@ export class AdminLayout {
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(() => {
       this.expandCurrentGroup();
+      this.closeFlyout();
       this.menuOpen = false;
     });
   }
@@ -124,8 +179,13 @@ export class AdminLayout {
     ).subscribe({ error: () => this.profileError = 'Không tải được hồ sơ. Vui lòng thử lại.' });
   }
 
-  toggleGroup(id: string): void {
-    this.expandedGroup = this.expandedGroup === id ? null : id;
+  toggleGroup(id: string, event?: Event): void {
+    if (this.sidebarCollapsed && window.matchMedia('(min-width:801px)').matches) {
+      const group = this.menu.find(item => item.id === id);
+      if (group) this.previewGroup(group, event);
+      return;
+    }
+    if (this.expandedGroups.has(id)) this.expandedGroups.delete(id); else this.expandedGroups.add(id);
   }
 
   isGroupActive(item: NavigationItem): boolean {
@@ -135,7 +195,8 @@ export class AdminLayout {
   }
 
   private expandCurrentGroup(): void {
-    this.expandedGroup = this.menu.find(item => this.isGroupActive(item))?.id ?? null;
+    const current = this.menu.find(item => this.isGroupActive(item));
+    if (current) this.expandedGroups.add(current.id);
   }
 
   confirmLogout(): void {

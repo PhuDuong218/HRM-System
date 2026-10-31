@@ -8,6 +8,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 @Component
+@org.springframework.boot.autoconfigure.condition.ConditionalOnProperty(
+    name="hrm.contracts.expiry-job-enabled", havingValue="true", matchIfMissing=true)
 public class ContractExpiryJob {
     private static final Logger log=LoggerFactory.getLogger(ContractExpiryJob.class);
     private final ContractLifecycleService lifecycle;

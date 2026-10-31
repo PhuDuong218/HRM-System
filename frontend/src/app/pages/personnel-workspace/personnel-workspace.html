@@ -1,0 +1,38 @@
+<header class="d-flex align-items-center justify-content-between gap-3"><h1>{{config.title}}</h1>
+@if(kind==='assignments'){<button class="btn btn-primary" [disabled]="!employeeId||saving" (click)="startTransfer()">Điều chuyển nhân viên</button>}
+@if(kind==='certificates'||kind==='entitlements'){<button class="btn btn-primary" [disabled]="saving||(kind==='certificates'&&!employeeId)" (click)="open(null)">Thêm mới</button>}
+@if(kind==='requests'&&admin){<button class="btn btn-outline-danger" [disabled]="saving" (click)="execute()">Thực thi nghỉ việc đến hạn</button>}
+</header>
+@if(error){<p class="alert alert-danger" role="alert">{{error}}</p>}@if(message){<p class="alert alert-success" role="status">{{message}}</p>}
+@if(lookupError){<p class="alert alert-warning">{{lookupError}} <button class="btn btn-sm btn-outline-secondary" (click)="loadOptions()">Tải lại lựa chọn</button></p>}
+<section class="surface my-3"><div class="toolbar">
+@if(kind==='assignments'||kind==='certificates'||kind==='entitlements'){<label>Nhân viên<select class="form-select" [(ngModel)]="employeeId" [disabled]="saving" (change)="filter()"><option [ngValue]="null">{{kind==='certificates'?'Chọn nhân viên':'Tất cả nhân viên'}}</option>@for(e of options['employees'];track e['id']){<option [ngValue]="e['id']">{{e['label']}}</option>}</select></label>}
+@if(kind==='requests'){<label>Trạng thái<select class="form-select" [(ngModel)]="status" [disabled]="saving" (change)="filter()"><option value="">Tất cả</option><option value="CHO_DUYET">Chờ duyệt</option><option value="DA_DUYET">Đã duyệt</option><option value="TU_CHOI">Từ chối</option></select></label><label>Loại đơn<select class="form-select" [(ngModel)]="requestType" [disabled]="saving" (change)="filter()"><option value="">Tất cả</option><option value="NGHI_PHEP">Nghỉ phép</option><option value="NGHI_VIEC">Nghỉ việc</option></select></label>}
+@if(kind==='audit'){<label>Đối tượng<select class="form-select" [(ngModel)]="table" [disabled]="saving" (change)="recordId=null;filter()">@for(t of tables;track t[0]){<option [value]="t[0]">{{t[1]}}</option>}</select></label>@if(table==='employees'){<label>Nhân viên<select class="form-select" [(ngModel)]="recordId"><option [ngValue]="null">Chọn nhân viên</option>@for(e of options['employees'];track e['id']){<option [ngValue]="e['id']">{{e['label']}}</option>}</select></label>}@else{<label>ID bản ghi<input class="form-control" type="number" min="1" [(ngModel)]="recordId"></label>}<button class="btn btn-primary" [disabled]="(!advancedAudit&&(!recordId||recordId<1))||loading" (click)="filter()">Tra cứu</button>}
+@if(kind==='audit'&&admin){<label><input type="checkbox" [(ngModel)]="advancedAudit" (change)="filter()"> Tra cứu mở rộng (ADMIN)</label>@if(advancedAudit){<label>ID tài khoản thực hiện<input class="form-control" type="number" min="1" [(ngModel)]="actorId"></label><label>Từ thời điểm UTC<input class="form-control" type="datetime-local" [(ngModel)]="fromUtc"></label><label>Đến trước thời điểm UTC<input class="form-control" type="datetime-local" [(ngModel)]="toUtc"></label>}}
+<button class="btn btn-outline-primary" [disabled]="loading||saving" (click)="load(page)">Tải lại</button>
+</div></section>
+@if(kind==='entitlements'&&balances.length){<section class="surface mb-3"><h2>Số dư phép theo nhân viên</h2>@for(balance of balances;track $index){<dl>@for(pair of balance|keyvalue;track pair.key){<dt>{{labels[pair.key]||pair.key}}</dt><dd>{{display(pair.key,pair.value)}}</dd>}</dl>}</section>}
+<app-record-workspace [open]="!!mode" [busy]="saving" (dismiss)="close()">
+<section recordList class="surface"><p>Tổng {{total}} bản ghi</p>@if(loading){<p role="status">Đang tải dữ liệu…</p>}
+<div class="table-responsive"><table class="table align-middle"><thead><tr>@for(c of config.columns;track c){<th>{{labels[c]||c}}</th>}<th>Thao tác</th></tr></thead><tbody>
+@for(row of rows;track row[config.id]){<tr [class.selected]="selected?.[config.id]===row[config.id]">@for(c of config.columns;track c){<td>{{display(c,row[c])}}</td>}<td><button class="btn btn-sm btn-outline-primary" [disabled]="saving" (click)="open(row)">Chi tiết</button></td></tr>}@empty{<tr><td [attr.colspan]="config.columns.length+1">{{loading?'Đang tải…':kind==='certificates'&&!employeeId?'Chọn nhân viên để xem bằng cấp.':kind==='audit'&&!recordId?'Chọn đối tượng và ID bản ghi để xem lịch sử.':'Không có dữ liệu phù hợp. Hãy đổi bộ lọc hoặc tải lại.'}}</td></tr>}
+</tbody></table></div><app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" /></section>
+<section recordDetail class="surface"><h2>{{mode==='edit'?'Cập nhật':'Chi tiết'}} {{config.title.toLowerCase()}}</h2>
+@if(mode==='detail'){<dl class="detail-grid">@for(entry of detailEntries();track entry[0]){<dt>{{labels[entry[0]]}}</dt><dd>{{display(entry[0],entry[1])}}</dd>}</dl>
+@if(kind==='certificates'||kind==='entitlements'){<button class="btn btn-primary me-2" [disabled]="saving" (click)="mode='edit'">Sửa</button>}
+@if(kind==='certificates'){<button class="btn btn-outline-primary me-2" [disabled]="saving||selected?.['isPrimary']" (click)="primary()">Chọn trình độ chính</button><button class="btn btn-outline-danger" [disabled]="saving" (click)="removeCertificate()">Gỡ khỏi hồ sơ</button>}
+@if(kind==='audit'){<h3>Trước thay đổi</h3><dl>@for(e of snapshot('beforeDataJson');track e[0]){<dt>{{e[0]}}</dt><dd>{{e[1]}}</dd>}</dl><h3>Sau thay đổi</h3><dl>@for(e of snapshot('afterDataJson');track e[0]){<dt>{{e[0]}}</dt><dd>{{e[1]}}</dd>}</dl>}
+@if(kind==='requests'){
+@if(selected?.['allocations']?.length){<h3>Phân bổ giờ nghỉ</h3><table class="table"><thead><tr><th>Lịch</th><th>Giờ trừ</th></tr></thead><tbody>@for(a of selected?.['allocations'];track a['scheduleId']){<tr><td>{{a['scheduleId']}}</td><td>{{a['chargedHours']}}</td></tr>}</tbody></table>}
+@if(selected?.['status']==='CHO_DUYET'&&!selected?.['withdrawnAt']){<label>Ghi chú duyệt / lý do từ chối<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label>@if(selected?.['requestType']==='NGHI_VIEC'){<label class="my-3">Ngày làm cuối được duyệt<input class="form-control" type="date" [(ngModel)]="approvedDate" [disabled]="saving"></label>}<div class="d-flex gap-2 mt-3"><button class="btn btn-primary" [disabled]="saving||loading" (click)="decision(true)">Duyệt</button><button class="btn btn-outline-danger" [disabled]="saving||loading||!note.trim()" (click)="decision(false)">Từ chối</button></div>}}
+}
+@if(mode==='edit'){<form #f="ngForm" (ngSubmit)="save(f)"><fieldset class="editor" [disabled]="saving">
+@for(field of fields;track field.key){<label>{{field.label}}{{field.required?' *':''}}
+@if(field.type==='select'){<select class="form-select" [name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required"><option [ngValue]="null">Chọn {{field.label.toLowerCase()}}</option>@for(o of options[field.options!];track o['id']){@if(o['isActive']!==false||o['id']===body[field.key]){<option [ngValue]="o['id']">{{o['label']}}</option>}}</select>}
+@else if(field.type==='checkbox'){<input type="checkbox" [name]="field.key" [(ngModel)]="body[field.key]">}
+@else{<input class="form-control" [type]="field.type" [name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required" [attr.maxlength]="field.max||null" [min]="field.min??0" [step]="field.key==='entitledHours'?'0.0001':'1'">}
+@if(f.controls[field.key]?.invalid&&f.controls[field.key]?.touched){<span class="text-danger small">{{field.label}} chưa hợp lệ.</span>}</label>}
+<button class="btn btn-primary" [disabled]="saving||f.invalid">{{saving?'Đang lưu…':'Lưu thay đổi'}}</button>
+</fieldset></form>}
+</section></app-record-workspace>

@@ -52,14 +52,14 @@ public class PositionController {
     @GetMapping(params = {
             "!page", "!size", "!keyword", "!active"
     })
-    @PreAuthorize("hasAuthority('position.view')")
+    @PreAuthorize("hasAnyAuthority('position.view','POSITION_MANAGE')")
     public List<PositionDTO> getAllPositions() {
         return positionService.getAllPositions();
     }
 
     // 2. Tim kiem va phan trang
     @GetMapping({ "", "/search" })
-    @PreAuthorize("hasAuthority('position.view')")
+    @PreAuthorize("hasAnyAuthority('position.view','POSITION_MANAGE')")
     public Page<PositionDTO> searchPositions(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -75,7 +75,7 @@ public class PositionController {
 
     // 3. Xem chi tiet chuc vu
     @GetMapping("/{id}")
-    @PreAuthorize("hasAuthority('position.view')")
+    @PreAuthorize("hasAnyAuthority('position.view','POSITION_MANAGE')")
     public PositionDTO getPositionById(
             @PathVariable Long id) {
 
@@ -85,7 +85,7 @@ public class PositionController {
     // 4. Tao chuc vu va ghi audit
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    @PreAuthorize("hasAuthority('position.create')")
+    @PreAuthorize("hasAnyAuthority('position.create','POSITION_MANAGE')")
     public PositionDTO addPosition(
             @Valid @RequestBody PositionRequestDTO requestDTO) {
 
@@ -96,7 +96,7 @@ public class PositionController {
 
     // 5. Cap nhat chuc vu va ghi audit
     @PutMapping("/{id}")
-    @PreAuthorize("hasAuthority('position.update')")
+    @PreAuthorize("hasAnyAuthority('position.update','POSITION_MANAGE')")
     public PositionDTO updatePosition(
             @PathVariable Long id,
             @Valid @RequestBody PositionRequestDTO requestDTO) {
@@ -109,7 +109,7 @@ public class PositionController {
 
     // 6. Vo hieu hoa chuc vu va ghi audit
     @DeleteMapping(value = "/{id}", produces = "text/plain;charset=UTF-8")
-    @PreAuthorize("hasAuthority('position.delete')")
+    @PreAuthorize("hasAnyAuthority('position.delete','POSITION_MANAGE')")
     public ResponseEntity<String> deletePosition(
             @PathVariable Long id) {
 

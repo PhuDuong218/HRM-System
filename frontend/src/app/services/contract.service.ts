@@ -9,6 +9,7 @@ import {
   ContractRenewRequest,
   ContractTerminateRequest,
   PageResponse,
+  ContractTypeRequest,
 } from "../models/contract.model";
 
 @Injectable({ providedIn: "root" })
@@ -56,5 +57,23 @@ export class ContractService {
       `${API_BASE_URL}/contracts/${id}/terminate`,
       request,
     );
+  }
+
+  createType(request: ContractTypeRequest) {
+    return this.http.post<ContractTypeResponse>(
+      `${API_BASE_URL}/contract-types`,
+      request,
+    );
+  }
+
+  updateType(id: number, request: ContractTypeRequest) {
+    return this.http.put<ContractTypeResponse>(
+      `${API_BASE_URL}/contract-types/${id}`,
+      request,
+    );
+  }
+
+  deactivateType(id: number) {
+    return this.http.delete<void>(`${API_BASE_URL}/contract-types/${id}`);
   }
 }

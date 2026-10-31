@@ -15,7 +15,9 @@ public record EmployeeTransferRequestDTO(
         Long positionId,
 
         @NotNull(message = "Ngày điều chuyển không được để trống")
-        LocalDate effectiveFrom
+        LocalDate effectiveFrom,
+        @jakarta.validation.constraints.Size(max=1000) String reason
 
 ) {
+    public EmployeeTransferRequestDTO(Long departmentId,Long positionId,LocalDate effectiveFrom) { this(departmentId,positionId,effectiveFrom,null); }
 }

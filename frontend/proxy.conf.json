@@ -9,6 +9,16 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/admin": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/reports": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:2005",
     "pathRewrite": { "^/api": "" },

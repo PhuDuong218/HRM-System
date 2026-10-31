@@ -47,3 +47,9 @@ export interface ContractTerminateRequest {
   terminationDate: string;
   reason: string;
 }
+
+export interface ContractTypeRequest {
+  typeCode: string;
+  typeName: string;
+  isActive: boolean | null;
+}
