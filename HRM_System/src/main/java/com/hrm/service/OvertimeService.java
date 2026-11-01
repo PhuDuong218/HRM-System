@@ -82,32 +82,14 @@ public class OvertimeService {
                 actor, action, Long.toString(id), reason, before, snapshot(id));
     }
 
-    private void checkRange(long employee, LocalDateTime start, LocalDateTime end, long skip) {
-        OvertimePolicy.validateRequest(start, end, "OT");
-        Long overlaps = db.queryForObject(
-                "SELECT COUNT_BIG(*) FROM dbo.overtime_requests WITH (HOLDLOCK) WHERE employee_id=? AND overtime_id<>? AND status NOT IN ('TU_CHOI','DA_HUY') AND requested_start<? AND requested_end>?",
-                Long.class, employee, skip, end, start);
-        need(overlaps != null && overlaps == 0, "Overlapping OT request");
-        Long shift = db.queryForObject(
-                "SELECT COUNT_BIG(*) FROM dbo.work_schedules WITH (HOLDLOCK) WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>?",
-                Long.class, employee, end, start);
-        need(shift != null && shift == 0, "OT overlaps scheduled work");
-        LocalDate d = start.toLocalDate();
-        while (!d.isAfter(end.toLocalDate())) {
-            LocalDateTime lo = d.atStartOfDay(), hi = d.plusDays(1).atStartOfDay();
-            long ot = Math.max(0, Duration.between(max(start, lo), min(end, hi)).toMinutes());
-            Long regular = db.queryForObject(
-                    "SELECT COALESCE(SUM(DATEDIFF_BIG(MINUTE,CASE WHEN planned_start>? THEN planned_start ELSE ? END,CASE WHEN planned_end<? THEN planned_end ELSE ? END)),0) FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>?",
-                    Long.class, lo, lo, hi, hi, employee, hi, lo);
-            // Conservative scheduled gross minutes. Never treat planned break as confirmed
-            // work.
-            Long other = db.queryForObject(
-                    "SELECT COALESCE(SUM(DATEDIFF_BIG(MINUTE,CASE WHEN requested_start>? THEN requested_start ELSE ? END,CASE WHEN requested_end<? THEN requested_end ELSE ? END)),0) FROM dbo.overtime_requests WHERE employee_id=? AND overtime_id<>? AND status IN ('CHO_DUYET','DA_DUYET') AND requested_start<? AND requested_end>?",
-                    Long.class, lo, lo, hi, hi, employee, skip, hi, lo);
-            need((regular == null ? 0 : regular) + (other == null ? 0 : other) + ot <= 720,
-                    "Projected daily work exceeds 12 hours; manual review required");
-            d = d.plusDays(1);
-        }
+    private void checkRange(long employee, LocalDateTime start, LocalDateTime end, long skip, List<BreakInput> breaks) {
+        new OvertimePlanningService(db).check(employee,start,end,skip,breaks);
+    }
+    private void savePlanned(long id,Register body,long actor){
+        db.update("UPDATE dbo.overtime_requests SET work_content=?,requested_break_status='VERIFIED' WHERE overtime_id=?",body.workContent(),id);
+        db.update("UPDATE dbo.overtime_requested_breaks SET is_active=0 WHERE overtime_id=? AND is_active=1",id);
+        for(var rest:OvertimePlanningService.validate(body.requestedStart(),body.requestedEnd(),body.breaks()))
+            db.update("INSERT dbo.overtime_requested_breaks(overtime_id,break_start,break_end,created_by) VALUES(?,?,?,?)",id,rest.breakStart(),rest.breakEnd(),actor);
     }
 
     private static LocalDateTime min(LocalDateTime a, LocalDateTime b) {
@@ -118,9 +100,9 @@ public class OvertimeService {
         return a.isAfter(b) ? a : b;
     }
 
-    private static void registrationWindow(LocalDateTime start) {
+    private static void registrationWindow(LocalDateTime start,LocalDateTime end) {
         LocalDate now = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-        need(OvertimePolicy.withinSubmissionWindow(start.toLocalDate(), now)
+        need(OvertimePolicy.withinSubmissionWindow(end.toLocalDate(), now)
                 && OvertimePolicy.withinAdvanceWindow(start.toLocalDate(), now), "OT is outside submission window");
     }
 
@@ -128,13 +110,14 @@ public class OvertimeService {
     public OvertimeView register(AuthenticatedAccount principal, Register body) {
         VerifiedActor a = perms.requireSelfRegistration(principal);
         OvertimePolicy.validateRequest(body.requestedStart(), body.requestedEnd(), body.reason());
-        registrationWindow(body.requestedStart());
+        registrationWindow(body.requestedStart(),body.requestedEnd());
         lockEmployee(a.employeeId());
-        checkRange(a.employeeId(), body.requestedStart(), body.requestedEnd(), -1);
+        checkRange(a.employeeId(), body.requestedStart(), body.requestedEnd(), -1,body.breaks());
         String code = "OT-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
         Long id = db.queryForObject(
-                "INSERT INTO dbo.overtime_requests(employee_id,request_code,requested_start,requested_end,reason) OUTPUT INSERTED.overtime_id VALUES(?,?,?,?,?)",
-                Long.class, a.employeeId(), code, body.requestedStart(), body.requestedEnd(), body.reason().trim());
+                "SET NOCOUNT ON; DECLARE @ids TABLE(id bigint); INSERT INTO dbo.overtime_requests(employee_id,request_code,requested_start,requested_end,reason,created_by) OUTPUT INSERTED.overtime_id INTO @ids VALUES(?,?,?,?,?,?); SELECT id FROM @ids;",
+                Long.class, a.employeeId(), code, body.requestedStart(), body.requestedEnd(), body.reason().trim(),a.accountId());
+        savePlanned(id,body,a.accountId());
         audit(a.accountId(), id, "OT_REGISTER", body.reason(), null);
         return load(id);
     }
@@ -145,11 +128,12 @@ public class OvertimeService {
         VerifiedActor a = perms.requireOwner(principal, v.employeeId());
         need("CHO_DUYET".equals(v.status()), "Only pending requests are editable");
         OvertimePolicy.validateRequest(body.requestedStart(), body.requestedEnd(), body.reason());
-        registrationWindow(body.requestedStart());
-        checkRange(v.employeeId(), body.requestedStart(), body.requestedEnd(), id);
+        registrationWindow(body.requestedStart(),body.requestedEnd());
+        checkRange(v.employeeId(), body.requestedStart(), body.requestedEnd(), id,body.breaks());
         String before = snapshot(id);
         db.update("UPDATE dbo.overtime_requests SET requested_start=?,requested_end=?,reason=? WHERE overtime_id=?",
                 body.requestedStart(), body.requestedEnd(), body.reason().trim(), id);
+        savePlanned(id,body,a.accountId());
         audit(a.accountId(), id, "OT_EDIT", body.reason(), before);
         return load(id);
     }
@@ -162,7 +146,7 @@ public class OvertimeService {
         if (!approve && (reason == null || reason.isBlank()))
             throw bad("Rejection reason required");
         if (approve)
-            checkRange(v.employeeId(), v.requestedStart(), v.requestedEnd(), id);
+            checkRange(v.employeeId(), v.requestedStart(), v.requestedEnd(), id,new OvertimePlanningService(db).rests(id));
         if (approve && a.employeeId() != null && a.employeeId() == v.employeeId())
             throw conflict("An OT applicant cannot self-approve");
         String before = snapshot(id);
@@ -234,6 +218,21 @@ public class OvertimeService {
                 v.processedBy() == null ? 0 : v.processedBy());
         need("DA_DUYET".equals(v.status()) && v.confirmedBy() == null && v.actualStart() != null
                 && v.actualEnd() != null, "OT is not ready for confirmation");
+        checkedMinutes(v);
+        String before = snapshot(id);
+        db.update("UPDATE dbo.overtime_requests SET confirmed_by=?,confirmed_at=SYSUTCDATETIME() WHERE overtime_id=?",
+                a.accountId(), id);
+        audit(a.accountId(), id, "OT_CONFIRM", null, before);
+        return load(id);
+    }
+
+    public Map<LocalDate,Long> previewConfirmation(AuthenticatedAccount principal,long id){
+        var v=load(id);perms.requireView(principal,v.employeeId(),v.requestedStart().toLocalDate());
+        need("DA_DUYET".equals(v.status())&&v.actualStart()!=null&&v.actualEnd()!=null,"Cần đơn đã duyệt có giờ thực tế.");
+        return checkedMinutes(v);
+    }
+    private Map<LocalDate,Long> checkedMinutes(OvertimeView v){
+        long id=v.overtimeId();
         boolean overflow = v.actualStart().isBefore(v.requestedStart()) || v.actualEnd().isAfter(v.requestedEnd());
         if (overflow) {
             Long pending = db.queryForObject(
@@ -310,11 +309,7 @@ public class OvertimeService {
             need((regular == null ? 0 : regular) + otherMinutes + entry.getValue() <= 720,
                     "Daily 12-hour net limit exceeded: " + day);
         }
-        String before = snapshot(id);
-        db.update("UPDATE dbo.overtime_requests SET confirmed_by=?,confirmed_at=SYSUTCDATETIME() WHERE overtime_id=?",
-                a.accountId(), id);
-        audit(a.accountId(), id, "OT_CONFIRM", null, before);
-        return load(id);
+        return recognized;
     }
 
     /**

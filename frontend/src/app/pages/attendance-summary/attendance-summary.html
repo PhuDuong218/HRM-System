@@ -1,59 +1,17 @@
-<p class="eyebrow">{{ "N-11 · BẢN SAO ĐỘC LẬP" | translate }}</p>
-<h1>{{ "Tổng hợp công xác nhận theo kỳ" | translate }}</h1>
-<p class="page-description">{{ "Chỉ hiển thị công đã xác nhận, không thay thế bảng công chi tiết." | translate }}</p>
-<div class="alert alert-info">{{ "Giao diện kiểm tra dữ liệu thật (chỉ đọc). Các chức năng tạo/sửa/duyệt/xác nhận đang khóa chờ phê duyệt tích hợp và xác minh RBAC, DTO." | translate }}</div>
-<section class="surface mb-3">
-    <div class="row g-3 align-items-end">
-        <div class="col-md-3"><label class="form-label">{{ "Từ ngày" | translate }}</label><input class="form-control" type="date"
-                [(ngModel)]="from"></div>
-        <div class="col-md-3"><label class="form-label">{{ "Đến ngày" | translate }}</label><input class="form-control" type="date"
-                [(ngModel)]="to"></div>
-        <div class="col-md-3"><label class="form-label">{{ "Mã nhân viên" | translate }}</label><input class="form-control" type="number"
-                min="1" [(ngModel)]="employeeId"></div>
-        <div class="col-md-auto"><button class="btn btn-primary" (click)="load()" [disabled]="loading">{{(loading?'Đang
-                tải...':'Tìm kiếm / tải dữ liệu') | translate}}</button></div>
-    </div>
-</section>
-<div *ngIf="error" class="alert alert-warning" role="alert">{{(error) | translate}}</div>
-<section class="surface">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <h2 class="h5 mb-0">{{ "Danh sách kết quả (" | translate }}{{records.length}})</h2><span class="badge text-bg-secondary">{{ "Chỉ đọc" | translate }}</span>
-    </div>
-    <div class="table-responsive">
-        <table class="table table-hover align-middle">
-            <thead>
-                <tr>
-                    <th>{{ "Nhân viên" | translate }}</th>
-                    <th>{{ "Ngày làm" | translate }}</th>
-                    <th>{{ "Bản ghi hiện diện" | translate }}</th>
-                    <th>{{ "Phút công thuần" | translate }}</th>
-                    <th>{{ "Chi tiết" | translate }}</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr *ngFor="let item of records">
-                    <td>{{v(item,'employeeId')}}</td>
-                    <td>{{v(item,'workDate')}}</td>
-                    <td>{{v(item,'presentRecords')}}</td>
-                    <td>{{v(item,'netMinutes')}}</td>
-                    <td><button type="button" class="btn btn-sm btn-outline-primary"
-                            (click)="selected=item">Xem</button></td>
-                </tr>
-                <tr *ngIf="!records.length">
-                    <td [attr.colspan]="5" class="text-center text-muted py-4">{{ "Chưa có bản ghi. Nhấn Tìm kiếm để tải dữ liệu." | translate }}</td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-</section>
-<section *ngIf="selected" class="surface mt-3">
-    <div class="d-flex justify-content-between">
-        <h2 class="h5">{{ "Thông tin chi tiết" | translate }}</h2><button type="button" class="btn btn-outline-secondary btn-sm"
-            (click)="selected=null">{{ "Đóng" | translate }}</button>
-    </div>
-    <dl class="row mb-0"><ng-container *ngFor="let field of selected | keyvalue">
-            <dt class="col-md-4 text-break">{{field.key}}</dt>
-            <dd class="col-md-8 text-break">{{field.value===null?'—':(field.value | json)}}</dd>
-        </ng-container></dl>
-    <p class="small text-muted mb-0">{{ "Thông tin hiển thị trực tiếp từ API; không tự tạo dữ liệu demo." | translate }}</p>
-</section>
+<header class="d-flex justify-content-between gap-3 mb-4"><div><h1>Tổng hợp công theo kỳ</h1><p class="text-muted">Theo dõi công đã xác nhận trong phạm vi quản lý.</p></div><button class="btn btn-outline-primary align-self-start" (click)="load()" [disabled]="loading">Tải lại</button></header>
+<section class="surface mb-3"><h2 class="h5">Tìm kiếm và lọc công</h2><form (ngSubmit)="load()" class="row g-3">
+<div class="col-md-4"><label for="month" class="form-label">Chọn nhanh tháng</label><input id="month" name="month" type="month" class="form-control" [(ngModel)]="month" (change)="setMonth()" [disabled]="loading"></div>
+<div class="col-md-4"><label for="from" class="form-label">Từ ngày</label><input id="from" name="from" type="date" class="form-control" [(ngModel)]="from" required [disabled]="loading"></div>
+<div class="col-md-4"><label for="to" class="form-label">Đến ngày</label><input id="to" name="to" type="date" class="form-control" [(ngModel)]="to" required [disabled]="loading"></div>
+<div class="col-md-4"><label for="employee" class="form-label">Mã hoặc tên nhân viên</label><input id="employee" name="employee" class="form-control" [(ngModel)]="q" placeholder="Nhập một phần mã/tên: tr, th, tran…" [disabled]="loading"></div>
+<div class="col-md-4"><label for="department" class="form-label">Phòng ban trong kỳ</label><select id="department" name="department" class="form-select" [(ngModel)]="department" [disabled]="loading"><option value="">Tất cả trong phạm vi</option>@for(d of departments;track d){<option [value]="d">{{d}}</option>}</select></div>
+<div class="col-md-4"><label for="state" class="form-label">Tình trạng tổng hợp</label><select id="state" name="state" class="form-select" [(ngModel)]="state" [disabled]="loading"><option value="">Tất cả</option><option value="review">Cần đối soát</option><option value="complete">Đủ dữ liệu tính giờ</option></select></div>
+<div class="d-flex gap-2"><button class="btn btn-primary" type="submit" [disabled]="loading">{{loading?'Đang tải…':'Tìm kiếm'}}</button><button class="btn btn-outline-secondary" type="button" (click)="reset()" [disabled]="loading">Đặt lại</button></div></form></section>
+@if(error){<div class="alert alert-warning" role="alert">{{error}}</div>}
+@if(loaded){<p class="small text-muted">Kỳ: {{period}}. Số liệu theo bộ lọc đã áp dụng.</p><div class="summary-stats mb-3"><div class="surface">Nhân viên<strong>{{results.length}}</strong></div><div class="surface">Giờ công thuần<strong>{{hours(stats.minutes)}}</strong></div><div class="surface">Lượt đi làm / vắng<strong>{{stats.present}} / {{stats.absent}}</strong></div><div class="surface">Bản ghi cần đối soát<strong>{{stats.unresolved}}</strong></div></div>}
+<div class="alert alert-info small">Chỉ tổng hợp công đã xác nhận, chưa vô hiệu. Bản ghi thiếu dữ liệu không được cộng giờ. Ngày tính theo ngày ca; lượt đi làm không phải ngày công quy đổi. OT được theo dõi riêng tại trang Tăng ca.</div>
+<div class="summary-layout" [class.has-detail]="selected"><section class="surface summary-list" [attr.aria-busy]="loading"><h2 class="h5 mb-3">Danh sách tổng hợp ({{results.length}})</h2><div class="table-responsive"><table class="table table-hover align-middle" [class.record-cards]="selected"><thead><tr><th>Nhân viên</th><th>Phòng ban</th><th>Ngày có bản ghi</th><th>Đi làm / vắng</th><th>Giờ công thuần</th><th>Ghi chú</th><th>Thao tác</th></tr></thead><tbody>
+@for(e of visible;track e.id){<tr [class.table-primary]="selected?.id===e.id"><td data-label="Nhân viên"><div><strong>{{e.name}}</strong><small class="d-block text-muted">{{e.code}}</small></div></td><td data-label="Phòng ban"><div>{{e.departments.join(' / ')||'Chưa có phân công'}}</div></td><td data-label="Ngày có bản ghi"><div>{{e.days.length}}</div></td><td data-label="Đi làm / vắng"><div>{{e.present}} / {{e.absent}}</div></td><td data-label="Giờ công thuần"><div>{{hours(e.minutes)}}</div></td><td data-label="Ghi chú"><div>@if(e.unresolved){<span class="badge text-bg-warning">Cần đối soát</span><small class="d-block">{{e.unresolved}} bản ghi chưa đủ dữ liệu.</small>}@else{<span class="badge text-bg-success">Đủ dữ liệu tính giờ</span>}</div></td><td data-label="Thao tác"><div><button class="btn btn-sm btn-outline-primary" (click)="selected=e">Xem chi tiết</button></div></td></tr>}
+@empty{<tr><td colspan="7" class="text-center text-muted py-4">{{loading?'Đang tải dữ liệu…':loaded?'Không có công đã xác nhận phù hợp với bộ lọc.':'Chưa có dữ liệu để hiển thị.'}}</td></tr>}</tbody></table></div>
+@if(results.length){<nav aria-label="Phân trang tổng hợp công" class="d-flex flex-wrap gap-1 mt-3"><button class="btn btn-sm btn-outline-primary" (click)="go(1)" [disabled]="page===1" aria-label="Trang đầu">&lt;&lt;</button><button class="btn btn-sm btn-outline-primary" (click)="go(page-1)" [disabled]="page===1" aria-label="Trang trước">&lt;</button>@for(n of numbers;track $index){@if(n==='…'){<span class="px-2 align-self-center">…</span>}@else{<button class="btn btn-sm" [class.btn-primary]="n===page" [class.btn-outline-primary]="n!==page" [attr.aria-current]="n===page?'page':null" (click)="go(n)">{{n}}</button>}}<button class="btn btn-sm btn-outline-primary" (click)="go(page+1)" [disabled]="page===pages" aria-label="Trang sau">&gt;</button><button class="btn btn-sm btn-outline-primary" (click)="go(pages)" [disabled]="page===pages" aria-label="Trang cuối">&gt;&gt;</button></nav>}
+</section>@if(selected;as e){<aside class="surface summary-detail"><div class="d-flex justify-content-between gap-2 mb-3"><h2 class="h5">Chi tiết công trong kỳ</h2><button class="btn btn-sm btn-outline-secondary" (click)="selected=null">Đóng</button></div><h3 class="h6">{{e.code}} — {{e.name}}</h3><p class="small text-muted">{{e.departments.join(' / ')}} · {{period}}</p><p><strong>{{hours(e.minutes)}}</strong> công thuần đã tính</p>@if(e.unresolved){<div class="alert alert-warning small">{{e.unresolved}} bản ghi chưa đủ dữ liệu. Cần kiểm tra giờ vào/ra, phút nghỉ hoặc dữ liệu ca qua ngày.</div>}<div class="table-responsive"><table class="table"><thead><tr><th>Ngày ca</th><th>Đi làm / vắng</th><th>Giờ công</th><th>Ghi chú</th></tr></thead><tbody>@for(d of e.days;track d.workDate){<tr><td>{{d.workDate|date:'dd/MM/yyyy'}}<small class="d-block text-muted">{{d.department}}</small></td><td>{{d.presentRecords}} / {{d.absentRecords}}</td><td>{{hours(d.netMinutes)}}</td><td>@if(d.unresolvedRecords){<span class="text-warning-emphasis">{{d.unresolvedRecords}} bản ghi cần đối soát</span>}@else{<span class="text-success">Đủ dữ liệu</span>}</td></tr>}</tbody></table></div></aside>}</div>

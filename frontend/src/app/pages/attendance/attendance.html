@@ -28,7 +28,9 @@
 
 @if (loading && !context) { <p role="status">{{ "Đang tải quyền chấm công..." | translate }}</p> }
 
+@if(context?.mine&&tab==='mine'){<app-overtime-calendar [mine]="true" />}
 @if (context && tab!=='requests') {
+@if(tab==='mine'){<div class="alert alert-info small">Để tạo yêu cầu điều chỉnh công của chính mình, chọn ngày ca trong danh sách rồi bấm <strong>Gửi yêu cầu</strong>. Nút chỉ xuất hiện khi bản ghi đủ điều kiện và còn hạn gửi; bản ghi đang có yêu cầu mở không được gửi trùng.</div>}
 
 @if (stats) {
 
@@ -474,7 +476,8 @@
 
 <section class="surface mb-3">
 
-    <h2 class="h5">{{ "Yêu cầu bổ sung và điều chỉnh công" | translate }}</h2>
+    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h2 class="h5 mb-0">{{ "Yêu cầu bổ sung và điều chỉnh công" | translate }}</h2>@if(context.mine){<button type="button" class="btn btn-primary" [disabled]="busy" (click)="switchTab('mine')">Tạo yêu cầu điều chỉnh công của tôi</button>}</div>
+    @if(context.mine){<p class="small text-muted">Để tạo đơn, chọn công của chính mình rồi bấm Gửi yêu cầu. HR gửi đơn cá nhân để ADMIN xét duyệt; không tự duyệt đơn của mình.</p>}
 
     <form (ngSubmit)="loadRequests()">
         <fieldset [disabled]="busy">

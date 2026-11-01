@@ -7,7 +7,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { catchError, finalize, forkJoin, map, of, throwError } from 'rxjs';
 import { API_BASE_URL } from '../../services/api.config';
 
-type Mode = 'view' | 'create' | 'edit' | 'deactivate';
+type Mode = 'view' | 'create' | 'edit' | 'deactivate' | 'activate';
 interface ShiftInput {
   shiftCode: string; shiftName: string; startTime: string; endTime: string;
   endDayOffset: number; breakMinutes: number; active: boolean;
@@ -49,6 +49,23 @@ export class WorkShiftsPage implements OnInit {
   private readonly destroyRef = inject(DestroyRef);
   private readonly url = `${API_BASE_URL}/management/shifts`;
   records: ShiftView[] = [];
+  history: Array<{id:number;action:string;actor:string;occurredAt:string;reason:string|null;beforeJson:string|null;afterJson:string|null}> = [];
+  historyLoading=false; historyError=''; private historyVersion=0;
+  loadHistory():void {
+    if(!this.selected)return;const id=this.selected.shiftId,version=++this.historyVersion;
+    this.history=[];this.historyError='';this.historyLoading=true;
+    this.http.get<typeof this.history>(this.url+'/'+id+'/history').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next:rows=>{if(version===this.historyVersion&&this.selected?.shiftId===id){this.history=rows;this.historyLoading=false;}},
+      error:e=>{if(version===this.historyVersion&&this.selected?.shiftId===id){this.historyError='Không tải được lịch sử thao tác. Vui lòng thử lại.';this.historyLoading=false;}}
+    });
+  }
+  historyLabel(action:string):string {return ({WORK_SHIFT_CREATE:'Tạo ca',WORK_SHIFT_UPDATE:'Sửa ca',WORK_SHIFT_BASIC_INFO_UPDATE:'Đổi tên ca',WORK_SHIFT_ACTIVATE:'Mở khóa ca',WORK_SHIFT_DEACTIVATE:'Khóa ca'} as Record<string,string>)[action]??action;}
+  historyChanges(h:{beforeJson:string|null;afterJson:string|null}):Array<{label:string;before:string;after:string}> {
+    const labels:Record<string,string>={shiftName:'Tên ca',startTime:'Giờ bắt đầu',endTime:'Giờ kết thúc',endDayOffset:'Ngày kết thúc (+ngày)',breakMinutes:'Tổng phút nghỉ',active:'Trạng thái'};
+    try{const before=JSON.parse(h.beforeJson||'{}')||{},after=JSON.parse(h.afterJson||'{}')||{};const value=(k:string,v:unknown)=>v==null?'—':k==='active'?(v?'Hoạt động':'Đã khóa'):String(v);
+      return Object.entries(labels).filter(([k])=>Object.hasOwn(after,k)&&JSON.stringify(before[k])!==JSON.stringify(after[k])).map(([k,label])=>({label,before:value(k,before[k]),after:value(k,after[k])}));
+    }catch{return [];}
+  }
   selected: ShiftView | null = null;
   selectedBreaks: OffsetBreak[] = [];
   breaksLoaded = false;
@@ -85,7 +102,7 @@ export class WorkShiftsPage implements OnInit {
   get busy(): boolean { return this.loading || this.detailLoading || this.saving; }
   get totalBreakMinutes(): number { return this.breaks.getRawValue().reduce((sum, b) => sum + Math.max(0, b.endMinute - b.startMinute), 0); }
   get panelTitle(): string {
-    return { view: 'Thông tin chi tiết', create: 'Thêm ca làm việc', edit: 'Chỉnh sửa ca làm việc', deactivate: 'Xác nhận khóa ca' }[this.mode];
+    return { view: 'Thông tin chi tiết', create: 'Thêm ca làm việc', edit: 'Chỉnh sửa ca làm việc', deactivate: 'Xác nhận khóa ca', activate: 'Xác nhận mở khóa ca' }[this.mode];
   }
   private normalize(value: string): string {
     return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
@@ -137,7 +154,7 @@ export class WorkShiftsPage implements OnInit {
   edit(row: ShiftView): void { this.openExisting(row, 'edit'); }
   private openExisting(row: ShiftView, mode: 'view' | 'edit'): void {
     if (this.busy) return;
-    this.mode = mode; this.panelOpen = true; this.selected = row; this.selectedBreaks = [];
+    this.mode = mode; this.panelOpen = true; this.selected = row; this.selectedBreaks = []; this.loadHistory();
     this.breaksLoaded = false; this.detailsWarning = '';
     this.detailsReady = false; this.detailLoading = true; this.panelError = ''; this.success = '';
     // Hai chế độ cấu hình backend công bố API khoảng nghỉ ở hai URL khác nhau.
@@ -188,6 +205,16 @@ export class WorkShiftsPage implements OnInit {
       endMinute: new FormControl(b.endMinute, { nonNullable: true, validators: [Validators.required, Validators.min(1)] }),
     });
   }
+  breakClock(index:number,key:'startMinute'|'endMinute'):string {
+    const start=minutes(this.form.controls.startTime.value),offset=this.breaks.at(index).controls[key].value;
+    if(start===null||!Number.isFinite(offset))return '';const total=(start+offset)%1440;return String(Math.floor(total/60)).padStart(2,'0')+':'+String(total%60).padStart(2,'0');
+  }
+  breakDay(index:number,key:'startMinute'|'endMinute'):string {const start=minutes(this.form.controls.startTime.value);return start!==null&&start+this.breaks.at(index).controls[key].value>=1440?'Ngày hôm sau':'Cùng ngày';}
+  setBreakClock(index:number,key:'startMinute'|'endMinute',event:Event):void {
+    const value=minutes((event.target as HTMLInputElement).value),start=minutes(this.form.controls.startTime.value);let offset=NaN;
+    if(value!==null&&start!==null){offset=value-start;if(this.form.controls.endDayOffset.value===1&&(offset<0||key==='endMinute'&&offset===0))offset+=1440;}
+    this.breaks.at(index).controls[key].setValue(offset);this.breaks.at(index).controls[key].markAsTouched();this.form.markAsDirty();
+  }
   addBreak(): void { if (!this.busy) { this.breaks.push(this.createBreak()); this.form.markAsDirty(); } }
   removeBreak(index: number): void { if (!this.busy) { this.breaks.removeAt(index); this.form.markAsDirty(); } }
   save(): void {
@@ -214,7 +241,7 @@ export class WorkShiftsPage implements OnInit {
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
       next: saved => {
         this.selected = saved; this.selectedBreaks = intervals; this.patchForm(saved, intervals); this.mode = 'view';
-        this.success = creating ? 'Đã thêm ca làm việc.' : 'Đã cập nhật ca làm việc.';
+        this.success = creating ? 'Đã thêm ca làm việc.' : 'Đã cập nhật ca làm việc.'; this.loadHistory();
         this.fetchList();
       },
       error: e => this.panelError = this.message(e),
@@ -227,27 +254,28 @@ export class WorkShiftsPage implements OnInit {
     } else this.close();
   }
   askDeactivate(row: ShiftView): void {
-    if (this.busy || !row.active) return;
-    this.mode = 'deactivate'; this.panelOpen = true; this.selected = row; this.selectedBreaks = [];
+    if (this.busy) return;
+    this.mode = row.active ? 'deactivate' : 'activate'; this.panelOpen = true; this.selected = row; this.selectedBreaks = [];
     this.detailsReady = false; this.panelError = ''; this.success = '';
     this.deactivateReason.reset();
   }
   confirmDeactivate(): void {
-    if (this.busy || this.mode !== 'deactivate' || !this.selected?.active) return;
+    if (this.busy || !['deactivate','activate'].includes(this.mode) || !this.selected) return;
+    const activating=this.mode==='activate';
     this.deactivateReason.markAsTouched();
     const reason = this.deactivateReason.value.trim();
     if (!reason) this.deactivateReason.setErrors({ required: true });
     if (this.deactivateReason.invalid) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn khóa ca làm việc này?\n\nMã ca: ${this.selected.shiftCode}\nTên ca: ${this.selected.shiftName}\nLý do: ${reason}\n\nCa sẽ chuyển sang trạng thái ngừng hoạt động.`)) return;
+    if (!window.confirm(`Bạn có chắc chắn muốn ${activating?'mở khóa':'khóa'} ca làm việc này?\n\nMã ca: ${this.selected.shiftCode}\nTên ca: ${this.selected.shiftName}\nLý do: ${reason}\n\nCa sẽ chuyển sang trạng thái ${activating?'hoạt động':'ngừng hoạt động'}.`)) return;
     this.saving = true; this.panelError = '';
     const id = this.selected.shiftId;
     // API khóa thống nhất ở cả hai chế độ backend, luôn lưu lý do vào audit.
-    this.http.patch<ShiftView>(`${this.url}/${id}/deactivate`, { reason }).pipe(
+    this.http.patch<ShiftView>(`${this.url}/${id}/${activating?'activate':'deactivate'}`, { reason }).pipe(
       takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false),
     ).subscribe({
       next: () => {
         this.panelOpen = false; this.selected = null; this.mode = 'view';
-        this.success = 'Đã khóa ca làm việc.'; this.fetchList();
+        this.success = activating ? 'Đã mở khóa ca làm việc.' : 'Đã khóa ca làm việc.'; this.fetchList();
       },
       error: e => this.panelError = this.message(e),
     });

@@ -37,6 +37,10 @@ public class ScheduleWorkspaceController {
             @RequestParam(required=false) Long employeeId,@RequestParam(required=false) Long departmentId,
             @RequestParam(required=false) Long shiftId,@RequestParam LocalDate from,@RequestParam LocalDate to,
             @RequestParam(defaultValue="0") int page) {return workspace.search(actor,employeeId,departmentId,shiftId,from,to,page);}
+    @GetMapping("/schedules/{id}/history")
+    public List<ScheduleWorkspaceService.History> history(@AuthenticationPrincipal AuthenticatedAccount actor,@PathVariable long id) {return workspace.history(actor,id);}
+    @GetMapping("/my-search")
+    public PageResponse<ScheduleWorkspaceService.Row> mine(@AuthenticationPrincipal AuthenticatedAccount actor,@RequestParam(required=false) Long shiftId,@RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(defaultValue="0") int page){return workspace.mine(actor,shiftId,from,to,page);}
     @PostMapping("/schedules")
     public ScheduleView create(@AuthenticationPrincipal AuthenticatedAccount actor,@RequestBody ScheduleWorkspaceService.SaveInput body) {return workspace.save(actor,null,body);}
     @PutMapping("/schedules/{id}")

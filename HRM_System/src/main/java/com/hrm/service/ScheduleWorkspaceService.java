@@ -93,8 +93,15 @@ public class ScheduleWorkspaceService {
 
     public PageResponse<Row> search(AuthenticatedAccount actor, Long employee, Long department, Long shift,
             LocalDate from, LocalDate to, int page) {
+        return searchRows(actor,employee,department,shift,from,to,page,false);
+    }
+    public PageResponse<Row> mine(AuthenticatedAccount actor,Long shift,LocalDate from,LocalDate to,int page){
+        context(actor);if(!"HR".equals(actor.roleCode()))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ HR xem lịch cá nhân trên giao diện này.");
+        return searchRows(actor,null,null,shift,from,to,page,true);
+    }
+    private PageResponse<Row> searchRows(AuthenticatedAccount actor,Long employee,Long department,Long shift,LocalDate from,LocalDate to,int page,boolean mine){
         context(actor);
-        var result=queries.search(actor,employee,department,shift,from,to,page,false);
+        var result=queries.search(actor,employee,department,shift,from,to,page,mine);
         if (result.items().isEmpty()) return new PageResponse<>(List.of(),result.page(),result.size(),result.totalElements(),result.totalPages());
         var ids=result.items().stream().map(ScheduleView::scheduleId).toList();
         String markers=String.join(",",Collections.nCopies(ids.size(),"?"));
@@ -117,6 +124,21 @@ public class ScheduleWorkspaceService {
             return new Row(s,l==null ? Long.toString(s.employeeId()):l.employee(),l==null?"":l.shift(),l==null?"LEGACY_UNVERIFIED":l.status(),l==null?"UNKNOWN":l.state(),l==null?null:l.cancellationReason());
         }).toList();
         return new PageResponse<>(rows,result.page(),result.size(),result.totalElements(),result.totalPages());
+    }
+
+    public record History(long id,String action,String actor,java.time.OffsetDateTime occurredAt,String reason,String beforeJson,String afterJson) {}
+    @Transactional(value="scheduleTransactionManager",readOnly=true)
+    public List<History> history(AuthenticatedAccount actor,long id) {
+        context(actor);
+        queries.getAuthorized(actor,id);
+        return db.query("""
+                SELECT h.audit_id,h.action,COALESCE(a.username,N'Hệ thống'),h.occurred_at,h.reason,h.before_data_json,h.after_data_json
+                FROM dbo.audit_logs h LEFT JOIN dbo.accounts a ON a.account_id=h.actor_account_id
+                WHERE h.target_table='work_schedules' AND h.target_record_key=?
+                  AND h.action IN ('WORK_SCHEDULE_CREATE','WORK_SCHEDULE_UPDATE','WORK_SCHEDULE_EDIT_LOCKED','WORK_SCHEDULE_EDIT_UNLOCKED','WORK_SCHEDULE_CANCELLED')
+                ORDER BY h.occurred_at DESC,h.audit_id DESC
+                """,(rs,n)->new History(rs.getLong(1),rs.getString(2),rs.getString(3),
+                  rs.getObject(4,LocalDateTime.class).atOffset(ZoneOffset.UTC),rs.getString(5),rs.getString(6),rs.getString(7)),Long.toString(id));
     }
 
     private ScheduleInput input(SaveInput body) {
@@ -142,13 +164,14 @@ public class ScheduleWorkspaceService {
             Long count=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.attendance_records WITH(HOLDLOCK) WHERE schedule_id=?",Long.class,id);
             if (count!=null && count>0) throw new ResponseStatusException(HttpStatus.CONFLICT,"Lịch đã có chấm công; cần dùng quy trình đổi lịch");
         }
+        ScheduleView before=id==null?null:schedules.get(id);
         var request=new ScheduleWithBreaks(input,List.of());
         ScheduleView saved=id==null ? detailed.createSchedule(actor,request) : detailed.updateSchedule(actor,id,request);
         db.update("""
-                INSERT INTO dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,after_data_json)
-                VALUES(?,?,'work_schedules',?,?,?)
+                INSERT INTO dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json)
+                VALUES(?,?,'work_schedules',?,?,?,?)
                 """,actor.accountId(),id==null?"WORK_SCHEDULE_CREATE":"WORK_SCHEDULE_UPDATE",Long.toString(saved.scheduleId()),
-                "Lưu lịch theo mẫu ca và khoảng nghỉ chi tiết",json.writeValueAsString(saved));
+                "Lưu lịch theo mẫu ca và khoảng nghỉ chi tiết",before==null?null:json.writeValueAsString(before),json.writeValueAsString(saved));
         return saved;
     }
 }

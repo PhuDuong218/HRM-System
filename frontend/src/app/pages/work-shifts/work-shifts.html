@@ -70,7 +70,7 @@
                 <td><div class="d-flex gap-1 flex-wrap">
                   <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy" (click)="view(row)">{{ "Xem" | translate }}</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="edit(row)">{{ "Sửa" | translate }}</button>
-                  <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="busy || !row.active" (click)="askDeactivate(row)">{{ "Khóa" | translate }}</button>
+                  <button type="button" class="btn btn-sm" [class.btn-outline-danger]="row.active" [class.btn-outline-success]="!row.active" [disabled]="busy" (click)="askDeactivate(row)">{{ (row.active?"Khóa":"Mở khóa") | translate }}</button>
                 </div></td>
               </tr>
             } @empty {
@@ -89,26 +89,26 @@
           <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="close()">{{ "Đóng" | translate }}</button>
         </div>
         @if (panelError) { <div class="alert alert-warning" role="alert">{{ panelError }}</div> }
-        @if (detailsWarning && mode !== 'deactivate') {
+        @if (detailsWarning && mode !== 'deactivate' && mode !== 'activate') {
           <div class="alert alert-warning" role="alert">{{ detailsWarning }}</div>
           <button type="button" class="btn btn-outline-primary btn-sm mb-3" [disabled]="busy" (click)="retryDetails()">{{ "Tải lại khoảng nghỉ" | translate }}</button>
         }
         @if (detailLoading) {
           <p class="text-muted" role="status">{{ "Đang tải thông tin và khoảng nghỉ..." | translate }}</p>
-        } @else if (mode === 'deactivate') {
-          <p>{{ "Bạn muốn khóa ca" | translate }}<strong>{{ selected?.shiftCode }} — {{ selected?.shiftName }}</strong>?</p>
-          <p class="small text-muted">{{ "Thao tác này chuyển ca sang trạng thái ngừng hoạt động." | translate }}</p>
+        } @else if (mode === 'deactivate' || mode === 'activate') {
+          <p>{{ (mode==='activate'?'Bạn muốn mở khóa ca':'Bạn muốn khóa ca') | translate }} <strong>{{ selected?.shiftCode }} — {{ selected?.shiftName }}</strong>?</p>
+          <p class="small text-muted">{{ (mode==='activate'?'Thao tác này cho phép sử dụng lại ca; giữ nguyên giờ và khoảng nghỉ.':'Thao tác này chuyển ca sang trạng thái ngừng hoạt động.') | translate }}</p>
           <div class="mb-3">
-            <label for="deactivateReason" class="form-label">{{ "Lý do khóa ca *" | translate }}</label>
+            <label for="deactivateReason" class="form-label">{{ (mode==='activate'?'Lý do mở khóa ca *':'Lý do khóa ca *') | translate }}</label>
             <textarea id="deactivateReason" class="form-control" rows="3" maxlength="1000"
               [formControl]="deactivateReason" [readOnly]="saving"
               [class.is-invalid]="deactivateReason.touched && deactivateReason.invalid"></textarea>
             @if (deactivateReason.touched && deactivateReason.invalid) {
-              <div class="invalid-feedback">{{ "Vui lòng nhập lý do khóa ca, tối đa 1000 ký tự." | translate }}</div>
+              <div class="invalid-feedback">{{ "Vui lòng nhập lý do khóa/mở khóa ca, tối đa 1000 ký tự." | translate }}</div>
             }
           </div>
           <div class="d-flex gap-2">
-            <button type="button" class="btn btn-danger" [disabled]="saving" (click)="confirmDeactivate()">{{ saving ? 'Đang khóa...' : 'Xác nhận khóa' }}</button>
+            <button type="button" class="btn btn-danger" [disabled]="saving" (click)="confirmDeactivate()">{{ saving ? 'Đang xử lý...' : mode==='activate'?'Xác nhận mở khóa':'Xác nhận khóa' }}</button>
             <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="cancel()">{{ "Hủy" | translate }}</button>
           </div>
         } @else if (!detailsReady) {
@@ -135,8 +135,14 @@
             }
             <div class="d-flex gap-2">
               <button type="button" class="btn btn-primary" [disabled]="busy" (click)="edit(shift)">{{ "Sửa" | translate }}</button>
-              <button type="button" class="btn btn-outline-danger" [disabled]="busy || !shift.active" (click)="askDeactivate(shift)">{{ "Khóa" | translate }}</button>
+              <button type="button" class="btn" [class.btn-outline-danger]="shift.active" [class.btn-outline-success]="!shift.active" [disabled]="busy" (click)="askDeactivate(shift)">{{ (shift.active?"Khóa":"Mở khóa") | translate }}</button>
             </div>
+            <section class="mt-4 border-top pt-3" aria-label="Lịch sử thao tác ca làm việc">
+              <div class="d-flex justify-content-between align-items-center gap-2 mb-3"><h3 class="h6 mb-0">Lịch sử thao tác</h3><button type="button" class="btn btn-sm btn-outline-primary" (click)="loadHistory()" [disabled]="historyLoading">Tải lại lịch sử</button></div>
+              @if(historyLoading){<p class="text-muted" role="status">Đang tải lịch sử…</p>}
+              @else if(historyError){<div class="alert alert-warning" role="alert">{{historyError}}</div>}
+              @else { @for(h of history;track h.id){<article class="border rounded p-3 mb-2"><div class="d-flex justify-content-between flex-wrap gap-2"><strong>{{historyLabel(h.action)}}</strong><time class="small text-muted">{{h.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}} (UTC+7)</time></div><p class="small mb-1">Người thực hiện: <strong>{{h.actor}}</strong></p><p class="small mb-2 text-break" style="white-space:pre-line">Lý do: {{h.reason||'Không ghi nhận lý do'}}</p>@for(c of historyChanges(h);track c.label){<div class="small text-break mb-1"><strong>{{c.label}}:</strong> {{c.before}} → {{c.after}}</div>}</article>} @empty{<p class="small text-muted">Chưa có lịch sử thao tác được ghi nhận cho ca này.</p>} }
+            </section>
           }
         } @else {
           <form [formGroup]="form" (ngSubmit)="save()">
@@ -159,12 +165,12 @@
               <div class="mb-3"><label for="shiftOffset" class="form-label">{{ "Ngày kết thúc" | translate }}</label><select id="shiftOffset" class="form-select" formControlName="endDayOffset"><option [ngValue]="0">{{ "Cùng ngày" | translate }}</option><option [ngValue]="1">{{ "Ngày hôm sau" | translate }}</option></select></div>
               <div class="form-check mb-3"><input id="shiftActive" type="checkbox" class="form-check-input" formControlName="active"><label for="shiftActive" class="form-check-label">{{ "Ca đang hoạt động" | translate }}</label></div>
               <div class="d-flex justify-content-between align-items-center"><h3 class="h6 mb-0">{{ "Khoảng nghỉ" | translate }}</h3><button type="button" class="btn btn-outline-primary btn-sm" (click)="addBreak()">{{ "Thêm khoảng nghỉ" | translate }}</button></div>
-              <p class="small text-muted mt-2">{{ "Nhập phút tính từ đầu ca. Ví dụ ca bắt đầu 08:00, nghỉ 12:00–13:00 thì nhập 240–300." | translate }}</p>
+              <p class="small text-muted mt-2">{{ "Chọn giờ bắt đầu và kết thúc nghỉ. Với ca qua đêm, hệ thống tự xác định ngày hôm sau." | translate }}</p>
               <div formArrayName="breaks">
                 @for (group of breaks.controls; track group; let i = $index) {
                   <div class="row g-2 align-items-end mb-3" [formGroupName]="i">
-                    <div class="col-5"><label class="form-label" [for]="'breakStart-' + i">{{ "Từ phút *" | translate }}</label><input [id]="'breakStart-' + i" type="number" min="0" step="1" class="form-control" formControlName="startMinute"></div>
-                    <div class="col-5"><label class="form-label" [for]="'breakEnd-' + i">{{ "Đến phút *" | translate }}</label><input [id]="'breakEnd-' + i" type="number" min="1" step="1" class="form-control" formControlName="endMinute"></div>
+                    <div class="col-5"><label class="form-label" [for]="'breakStart-' + i">{{ "Bắt đầu nghỉ *" | translate }}</label><input [id]="'breakStart-' + i" type="time" step="60" class="form-control" [value]="breakClock(i,'startMinute')" (input)="setBreakClock(i,'startMinute',$event)"><small class="text-muted">{{breakDay(i,'startMinute')}}</small><input type="hidden" formControlName="startMinute"></div>
+                    <div class="col-5"><label class="form-label" [for]="'breakEnd-' + i">{{ "Kết thúc nghỉ *" | translate }}</label><input [id]="'breakEnd-' + i" type="time" step="60" class="form-control" [value]="breakClock(i,'endMinute')" (input)="setBreakClock(i,'endMinute',$event)"><small class="text-muted">{{breakDay(i,'endMinute')}}</small><input type="hidden" formControlName="endMinute"></div>
                     <div class="col-2"><button type="button" class="btn btn-outline-danger w-100" [attr.aria-label]="'Xóa khoảng nghỉ ' + (i + 1)" (click)="removeBreak(i)">{{ "Xóa" | translate }}</button></div>
                   </div>
                 } @empty { <p class="small text-muted">Chưa có khoảng nghỉ.</p> }
@@ -186,3 +192,4 @@
     </div>
   }
 </div>
+

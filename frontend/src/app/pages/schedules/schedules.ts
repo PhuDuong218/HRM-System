@@ -1,3 +1,4 @@
+import {OvertimeCalendarComponent} from '../../shared/overtime-calendar';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -7,6 +8,7 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, finalize, forkJoin, switchMap, timer } from 'rxjs';
 import { API_BASE_URL } from '../../services/api.config';
 
+interface ScheduleHistory {id:number;action:string;actor:string;occurredAt:string;reason:string|null;beforeJson:string|null;afterJson:string|null;}
 interface Employee { employeeId: number; employeeCode: string; fullName: string; }
 interface Shift { shiftId: number; shiftCode: string; shiftName: string; startTime: string; endTime: string; endDayOffset: number; breakMinutes: number; active: boolean; }
 interface ShiftOption { shift: Shift; breaksVerified: boolean; }
@@ -20,13 +22,24 @@ interface ShiftLookup { text: string; selected: ShiftOption | null; error: strin
 const employeeLookup = (): EmployeeLookup => ({ text: '', selected: null, options: [], error: '', loading: false });
 const shiftLookup = (): ShiftLookup => ({ text: '', selected: null, error: '' });
 
-@Component({ selector: 'app-schedules', standalone: true, imports: [CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-schedules', standalone: true, imports: [OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
 export class SchedulesPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly url = `${API_BASE_URL}/management/schedule-workspace`;
   loading = false; saving = false; lookupLoading = false;
   error = ''; success = ''; lookupError = '';
+  personal=false;templateBreaks:Array<{start:string;end:string}>=[];templateBreakError='';
+  switchScheduleScope(personal:boolean):void {if(this.busy)return;this.personal=personal;this.closeDetails();this.filterEmployee=employeeLookup();this.departmentId='';this.load();}
+  saveTemplateBreaks():void {
+    const option=this.formShift.selected;if(!option||this.busy)return;const shift=option.shift;const start=this.toMinute(shift.startTime);const duration=this.toMinute(shift.endTime)+shift.endDayOffset*1440-start;
+    const offsets=this.templateBreaks.map(b=>{let a=this.toMinute(b.start)-start,z=this.toMinute(b.end)-start;if(shift.endDayOffset===1){if(a<0)a+=1440;if(z<=0)z+=1440;}return {startMinute:a,endMinute:z};}).sort((a,b)=>a.startMinute-b.startMinute);
+    let previous=0;for(const b of offsets){if(!Number.isFinite(b.startMinute)||!Number.isFinite(b.endMinute)||b.startMinute<previous||b.endMinute<=b.startMinute||b.endMinute>duration){this.templateBreakError='Giờ nghỉ phải nằm trong ca, kết thúc sau bắt đầu và không chồng lấn.';return;}previous=b.endMinute;}
+    if(!offsets.length||offsets.reduce((n,b)=>n+b.endMinute-b.startMinute,0)!==shift.breakMinutes){this.templateBreakError='Tổng các khoảng nghỉ phải bằng '+shift.breakMinutes+' phút của ca.';return;}
+    if(!window.confirm('Lưu giờ nghỉ chi tiết cho ca '+shift.shiftCode+'? Mẫu ca sẽ dùng giờ nghỉ này cho các lịch tạo mới.'))return;
+    this.saving=true;this.templateBreakError='';this.http.put<Shift>(API_BASE_URL+'/management/shifts/'+shift.shiftId,{shift,breaks:offsets}).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({next:saved=>{const updated={shift:saved,breaksVerified:true};this.shifts=this.shifts.map(s=>s.shift.shiftId===saved.shiftId?updated:s);this.formShift.selected=updated;this.formShift.text=this.shiftLabel(updated);this.success='Đã bổ sung giờ nghỉ cho ca. Bạn có thể lưu lịch làm việc.';this.templateBreaks=[];},error:e=>this.templateBreakError=this.message(e)});
+  }
+  private toMinute(value:string):number {const match=value.match(/^(\d{2}):(\d{2})/);return match&&+match[1]<24&&+match[2]<60?+match[1]*60+(+match[2]):NaN;}
   canManage = false; canSubmitOwn = false; ownEmployeeId: number | null = null;
   departments: Array<{ departmentId: number; departmentName: string }> = [];
   shifts: ShiftOption[] = [];
@@ -38,6 +51,22 @@ export class SchedulesPage implements OnInit {
   mode: 'view' | 'create' | 'edit' | 'lock' | 'unlock' | 'cancel' = 'view';
   private stateReturnMode: 'view' | 'edit' = 'view';
   formDate = this.today(); formNote = ''; formError = '';
+  history: ScheduleHistory[] = []; historyLoading=false; historyError='';
+  loadHistory(): void {
+    if(!this.selected)return;const id=this.selected.schedule.scheduleId;
+    this.history=[];this.historyError='';this.historyLoading=true;
+    this.http.get<ScheduleHistory[]>(this.url+'/schedules/'+id+'/history').pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next:rows=>{if(this.selected?.schedule.scheduleId===id){this.history=rows;this.historyLoading=false;}},
+      error:e=>{if(this.selected?.schedule.scheduleId===id){this.historyError=this.message(e);this.historyLoading=false;}}
+    });
+  }
+  historyLabel(action:string):string {return ({WORK_SCHEDULE_CREATE:'Tạo lịch',WORK_SCHEDULE_UPDATE:'Sửa lịch',WORK_SCHEDULE_EDIT_LOCKED:'Khóa chỉnh sửa',WORK_SCHEDULE_EDIT_UNLOCKED:'Mở khóa chỉnh sửa',WORK_SCHEDULE_CANCELLED:'Hủy lịch'} as Record<string,string>)[action]??action;}
+  historyChanges(item:ScheduleHistory):Array<{label:string;before:string;after:string}> {
+    const labels:Record<string,string>={employeeId:'ID nhân viên',shiftId:'ID ca',plannedStart:'Bắt đầu',plannedEnd:'Kết thúc',plannedBreakMinutes:'Phút nghỉ',note:'Ghi chú',state:'Trạng thái'};
+    try {const before=JSON.parse(item.beforeJson||'{}')||{},after=JSON.parse(item.afterJson||'{}')||{};
+      return Object.entries(labels).filter(([key])=>Object.hasOwn(after,key)&&JSON.stringify(before[key])!==JSON.stringify(after[key])).map(([key,label])=>({label,before:key==='state'?this.statusLabel(before[key]??'—'):String(before[key]??'—'),after:key==='state'?this.statusLabel(after[key]??'—'):String(after[key]??'—')}));
+    }catch{return [];}
+  }
   stateLoading = false; scheduleState = ''; stateError = ''; actionReason = '';
   private stateVersion = 0;
   private currentTime = Date.now();
@@ -108,6 +137,17 @@ export class SchedulesPage implements OnInit {
   employeeLabel(e: Employee): string { return `${e.employeeCode} - ${e.fullName}`; }
   shiftLabel(s: ShiftOption): string { return `${s.shift.shiftCode} - ${s.shift.shiftName}`; }
   displayTime(value: string): string { return value ? value.replace('T', ' ').slice(0, 16) : '—'; }
+  statusClass(status: string): string {
+    const colors: Record<string, string> = {
+      ACTIVE: 'bg-success-subtle text-success-emphasis border-success-subtle',
+      EDIT_LOCKED: 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
+      CANCELLED: 'bg-danger-subtle text-danger-emphasis border-danger-subtle',
+      CHO_DUYET: 'bg-warning-subtle text-warning-emphasis border-warning-subtle',
+      DA_DUYET: 'bg-success-subtle text-success-emphasis border-success-subtle',
+      TU_CHOI: 'bg-danger-subtle text-danger-emphasis border-danger-subtle'
+    };
+    return 'badge border rounded-pill px-3 py-2 ' + (colors[status] ?? 'bg-secondary-subtle text-secondary-emphasis border-secondary-subtle');
+  }
   statusLabel(status: string): string { return ({ CHO_DUYET: 'Chờ duyệt', DA_DUYET: 'Đã duyệt', TU_CHOI: 'Từ chối', HET_HIEU_LUC: 'Hết hiệu lực', ACTIVE: 'Đang hiệu lực', EDIT_LOCKED: 'Khóa chỉnh sửa', CANCELLED: 'Đã hủy' } as Record<string, string>)[status] ?? status; }
   private shiftTime(state: ShiftLookup, date: string, end: boolean): string {
     if (!state.selected || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return '';
@@ -181,7 +221,7 @@ export class SchedulesPage implements OnInit {
     if (this.filterEmployee.selected) params = params.set('employeeId', this.filterEmployee.selected.employeeId);
     if (this.filterShift.selected) params = params.set('shiftId', this.filterShift.selected.shift.shiftId);
     if (this.departmentId) params = params.set('departmentId', this.departmentId);
-    this.http.get<Page<Row>>(`${this.url}/search`, { params }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false)).subscribe({
+    this.http.get<Page<Row>>(`${this.url}/${this.personal?'my-search':'search'}`, { params }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false)).subscribe({
       next: result => { this.records = result.items; this.page = result.page; this.totalPages = result.totalPages; this.totalElements = result.totalElements; },
       error: e => this.error = this.message(e),
     });
@@ -192,13 +232,14 @@ export class SchedulesPage implements OnInit {
   }
   goPage(page: number): void { if (!this.busy && page >= 0 && page < this.totalPages) { this.page = page; this.load(false); } }
   createForm(): void {
-    if (!this.canManage || this.busy) return;
+    if (this.personal || !this.canManage || this.busy) return;
     this.formEmployee.subscription?.unsubscribe(); this.formEmployee = employeeLookup(); this.formShift = shiftLookup();
     this.mode = 'create'; this.selected = null; this.formDate = this.today(); this.formNote = ''; this.formError = ''; this.stateError = '';
   }
   view(row: Row, action?: 'lock' | 'unlock' | 'cancel'): void {
     if (this.busy) return;
     this.selected = row; this.mode = 'view'; this.formError = ''; this.scheduleState = ''; this.stateError = ''; this.actionReason = '';
+    this.loadHistory();
     const version = ++this.stateVersion; this.stateLoading = true;
     this.http.get<{ scheduleId: number; state: string }>(`${API_BASE_URL}/management/schedules/${row.schedule.scheduleId}/state`)
       .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
@@ -272,7 +313,7 @@ export class SchedulesPage implements OnInit {
         next: r => {
           this.scheduleState = r.state; if (this.selected) { this.selected.state = r.state; if (action === 'cancel') this.selected.cancellationReason = reason; }
           this.records = this.records.map(row => row.schedule.scheduleId === id ? { ...row, state: r.state, ...(action === 'cancel' ? { cancellationReason: reason } : {}) } : row);
-          this.mode = 'view'; this.formError = ''; this.success = `Đã ${verb.toLowerCase()} #${id}.`;
+          this.mode = 'view'; this.formError = ''; this.success = `Đã ${verb.toLowerCase()} #${id}.`; this.loadHistory();
         }, error: e => this.formError = this.message(e)
       });
   }

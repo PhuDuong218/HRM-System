@@ -1,3 +1,4 @@
+import {OvertimeCalendarComponent} from '../../shared/overtime-calendar';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -10,7 +11,7 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports: [CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports: [OvertimeCalendarComponent, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })
