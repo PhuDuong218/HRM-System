@@ -89,7 +89,7 @@ public class OvertimeService {
                 Long.class, employee, skip, end, start);
         need(overlaps != null && overlaps == 0, "Overlapping OT request");
         Long shift = db.queryForObject(
-                "SELECT COUNT_BIG(*) FROM dbo.work_schedules WITH (HOLDLOCK) WHERE employee_id=? AND planned_start<? AND planned_end>?",
+                "SELECT COUNT_BIG(*) FROM dbo.work_schedules WITH (HOLDLOCK) WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>?",
                 Long.class, employee, end, start);
         need(shift != null && shift == 0, "OT overlaps scheduled work");
         LocalDate d = start.toLocalDate();
@@ -97,7 +97,7 @@ public class OvertimeService {
             LocalDateTime lo = d.atStartOfDay(), hi = d.plusDays(1).atStartOfDay();
             long ot = Math.max(0, Duration.between(max(start, lo), min(end, hi)).toMinutes());
             Long regular = db.queryForObject(
-                    "SELECT COALESCE(SUM(DATEDIFF_BIG(MINUTE,CASE WHEN planned_start>? THEN planned_start ELSE ? END,CASE WHEN planned_end<? THEN planned_end ELSE ? END)),0) FROM dbo.work_schedules WHERE employee_id=? AND planned_start<? AND planned_end>?",
+                    "SELECT COALESCE(SUM(DATEDIFF_BIG(MINUTE,CASE WHEN planned_start>? THEN planned_start ELSE ? END,CASE WHEN planned_end<? THEN planned_end ELSE ? END)),0) FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>?",
                     Long.class, lo, lo, hi, hi, employee, hi, lo);
             // Conservative scheduled gross minutes. Never treat planned break as confirmed
             // work.
@@ -271,7 +271,7 @@ public class OvertimeService {
             Long missing = db.queryForObject(
                     """
                             SELECT COUNT_BIG(*) FROM dbo.work_schedules s
-                            WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
+                            WHERE s.cancelled_at IS NULL AND s.employee_id=? AND s.planned_start<? AND s.planned_end>?
                             AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
                               WHERE a.schedule_id=s.schedule_id AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN')
                             """,

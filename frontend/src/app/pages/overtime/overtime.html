@@ -2,8 +2,65 @@
 <h1>Đơn tăng ca và xác nhận OT</h1>
 <p class="page-description">Danh sách đơn tăng ca, trạng thái duyệt và thời gian thực tế. Quyết định và xác nhận chỉ
     thực hiện khi kết nối workflow đã được phê duyệt.</p>
-<div class="alert alert-info">Giao diện kiểm tra dữ liệu thật (chỉ đọc). Các chức năng tạo/sửa/duyệt/xác nhận đang khóa
-    chờ phê duyệt tích hợp và xác minh RBAC, DTO.</div>
+<div class="alert alert-info">Các thao tác ghi chỉ thành công khi backend kích hoạt API và xác nhận quyền thực tế. API
+    OT có thể trả 404 khi chưa được bật.</div>
+<div class="d-flex flex-wrap gap-2 mb-3"><button class="btn" [class.btn-primary]="tab==='mine'"
+        [class.btn-outline-primary]="tab!=='mine'" (click)="switchTab('mine')">Đơn của tôi</button><button class="btn"
+        [class.btn-primary]="tab==='approve'" [class.btn-outline-primary]="tab!=='approve'"
+        (click)="switchTab('approve')">Duyệt OT</button><button class="btn" [class.btn-primary]="tab==='actual'"
+        [class.btn-outline-primary]="tab!=='actual'" (click)="switchTab('actual')">Xác nhận thực tế</button><button
+        class="btn" [class.btn-primary]="tab==='other'" [class.btn-outline-primary]="tab!=='other'"
+        (click)="switchTab('other')">Yêu cầu khác</button></div>
+<section *ngIf="tab==='mine'" class="surface mb-3">
+    <h2 class="h5">Đăng ký OT cá nhân</h2>
+    <div class="alert alert-info">ADMIN không được đăng ký OT cá nhân. Backend xác định người đăng ký từ phiên đăng
+        nhập, không nhận ID nhân viên từ client.</div>
+    <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">Bắt đầu đăng ký</label><input type="datetime-local"
+                class="form-control" [(ngModel)]="requestedStart"></div>
+        <div class="col-md-4"><label class="form-label">Kết thúc đăng ký</label><input type="datetime-local"
+                class="form-control" [(ngModel)]="requestedEnd"></div>
+        <div class="col-md-12"><label class="form-label">Lý do</label><textarea class="form-control"
+                [(ngModel)]="actionReason"></textarea></div>
+    </div><button class="btn btn-primary mt-3" [disabled]="busy" (click)="register()">Gửi đơn OT</button>
+</section>
+<section *ngIf="tab==='approve'||tab==='actual'||tab==='other'" class="surface mb-3">
+    <h2 class="h5">{{tab==='approve'?'Duyệt / từ chối đơn':tab==='actual'?'Ghi nhận và xác nhận thực tế':'Hủy / mở lại /
+        xem xét vượt giờ'}}</h2>
+    <p class="text-muted">Sử dụng ID đơn lấy từ danh sách hoặc chi tiết backend. Quyền, người duyệt và trạng thái do
+        backend quyết định.</p>
+    <div class="row g-3">
+        <div class="col-md-4"><label class="form-label">ID đơn OT</label><input class="form-control"
+                [(ngModel)]="targetId" inputmode="numeric"></div><ng-container *ngIf="tab==='actual'">
+            <div class="col-md-4"><label class="form-label">Giờ vào thực tế</label><input type="datetime-local"
+                    class="form-control" [(ngModel)]="actualStart"></div>
+            <div class="col-md-4"><label class="form-label">Giờ ra thực tế</label><input type="datetime-local"
+                    class="form-control" [(ngModel)]="actualEnd"></div>
+            <div class="col-md-4"><label class="form-label">Phút nghỉ thực tế (chỉ dùng khi backend cho
+                    phép)</label><input type="number" class="form-control" min="0" [(ngModel)]="actualBreakMinutes">
+            </div>
+            <div class="col-md-8"><label class="form-label">Lý do điều chỉnh thực tế</label><input class="form-control"
+                    [(ngModel)]="actualReason"></div>
+        </ng-container>
+        <div class="col-md-4"><label class="form-label">Thao tác</label><select class="form-select"
+                [(ngModel)]="action">
+                <option *ngIf="tab==='approve'" value="approve">Duyệt</option>
+                <option *ngIf="tab==='approve'" value="reject">Từ chối</option>
+                <option *ngIf="tab==='actual'" value="confirm">Xác nhận giờ thực tế</option>
+                <option *ngIf="tab==='other'" value="cancel">Yêu cầu hủy (theo API hiện có)</option>
+                <option *ngIf="tab==='other'" value="reopen-confirmation">Mở lại xác nhận</option>
+                <option *ngIf="tab==='other'" value="overflow-review">Xét phần vượt giờ</option>
+            </select></div>
+        <div class="col-md-8"><label class="form-label">Lý do / ghi chú</label><input class="form-control"
+                [(ngModel)]="actionReason"></div>
+    </div>
+    <div class="d-flex gap-2 mt-3"><button *ngIf="tab==='actual'" class="btn btn-outline-primary" [disabled]="busy"
+            (click)="recordActual()">Ghi giờ thực tế</button><button class="btn btn-primary" [disabled]="busy"
+            (click)="process()">Gửi thao tác</button></div>
+    <p class="small text-muted mt-2">Đối với nghỉ qua ngày, phần nghỉ chi tiết chưa được tích hợp trong biểu mẫu này;
+        không tự phân bổ phút nghỉ.</p>
+</section>
+<div *ngIf="feedback" class="alert alert-info" role="status">{{feedback}}</div>
 <section class="surface mb-3">
     <div class="row g-3 align-items-end">
         <div class="col-md-3"><label class="form-label">Từ ngày</label><input class="form-control" type="date"

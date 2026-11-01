@@ -83,7 +83,9 @@ public class WorkShiftService {
   ShiftView updateWithVerifiedBreaks(AuthenticatedAccount actor, long id, ShiftInput v) {
     validate(v);
     permissions.requireManage(actor);
-    lockShift(id);
+    ShiftView previous = lockShift(id);
+    if (!previous.shiftCode().equals(v.shiftCode()))
+      throw new ResponseStatusException(HttpStatus.CONFLICT, "Không được thay đổi mã ca");
     // Existing work_schedules persist their own planned_start/planned_end and break
     // snapshots.
     // Updating the template must never rewrite already assigned schedules.

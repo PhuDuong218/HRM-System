@@ -16,4 +16,22 @@ export class OvertimePage {
     fail(error: unknown) { this.loading = false; if (error instanceof HttpErrorResponse) { this.error = error.status === 404 ? 'API chưa được bật hoặc đường dẫn chưa khả dụng (404).' : error.status === 403 ? 'Tài khoản không có quyền xem dữ liệu (403).' : error.status === 401 ? 'Phiên đăng nhập không hợp lệ (401).' : `Không tải được dữ liệu (HTTP ${error.status || 'network'}).`; } else { this.error = 'Không thể tải dữ liệu.'; } }
     from = this.monthStart(); to = this.monthEnd(); employeeId = ''; departmentId = ''; status = ''; page = 0;
     load() { if (this.loading) return; this.loading = true; this.error = ''; this.selected = null; this.api.overtime(this.from, this.to, this.status, this.page).subscribe({ next: (value: unknown) => { this.raw = value; this.records = this.asRows(value); this.loading = false; }, error: e => this.fail(e) }); }
+    tab: 'mine' | 'approve' | 'actual' | 'other' = 'mine';
+    switchTab(next: 'mine' | 'approve' | 'actual' | 'other') { this.tab = next; this.action = next === 'actual' ? 'confirm' : next === 'other' ? 'cancel' : 'approve'; this.feedback = ''; }
+    busy = false; feedback = ''; targetId = ''; actionReason = ''; requestedStart = ''; requestedEnd = '';
+    actualStart = ''; actualEnd = ''; actualBreakMinutes = 0; actualReason = '';
+    action: 'approve' | 'reject' | 'cancel' | 'confirm' | 'reopen-confirmation' | 'overflow-review' = 'approve';
+    validId() { const n = Number(this.targetId); return /^\d+$/.test(this.targetId) && Number.isSafeInteger(n) && n > 0 ? n : null; }
+    private execute(call: import('rxjs').Observable<unknown>) { this.busy = true; this.feedback = ''; call.subscribe({ next: () => { this.busy = false; this.feedback = 'Backend đã xử lý thao tác thành công.'; this.load(); }, error: e => { this.busy = false; this.fail(e); this.feedback = this.error; } }); }
+    register() { if (!this.requestedStart || !this.requestedEnd || this.requestedEnd <= this.requestedStart || !this.actionReason.trim()) { this.feedback = 'Cần thời gian bắt đầu/kết thúc hợp lệ và lý do.'; return; } this.execute(this.api.registerOvertime({ requestedStart: this.requestedStart + ':00', requestedEnd: this.requestedEnd + ':00', reason: this.actionReason.trim() })); }
+    process() {
+        const id = this.validId(); if (id === null) { this.feedback = 'Cần ID OT hợp lệ từ backend.'; return; }
+        if (['reject', 'cancel', 'reopen-confirmation', 'overflow-review'].includes(this.action) && !this.actionReason.trim()) { this.feedback = 'Thao tác này bắt buộc nhập lý do hoặc ghi chú.'; return; }
+        const body = this.action === 'overflow-review' ? { note: this.actionReason.trim() } : ['reject', 'cancel', 'reopen-confirmation'].includes(this.action) ? { reason: this.actionReason.trim() } : {};
+        this.execute(this.api.overtimeAction(id, this.action, body));
+    }
+    recordActual() {
+        const id = this.validId(); if (id === null || !this.actualStart || !this.actualEnd || this.actualEnd <= this.actualStart || !Number.isInteger(this.actualBreakMinutes) || this.actualBreakMinutes < 0) { this.feedback = 'Kiểm tra ID, khoảng giờ thực tế và phút nghỉ.'; return; }
+        this.execute(this.api.overtimeActual(id, { actualStart: this.actualStart + ':00', actualEnd: this.actualEnd + ':00', actualBreakMinutes: this.actualBreakMinutes, breaks: [], reason: this.actualReason.trim() }));
+    }
 }

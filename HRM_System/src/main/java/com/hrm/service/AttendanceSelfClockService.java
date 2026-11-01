@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 /**
- * Employee-owned clock events. Never accepts employeeId or timestamps from
+ * HR/employee-owned clock events. Never accepts employeeId or timestamps from
  * clients.
  * Relies on scheduleTransactionManager being bound to the JdbcTemplate
  * datasource.
@@ -29,16 +29,19 @@ public class AttendanceSelfClockService {
     private record Existing(long id, LocalDateTime in, LocalDateTime out) {
     }
 
+    @Autowired(required = false)
+    private ScheduleStateService scheduleStates;
+
     private final JdbcTemplate db;
     private final Clock clock;
 
-    @Autowired
     public AttendanceSelfClockService(JdbcTemplate db) {
-        this(db, Clock.systemDefaultZone());
+        this(db, Clock.system(java.time.ZoneId.of("Asia/Ho_Chi_Minh")));
     }
 
     // Package-visible for deterministic tests.
-    AttendanceSelfClockService(JdbcTemplate db, Clock clock) {
+    @Autowired
+    public AttendanceSelfClockService(JdbcTemplate db, @org.springframework.beans.factory.annotation.Qualifier("hrmBusinessClock") Clock clock) {
         this.db = db;
         this.clock = clock;
     }
@@ -52,15 +55,15 @@ public class AttendanceSelfClockService {
                 """, (rs, n) -> rs.getLong(1), accountId);
         if (found.size() != 1 || found.get(0) <= 0)
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Account has no active employee identity");
-        // Ownership alone is not enough: self-clock is an EMPLOYEE operation.
+        // Ownership alone is not enough: self-clock requires an HR or EMPLOYEE account.
         // A single person may have several accounts with different roles.
         Long employeeRole = db.queryForObject("""
                 SELECT COUNT_BIG(*) FROM dbo.accounts a WITH (HOLDLOCK)
                 JOIN dbo.roles r ON r.role_id=a.role_id
-                WHERE a.account_id=? AND a.is_active=1 AND r.role_code='EMPLOYEE'
+                WHERE a.account_id=? AND a.is_active=1 AND r.role_code IN ('EMPLOYEE','HR')
                 """, Long.class, accountId);
         if (employeeRole == null || employeeRole != 1L)
-            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Employee role required for self-clock");
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN, "HR or EMPLOYEE role required for self-clock");
         return found.get(0);
     }
 
@@ -69,6 +72,7 @@ public class AttendanceSelfClockService {
                 SELECT employee_id, planned_start, planned_end
                 FROM dbo.work_schedules WITH (UPDLOCK, HOLDLOCK)
                 WHERE schedule_id=? AND employee_id=?
+                  AND cancelled_at IS NULL
                 """,
                 (rs, n) -> new Schedule(rs.getLong(1), rs.getTimestamp(2).toLocalDateTime(),
                         rs.getTimestamp(3).toLocalDateTime()),
@@ -115,6 +119,8 @@ public class AttendanceSelfClockService {
         // operations.
         lockEmployee(employee);
         Schedule s = requireSchedule(scheduleId, employee);
+        if (scheduleStates != null)
+            scheduleStates.requireEffective(scheduleId);
         Existing e = existing(scheduleId);
         if (e != null) {
             if (e.in() != null)
@@ -143,6 +149,8 @@ public class AttendanceSelfClockService {
         long employee = requireEmployee(accountId);
         lockEmployee(employee);
         Schedule s = requireSchedule(scheduleId, employee);
+        if (scheduleStates != null)
+            scheduleStates.requireEffective(scheduleId);
         Existing e = existing(scheduleId);
         if (e == null || e.in() == null)
             throw new ResponseStatusException(HttpStatus.CONFLICT, "Check-in required before checkout");
@@ -173,6 +181,7 @@ public class AttendanceSelfClockService {
     }
 
     private void lockEmployee(long employeeId) {
+        db.queryForObject("SELECT employee_id FROM dbo.employees WITH(UPDLOCK,HOLDLOCK) WHERE employee_id=?",Long.class,employeeId);
         // SQL Server transaction-scoped application lock, shared across clock requests.
         Integer status = db.queryForObject("""
                 DECLARE @res int;

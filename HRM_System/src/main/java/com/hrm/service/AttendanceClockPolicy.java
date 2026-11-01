@@ -16,7 +16,7 @@ public final class AttendanceClockPolicy {
     private AttendanceClockPolicy() {
     }
 
-    public static final int CHECK_IN_WINDOW_MINUTES = 15;
+    public static final int CHECK_IN_WINDOW_MINUTES = 30;
     public static final int CHECK_OUT_AFTER_END_MINUTES = 120;
 
     public record CheckInDecision(boolean allowed, long lateMinutes) {
@@ -38,7 +38,7 @@ public final class AttendanceClockPolicy {
         validateShift(plannedStart, plannedEnd);
         Objects.requireNonNull(serverNow, "serverNow");
         boolean allowed = !serverNow.isBefore(plannedStart.minusMinutes(CHECK_IN_WINDOW_MINUTES))
-                && !serverNow.isAfter(plannedStart.plusMinutes(CHECK_IN_WINDOW_MINUTES));
+                && serverNow.isBefore(plannedEnd);
         // For exact subminute lateness, round UP: any arrival after plannedStart is
         // late.
         long lateMinutes = serverNow.isAfter(plannedStart)

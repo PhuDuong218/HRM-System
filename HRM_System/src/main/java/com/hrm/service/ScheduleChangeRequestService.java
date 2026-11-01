@@ -74,6 +74,7 @@ public class ScheduleChangeRequestService {
                 SELECT schedule_id,employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note
                 FROM dbo.work_schedules WITH(UPDLOCK,HOLDLOCK)
                 WHERE schedule_id=? AND employee_id=?
+                  AND cancelled_at IS NULL
                 """, (rs, i) -> new ScheduleView(rs.getLong(1), rs.getLong(2), rs.getObject(3, Long.class),
                 rs.getDate(4).toLocalDate(), rs.getTimestamp(5).toLocalDateTime(),
                 rs.getTimestamp(6).toLocalDateTime(), rs.getInt(7), rs.getString(8)),
