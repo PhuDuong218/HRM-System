@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../../shared/translate.pipe';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,7 +20,7 @@ interface ShiftLookup { text: string; selected: ShiftOption | null; error: strin
 const employeeLookup = (): EmployeeLookup => ({ text: '', selected: null, options: [], error: '', loading: false });
 const shiftLookup = (): ShiftLookup => ({ text: '', selected: null, error: '' });
 
-@Component({ selector: 'app-schedules', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-schedules', standalone: true, imports: [CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
 export class SchedulesPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);

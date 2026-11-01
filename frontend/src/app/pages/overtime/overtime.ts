@@ -1,9 +1,10 @@
+import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { WorkModuleApiService } from '../../services/work-module-api.service';
-@Component({ selector: 'app-overtime', standalone: true, imports: [CommonModule, FormsModule], templateUrl: './overtime.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-overtime', standalone: true, imports: [CommonModule, FormsModule,TranslatePipe], templateUrl: './overtime.html', styleUrl: '../work-module.css' })
 export class OvertimePage {
     private api = inject(WorkModuleApiService);
     private localDate(y: number, m: number, d: number): string { return `${y}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')}`; }

@@ -110,6 +110,12 @@ Lỗi 401/403 phải đối chiếu Security thật. Lỗi kết nối: kiểm t
 
 Proxy chỉ phục vụ phát triển local; bản production cần reverse proxy /api hoặc cấu hình URL API và CORS phù hợp. Chưa có hướng dẫn deploy production trong bản này.
 
+### Báo cáo
+
+Trang `/reports` kết nối các API báo cáo nhân sự, hợp đồng, công và quỹ lương; có bộ lọc theo API và xuất XLSX với bộ lọc của báo cáo đang hiển thị. Khởi động lại `npm start` sau khi sửa proxy. ADMIN/HR cần quyền `REPORT_VIEW`; báo cáo lương cần thêm `PAYROLL_VIEW`. Các quyền này chưa có trong seed SQL gốc. Việc lọc báo cáo theo phạm vi phòng ban của HR chưa được backend thực hiện; cần xử lý và kiểm thử trước khi dùng với dữ liệu thực.
+
+Quỹ lương chỉ gồm các kỳ nằm trọn trong khoảng lọc và bảng lương đã chốt. Frontend giữ chính xác các chữ số thập phân của số tiền từ JSON; các phép tính lương vẫn do backend thực hiện. Chạy `npm run test:reports` để kiểm tra request, bộ lọc, quyền và định dạng tiền.
+
 ## 7. Phát triển nhân viên từ đâu?
 
 Bước tiếp theo sau khi hiểu giao diện là lấy Controller và DTO nhân viên từ backend để đối chiếu hợp đồng API. Cần xác minh path, quyền, cấu trúc phân trang, tên trường, định dạng ngày và lỗi.

@@ -2,11 +2,13 @@
 export interface NavigationLink {
   path: string;
   label: string;
+  roles?: string[];
 }
 
 export interface NavigationItem {
   id: string;
   label: string;
+  roles?: string[];
   path?: string;
   children?: NavigationLink[];
 }
@@ -19,6 +21,7 @@ export const navigation: NavigationItem[] = [
       {path:'assignments',label:'Phân công / Điều chuyển'},
       {path:'certificates',label:'Bằng cấp / Chứng chỉ'},
       { path: 'contracts', label: 'Hợp đồng' },
+      { path: 'contract-types', label: 'Loại hợp đồng' },
       { path: 'decisions', label: 'Khen thưởng / Kỷ luật' }
     ]
   },
@@ -51,8 +54,8 @@ export const navigation: NavigationItem[] = [
   { id: 'reports', path: 'reports', label: 'Báo cáo' },
   {
     id: 'system', label: 'Hệ thống', children: [
-      { path: 'accounts', label: 'Tài khoản và phân quyền' },
-      { path: 'connection', label: 'Kiểm tra kết nối' },
+      { path: 'accounts', label: 'Tài khoản và phân quyền', roles:['ADMIN'] },
+      { path: 'connection', label: 'Kiểm tra kết nối', roles:['ADMIN'] },
       {path:'audit',label:'Lịch sử thay đổi'}
     ]
   }

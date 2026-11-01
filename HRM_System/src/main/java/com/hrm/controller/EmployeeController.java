@@ -72,7 +72,7 @@ public class EmployeeController {
     // 2. Lay danh sach phan trang
     // Tam gioi han ADMIN cho den khi Service ho tro loc pham vi HR
     @GetMapping(params = { "page" })
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public Page<EmployeeDTO> getEmployeesPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
@@ -145,7 +145,7 @@ public class EmployeeController {
     // 7. Tim kiem nhan vien
     // Tam gioi han ADMIN de tranh HR xem nhan vien ngoai pham vi
     @GetMapping("/search")
-    @PreAuthorize("hasRole('ADMIN') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
     public Page<EmployeeDTO> searchEmployees(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) EmploymentStatus status,

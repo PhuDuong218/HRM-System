@@ -1,0 +1,44 @@
+:host { display: block; min-height: 100dvh; }
+.report-tabs { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 20px; }
+.report-tabs button { background: #fff; border: 1px solid #dce5ef; border-radius: 8px; padding: 10px 16px; color: #526c86; font-size: 13px; font-weight: 600; }
+.report-tabs button.active { color: #004581; background: #e8f1fb; border-color: #b6cfe8; }
+.report-heading { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; }
+.report-heading h2 { margin-bottom: 6px; font-size: 20px; }
+.report-kicker { margin-bottom: 8px; color: #7390ac; font-size: 10px; font-weight: 700; letter-spacing: 1.2px; }
+.report-description { margin-bottom: 0; font-size: 13px; }
+.export-button { white-space: nowrap; }
+.report-filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); align-items: end; gap: 14px; margin-top: 24px; padding: 18px; border-radius: 9px; background: #f6f9fc; }
+.report-filters .form-label { font-size: 12px; color: #526c86; font-weight: 600; margin-bottom: 6px; }
+.report-filters .form-label span { font-weight: 400; }
+.report-filters .form-control { min-height: 40px; font-size: 13px; }
+.filter-submit button { white-space: nowrap; }
+.employee-info { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin-top: 24px; padding: 12px 16px; border-radius: 8px; background: #f6f9fc; color: #627891; font-size: 13px; }
+.report-results { display: flow-root; min-height: clamp(300px, 45dvh, 560px); }
+.report-state { padding: 48px 0 30px; }
+.group-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; margin-top: 24px; }
+.group-card { min-width: 0; padding: 18px; border: 1px solid #e5ebf2; border-radius: 10px; }
+.group-card h3 { margin-bottom: 15px; color: #29465f; font-size: 15px; font-weight: 700; }
+.group-card th, .group-card td { padding: 10px; }
+.period-label { margin: 24px 0 14px; color: #526c86; font-size: 13px; font-weight: 600; }
+.metric-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+.metric { min-width: 0; min-height: 118px; padding: 17px; border: 1px solid #e5edf5; border-radius: 10px; background: #f9fbfe; }
+.metric span, .metric small { display: block; color: #6d8195; font-size: 12px; }
+.metric strong { display: block; margin: 10px 0 5px; color: #174469; font-size: 22px; font-weight: 700; overflow-wrap: anywhere; }
+.metric em { font-size: 13px; font-style: normal; font-weight: 500; }
+.metric-highlight { background: #eaf4fc; border-color: #c9dff0; }
+.payroll-metrics .metric strong { font-size: 19px; }
+.report-note { margin: 16px 0 0; color: #738397; font-size: 12px; line-height: 1.6; }
+.batch-heading { display: flex; justify-content: space-between; align-items: center; gap: 12px; margin: 30px 0 12px; }
+.batch-heading h3 { margin: 0; font-size: 15px; font-weight: 700; }
+.batch-code { font-weight: 600; color: #24415f; }
+.amount { white-space: nowrap; }
+.empty-batches { padding: 30px 12px; border: 1px dashed #d9e3ec; border-radius: 8px; text-align: center; color: #738397; font-size: 13px; }
+:host-context([data-bs-theme='dark']) .report-tabs button { background: #1c2a3c; border-color: #506580; color: #c2d0e2; }
+:host-context([data-bs-theme='dark']) .report-tabs button.active { background: #34557e; border-color: #7195c0; color: #fff; }
+:host-context([data-bs-theme='dark']) .report-filters, :host-context([data-bs-theme='dark']) .employee-info { background: #26364b; color: #c2d0e2; }
+:host-context([data-bs-theme='dark']) .report-filters .form-label, :host-context([data-bs-theme='dark']) .period-label { color: #c2d0e2; }
+:host-context([data-bs-theme='dark']) .group-card, :host-context([data-bs-theme='dark']) .metric { border-color: #35465d; background: #26364b; }
+:host-context([data-bs-theme='dark']) .group-card h3, :host-context([data-bs-theme='dark']) .metric strong, :host-context([data-bs-theme='dark']) .batch-code { color: #e4efff; }
+:host-context([data-bs-theme='dark']) .metric span, :host-context([data-bs-theme='dark']) .metric small, :host-context([data-bs-theme='dark']) .report-note { color: #b3c3d6; }
+:host-context([data-bs-theme='dark']) .metric-highlight { background: #34557e; border-color: #7195c0; }
+@media (max-width: 700px) { .group-grid { grid-template-columns: 1fr; } .report-heading, .batch-heading { flex-direction: column; align-items: flex-start; } .employee-info { flex-wrap: wrap; } }

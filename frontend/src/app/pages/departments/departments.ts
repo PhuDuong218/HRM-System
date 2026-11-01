@@ -1,3 +1,6 @@
+import {ManagementPageBase} from '../../shared/management-page.base';
+import {PageHeader} from '../../shared/page-header';
+import {TranslatePipe} from '../../shared/translate.pipe';
 import {Pagination} from '../../shared/pagination';
 import {RouterLink} from '@angular/router';
 import { RecordWorkspace } from '../../shared/record-workspace';
@@ -6,15 +9,15 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, expand, reduce, takeUntil } from 'rxjs';
 import { DepartmentService, Department, Head, Assignment, Position } from '../../services/department.service';
 
-@Component({ selector: 'app-departments', standalone: true, imports: [Pagination,RecordWorkspace,RouterLink], templateUrl: './departments.html' })
-export class DepartmentsPage implements OnInit, OnDestroy {
+@Component({ selector: 'app-departments', standalone: true, imports: [PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe], templateUrl: './departments.html' })
+export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDestroy {
   private api = inject(DepartmentService);
   private destroyed = new Subject<void>();
   private selectionChanged = new Subject<void>();
   rows: Department[] = []; selected: Department | null = null;
   heads: Head[] = []; candidates: Assignment[] = []; positions: Position[] = [];
   page = 0; pages = 0; historyPage = 0; historyPages = 0; candidatePage = 0; candidatePages = 0;
-  loading = false; saving = false; error = ''; message = '';
+
   positionsLoading = false; positionsError = '';
   positionsLoaded = false;
   today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());

@@ -1,20 +1,21 @@
+import {TranslatePipe} from './translate.pipe';
 import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@angular/core';
 
 /** Shared list/detail workspace. Narrow screens use a right drawer, never a form below the table. */
-@Component({
+@Component({imports:[TranslatePipe],
   selector: 'app-record-workspace',
   standalone: true,
   template: `
     <div class="record-layout" [class.has-detail]="open">
       <div class="record-list"><ng-content select="[recordList]" /></div>
       @if (open) {
-        <button class="record-backdrop" type="button" aria-label="Đóng bảng chi tiết"
+        <button class="record-backdrop" type="button" [attr.aria-label]="&quot;Đóng bảng chi tiết&quot; | translate"
                 tabindex="-1" [disabled]="busy" (click)="dismiss.emit()"></button>
-        <aside #panel class="record-detail" tabindex="-1" aria-label="Chi tiết và thao tác"
+        <aside #panel class="record-detail" tabindex="-1" [attr.aria-label]="&quot;Chi tiết và thao tác&quot; | translate"
                (keydown.escape)="close($event)" (keydown.tab)="keepFocus($event)">
-          <div class="panel-toolbar"><span>THÔNG TIN & THAO TÁC</span>
+          <div class="panel-toolbar"><span>{{ "THÔNG TIN & THAO TÁC" | translate }}</span>
             <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy"
-                    (click)="dismiss.emit()" aria-label="Đóng bảng chi tiết">Đóng ×</button>
+                    (click)="dismiss.emit()" [attr.aria-label]="&quot;Đóng bảng chi tiết&quot; | translate">{{ "Đóng ×" | translate }}</button>
           </div>
           <ng-content select="[recordDetail]" />
         </aside>
@@ -26,7 +27,7 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
     .record-layout{display:grid;gap:20px;align-items:start}
     .record-list,.record-detail{min-width:0}
     .has-detail{grid-template-columns:minmax(0,1.15fr) minmax(360px,1fr)}
-    .record-detail{position:sticky;top:16px;max-height:calc(100dvh - 32px);overflow:auto;scrollbar-gutter:stable;border:1px solid #e4eaf2;border-radius:14px;background:#fff;box-shadow:0 6px 24px #17365308}
+    .record-detail{position:sticky;top:calc(var(--app-topbar-height, 0px) + 16px);max-height:calc(100dvh - var(--app-topbar-height, 0px) - 32px);overflow:auto;scrollbar-gutter:stable;border:1px solid #e4eaf2;border-radius:14px;background:#fff;box-shadow:0 6px 24px #17365308}
     .record-detail:focus{outline:none}
     .panel-toolbar{position:sticky;top:0;z-index:2;background:#fff;display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 18px;border-bottom:1px solid #e4eaf2}
     .panel-toolbar span{font-size:10px;font-weight:700;letter-spacing:.8px;color:#637b91}
@@ -44,7 +45,8 @@ export class RecordWorkspace {
   @Input() busy = false;
   @Output() dismiss = new EventEmitter<void>();
   @ViewChild('panel') set panel(element: ElementRef<HTMLElement> | undefined) {
-    if (element) queueMicrotask(() => element.nativeElement.focus());
+    // Keep the page heading and filter position stable when opening a panel.
+    if (element) queueMicrotask(() => element.nativeElement.focus({preventScroll:true}));
   }
   close(event: Event) {
     event.stopPropagation();

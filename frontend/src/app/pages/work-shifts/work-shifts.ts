@@ -1,3 +1,4 @@
+import { TranslatePipe } from '../../shared/translate.pipe';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -40,7 +41,7 @@ const shiftValidator: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-work-shifts', standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-shifts.html', styleUrl: '../work-module.css',
 })
 export class WorkShiftsPage implements OnInit {
