@@ -21,6 +21,9 @@ import static com.hrm.dto.WorkTimeDTOs.*;
  */
 @Service
 public class WorkScheduleService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private ScheduleStateService scheduleStates;
+
     private final JdbcTemplate db;
     private final ScheduleWritePermissionService permissions;
 
@@ -41,7 +44,7 @@ public class WorkScheduleService {
 
     public List<ScheduleView> list(long employeeId, LocalDate from, LocalDate to) {
         return db.query(
-                "SELECT * FROM dbo.work_schedules WHERE employee_id=? AND planned_start < ? AND planned_end > ? ORDER BY planned_start",
+                "SELECT * FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND planned_start < ? AND planned_end > ? ORDER BY planned_start",
                 MAPPER,
                 employeeId,
                 Timestamp.valueOf(to.plusDays(1).atStartOfDay()),
@@ -140,7 +143,7 @@ public class WorkScheduleService {
 
     private void assertNoOverlap(long emp, LocalDateTime start, LocalDateTime end, long excluding) {
         Integer n = db.queryForObject(
-                "SELECT COUNT(1) FROM dbo.work_schedules WHERE employee_id=? AND schedule_id<>? AND planned_start < ? AND planned_end > ?",
+                "SELECT COUNT(1) FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND schedule_id<>? AND planned_start < ? AND planned_end > ?",
                 Integer.class,
                 emp,
                 excluding,
@@ -195,7 +198,10 @@ public class WorkScheduleService {
     @Transactional("scheduleTransactionManager")
     ScheduleView updateWithVerifiedBreaks(AuthenticatedAccount actor, long id, ScheduleInput v) {
         validate(v);
+        db.query("SELECT schedule_id FROM dbo.work_schedules WITH(UPDLOCK,HOLDLOCK) WHERE schedule_id=?",(rs,n)->rs.getLong(1),id);
         ScheduleView previous = get(id);
+        if (scheduleStates != null)
+            scheduleStates.requireEditable(id);
 
         // Immutable ownership: changing the employee means creating a distinct
         // schedule, not silently transferring.

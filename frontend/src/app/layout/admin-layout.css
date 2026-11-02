@@ -225,3 +225,8 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
 :host-context([data-bs-theme='dark']) .login-success-eyebrow { color:#91dbad; }
 :host-context([data-bs-theme='dark']) .login-success-message, :host-context([data-bs-theme='dark']) .login-success-close { color:#b9d0c3; }
 :host-context([data-bs-theme='dark']) .login-success-close:hover { background:#2b443b; color:#e6f7ed; }
+
+/* Preserve compact controls from the personnel responsive layout. */
+.profile-trigger-arrow{color:#75869a;font-size:18px}
+@media(max-width:480px){.account-name,.profile-trigger-arrow{display:none}.profile-trigger{padding:4px}.account-actions{gap:4px}}
+@media(max-width:360px){.menu-button span{display:none}.menu-button{width:44px;justify-content:center}.account-actions>.btn{padding:8px;font-size:12px}}

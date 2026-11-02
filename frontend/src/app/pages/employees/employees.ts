@@ -1,3 +1,6 @@
+import {ManagementPageBase} from '../../shared/management-page.base';
+import {PageHeader} from '../../shared/page-header';
+import {TranslatePipe} from '../../shared/translate.pipe';
 import {Pagination} from '../../shared/pagination';
 import { Component, DestroyRef, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
@@ -8,8 +11,8 @@ import { EmployeeService, Employee, EmployeeForm, errorMessage } from '../../ser
 import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
-@Component({ selector: 'app-employees', standalone: true, imports: [Pagination,FormsModule, DatePipe, RecordWorkspace], templateUrl: './employees.html', styleUrl: './employees.css' })
-export class EmployeesPage implements OnInit {
+@Component({ selector: 'app-employees', standalone: true, imports: [PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
+export class EmployeesPage extends ManagementPageBase implements OnInit {
     private api = inject(EmployeeService);
     private auth = inject(AuthService);
     private destroy = inject(DestroyRef);
@@ -30,12 +33,12 @@ export class EmployeesPage implements OnInit {
         id: number;
         name: string;
     }[] = [];
-    loading = false;
+
     detailLoading = false;
-    saving = false;
-    error = '';
+
+
     detailError = '';
-    message = '';
+
     choicesError = '';
     mode: string | null = null;
     form = blank();
@@ -43,6 +46,8 @@ export class EmployeesPage implements OnInit {
     rehireDate = '';
     rehireReason = '';
     get admin() { return this.auth.profile()?.role === 'ADMIN'; }
+    get canSearch(){return ['ADMIN','HR'].includes(this.auth.profile()?.role||'');}
+    get ownProfile(){return !!this.selected && this.selected.employeeCode===this.auth.profile()?.employeeCode;}
     ngOnInit() { this.auth.loadCurrentUser().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.load(), error: () => this.load() }); this.loadChoices(); }
     loadChoices() { this.choicesError = ''; for (const path of ['departments', 'positions'])
         this.api.choices(path).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { const k = path === 'departments' ? 'department' : 'position'; const c = r.filter(x => x['isActive'] !== false).map(x => ({ id: Number(x[k + 'Id']), name: String(x[k + 'Name']) })); if (path === 'departments')
@@ -50,7 +55,7 @@ export class EmployeesPage implements OnInit {
             else
                 this.positions = c; }, error: e => this.choicesError = (path === 'positions' ? 'Danh mục chức vụ: ' : 'Danh mục phòng ban: ') + errorMessage(e) }); }
     load(page = 0) { if (this.loading || this.saving)
-        return; this.loading = true; this.error = ''; this.api.list(this.admin, page, this.keyword.trim(), this.status, this.department).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
+        return; this.loading = true; this.error = ''; this.api.list(this.canSearch, page, this.keyword.trim(), this.status, this.department).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
             this.rows = r;
             this.page = 0;
             this.pages = r.length ? 1 : 0;
@@ -68,7 +73,7 @@ export class EmployeesPage implements OnInit {
     close() { if (this.saving)
         return; this.detailRequest?.unsubscribe(); this.mode = null; this.selected = null; this.detailLoading = false; this.detailError = ''; }
     edit(mode: string) { if (this.saving || this.detailLoading)
-        return; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '' }; }
+        return; this.form.privateFieldsEditable=this.ownProfile; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '', privateFieldsEditable:this.ownProfile }; }
     save(f: NgForm) { if (this.saving)
         return; if (f.invalid || !this.form.fullName.trim()) {
         f.control.markAllAsTouched();

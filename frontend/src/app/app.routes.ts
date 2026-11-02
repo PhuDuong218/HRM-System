@@ -1,11 +1,8 @@
+import {adminGuard} from './services/admin.guard';
 import { Routes } from "@angular/router";
-import { PersonnelWorkspacePage } from "./pages/personnel-workspace/personnel-workspace";
-import { CatalogPage } from "./pages/catalog/catalog";
 import { AdminLayout } from "./layout/admin-layout";
-import { EmployeesPage } from "./pages/employees/employees";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
-import { DepartmentsPage } from "./pages/departments/departments";
 import { authGuard } from "./services/auth.guard";
 export const routes: Routes = [
   { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
@@ -16,52 +13,52 @@ export const routes: Routes = [
     children: [
       { path: "", redirectTo: "overview", pathMatch: "full" },
       { path: "overview", loadComponent: () => import("./pages/overview/overview").then(m => m.OverviewPage) },
-      { path: "employees", component: EmployeesPage },
+      { path: "employees", loadComponent: () => import("./pages/employees/employees").then(m => m.EmployeesPage) },
       {
         path: "assignments",
-        component: PersonnelWorkspacePage,
+        loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "assignments" },
       },
       {
         path: "certificates",
-        component: PersonnelWorkspacePage,
+        loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "certificates" },
       },
       {
         path: "leave-entitlements",
-        component: PersonnelWorkspacePage,
+        loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "entitlements" },
       },
       {
         path: "audit",
-        component: PersonnelWorkspacePage,
+        loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "audit" },
       },
-      { path: "connection", component: ConnectionPage },
+      { path: "connection", component: ConnectionPage, canActivate:[adminGuard] },
       {
         path: "accounts",
-        loadComponent: () =>
-          import("./pages/accounts/accounts").then((m) => m.AccountsPage),
+        canActivate:[adminGuard],
+        loadComponent: () => import("./pages/accounts/accounts").then(m => m.AccountsPage),
       },
-      { path: "departments", component: DepartmentsPage },
+      { path: "departments", loadComponent: () => import("./pages/departments/departments").then(m => m.DepartmentsPage) },
       {
         path: "department-catalog",
-        component: CatalogPage,
+        loadComponent: () => import("./pages/catalog/catalog").then(m => m.CatalogPage),
         data: { catalog: "departments" },
       },
       {
         path: "leave-types",
-        component: CatalogPage,
+        loadComponent: () => import("./pages/catalog/catalog").then(m => m.CatalogPage),
         data: { catalog: "leaveTypes" },
       },
       {
         path: "positions",
-        component: CatalogPage,
+        loadComponent: () => import("./pages/catalog/catalog").then(m => m.CatalogPage),
         data: { catalog: "positions" },
       },
       {
         path: "qualifications",
-        component: CatalogPage,
+        loadComponent: () => import("./pages/catalog/catalog").then(m => m.CatalogPage),
         data: { catalog: "qualifications" },
       },
       {
@@ -72,28 +69,20 @@ export const routes: Routes = [
       {
         path: "contract-types",
         loadComponent: () =>
-          import("./pages/contract-types/contract-types").then((m) => m.ContractTypesPage),
+          import("./pages/contract-types/contract-types").then(
+            (m) => m.ContractTypesPage,
+          ),
       },
-      {
-        path: "schedules",
-        component: PlaceholderPage,
-        data: { title: "Lịch làm việc" },
-      },
-      {
-        path: "attendance",
-        component: PlaceholderPage,
-        data: { title: "Chấm công" },
-      },
+      { path: "work-shifts", loadComponent: () => import("./pages/work-shifts/work-shifts").then(m => m.WorkShiftsPage) },
+      { path: "schedules", loadComponent: () => import("./pages/schedules/schedules").then(m => m.SchedulesPage) },
+      { path: "attendance", loadComponent: () => import("./pages/attendance/attendance").then(m => m.AttendancePage) },
+      { path: "attendance/summary", loadComponent: () => import("./pages/attendance-summary/attendance-summary").then(m => m.AttendanceSummaryPage) },
       {
         path: "requests",
-        component: PersonnelWorkspacePage,
+        loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "requests" },
       },
-      {
-        path: "overtime",
-        component: PlaceholderPage,
-        data: { title: "Tăng ca" },
-      },
+      { path: "overtime", loadComponent: () => import("./pages/overtime/overtime").then(m => m.OvertimePage) },
       {
         path: "allowances",
         component: PlaceholderPage,
@@ -116,8 +105,7 @@ export const routes: Routes = [
       },
       {
         path: "reports",
-        loadComponent: () =>
-          import("./pages/reports/reports").then((m) => m.ReportsPage),
+        loadComponent: () => import("./pages/reports/reports").then(m => m.ReportsPage),
       },
       {
         path: "forbidden",
@@ -125,7 +113,7 @@ export const routes: Routes = [
         data: {
           title: "Không có quyền truy cập",
           message:
-            "Đây là trang thông báo mẫu; sẽ nối với cơ chế phân quyền thực tế.",
+            "Tài khoản của bạn không có quyền truy cập chức năng này.",
         },
       },
       {

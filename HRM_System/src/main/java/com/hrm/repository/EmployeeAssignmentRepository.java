@@ -125,4 +125,6 @@ default List<EmployeeAssignment> findCurrentByEmployeeIds(
             employeeIds,
             LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 }
+    @Query(value="SELECT a FROM EmployeeAssignment a JOIN FETCH a.employee JOIN FETCH a.department JOIN FETCH a.position WHERE a.employee.employeeId IN :ids",countQuery="SELECT COUNT(a) FROM EmployeeAssignment a WHERE a.employee.employeeId IN :ids")
+    Page<EmployeeAssignment> findScoped(@Param("ids") Collection<Long> ids,Pageable pageable);
 }

@@ -1,3 +1,4 @@
+import {TranslatePipe} from '../../shared/translate.pipe';
 import { LanguageService } from '../../services/language.service';
 import {Pagination} from '../../shared/pagination';
 import { EmployeeService, Employee, errorMessage } from '../../services/employee.service';
@@ -20,7 +21,7 @@ import {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [Pagination,RecordWorkspace],
+  imports: [Pagination,RecordWorkspace,TranslatePipe],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })

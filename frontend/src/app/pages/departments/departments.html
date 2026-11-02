@@ -1,47 +1,46 @@
-<p class="eyebrow">CƠ CẤU NHÂN SỰ</p>
-<div class="d-flex justify-content-between gap-3"><h1>Phòng ban và trưởng phòng</h1><a class="btn btn-outline-primary" routerLink="/department-catalog">Thêm / sửa phòng ban</a></div>
-<p class="page-description">Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.</p>
-@if (error) { <div class="alert alert-danger" role="alert">{{ error }}</div> }
-@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+<p class="eyebrow">{{ "CƠ CẤU NHÂN SỰ" | translate }}</p>
+<app-page-header [title]="&quot;Phòng ban và trưởng phòng&quot; | translate" [description]="&quot;Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.&quot; | translate"><a class="btn btn-outline-primary" routerLink="/department-catalog">{{ "Thêm / sửa phòng ban" | translate }}</a></app-page-header>
+@if (error) { <div class="alert alert-danger" role="alert">{{(error) | translate}}</div> }
+@if (message) { <div class="alert alert-success" role="status">{{(message) | translate}}</div> }
 <app-record-workspace [open]="!!selected" [busy]="saving" (dismiss)="clearSelection()"><section recordList class="surface mb-4">
-  <div class="d-flex justify-content-between align-items-center mb-3"><h2>Danh sách phòng ban</h2><button class="btn btn-outline-primary" (click)="load()" [disabled]="loading || saving">Tải lại</button></div>
-  @if (loading) { <p role="status">Đang tải…</p> }
-  <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã</th><th>Phòng ban</th><th>Trưởng phòng</th><th>Từ ngày</th><th>Trạng thái</th><th></th></tr></thead>
+  <div class="list-toolbar"><h2>{{ "Danh sách phòng ban" | translate }}</h2><button class="btn btn-outline-primary" (click)="load()" [disabled]="loading || saving">{{ "Tải lại" | translate }}</button></div>
+  @if (loading) { <p role="status">{{ "Đang tải…" | translate }}</p> }
+  <div class="table-responsive"><table class="table align-middle"><thead><tr><th>{{ "Mã" | translate }}</th><th>{{ "Phòng ban" | translate }}</th><th>{{ "Trưởng phòng" | translate }}</th><th>{{ "Từ ngày" | translate }}</th><th>{{ "Trạng thái" | translate }}</th><th></th></tr></thead>
     <tbody>@for (d of rows; track d.departmentId) {
-      <tr><td>{{ d.departmentCode }}</td><td>{{ d.departmentName }}</td><td>{{ d.headFullName || 'Chưa bổ nhiệm' }}</td><td>{{ d.headEffectiveFrom || '—' }}</td><td>{{ d.isActive ? 'Hoạt động' : 'Ngừng sử dụng' }}</td><td><button class="btn btn-sm btn-outline-primary" (click)="select(d)" [disabled]="saving">Chi tiết</button></td></tr>
-    } @empty { <tr><td colspan="6">Chưa có dữ liệu để hiển thị.</td></tr> }</tbody>
+      <tr [class.selected]="selected?.departmentId===d.departmentId"><td [attr.data-label]="'Mã' | translate">{{d.departmentCode}}</td><td [attr.data-label]="'Phòng ban' | translate">{{d.departmentName}}</td><td [attr.data-label]="'Trưởng phòng' | translate">{{(d.headFullName || 'Chưa bổ nhiệm') | translate}}</td><td [attr.data-label]="'Từ ngày' | translate">{{d.headEffectiveFrom || '—'}}</td><td [attr.data-label]="'Trạng thái' | translate">{{(d.isActive ? 'Hoạt động' : 'Ngừng sử dụng') | translate}}</td><td [attr.data-label]="'Thao tác' | translate"><button class="btn btn-sm btn-outline-primary" (click)="select(d)" [disabled]="saving">{{ "Chi tiết" | translate }}</button></td></tr>
+    } @empty { <tr><td colspan="6">{{ 'Chưa có dữ liệu để hiển thị.' | translate }}</td></tr> }</tbody>
   </table></div>
   <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" />
 </section>
 <div recordDetail>@if (selected; as d) {
   <section class="surface mb-4">
-    <div class="d-flex justify-content-between align-items-center gap-2"><h2>{{ d.departmentName }}</h2></div><p>Trưởng phòng hiện tại: <strong>{{ d.headFullName || 'Chưa bổ nhiệm' }}</strong></p>
-    @if (d.headEmployeeId && positionsLoading) { <p role="status">Đang tải danh sách chức vụ…</p> }
-    @if (d.headEmployeeId && positionsError) { <div class="alert alert-warning" role="alert">{{ positionsError }} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadPositions()">Thử lại</button></div> }
+    <div class="d-flex justify-content-between align-items-center gap-2"><h2>{{d.departmentName}}</h2></div><p>{{ "Trưởng phòng hiện tại: " | translate }}<strong>{{(d.headFullName || 'Chưa bổ nhiệm') | translate}}</strong></p>
+    @if (d.headEmployeeId && positionsLoading) { <p role="status">{{ "Đang tải danh sách chức vụ…" | translate }}</p> }
+    @if (d.headEmployeeId && positionsError) { <div class="alert alert-warning" role="alert">{{(positionsError) | translate}} <button type="button" class="btn btn-sm btn-outline-secondary" (click)="loadPositions()">{{ "Thử lại" | translate }}</button></div> }
     @if (d.isActive) {
-      <h3>{{ d.headEmployeeId ? 'Thay trưởng phòng' : 'Bổ nhiệm trưởng phòng' }}</h3>
-      <p>Ngày hiệu lực phải sau ngày bắt đầu phân công của người liên quan và không ở tương lai. Nếu mới phân công hôm nay, cần thực hiện từ ngày sau.</p>
+      <h3>{{(d.headEmployeeId ? 'Thay trưởng phòng' : 'Bổ nhiệm trưởng phòng') | translate}}</h3>
+      <p>{{ "Ngày hiệu lực phải sau ngày bắt đầu phân công của người liên quan và không ở tương lai. Nếu mới phân công hôm nay, cần thực hiện từ ngày sau." | translate }}</p>
       <form (submit)="appoint($event, employee.value, appointDate.value, previousPosition.value, appointReason.value)" class="row g-3">
-        <div class="col-md-6"><label for="new-head" class="form-label">Người được bổ nhiệm</label><select id="new-head" #employee class="form-select" required [disabled]="saving"><option value="">Chọn nhân viên trong phòng</option>@for (e of candidates; track e.employeeId) {<option [value]="e.employeeId">{{ e.employeeCode }} — {{ e.employeeName }} (phân công từ {{ e.effectiveFrom }})</option>}</select>
+        <div class="col-md-6"><label for="new-head" class="form-label">{{ "Người được bổ nhiệm" | translate }}</label><select id="new-head" #employee class="form-select" required [disabled]="saving"><option value="">{{ "Chọn nhân viên trong phòng" | translate }}</option>@for (e of candidates; track e.employeeId) {<option [value]="e.employeeId">{{e.employeeCode}} — {{e.employeeName}}{{ " (phân công từ " | translate }}{{e.effectiveFrom}})</option>}</select>
           <app-pagination [page]="candidatePage" [pages]="candidatePages" [busy]="saving" label="Phân trang ứng viên trưởng phòng" (pageChange)="loadCandidates($event)" />
         </div>
-        <div class="col-md-6"><label for="appoint-date" class="form-label">Có hiệu lực từ ngày</label><input id="appoint-date" #appointDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
-        <div class="col-md-6"><label for="previous-position" class="form-label">Chức vụ tiếp theo của trưởng phòng cũ</label><select id="previous-position" #previousPosition class="form-select" [required]="!!d.headEmployeeId" [disabled]="!d.headEmployeeId || saving || !positionsLoaded"><option value="">{{ d.headEmployeeId ? 'Chọn chức vụ cho người cũ' : 'Không có người cũ' }}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
-        <div class="col-md-6"><label for="appoint-reason" class="form-label">Lý do bổ nhiệm / thay người</label><textarea id="appoint-reason" #appointReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
-        <div><button type="submit" class="btn btn-primary" [disabled]="saving || !candidates.length || (!!d.headEmployeeId && (!positionsLoaded || !positions.length))">{{ saving ? 'Đang lưu…' : 'Lưu bổ nhiệm' }}</button></div>
+        <div class="col-md-6"><label for="appoint-date" class="form-label">{{ "Có hiệu lực từ ngày" | translate }}</label><input id="appoint-date" #appointDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
+        <div class="col-md-6"><label for="previous-position" class="form-label">{{ "Chức vụ tiếp theo của trưởng phòng cũ" | translate }}</label><select id="previous-position" #previousPosition class="form-select" [required]="!!d.headEmployeeId" [disabled]="!d.headEmployeeId || saving || !positionsLoaded"><option value="">{{(d.headEmployeeId ? 'Chọn chức vụ cho người cũ' : 'Không có người cũ') | translate}}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{p.positionName}}</option>}</select></div>
+        <div class="col-md-6"><label for="appoint-reason" class="form-label">{{ "Lý do bổ nhiệm / thay người" | translate }}</label><textarea id="appoint-reason" #appointReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
+        <div class="form-actions"><button type="submit" class="btn btn-primary" [disabled]="saving || !candidates.length || (!!d.headEmployeeId && (!positionsLoaded || !positions.length))">{{(saving ? 'Đang lưu…' : 'Lưu bổ nhiệm') | translate}}</button></div>
       </form>
     }
     @if (d.headEmployeeId) {
-      <hr><h3>Kết thúc nhiệm kỳ</h3><p>Người cũ tiếp tục làm việc tại phòng với chức vụ được chọn; phòng sẽ tạm thời chưa có trưởng phòng.</p>
+      <hr><h3>{{ "Kết thúc nhiệm kỳ" | translate }}</h3><p>{{ "Người cũ tiếp tục làm việc tại phòng với chức vụ được chọn; phòng sẽ tạm thời chưa có trưởng phòng." | translate }}</p>
       <form (submit)="end($event, endDate.value, nextPosition.value, endReason.value)" class="row g-3">
-        <div class="col-md-4"><label for="end-date" class="form-label">Ngày đầu không còn đảm nhiệm</label><input id="end-date" #endDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
-        <div class="col-md-4"><label for="next-position" class="form-label">Chức vụ tiếp theo</label><select id="next-position" #nextPosition class="form-select" required [disabled]="saving || !positionsLoaded"><option value="">Chọn chức vụ</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{ p.positionName }}</option>}</select></div>
-        <div class="col-md-4"><label for="end-reason" class="form-label">Lý do kết thúc</label><textarea id="end-reason" #endReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
-        <div><button type="submit" class="btn btn-outline-danger" [disabled]="saving || !positionsLoaded || !positions.length">Kết thúc nhiệm kỳ</button></div>
+        <div class="col-md-4"><label for="end-date" class="form-label">{{ "Ngày đầu không còn đảm nhiệm" | translate }}</label><input id="end-date" #endDate type="date" class="form-control" [value]="today" [max]="today" required [disabled]="saving"></div>
+        <div class="col-md-4"><label for="next-position" class="form-label">{{ "Chức vụ tiếp theo" | translate }}</label><select id="next-position" #nextPosition class="form-select" required [disabled]="saving || !positionsLoaded"><option value="">{{ "Chọn chức vụ" | translate }}</option>@for (p of positions; track p.positionId) {<option [value]="p.positionId">{{p.positionName}}</option>}</select></div>
+        <div class="col-md-4"><label for="end-reason" class="form-label">{{ "Lý do kết thúc" | translate }}</label><textarea id="end-reason" #endReason class="form-control" maxlength="1000" required [disabled]="saving"></textarea></div>
+        <div class="form-actions"><button type="submit" class="btn btn-outline-danger" [disabled]="saving || !positionsLoaded || !positions.length">{{ "Kết thúc nhiệm kỳ" | translate }}</button></div>
       </form>
     }
   </section>
-  <section class="surface"><h2>Lịch sử trưởng phòng</h2><div class="table-responsive"><table class="table"><thead><tr><th>Mã nhân viên</th><th>Họ tên</th><th>Từ ngày</th><th>Đến trước ngày</th></tr></thead><tbody>@for (h of heads; track h.assignmentId) {<tr><td>{{ h.employeeCode }}</td><td>{{ h.fullName }}</td><td>{{ h.effectiveFrom }}</td><td>{{ h.effectiveTo || 'Chưa kết thúc' }}</td></tr>} @empty {<tr><td colspan="4">Chưa có lịch sử.</td></tr>}</tbody></table></div>
+  <section class="surface"><h2>{{ "Lịch sử trưởng phòng" | translate }}</h2><div class="table-responsive"><table class="table"><thead><tr><th>{{ "Mã nhân viên" | translate }}</th><th>{{ "Họ tên" | translate }}</th><th>{{ "Từ ngày" | translate }}</th><th>{{ "Đến trước ngày" | translate }}</th></tr></thead><tbody>@for (h of heads; track h.assignmentId) {<tr><td>{{h.employeeCode}}</td><td>{{h.fullName}}</td><td>{{h.effectiveFrom}}</td><td>{{(h.effectiveTo || 'Chưa kết thúc') | translate}}</td></tr>} @empty {<tr><td colspan="4">{{ 'Chưa có lịch sử.' | translate }}</td></tr>}</tbody></table></div>
     <app-pagination [page]="historyPage" [pages]="historyPages" [busy]="saving" label="Phân trang lịch sử trưởng phòng" (pageChange)="loadHistory($event)" />
   </section>
 }

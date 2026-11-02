@@ -20,6 +20,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly=true)
 public class DepartmentService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
     private final DepartmentRepository departments;
     private final EmployeeAssignmentRepository assignments;
     private final AssignmentGuardService guard;
@@ -31,7 +33,10 @@ public class DepartmentService {
     }
 
     public DepartmentDTO getDepartment(Long id) { return enrich(List.of(required(id))).get(0); }
-    public List<DepartmentDTO> getAllDepartment() { return enrich(departments.findAll()); }
+    public List<DepartmentDTO> getAllDepartment() {
+        var allowed = PersonnelScopeService.isHr() ? personnelScope.departments() : null;
+        return enrich(departments.findAll().stream().filter(d -> allowed == null || allowed.contains(d.getDepartmentId())).toList());
+    }
 
     public Page<DepartmentDTO> getDepartmentsPage(int page,int size) {
         return searchDepartments(null, null, page, size);
@@ -39,7 +44,8 @@ public class DepartmentService {
 
     public Page<DepartmentDTO> searchDepartments(String keyword, Boolean active, int page, int size) {
         String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
-        var result=departments.search(pattern,active,PagingUtils.create(page,size,Sort.by(Sort.Direction.DESC,"departmentId")));
+        var paging=PagingUtils.create(page,size,Sort.by(Sort.Direction.DESC,"departmentId"));
+        var result=PersonnelScopeService.isHr()?departments.searchScoped(pattern,active,personnelScope.departments(),paging):departments.search(pattern,active,paging);
         return new PageImpl<>(enrich(result.getContent()),result.getPageable(),result.getTotalElements());
     }
 

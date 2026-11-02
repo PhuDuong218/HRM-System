@@ -1,0 +1,402 @@
+<h1 class="h3">{{ "Lịch làm việc và phân công" | translate }}</h1>
+@if(canSubmitOwn){<nav class="d-flex gap-2 mb-3" aria-label="Phạm vi lịch làm việc"><button class="btn" [class.btn-primary]="!personal" [class.btn-outline-primary]="personal" [disabled]="busy" (click)="switchScheduleScope(false)">Lịch nhân viên</button><button class="btn" [class.btn-primary]="personal" [class.btn-outline-primary]="!personal" [disabled]="busy" (click)="switchScheduleScope(true)">Lịch làm việc của tôi</button></nav>}
+@if(personal){<div class="alert alert-info small">Lịch làm việc cá nhân của bạn. Xem ca và lịch OT tại đây; vào Chấm công → Công của tôi để check-in/check-out công thường.</div>}
+@if (lookupError) {
+<div class="alert alert-warning">{{ lookupError }} <button type="button" class="btn btn-sm btn-outline-primary"
+    [disabled]="lookupLoading" (click)="loadLookups()">{{ "Tải lại danh mục" | translate }}</button></div>
+}
+@if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+
+@if (!requestsOpen) {
+<section class="surface mb-3">
+  <h2 class="h6 mb-3">{{ "Tìm kiếm và lọc" | translate }}</h2>
+  <div class="row g-3 align-items-start">
+    <div class="col-md-3"><label for="filterFrom" class="form-label">{{ "Từ ngày" | translate }}</label><input id="filterFrom" type="date"
+        class="form-control" [(ngModel)]="from" [disabled]="loading"></div>
+    <div class="col-md-3"><label for="filterTo" class="form-label">{{ "Đến ngày" | translate }}</label><input id="filterTo" type="date"
+        class="form-control" [(ngModel)]="to" [disabled]="loading"></div>
+    <div class="col-md-6">
+      <label for="filterEmployee" class="form-label">{{ "Mã hoặc tên nhân viên" | translate }}</label>
+      <input id="filterEmployee" class="form-control" type="text" list="filterEmployees" autocomplete="off"
+        maxlength="200" [ngModel]="filterEmployee.text" (ngModelChange)="employeeChanged(filterEmployee,$event)"
+        (focus)="employeeFocus(filterEmployee)" (blur)="validateEmployee(filterEmployee,false)" (keydown.enter)="load()"
+        [disabled]="loading" [class.is-invalid]="!!filterEmployee.error" placeholder="Nhập mã/tên và chọn gợi ý">
+      <datalist id="filterEmployees">@for (e of filterEmployee.options; track e.employeeId) { <option
+          [value]="employeeLabel(e)"></option> }</datalist>
+      @if (filterEmployee.loading) { <div class="form-text">{{ "Đang tìm nhân viên..." | translate }}</div> }
+      @if (filterEmployee.error) { <div class="invalid-feedback">{{ filterEmployee.error }}</div> }
+    </div>
+    <div class="col-md-6">
+      <label for="filterShift" class="form-label">{{ "Mã hoặc tên ca" | translate }}</label>
+      <input id="filterShift" class="form-control" type="text" list="allShifts" autocomplete="off"
+        [ngModel]="filterShift.text" (ngModelChange)="shiftChanged(filterShift,$event,false)"
+        (blur)="validateShift(filterShift,false)" (keydown.enter)="load()" [class.is-invalid]="!!filterShift.error"
+        [disabled]="loading" placeholder="Ví dụ: SANG - Ca sáng">
+      @if (filterShift.error) { <div class="invalid-feedback">{{ filterShift.error }}</div> }
+    </div>
+    <div class="col-md-6"><label for="filterDepartment" class="form-label">{{ "Phòng ban" | translate }}</label><select
+        id="filterDepartment" class="form-select" [(ngModel)]="departmentId" [disabled]="loading">
+        <option value="">{{ "Tất cả phòng ban" | translate }}</option>@for (d of departments; track d.departmentId) { <option
+          [value]="d.departmentId">{{ d.departmentName }}</option> }
+      </select></div>
+  </div>
+  <div class="d-flex gap-2 mt-3">
+    <button type="button" class="btn btn-primary" [disabled]="busy || filterEmployee.loading" (click)="load()">{{
+      loading ? 'Đang tải...' : 'Tìm kiếm' }}</button>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="clearFilters()">{{ "Xóa lọc" | translate }}</button>
+  </div>
+</section>
+@if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }
+<div class="row g-3 align-items-start">
+  <div [ngClass]="selected || mode !== 'view' ? 'col-12 col-lg-6' : 'col-12'" style="min-width:0">
+    <section class="surface">
+      <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+        <h2 class="h5 mb-0">Danh sách lịch ({{ totalElements }})</h2>
+        <div class="d-flex gap-2 flex-wrap">
+          <button type="button" class="btn btn-primary btn-sm" [disabled]="!canManage || busy || lookupLoading"
+            [hidden]="personal" (click)="createForm()">{{ "Thêm lịch làm việc" | translate }}</button>
+          <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy" (click)="openRequests()">{{ "Yêu cầu đổi lịch và duyệt" | translate }}</button>
+        </div>
+      </div>
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>{{ "Lịch" | translate }}</th>
+              <th>{{ "Nhân viên" | translate }}</th>
+              <th>{{ "Ca làm" | translate }}</th>
+              <th>{{ "Ngày làm" | translate }}</th>
+              <th>{{ "Bắt đầu" | translate }}</th>
+              <th>{{ "Kết thúc" | translate }}</th>
+              <th>{{ "Nghỉ (phút)" | translate }}</th>
+              <th>{{ "Trạng thái" | translate }}</th>
+              <th>{{ "Ghi chú" | translate }}</th>
+              <th>{{ "Thao tác" | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of records; track row.schedule.scheduleId) {
+            <tr [class.table-active]="selected?.schedule?.scheduleId === row.schedule.scheduleId">
+              <td>#{{ row.schedule.scheduleId }}</td>
+              <td>{{ row.employeeLabel }}</td>
+              <td>{{ row.shiftLabel }}</td>
+              <td>{{ row.schedule.workDate }}</td>
+              <td>{{ displayTime(row.schedule.plannedStart) }}</td>
+              <td>{{ displayTime(row.schedule.plannedEnd) }}</td>
+              <td>{{ row.schedule.plannedBreakMinutes }}</td>
+              <td><span [class]="statusClass(row.state)">{{ statusLabel(row.state) }}</span></td>
+              <td style="min-width:200px;white-space:pre-line;overflow-wrap:anywhere">{{ scheduleNotes(row) }}</td>
+              <td>
+                <div class="d-flex gap-1 flex-wrap">
+                  <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="busy"
+                    (click)="view(row)">{{ "Xem" | translate }}</button>
+                  <button [hidden]="personal" type="button" class="btn btn-sm btn-outline-secondary"
+                    [disabled]="!canManage || busy || lookupLoading || row.state!=='ACTIVE'"
+                    (click)="editForm(row)">{{ "Sửa" | translate }}</button>
+                  <button [hidden]="personal" type="button" class="btn btn-sm btn-outline-warning"
+                    [disabled]="!canManage || busy || row.state==='CANCELLED'"
+                    (click)="view(row,row.state==='EDIT_LOCKED'?'unlock':'lock')">{{ row.state==='EDIT_LOCKED'?'Mở khóa
+                    sửa':'Khóa sửa' }}</button>
+                  <button [hidden]="personal" type="button" class="btn btn-sm btn-outline-danger"
+                    [disabled]="!canManage || busy || row.state==='CANCELLED' || scheduleHasStarted(row)"
+                    [title]="cancellationDisabledReason(row)||'Hủy lịch trước giờ bắt đầu'"
+                    (click)="view(row,'cancel')">{{ "Hủy lịch" | translate }}</button>
+                </div>
+              </td>
+            </tr>
+            } @empty { <tr>
+              <td colspan="10" class="text-center text-muted py-4">{{ loading ? 'Đang tải lịch...' : 'Không có lịch phù
+                hợp.' }}</td>
+            </tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (totalPages>1) {
+      <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2" aria-label="Phân trang lịch">
+        <span class="small text-muted">Trang {{ page+1 }}/{{ totalPages }}</span>
+        <div class="d-flex gap-1 flex-wrap">
+          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang đầu"
+            [disabled]="busy || page===0" (click)="goPage(0)">&lt;&lt;</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang trước"
+            [disabled]="busy || page===0" (click)="goPage(page-1)">&lt;</button>
+          @for (p of paginationPages(totalPages,page); track $index) {
+          @if (p==='...') { <span class="px-2 align-self-center">…</span> }
+          @else { <button type="button" class="btn btn-sm" [class.btn-primary]="p===page"
+            [class.btn-outline-secondary]="p!==page" [attr.aria-current]="p===page?'page':null" [disabled]="busy"
+            (click)="goPage(p)">{{ p+1 }}</button> }
+          }
+          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang sau"
+            [disabled]="busy || page+1>=totalPages" (click)="goPage(page+1)">&gt;</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang cuối"
+            [disabled]="busy || page+1>=totalPages" (click)="goPage(totalPages-1)">&gt;&gt;</button>
+        </div>
+      </nav>
+      }
+    </section>
+  </div>
+  @if (selected || mode !== 'view') {
+  <div class="col-12 col-lg-6" style="min-width:0">
+    <section class="surface">
+      <div class="d-flex justify-content-between align-items-center mb-3">
+        <h2 class="h5 mb-0">{{ mode==='create' ? 'Thêm lịch làm việc' : mode==='edit' ? 'Chỉnh sửa lịch' : mode==='lock'
+          ? 'Khóa sửa lịch' : mode==='unlock' ? 'Mở khóa sửa lịch' : mode==='cancel' ? 'Hủy lịch làm việc' : 'Thông tin
+          chi tiết' }}</h2><button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="saving"
+          (click)="closeDetails()">{{ "Đóng" | translate }}</button>
+      </div>
+      @if (formError) { <div class="alert alert-warning" role="alert">{{ formError }}</div> }
+      @if (stateError) { <div class="alert alert-warning">{{ stateError }}</div> }
+      @if (stateLoading) { <p class="text-muted">{{ "Đang tải trạng thái..." | translate }}</p> }
+      @if (mode==='view' && selected) {
+      <dl class="row">
+        <dt class="col-5">{{ "Lịch" | translate }}</dt>
+        <dd class="col-7">#{{ selected.schedule.scheduleId }}</dd>
+        <dt class="col-5">{{ "Nhân viên" | translate }}</dt>
+        <dd class="col-7">{{ selected.employeeLabel }}</dd>
+        <dt class="col-5">{{ "Ca" | translate }}</dt>
+        <dd class="col-7">{{ selected.shiftLabel }}</dd>
+        <dt class="col-5">{{ "Bắt đầu" | translate }}</dt>
+        <dd class="col-7">{{ displayTime(selected.schedule.plannedStart) }}</dd>
+        <dt class="col-5">{{ "Kết thúc" | translate }}</dt>
+        <dd class="col-7">{{ displayTime(selected.schedule.plannedEnd) }}</dd>
+        <dt class="col-5">{{ "Tổng phút nghỉ" | translate }}</dt>
+        <dd class="col-7">{{ selected.schedule.plannedBreakMinutes }}</dd>
+        <dt class="col-5">{{ "Trạng thái" | translate }}</dt>
+        <dd class="col-7"><span [class]="statusClass(scheduleState)">{{ statusLabel(scheduleState) || '—' }}</span></dd>
+        <dt class="col-5">{{ "Ghi chú" | translate }}</dt>
+        <dd class="col-7" style="white-space:pre-line;overflow-wrap:anywhere">{{ scheduleNotes(selected) }}</dd>
+      </dl>
+      @if (selected.breakDetailStatus !== 'VERIFIED') { <div class="alert alert-warning small">{{ "Lịch cũ chưa có giờ nghỉ chi tiết đã xác minh; không tự suy đoán khoảng nghỉ." | translate }}</div> }
+      <div class="d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-primary" [disabled]="busy || stateLoading || scheduleState!=='ACTIVE'"
+          (click)="editForm(selected)">{{ "Sửa lịch" | translate }}</button>
+        <button type="button" class="btn btn-outline-primary" [disabled]="!canLockSelected"
+          (click)="startStateAction('lock')">{{ "Khóa sửa lịch" | translate }}</button>
+        <button type="button" class="btn btn-outline-secondary"
+          [disabled]="busy || stateLoading || scheduleState!=='EDIT_LOCKED'" (click)="startStateAction('unlock')">{{ "Mở khóa sửa" | translate }}</button>
+        <button type="button" class="btn btn-outline-danger" [disabled]="!canCancelSelected"
+          (click)="startStateAction('cancel')">{{ "Hủy lịch" | translate }}</button>
+      </div>
+      <section [hidden]="personal" class="mt-4 border-top pt-3" aria-label="Lịch sử thao tác lịch">
+        <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="h6 mb-0">Lịch sử chỉnh sửa và khóa lịch</h3><button class="btn btn-sm btn-outline-primary" type="button" (click)="loadHistory()" [disabled]="historyLoading">Tải lại lịch sử</button></div>
+        @if(historyLoading){<p class="text-muted" role="status">Đang tải lịch sử…</p>}
+        @else if(historyError){<div class="alert alert-warning" role="alert">{{historyError}}</div>}
+        @else { @for(h of history;track h.id){<article class="border rounded p-3 mb-2">
+          <div class="d-flex justify-content-between flex-wrap gap-2"><strong>{{historyLabel(h.action)}}</strong><time class="small text-muted">{{h.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}} (UTC+7)</time></div>
+          <p class="small mb-1">Người thực hiện: <strong>{{h.actor}}</strong></p>
+          <p class="small mb-2 text-break" style="white-space:pre-line">Lý do: {{h.reason||'Không ghi nhận lý do'}}</p>
+          @for(c of historyChanges(h);track c.label){<div class="small text-break mb-1"><strong>{{c.label}}:</strong> {{c.before}} → {{c.after}}</div>}
+          @if(h.action==='WORK_SCHEDULE_UPDATE'&&!h.beforeJson){<p class="small text-muted mb-0">Bản ghi cũ chưa lưu dữ liệu trước khi sửa để đối chiếu.</p>}
+        </article>} @empty{<p class="text-muted small">Chưa có lịch sử thao tác được ghi nhận cho lịch này.</p>} }
+      </section>
+      } @else if (mode==='lock' || mode==='unlock' || mode==='cancel') {
+      <p class="small text-muted">{{ mode==='cancel'?'Hủy làm lịch mất hiệu lực, chỉ thực hiện trước giờ bắt đầu. Bản
+        ghi được giữ để tra cứu lịch sử.':mode==='lock'?'Khóa sửa chặn ADMIN/HR chỉnh sửa cho tới khi mở khóa; lịch vẫn
+        có hiệu lực.':'Mở khóa cho phép chỉnh sửa lại theo điều kiện nghiệp vụ.' }}</p>
+      <label for="stateReason" class="form-label">{{ "Lý do *" | translate }}</label><textarea id="stateReason" class="form-control"
+        rows="3" maxlength="1000" [(ngModel)]="actionReason" [disabled]="saving"></textarea>
+      <div class="d-flex gap-2 mt-3"><button type="button" class="btn btn-primary" [disabled]="saving"
+          (click)="submitStateAction()">{{ "Xác nhận" | translate }}</button><button type="button" class="btn btn-outline-secondary"
+          [disabled]="saving" (click)="cancelForm()">{{ "Hủy" | translate }}</button></div>
+      } @else if (mode==='create' || mode==='edit') {
+      <form (ngSubmit)="submitForm()">
+        <fieldset [disabled]="saving">
+          <div class="mb-3"><label for="workDate" class="form-label">{{ "Ngày làm *" | translate }}</label><input id="workDate" type="date"
+              name="workDate" class="form-control" [(ngModel)]="formDate" (ngModelChange)="formDateChanged()" required>
+          </div>
+          <div class="mb-3">
+            <label for="formEmployee" class="form-label">{{ "Mã - tên nhân viên *" | translate }}</label>
+            <input id="formEmployee" name="employee" type="text" class="form-control" list="formEmployees"
+              autocomplete="off" maxlength="200" [ngModel]="formEmployee.text"
+              (ngModelChange)="employeeChanged(formEmployee,$event)" (focus)="employeeFocus(formEmployee)"
+              (blur)="validateEmployee(formEmployee,true)" [readOnly]="mode==='edit'"
+              [class.is-invalid]="!!formEmployee.error" placeholder="Nhập mã/tên và chọn nhân viên" required>
+            <datalist id="formEmployees">@for (e of formEmployee.options; track e.employeeId) { <option
+                [value]="employeeLabel(e)"></option> }</datalist>
+            @if (formEmployee.loading) { <div class="form-text">{{ "Đang tìm nhân viên..." | translate }}</div> }
+            @if (formEmployee.error) { <div class="invalid-feedback">{{ formEmployee.error }}</div> }
+            @if (mode==='edit') { <div class="form-text">{{ "Không được thay đổi nhân viên của lịch đã tạo." | translate }}</div> }
+          </div>
+          <div class="mb-3">
+            <label for="formShift" class="form-label">{{ "Mã - tên ca *" | translate }}</label>
+            <input id="formShift" name="shift" type="text" class="form-control" list="activeShifts" autocomplete="off"
+              [ngModel]="formShift.text" (ngModelChange)="shiftChanged(formShift,$event,true)"
+              (blur)="validateShift(formShift,true)" [class.is-invalid]="!!formShift.error"
+              placeholder="Ví dụ: SANG - Ca sáng" required>
+            @if (formShift.error) { <div class="invalid-feedback">{{ formShift.error }}</div> }
+          </div>
+          <div class="row g-3 mb-3">
+            <div class="col-6"><label for="plannedStart" class="form-label">{{ "Bắt đầu dự kiến" | translate }}</label><input
+                id="plannedStart" class="form-control" [value]="displayTime(formStart)" readonly></div>
+            <div class="col-6"><label for="plannedEnd" class="form-label">{{ "Kết thúc dự kiến" | translate }}</label><input id="plannedEnd"
+                class="form-control" [value]="displayTime(formEnd)" readonly></div>
+          </div>
+          <div class="mb-3"><label for="breakMinutes" class="form-label">{{ "Tổng phút nghỉ (tự động theo ca)" | translate }}</label><input
+              id="breakMinutes" class="form-control" [value]="formBreakMinutes" readonly></div>
+          @if(formShift.selected&&!formShift.selected.breaksVerified){<section class="alert alert-warning"><h3 class="h6">Ca thiếu giờ nghỉ chi tiết — chưa thể phân công</h3><p class="small">Bổ sung giờ nghỉ cho mẫu ca ngay tại đây (tổng {{formShift.selected.shift.breakMinutes}} phút). Hệ thống không tự suy đoán giờ nghỉ.</p>@for(b of templateBreaks;track $index;let i=$index){<div class="row g-2 mb-2"><div class="col-5"><label [for]="'templateStart'+i">Bắt đầu nghỉ</label><input [id]="'templateStart'+i" [name]="'templateStart'+i" class="form-control" type="time" step="60" [(ngModel)]="b.start" [disabled]="saving"></div><div class="col-5"><label [for]="'templateEnd'+i">Kết thúc nghỉ</label><input [id]="'templateEnd'+i" [name]="'templateEnd'+i" class="form-control" type="time" step="60" [(ngModel)]="b.end" [disabled]="saving"></div><div class="col-2 align-self-end"><button class="btn btn-outline-danger" type="button" [disabled]="saving" (click)="templateBreaks.splice(i,1)">Xóa</button></div></div>}@if(templateBreakError){<p class="text-danger small" role="alert">{{templateBreakError}}</p>}<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary btn-sm" type="button" [disabled]="saving" (click)="templateBreaks.push({start:'',end:''})">Thêm khoảng nghỉ</button><button class="btn btn-primary btn-sm" type="button" [disabled]="saving||!templateBreaks.length" (click)="saveTemplateBreaks()">Lưu giờ nghỉ của ca</button></div></section>}
+          <div class="mb-3"><label for="scheduleNote" class="form-label">{{ "Ghi chú" | translate }}</label><textarea id="scheduleNote"
+              name="note" class="form-control" rows="3" maxlength="1000" [(ngModel)]="formNote"></textarea></div>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="submit" class="btn btn-primary"
+              [disabled]="busy || formEmployee.loading || !formEmployee.selected || !formShift.selected || !formShift.selected.breaksVerified || (mode==='edit' && (stateLoading || scheduleState!=='ACTIVE'))">{{
+              saving?'Đang lưu...':'Lưu lịch' }}</button>
+            @if (mode==='edit') {
+            <button type="button" class="btn btn-outline-warning" [disabled]="!canLockSelected"
+              (click)="startStateAction('lock')">{{ "Khóa sửa lịch" | translate }}</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="!canCancelSelected"
+              (click)="startStateAction('cancel')">{{ "Hủy lịch" | translate }}</button>
+            }
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="cancelForm()">{{ "Hủy chỉnh sửa" | translate }}</button>
+          </div>
+        </fieldset>
+      </form>
+      }
+    </section>
+  </div>
+  }
+</div>
+} @else {
+<section class="surface">
+  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
+    <h2 class="h5 mb-0">Yêu cầu đổi lịch và duyệt ({{ requestTotal }})</h2>
+    <div class="d-flex gap-2">@if (canSubmitOwn) { <button type="button" class="btn btn-primary btn-sm"
+        [disabled]="requestBusy" (click)="newRequest()">{{ "Gửi yêu cầu đổi lịch" | translate }}</button> }<button type="button"
+        class="btn btn-outline-secondary btn-sm" [disabled]="requestBusy" (click)="closeRequests()">{{ "Quay lại lịch" | translate }}</button></div>
+  </div>
+  @if (requestError) { <div class="alert alert-warning" role="alert">{{ requestError }}</div> }
+  @if (requestFeedback) { <div class="alert alert-info" role="status">{{ requestFeedback }}</div> }
+  @if (requestMode==='new') {
+  <h3 class="h6">{{ "Đề nghị đổi lịch của tôi" | translate }}</h3>
+  <div class="mb-3"><label for="ownSchedule" class="form-label">{{ "Lịch hiện tại *" | translate }}</label><select id="ownSchedule"
+      class="form-select" [(ngModel)]="ownScheduleId" [disabled]="ownLoading || requestBusy">
+      <option value="">{{ "Chọn lịch của bạn" | translate }}</option>@for (s of ownSchedules; track s.scheduleId) { <option
+        [value]="s.scheduleId">Lịch #{{ s.scheduleId }} — {{ displayTime(s.plannedStart) }} → {{
+        displayTime(s.plannedEnd) }}</option> }
+    </select></div>
+  @if (ownPages>1) { <div class="d-flex gap-2 align-items-center mb-3"><button type="button"
+      class="btn btn-outline-secondary btn-sm" [disabled]="ownLoading || ownPage===0"
+      (click)="ownGoPage(ownPage-1)">{{ "Lịch trước" | translate }}</button><span>{{ ownPage+1 }}/{{ ownPages }}</span><button type="button"
+      class="btn btn-outline-secondary btn-sm" [disabled]="ownLoading || ownPage+1>=ownPages"
+      (click)="ownGoPage(ownPage+1)">{{ "Lịch tiếp" | translate }}</button></div> }
+  <div class="row g-3 mb-3">
+    <div class="col-md-6"><label for="changeDate" class="form-label">{{ "Ngày làm mới *" | translate }}</label><input id="changeDate"
+        type="date" class="form-control" [(ngModel)]="changeDate" [disabled]="requestBusy"></div>
+    <div class="col-md-6"><label for="changeShift" class="form-label">{{ "Ca đề xuất *" | translate }}</label><input id="changeShift"
+        type="text" class="form-control" list="activeShifts" autocomplete="off" [ngModel]="changeShift.text"
+        (ngModelChange)="shiftChanged(changeShift,$event,true)" [disabled]="requestBusy"
+        [class.is-invalid]="!!changeShift.error">@if (changeShift.error) { <div class="invalid-feedback">{{
+        changeShift.error }}</div> }</div>
+  </div>
+  <p>Thời gian mới: {{ displayTime(changeStart) }} → {{ displayTime(changeEnd) }} · Nghỉ: {{
+    changeShift.selected?.shift?.breakMinutes ?? 0 }} phút.</p>
+  <label for="changeReason" class="form-label">{{ "Lý do *" | translate }}</label><textarea id="changeReason" class="form-control mb-3"
+    rows="3" maxlength="1000" [(ngModel)]="changeReason" [disabled]="requestBusy"></textarea>
+  <div class="d-flex gap-2"><button type="button" class="btn btn-primary" [disabled]="requestBusy || ownLoading"
+      (click)="submitChange()">{{ "Gửi yêu cầu" | translate }}</button><button type="button" class="btn btn-outline-secondary"
+      [disabled]="requestBusy" (click)="requestMode='list'">{{ "Hủy" | translate }}</button></div>
+  } @else {
+  <div class="d-flex gap-2 align-items-center mb-3"><label for="requestStatus">{{ "Trạng thái" | translate }}</label><select
+      id="requestStatus" class="form-select w-auto" [(ngModel)]="requestStatus"
+      [disabled]="requestLoading || requestBusy">
+      <option value="">{{ "Tất cả" | translate }}</option>
+      <option value="CHO_DUYET">{{ "Chờ duyệt" | translate }}</option>
+      <option value="DA_DUYET">{{ "Đã duyệt" | translate }}</option>
+      <option value="TU_CHOI">{{ "Từ chối" | translate }}</option>
+      <option value="HET_HIEU_LUC">{{ "Hết hiệu lực" | translate }}</option>
+    </select><button type="button" class="btn btn-outline-primary" [disabled]="requestLoading || requestBusy"
+      (click)="loadRequests()">{{ "Tìm kiếm" | translate }}</button></div>
+  <div class="row g-3">
+    <div [ngClass]="requestDetail ? 'col-12 col-lg-6':'col-12'" style="min-width:0">
+      <div class="table-responsive">
+        <table class="table table-hover align-middle">
+          <thead>
+            <tr>
+              <th>{{ "Mã yêu cầu" | translate }}</th>
+              <th>{{ "Ngày gửi" | translate }}</th>
+              <th>{{ "Lý do" | translate }}</th>
+              <th>{{ "Trạng thái" | translate }}</th>
+              <th></th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of requests; track r.requestId) { <tr>
+              <td>{{ r.requestCode }}</td>
+              <td>{{ displayTime(r.submittedAt) }}</td>
+              <td>{{ r.reason }}</td>
+              <td><span [class]="statusClass(r.status)">{{ statusLabel(r.status) }}</span></td>
+              <td><button type="button" class="btn btn-outline-primary btn-sm"
+                  [disabled]="requestLoading || requestBusy" (click)="viewRequest(r)">{{ "Xem và xử lý" | translate }}</button></td>
+            </tr> }
+            @empty { <tr>
+              <td colspan="5" class="text-center text-muted py-4">{{ requestLoading?'Đang tải yêu cầu...':'Không có yêu
+                cầu đổi lịch phù hợp.' }}</td>
+            </tr> }
+          </tbody>
+        </table>
+      </div>
+      @if (requestPages>1) {
+      <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang yêu cầu">
+        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang đầu"
+          [disabled]="requestLoading || requestBusy || requestPage===0" (click)="requestGoPage(0)">&lt;&lt;</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang trước"
+          [disabled]="requestLoading || requestBusy || requestPage===0"
+          (click)="requestGoPage(requestPage-1)">&lt;</button>
+        @for (p of paginationPages(requestPages,requestPage); track $index) {
+        @if (p==='...') { <span class="px-2 align-self-center">…</span> }
+        @else { <button type="button" class="btn btn-sm" [class.btn-primary]="p===requestPage"
+          [class.btn-outline-secondary]="p!==requestPage" [attr.aria-current]="p===requestPage?'page':null"
+          [disabled]="requestLoading || requestBusy" (click)="requestGoPage(p)">{{ p+1 }}</button> }
+        }
+        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang sau"
+          [disabled]="requestLoading || requestBusy || requestPage+1>=requestPages"
+          (click)="requestGoPage(requestPage+1)">&gt;</button>
+        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang cuối"
+          [disabled]="requestLoading || requestBusy || requestPage+1>=requestPages"
+          (click)="requestGoPage(requestPages-1)">&gt;&gt;</button>
+      </nav>
+      }
+    </div>
+    @if (requestDetail; as d) {
+    <div class="col-12 col-lg-6" style="min-width:0">
+      <div class="border rounded p-3">
+        <div class="d-flex justify-content-between mb-3">
+          <h3 class="h6">Chi tiết {{ d.request.requestCode }}</h3><button type="button"
+            class="btn btn-outline-secondary btn-sm" [disabled]="requestBusy"
+            (click)="requestDetail=null;requestMode='list'">{{ "Đóng" | translate }}</button>
+        </div>
+        <dl class="row">
+          <dt class="col-4">{{ "Nhân viên" | translate }}</dt>
+          <dd class="col-8">{{ d.employeeLabel }}</dd>
+          <dt class="col-4">{{ "Lịch gốc" | translate }}</dt>
+          <dd class="col-8">#{{ d.scheduleId }} · {{ displayTime(d.originalStart) }} → {{ displayTime(d.originalEnd) }}
+          </dd>
+          <dt class="col-4">{{ "Ca đề xuất" | translate }}</dt>
+          <dd class="col-8">{{ d.shiftLabel || 'Không có ca mẫu' }}</dd>
+          <dt class="col-4">{{ "Thời gian mới" | translate }}</dt>
+          <dd class="col-8">{{ displayTime(d.proposedStart) }} → {{ displayTime(d.proposedEnd) }}</dd>
+          <dt class="col-4">{{ "Lý do" | translate }}</dt>
+          <dd class="col-8">{{ d.request.reason }}</dd>
+          <dt class="col-4">{{ "Trạng thái" | translate }}</dt>
+          <dd class="col-8"><span [class]="statusClass(d.request.status)">{{ statusLabel(d.request.status) }}</span></dd>
+        </dl>
+        <h4 class="h6">{{ "Khoảng nghỉ đề xuất" | translate }}</h4>
+        <ul>@for (b of d.breaks; track $index) { <li>{{ displayTime(b.start) }} → {{ displayTime(b.end) }}</li> } @empty
+          { <li>Không có khoảng nghỉ.</li> }</ul>
+        @if (canDecide) { <label for="rejectReason" class="form-label">{{ "Lý do từ chối (bắt buộc khi từ chối)" | translate }}</label><textarea id="rejectReason" class="form-control mb-3" rows="2" maxlength="1000"
+          [(ngModel)]="rejectionReason" [disabled]="requestBusy"></textarea>
+        <div class="d-flex gap-2"><button type="button" class="btn btn-primary" [disabled]="requestBusy"
+            (click)="decideRequest(true)">{{ "Duyệt" | translate }}</button><button type="button" class="btn btn-outline-danger"
+            [disabled]="requestBusy" (click)="decideRequest(false)">{{ "Từ chối" | translate }}</button></div> }
+        @else if (d.request.status==='CHO_DUYET') { <p class="text-muted small">{{ "Không tự duyệt yêu cầu cá nhân." | translate }}</p> }
+      </div>
+    </div>
+    }
+  </div>
+  }
+</section>
+}
+<datalist id="allShifts">@for (s of shifts; track s.shift.shiftId) { <option [value]="shiftLabel(s)">{{
+    s.shift.active?'Hoạt động':'Đã khóa' }}</option> }</datalist>
+<datalist id="activeShifts">@for (s of activeShifts; track s.shift.shiftId) { <option [value]="shiftLabel(s)">{{
+    s.shift.breakMinutes }} phút nghỉ</option> }</datalist>
+
+@if(!requestsOpen&&!filterShift.selected){<app-overtime-calendar [mine]="personal" [initialFrom]="from" [initialTo]="to" [employeeId]="filterEmployee.selected?.employeeId??null" [departmentId]="departmentId" /> }

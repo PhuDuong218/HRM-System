@@ -1,3 +1,4 @@
+import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -12,7 +13,7 @@ import { ContractService } from '../../services/contract.service';
 @Component({
   selector: 'app-contract-types',
   standalone: true,
-  imports: [FormsModule],
+  imports: [FormsModule,TranslatePipe],
   templateUrl: './contract-types.html'
 })
 export class ContractTypesPage implements OnInit {

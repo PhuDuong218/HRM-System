@@ -13,7 +13,8 @@ public final class OvertimeDTOs {
         /** Used for both registration and editing a pending request. */
         public record Register(@NotNull LocalDateTime requestedStart,
                         @NotNull LocalDateTime requestedEnd,
-                        @NotBlank String reason) {
+                        @NotBlank String reason, @Valid List<BreakInput> breaks, String workContent) {
+            public Register(LocalDateTime start, LocalDateTime end, String reason){this(start,end,reason,List.of(),null);}
         }
 
         public record Reject(@NotBlank String reason) {

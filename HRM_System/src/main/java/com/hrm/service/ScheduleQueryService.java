@@ -76,6 +76,11 @@ public class ScheduleQueryService {
 
     public PageResponse<ScheduleView> search(AuthenticatedAccount actor, Long employeeId,
             Long departmentId, LocalDate from, LocalDate to, int page, boolean personal) {
+        return search(actor, employeeId, departmentId, null, from, to, page, personal);
+    }
+
+    public PageResponse<ScheduleView> search(AuthenticatedAccount actor, Long employeeId,
+            Long departmentId, Long shiftId, LocalDate from, LocalDate to, int page, boolean personal) {
         checkActor(actor);
         if (from == null || to == null || from.isAfter(to))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khoảng ngày không hợp lệ");
@@ -83,6 +88,8 @@ public class ScheduleQueryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phân trang không hợp lệ");
         if ((employeeId != null && employeeId <= 0) || (departmentId != null && departmentId <= 0))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID không hợp lệ");
+        if (shiftId != null && shiftId <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ca được chọn không hợp lệ");
         if (!personal && actor.roleCode().equals("EMPLOYEE"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ được tra cứu lịch cá nhân");
 
@@ -92,7 +99,12 @@ public class ScheduleQueryService {
         where.append(" AND s.work_date>=? AND s.work_date<=?");
         params.add(from);
         params.add(to);
+        if (shiftId != null) {
+            where.append(" AND s.shift_id=?");
+            params.add(shiftId);
+        }
         if (personal) {
+            where.append(" AND s.cancelled_at IS NULL");
             where.append(" AND s.employee_id=?");
             params.add(actor.employeeId());
         } else {

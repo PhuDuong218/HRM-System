@@ -26,6 +26,7 @@ export interface Page {
     totalElements: number;
 }
 export interface EmployeeForm {
+    privateFieldsEditable?: boolean;
     employeeCode: string;
     fullName: string;
     birthDate: string;
@@ -56,7 +57,7 @@ export class EmployeeService {
     list(admin: boolean, page: number, keyword: string, status: string, department: string): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
     detail(id: number) { return this.http.get<Employee>(API_BASE_URL + `/employees/${id}/detail`).pipe(timeout(15000)); }
     choices(path: string) { return this.http.get<Record<string, unknown>[]>(API_BASE_URL + '/' + path).pipe(timeout(15000)); }
-    save(mode: string, id: number | undefined, f: EmployeeForm) { const common = { fullName: f.fullName.trim(), birthDate: f.birthDate || null, email: f.email || null, phone: f.phone || null, identityNumber: f.identityNumber || null }; return mode === 'create' ? this.http.post<Employee>(API_BASE_URL + '/employees', { ...f, ...common, address: f.address || null }) : mode === 'contact' ? this.http.patch<Employee>(API_BASE_URL + `/employees/${id}/contact`, { email: f.email, phone: f.phone, address: f.address, identityNumber: f.identityNumber }) : this.http.put<Employee>(API_BASE_URL + `/employees/${id}`, common); }
+    save(mode: string, id: number | undefined, f: EmployeeForm) { const common = { fullName: f.fullName.trim(), birthDate: f.birthDate || null, email: f.email || null, phone: f.phone || null, ...(f.privateFieldsEditable?{identityNumber:f.identityNumber||null}:{}) }; return mode === 'create' ? this.http.post<Employee>(API_BASE_URL + '/employees', { employeeCode:f.employeeCode,hireDate:f.hireDate,departmentId:f.departmentId,positionId:f.positionId,...common }) : mode === 'contact' ? this.http.patch<Employee>(API_BASE_URL + `/employees/${id}/contact`, { email: f.email, phone: f.phone }) : this.http.put<Employee>(API_BASE_URL + `/employees/${id}`, common); }
     rehire(id:number,request:{effectiveDate:string;departmentId:number;positionId:number;reason:string}) { return this.http.post<void>(API_BASE_URL+`/employees/${id}/rehire`,request).pipe(timeout(20000)); }
     terminate(id: number) { return this.http.post<void>(API_BASE_URL + `/employees/${id}/terminate`, {}).pipe(timeout(20000)); }
 }

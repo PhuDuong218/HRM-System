@@ -1,0 +1,28 @@
+.surface {
+    padding: 1.25rem;
+    border: 1px solid #e5eaf1;
+    border-radius: 14px;
+    background: #fff
+}
+
+.surface h2 {
+    font-weight: 700
+}
+
+.table th {
+    white-space: nowrap;
+    font-size: .84rem
+}
+
+.table td {
+    font-size: .88rem
+}
+
+.form-label {
+    font-weight: 600;
+    font-size: .82rem
+}
+
+.surface dd {
+    white-space: pre-wrap
+}
