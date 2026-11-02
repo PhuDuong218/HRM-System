@@ -15,7 +15,7 @@ Hệ thống hướng tới quản lý hồ sơ nhân viên, phòng ban, chức 
 
 | Thành phần | Công nghệ |
 |---|---|
-| Ngôn ngữ | Java 21 (theo `pom.xml`; thống nhất JDK 21 trong nhóm) |
+| Ngôn ngữ | Java 25 (theo `pom.xml`; thống nhất JDK 25 trong nhóm) |
 | Backend | Spring Boot 4.1.1, Spring Web MVC |
 | Truy cập CSDL | Spring Data JPA / Hibernate |
 | Cơ sở dữ liệu | Microsoft SQL Server (`hrm_db`) |
@@ -56,7 +56,7 @@ HRM_System/
 ## 3. Chuẩn bị trên máy thành viên
 
 1. **Git** — tải và cập nhật source code.
-2. **JDK 21** — kiểm tra bằng `java -version`. Nếu cài nhiều JDK, đặt `JAVA_HOME` trỏ đến JDK 21.
+2. **JDK 25** — kiểm tra bằng `java -version`. Nếu cài nhiều JDK, đặt `JAVA_HOME` trỏ đến JDK 25.
 3. **VS Code + Extension Pack for Java** hoặc IntelliJ IDEA.
 4. **SQL Server Database Engine** — nếu dùng database cục bộ; bảo đảm SQL Server đang chạy và cho phép kết nối TCP/IP.
 5. **SQL Server Management Studio (SSMS)** — để tạo/import và kiểm tra database.
@@ -267,7 +267,7 @@ Luồng trả về: `SQL Server → Repository (Model/Entity) → Service (chuy�
 
 | Hiện tượng | Cách kiểm tra |
 |---|---|
-| `java` không nhận diện | Kiểm tra JDK 21, `JAVA_HOME`, `PATH`; mở lại terminal |
+| `java` không nhận diện | Kiểm tra JDK 25, `JAVA_HOME`, `PATH`; mở lại terminal |
 | Maven Wrapper lỗi | Kiểm tra `mvnw.cmd`, `.mvn/wrapper/`, Internet lần đầu |
 | `Login failed for user` | Kiểm tra SQL Authentication, username/password trong file local |
 | `Connection refused` / timeout | Kiểm tra SQL Server service, TCP/IP, cổng 1433 hoặc cổng thực tế |
