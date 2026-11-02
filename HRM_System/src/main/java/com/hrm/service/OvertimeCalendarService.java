@@ -50,7 +50,7 @@ public class OvertimeCalendarService {
         need(body!=null&&body.expectedVersion()!=null&&body.expectedVersion().equals(row.version()),"Dữ liệu đã thay đổi. Hãy tải lại lịch OT.");
         need("DA_DUYET".equals(o.status())&&o.confirmedBy()==null,"Chỉ chấm công OT đã duyệt và chưa xác nhận thực tế.");
         Long pending=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.overtime_request_details d JOIN dbo.employee_requests r ON r.request_id=d.request_id WHERE d.overtime_id=? AND r.status='CHO_DUYET'",Long.class,id);
-        need(pending!=null&&pending==0,"Đơn đang có yêu cầu chờ xử lý.");
+        need(pending!=null&&pending==0&&db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.ot_supplement_requests WHERE overtime_id=? AND status='CHO_XU_LY'",Long.class,id)==0,"Đơn đang có yêu cầu chờ xử lý.");
         var time=now();writable(o.requestedStart(),o.requestedEnd());
         String before=db.queryForObject("SELECT (SELECT * FROM dbo.overtime_requests WHERE overtime_id=? FOR JSON PATH,WITHOUT_ARRAY_WRAPPER)",String.class,id);
         if(checkIn){

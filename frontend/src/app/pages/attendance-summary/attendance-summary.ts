@@ -1,3 +1,5 @@
+import {DetailFocusDirective} from '../../shared/detail-focus.directive';
+import {RowViewDirective} from '../../shared/row-view.directive';
 import {Component, DestroyRef, OnInit, inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {FormsModule} from '@angular/forms';
@@ -6,8 +8,10 @@ import {WorkModuleApiService} from '../../services/work-module-api.service';
 import {AttendanceApiService} from '../attendance/attendance-api.service';
 interface Day {employeeId:number;employeeCode:string;employeeName:string;department:string|null;workDate:string;presentRecords:number;absentRecords:number;netMinutes:number;unresolvedRecords:number;}
 interface Employee {id:number;code:string;name:string;departments:string[];days:Day[];present:number;absent:number;minutes:number;unresolved:number;}
-@Component({selector:'app-attendance-summary',standalone:true,imports:[CommonModule,FormsModule],templateUrl:'./attendance-summary.html',styleUrls:['../work-module.css','./attendance-summary.css']})
+@Component({selector:'app-attendance-summary',standalone:true,imports: [DetailFocusDirective,RowViewDirective,CommonModule,FormsModule],templateUrl:'./attendance-summary.html',styleUrls:['../work-module.css','./attendance-summary.css']})
 export class AttendanceSummaryPage implements OnInit {
+ detailFocusVersion=0;
+ openSummary(e:Employee){this.selected=e;++this.detailFocusVersion;}
  private api=inject(WorkModuleApiService);private attendance=inject(AttendanceApiService);private destroy=inject(DestroyRef);
  private date(d:Date){return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
  month=this.date(new Date()).slice(0,7);from=`${this.month}-01`;to=this.date(new Date(new Date().getFullYear(),new Date().getMonth()+1,0));

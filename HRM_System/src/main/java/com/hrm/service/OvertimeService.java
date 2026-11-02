@@ -164,6 +164,7 @@ public class OvertimeService {
         need("DA_DUYET".equals(v.status()) && v.confirmedBy() == null, "Only unconfirmed approved OT can be recorded");
         if (body.actualStart() == null || body.actualEnd() == null || !body.actualEnd().isAfter(body.actualStart()))
             throw bad("Invalid actual interval");
+        need(!actualRecorded(id), "Giờ OT thực tế đã được ghi nhận; không được ghi nhận lại.");
         int breaks = body.actualBreakMinutes() == null ? 0 : body.actualBreakMinutes();
         if (body.breaks() != null && !body.breaks().isEmpty()) {
             var intervals = new ArrayList<>(body.breaks());
@@ -448,5 +449,9 @@ public class OvertimeService {
         need(exceeds, "Actual OT has no interval outside approved hours");
         audit(actor.accountId(), id, "OT_OVERFLOW_REVIEW", note.trim(), snapshot(id));
         return load(id);
+    }
+    public boolean actualRecorded(long id) {
+        Long count = db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.audit_logs WHERE target_table='overtime_requests' AND target_record_key=? AND action='OT_ACTUAL'", Long.class, Long.toString(id));
+        return count == null || count > 0;
     }
 }

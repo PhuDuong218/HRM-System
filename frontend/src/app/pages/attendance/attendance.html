@@ -28,8 +28,8 @@
 
 @if (loading && !context) { <p role="status">{{ "Đang tải quyền chấm công..." | translate }}</p> }
 
-@if(context?.mine&&tab==='mine'){<app-overtime-calendar [mine]="true" />}
-@if (context && tab!=='requests') {
+@if(context?.mine&&tab==='mine'){<app-personal-calendar [attendance]="true" />}
+@if (context && tab!=='requests') {<div [hidden]="tab==='mine'">
 @if(tab==='mine'){<div class="alert alert-info small">Để tạo yêu cầu điều chỉnh công của chính mình, chọn ngày ca trong danh sách rồi bấm <strong>Gửi yêu cầu</strong>. Nút chỉ xuất hiện khi bản ghi đủ điều kiện và còn hạn gửi; bản ghi đang có yêu cầu mở không được gửi trùng.</div>}
 
 @if (stats) {
@@ -218,7 +218,7 @@
 
                         @for (r of rows; track r.scheduleId) {
 
-                        <tr [class.table-active]="detail?.row?.scheduleId===r.scheduleId">
+                        <tr (appRowView)="view(r)" [rowViewDisabled]="saving" [class.table-active]="detail?.row?.scheduleId===r.scheduleId">
                             <td>{{ r.attendanceId ? '#'+r.attendanceId : 'Chưa có' }}</td>
 
                             @if (tab==='manage') { <td>{{ r.employeeLabel }}</td>
@@ -302,7 +302,7 @@
     @if (detail||detailLoading) {
 
     <div class="col-12 col-lg-6" style="min-width:0">
-        <section class="surface">
+        <section class="surface" [appDetailFocus]="detail ? detail.row.scheduleId+':'+mode : null">
 
             <div class="d-flex justify-content-between mb-3">
                 <h2 class="h5">{{ mode==='view'?'Chi tiết và đối soát':mode==='proposal'?'Yêu cầu bổ sung / điều
@@ -470,14 +470,26 @@
 
 </div>
 
-}
-
+</div>}
 @if (context && tab==='requests') {
+<app-ot-supplement-panel [mineAllowed]="context.mine" [manage]="context.manage" />
+@if(feedback){<div class="alert alert-success" role="status">{{feedback}}</div>}
+@if(ownRequestOpen){<section class="surface mb-3" [appDetailFocus]="ownSchedule||'create-own-request'"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">Tạo yêu cầu điều chỉnh công của tôi</h2><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving" (click)="closeOwnRequest()">Đóng</button></div>
+  <p class="small text-muted">Chọn ngày ca, bản ghi công và nhập nội dung đề nghị. Công gốc chỉ thay đổi sau khi được duyệt.</p>
+  <form class="row g-2 align-items-end mb-3" (ngSubmit)="loadOwnRequestRows()"><div class="col-md-4"><label for="ownRequestFrom" class="form-label">Ngày ca từ</label><input id="ownRequestFrom" name="from" type="date" class="form-control" [(ngModel)]="ownRequestFrom" [disabled]="saving" required></div><div class="col-md-4"><label for="ownRequestTo" class="form-label">Đến ngày</label><input id="ownRequestTo" name="to" type="date" class="form-control" [(ngModel)]="ownRequestTo" [disabled]="saving" required></div><div class="col-md-auto"><button class="btn btn-outline-primary" [disabled]="saving||ownRequestLoading">Tìm công của tôi</button></div></form>
+  <label for="ownRequestSchedule" class="form-label">Bản ghi công cần điều chỉnh *</label><select id="ownRequestSchedule" class="form-select mb-2" [(ngModel)]="ownSchedule" (ngModelChange)="selectOwnRequest()" [disabled]="saving||ownRequestLoading"><option value="">{{ownRequestLoading?'Đang tải công cá nhân…':'Chọn ngày / ca / bản ghi công'}}</option>@for(r of ownRequestRows;track r.scheduleId){<option [value]="r.scheduleId" [disabled]="!r.canRequest">{{r.workDate}} — {{r.shift}} — {{r.attendanceId?'Công #'+r.attendanceId:'Chưa có bản ghi công'}}{{r.canRequest?'':' (Chưa đủ điều kiện gửi yêu cầu)'}}</option>}</select>
+  <p class="small text-muted">Có thể gửi điều chỉnh công đã xác nhận hoặc bổ sung giờ ra còn thiếu theo chính sách máy chủ. Bản ghi hết hạn, kỳ khóa hoặc đang có yêu cầu mở không được chọn.</p>
+  @if(!ownRequestLoading&&!ownRequestRows.length){<div class="alert alert-info">Không có lịch/công cá nhân trong khoảng ngày đã chọn. Hãy kiểm tra ngày ca.</div>}
+  @if(ownRequestPages>1){<div class="d-flex gap-2 align-items-center mb-3"><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage===0" (click)="loadOwnRequestRows(ownRequestPage-1)">Trang trước</button><span>{{ownRequestPage+1}} / {{ownRequestPages}}</span><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage+1>=ownRequestPages" (click)="loadOwnRequestRows(ownRequestPage+1)">Trang sau</button></div>}
+  @if(detailLoading){<p role="status">Đang kiểm tra bản ghi công…</p>}
+  @if(detail&&mode==='proposal'){<div class="alert alert-info small">{{missingCheckoutProposal?'Yêu cầu bổ sung check-out':'Yêu cầu điều chỉnh công đã xác nhận'}} — {{detail.row.employeeLabel}}<br>Đang lưu: {{time(detail.row.actualStart)}} → {{time(detail.row.actualEnd)}}; nghỉ {{detail.row.actualBreakMinutes}} phút.</div><form (ngSubmit)="save()"><fieldset [disabled]="saving"><div class="row g-3"><div class="col-md-4"><label for="ownProposedResult" class="form-label">Kết quả đề nghị</label><select id="ownProposedResult" name="result" class="form-select" [(ngModel)]="result" (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal"><option value="DI_LAM">Đi làm</option><option value="VANG">Vắng</option></select></div><div class="col-md-4"><label for="ownProposedStart" class="form-label">Giờ vào đề nghị</label><input id="ownProposedStart" name="start" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualStart" [disabled]="missingCheckoutProposal||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedEnd" class="form-label">Giờ ra đề nghị</label><input id="ownProposedEnd" name="end" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualEnd" [disabled]="result==='VANG'"></div><div class="col-md-4"><label for="ownProposedBreaks" class="form-label">Phút nghỉ thực tế đề nghị</label><input id="ownProposedBreaks" name="breaks" type="number" min="0" step="1" class="form-control" [(ngModel)]="breakMinutes" [disabled]="result==='VANG'"></div><div class="col-12"><label for="ownProposedReason" class="form-label">Lý do *</label><textarea id="ownProposedReason" name="reason" class="form-control" rows="3" maxlength="1000" [(ngModel)]="reason" required></textarea></div></div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{saving?'Đang gửi…':'Gửi yêu cầu điều chỉnh'}}</button><button type="button" class="btn btn-outline-secondary" (click)="closeOwnRequest()">Hủy</button></div></fieldset></form>}
+</section>}
+
 
 <section class="surface mb-3">
 
-    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h2 class="h5 mb-0">{{ "Yêu cầu bổ sung và điều chỉnh công" | translate }}</h2>@if(context.mine){<button type="button" class="btn btn-primary" [disabled]="busy" (click)="switchTab('mine')">Tạo yêu cầu điều chỉnh công của tôi</button>}</div>
-    @if(context.mine){<p class="small text-muted">Để tạo đơn, chọn công của chính mình rồi bấm Gửi yêu cầu. HR gửi đơn cá nhân để ADMIN xét duyệt; không tự duyệt đơn của mình.</p>}
+    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h2 class="h5 mb-0">{{ "Yêu cầu bổ sung và điều chỉnh công" | translate }}</h2>@if(context.mine){<button type="button" class="btn btn-primary" [disabled]="busy" (click)="createOwnRequest()">Tạo yêu cầu điều chỉnh công của tôi</button>}</div>
+    @if(context.mine){<p class="small text-muted">Nhấn Tạo yêu cầu để chọn bản ghi công của chính mình và nhập đề xuất ngay tại đây. Đơn của HR do ADMIN xét duyệt.</p>}
 
     <form (ngSubmit)="loadRequests()">
         <fieldset [disabled]="busy">
@@ -549,7 +561,7 @@
                     </thead>
                     <tbody>
 
-                        @for (r of requestRows; track r.requestId) { <tr>
+                        @for (r of requestRows; track r.requestId) { <tr (appRowView)="viewRequest(r)" [rowViewDisabled]="saving">
                             <td>{{ r.requestCode }}<div>{{ r.employeeLabel }}</div>
                             </td>
                             <td>{{ label(r.requestType) }}<div>{{ r.workDate }}</div>
@@ -601,7 +613,7 @@
     </div> }
 
     @if (requestDetail; as d) { <div class="col-12 col-lg-6" style="min-width:0">
-        <section class="surface">
+        <section class="surface" [appDetailFocus]="d.request.requestId">
 
             <div class="d-flex justify-content-between mb-3">
                 <h2 class="h5">{{ d.request.requestCode }}</h2><button type="button"

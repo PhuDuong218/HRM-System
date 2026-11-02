@@ -14,7 +14,8 @@
     <div class="row g-3">
       <div class="col-12 col-md-8">
         <label for="searchKeyword" class="form-label">{{ "Mã hoặc tên ca" | translate }}</label>
-        <input id="searchKeyword" type="search" class="form-control" formControlName="keyword" placeholder="Ví dụ: CA_SANG hoặc ca sáng">
+        <div class="lookup-anchor"><input id="searchKeyword" type="search" class="form-control" formControlName="keyword" placeholder="Nhập một phần mã hoặc tên ca" autocomplete="off" (input)="shiftSuggestionsOpen=true" (focus)="shiftSuggestionsOpen=true" (blur)="shiftSuggestionsOpen=false" (keydown.escape)="shiftSuggestionsOpen=false">
+        @if(shiftSuggestionsOpen&&shiftSuggestions.length){<div class="list-group shadow-sm lookup-dropdown" aria-label="Gợi ý ca làm việc">@for(s of shiftSuggestions;track s.shiftId){<button type="button" class="list-group-item list-group-item-action" (pointerdown)="$event.preventDefault()" (click)="chooseShiftSuggestion(s)">{{s.shiftCode}} — {{s.shiftName}}</button>}</div>}</div>
       </div>
       <div class="col-12 col-md-4">
         <label for="searchStatus" class="form-label">{{ "Trạng thái" | translate }}</label>
@@ -62,7 +63,7 @@
           <thead><tr><th>{{ "Mã ca" | translate }}</th><th>{{ "Tên ca" | translate }}</th><th>{{ "Bắt đầu" | translate }}</th><th>{{ "Kết thúc" | translate }}</th><th>{{ "Phút nghỉ" | translate }}</th><th>{{ "Trạng thái" | translate }}</th><th>{{ "Thao tác" | translate }}</th></tr></thead>
           <tbody>
             @for (row of filteredRecords; track row.shiftId) {
-              <tr [class.table-active]="selected?.shiftId === row.shiftId">
+              <tr (appRowView)="view(row)" [rowViewDisabled]="busy" [class.table-active]="selected?.shiftId === row.shiftId">
                 <td>{{ row.shiftCode }}</td><td>{{ row.shiftName }}</td><td>{{ row.startTime.slice(0, 5) }}</td>
                 <td>{{ row.endTime.slice(0, 5) }} @if (row.endDayOffset === 1) { <small class="text-muted">{{ "(+1 ngày)" | translate }}</small> }</td>
                 <td>{{ row.breakMinutes }}</td>
@@ -83,7 +84,7 @@
   </div>
   @if (panelOpen) {
     <div class="col-12 col-lg-6" style="min-width: 0">
-      <section class="surface" aria-labelledby="panelTitle">
+      <section class="surface" aria-labelledby="panelTitle" [appDetailFocus]="detailLoading ? null : (selected?.shiftId??'new')+':'+mode">
         <div class="d-flex justify-content-between align-items-center mb-3">
           <h2 id="panelTitle" class="h5 mb-0">{{ panelTitle }}</h2>
           <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="close()">{{ "Đóng" | translate }}</button>
