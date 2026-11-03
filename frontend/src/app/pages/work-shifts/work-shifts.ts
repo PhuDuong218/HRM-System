@@ -1,3 +1,5 @@
+import {DetailFocusDirective} from '../../shared/detail-focus.directive';
+import {RowViewDirective} from '../../shared/row-view.directive';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { CommonModule } from '@angular/common';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
@@ -41,7 +43,7 @@ const shiftValidator: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-work-shifts', standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports: [DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-shifts.html', styleUrl: '../work-module.css',
 })
 export class WorkShiftsPage implements OnInit {
@@ -104,6 +106,9 @@ export class WorkShiftsPage implements OnInit {
   get panelTitle(): string {
     return { view: 'Thông tin chi tiết', create: 'Thêm ca làm việc', edit: 'Chỉnh sửa ca làm việc', deactivate: 'Xác nhận khóa ca', activate: 'Xác nhận mở khóa ca' }[this.mode];
   }
+  shiftSuggestionsOpen=false;
+  get shiftSuggestions():ShiftView[]{const q=this.normalize(this.searchForm.controls.keyword.value);return q?this.records.filter(r=>this.normalize(r.shiftCode+' '+r.shiftName).includes(q)):[];}
+  chooseShiftSuggestion(row:ShiftView):void{this.searchForm.controls.keyword.setValue(row.shiftCode);this.shiftSuggestionsOpen=false;this.search();}
   private normalize(value: string): string {
     return value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLowerCase().trim();
   }

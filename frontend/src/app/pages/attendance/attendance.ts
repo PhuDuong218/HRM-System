@@ -1,4 +1,8 @@
-import {OvertimeCalendarComponent} from '../../shared/overtime-calendar';
+import {PersonalCalendarComponent} from '../../shared/personal-calendar';
+import {DetailFocusDirective} from '../../shared/detail-focus.directive';
+import {OtSupplementPanelComponent} from '../../shared/ot-supplement-panel';
+import {RowViewDirective} from '../../shared/row-view.directive';
+
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -11,7 +15,7 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports: [OvertimeCalendarComponent, CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports: [PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })
@@ -104,9 +108,27 @@ export class AttendancePage implements OnInit {
     actionLabel(action: string): string { return ({ ATTENDANCE_CREATE: 'Nhập công', ATTENDANCE_CORRECT: 'Sửa công', ATTENDANCE_CONFIRM: 'Xác nhận', ATTENDANCE_UNCONFIRM: 'Hủy xác nhận', ATTENDANCE_SELF_CHECK_IN: 'Check-in', ATTENDANCE_SELF_CHECK_OUT: 'Check-out', ATTENDANCE_REQUEST_SUBMITTED: 'Gửi yêu cầu', ATTENDANCE_REQUEST_RECEIVED: 'Tiếp nhận', ATTENDANCE_REQUEST_APPROVED: 'Chấp nhận', ATTENDANCE_REQUEST_REJECTED: 'Từ chối', ATTENDANCE_PORTAL_REQUEST_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_CORRECTION_APPLIED: 'Áp dụng điều chỉnh' } as Record<string, string>)[action] ?? action; }
     shiftState(r: AttendanceRow): string { if (r.actualEnd) return 'Đã check-out'; if (r.actualStart) return r.anomalies.includes('THIEU_RA') ? 'Thiếu check-out' : 'Đã check-in'; if (r.canCheckIn) return 'Được check-in'; return this.context && r.plannedStart > this.context.serverNow ? 'Chưa đến giờ' : 'Chưa ghi nhận giờ vào'; }
 
+    ownRequestOpen=false;ownRequestLoading=false;ownRequestRows:AttendanceRow[]=[];ownRequestFrom=this.date(-7);ownRequestTo=this.date();ownRequestPage=0;ownRequestPages=0;ownSchedule='';private ownRequestVersion=0;
+    createOwnRequest():void {
+        if(!this.context?.mine||this.busy)return;
+        this.ownRequestOpen=true;this.requestDetail=null;++this.requestVersion;this.closeDetail();this.actionError='';this.ownSchedule='';this.ownRequestFrom=this.requestFrom;this.ownRequestTo=this.requestTo;this.loadOwnRequestRows();
+    }
+    closeOwnRequest():void {if(this.saving)return;this.ownRequestOpen=false;++this.ownRequestVersion;this.ownRequestLoading=false;this.closeDetail();}
+    loadOwnRequestRows(page=0):void {
+        if(!this.context?.mine||this.saving)return;
+        if(!this.validRange(this.ownRequestFrom,this.ownRequestTo)){this.actionError='Chọn khoảng ngày ca hợp lệ, tối đa 366 ngày.';return;}
+        const version=++this.ownRequestVersion;this.ownRequestLoading=true;this.ownRequestRows=[];this.ownSchedule='';this.closeDetail();this.actionError='';
+        this.api.records({mine:true,from:this.ownRequestFrom,to:this.ownRequestTo,q:'',departmentId:'',verification:'',anomaly:'',page}).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:r=>{if(version!==this.ownRequestVersion||!this.ownRequestOpen)return;this.ownRequestRows=r.items;this.ownRequestPage=r.page;this.ownRequestPages=r.totalPages;this.ownRequestLoading=false;},error:e=>{if(version===this.ownRequestVersion&&this.ownRequestOpen){this.ownRequestLoading=false;this.actionError=this.api.message(e);}}});
+    }
+    selectOwnRequest():void {
+        if(this.saving)return;this.closeDetail();this.actionError='';const row=this.ownRequestRows.find(r=>String(r.scheduleId)===String(this.ownSchedule));
+        if(!row?.canRequest){if(this.ownSchedule)this.actionError='Bản ghi chưa đủ điều kiện, đã hết hạn, kỳ đã khóa hoặc đang có yêu cầu mở.';return;}
+        const version=++this.detailVersion;this.detailLoading=true;
+        this.api.detail(row.scheduleId,true).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:d=>{if(version!==this.detailVersion||!this.ownRequestOpen)return;this.detailLoading=false;this.detail=d;if(!d.row.canRequest){this.actionError='Bản ghi không còn đủ điều kiện gửi yêu cầu. Hãy tải lại.';return;}this.openForm('proposal');},error:e=>{if(version===this.detailVersion){this.detailLoading=false;this.actionError=this.api.message(e);}}});
+    }
     switchTab(tab: 'mine' | 'manage' | 'requests'): void {
         if (this.busy || !this.context || tab === 'mine' && !this.context.mine || tab === 'manage' && !this.context.manage) return;
-        this.tab = tab; this.closeDetail(); this.requestDetail = null; ++this.requestVersion; ++this.todayVersion; this.error = ''; this.stats = null;
+        this.closeOwnRequest();this.tab = tab; this.closeDetail(); this.requestDetail = null; ++this.requestVersion; ++this.todayVersion; this.error = ''; this.stats = null;
         if (tab === 'requests') this.loadRequests(); else this.search();
     }
 
@@ -199,7 +221,7 @@ export class AttendancePage implements OnInit {
         request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
             next: () => {
                 this.saving = false; this.notify(success); this.mode = 'view';
-                if (this.tab === 'requests') { this.loadRequests(false); if (requestId) this.viewRequestId(requestId); } else { this.loadRecords(); if (this.tab === 'mine') this.loadToday(); if (row) this.view(row); }
+                if (this.tab === 'requests') { if(this.ownRequestOpen){this.requestsMine=true;this.requestFrom=this.ownRequestFrom;this.requestTo=this.ownRequestTo;this.requestType='';this.requestStatus='CHO_XU_LY';this.closeOwnRequest();this.requestPage=0;} this.loadRequests(false); if (requestId) this.viewRequestId(requestId); } else { this.loadRecords(); if (this.tab === 'mine') this.loadToday(); if (row) this.view(row); }
             }, error: e => this.actionError = this.api.message(e)
         });
     }

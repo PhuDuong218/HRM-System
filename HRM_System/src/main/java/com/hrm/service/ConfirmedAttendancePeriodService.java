@@ -35,6 +35,15 @@ public class ConfirmedAttendancePeriodService {
 
     public PeriodSummary summarize(AuthenticatedAccount principal, LocalDate from, LocalDate to,
             Long employeeFilter) {
+        return summarizeInternal(principal, from, to, employeeFilter, false);
+    }
+
+    public PeriodSummary summarizeMine(AuthenticatedAccount principal, LocalDate from, LocalDate to) {
+        return summarizeInternal(principal, from, to, null, true);
+    }
+
+    private PeriodSummary summarizeInternal(AuthenticatedAccount principal, LocalDate from, LocalDate to,
+            Long employeeFilter, boolean mine) {
         if (principal == null || principal.accountId() == null || principal.accountId() <= 0)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         if (from == null || to == null || to.isBefore(from) || ChronoUnit.DAYS.between(from, to) > 366)
@@ -51,8 +60,13 @@ public class ConfirmedAttendancePeriodService {
                 || !Objects.equals(actors.get(0)[2], principal.roleCode()))
             deny();
         String role = (String) actors.get(0)[2];
-        if (!"ADMIN".equals(role) && !"HR".equals(role))
+        if (mine) {
+            if ((!"EMPLOYEE".equals(role) && !"HR".equals(role)) || principal.employeeId() == null || principal.employeeId() <= 0) deny();
+            employeeFilter = principal.employeeId();
+        }
+        if (!mine && !"ADMIN".equals(role) && !"HR".equals(role))
             deny();
+        if (!mine) {
         Long granted = db.queryForObject("""
                 SELECT COUNT_BIG(*) FROM dbo.accounts a JOIN dbo.role_permissions rp ON rp.role_id=a.role_id
                 JOIN dbo.permissions p ON p.permission_id=rp.permission_id
@@ -60,6 +74,7 @@ public class ConfirmedAttendancePeriodService {
                 """, Long.class, principal.accountId());
         if (granted == null || granted != 1L)
             deny();
+        }
         StringBuilder query = new StringBuilder("""
                 SELECT a.employee_id,a.work_date,a.attendance_result,a.actual_start,a.actual_end,
                        a.actual_break_minutes,e.employee_code,e.full_name,
@@ -80,7 +95,7 @@ public class ConfirmedAttendancePeriodService {
             query.append(" AND a.employee_id=?");
             parameters.add(employeeFilter);
         }
-        if ("HR".equals(role)) {
+        if (!mine && "HR".equals(role)) {
             query.append("""
                     AND EXISTS (
                       SELECT 1 FROM dbo.accounts owner JOIN dbo.roles owner_role ON owner_role.role_id=owner.role_id

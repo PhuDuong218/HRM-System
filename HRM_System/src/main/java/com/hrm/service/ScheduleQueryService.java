@@ -81,6 +81,10 @@ public class ScheduleQueryService {
 
     public PageResponse<ScheduleView> search(AuthenticatedAccount actor, Long employeeId,
             Long departmentId, Long shiftId, LocalDate from, LocalDate to, int page, boolean personal) {
+        return search(actor,employeeId,departmentId,shiftId,from,to,page,personal,"date");
+    }
+    public PageResponse<ScheduleView> search(AuthenticatedAccount actor,Long employeeId,Long departmentId,Long shiftId,LocalDate from,LocalDate to,int page,boolean personal,String sort) {
+        if(!java.util.Set.of("date","asc","desc").contains(sort))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Thứ tự lịch không hợp lệ");
         checkActor(actor);
         if (from == null || to == null || from.isAfter(to))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khoảng ngày không hợp lệ");
@@ -128,7 +132,7 @@ public class ScheduleQueryService {
         paged.add(PAGE_SIZE);
         List<ScheduleView> items = db.query("SELECT s.schedule_id,s.employee_id,s.shift_id,s.work_date," +
                 "s.planned_start,s.planned_end,s.planned_break_minutes,s.note" + where +
-                " ORDER BY s.planned_start,s.schedule_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
+                " ORDER BY "+(sort.equals("asc")?"s.schedule_id ASC":sort.equals("desc")?"s.schedule_id DESC":"s.planned_start,s.schedule_id")+" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
                 MAPPER, paged.toArray());
         int totalPages = (int) Math.min(Integer.MAX_VALUE, (count + PAGE_SIZE - 1) / PAGE_SIZE);
         return new PageResponse<>(items, page, PAGE_SIZE, count, totalPages);

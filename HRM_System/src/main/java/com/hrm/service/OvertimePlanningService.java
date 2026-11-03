@@ -13,11 +13,18 @@ public class OvertimePlanningService {
     public OvertimePlanningService(JdbcTemplate db){this.db=db;}
     public static void require(boolean ok,String why){if(!ok)throw new ResponseStatusException(HttpStatus.CONFLICT,why);}
     public static List<BreakInput> validate(LocalDateTime start,LocalDateTime end,List<BreakInput> breaks){
+        return validateIntervals(start,end,breaks,true);
+    }
+    /** Server clock readings retain seconds and fractional seconds. */
+    public static List<BreakInput> validateActual(LocalDateTime start,LocalDateTime end,List<BreakInput> breaks){
+        return validateIntervals(start,end,breaks,false);
+    }
+    private static List<BreakInput> validateIntervals(LocalDateTime start,LocalDateTime end,List<BreakInput> breaks,boolean minuteAligned){
         require(start!=null&&end!=null&&end.isAfter(start),"Khoảng OT không hợp lệ.");
-        require(start.getSecond()==0&&start.getNano()==0&&end.getSecond()==0&&end.getNano()==0,"Giờ OT phải theo phút.");
+        require(!minuteAligned||(start.getSecond()==0&&start.getNano()==0&&end.getSecond()==0&&end.getNano()==0),"Giờ OT phải theo phút.");
         var sorted=new ArrayList<>(breaks==null?List.<BreakInput>of():breaks);
         require(sorted.stream().allMatch(b->b!=null&&b.breakStart()!=null&&b.breakEnd()!=null),"Khoảng nghỉ thiếu thời điểm.");sorted.sort(Comparator.comparing(BreakInput::breakStart));LocalDateTime last=start;
-        for(var b:sorted){require(!b.breakStart().isBefore(last)&&b.breakEnd().isAfter(b.breakStart())&&!b.breakEnd().isAfter(end)&&b.breakStart().getSecond()==0&&b.breakEnd().getSecond()==0&&b.breakStart().getNano()==0&&b.breakEnd().getNano()==0,"Khoảng nghỉ phải nằm trong OT, theo phút và không chồng lấn.");last=b.breakEnd();}
+        for(var b:sorted){require(!b.breakStart().isBefore(last)&&b.breakEnd().isAfter(b.breakStart())&&!b.breakEnd().isAfter(end)&&(!minuteAligned||(b.breakStart().getSecond()==0&&b.breakEnd().getSecond()==0&&b.breakStart().getNano()==0&&b.breakEnd().getNano()==0)),minuteAligned?"Khoảng nghỉ phải nằm trong OT, theo phút và không chồng lấn.":"Khoảng nghỉ thực tế phải nằm trong OT và không chồng lấn.");last=b.breakEnd();}
         require(net(start,end,sorted).values().stream().mapToLong(Long::longValue).sum()>0,"OT thuần phải lớn hơn 0 phút.");return sorted;
     }
     public static Map<LocalDate,Long> net(LocalDateTime start,LocalDateTime end,List<BreakInput> rests){

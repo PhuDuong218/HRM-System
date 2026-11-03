@@ -1,3 +1,6 @@
+import {DetailFocusDirective} from '../../shared/detail-focus.directive';
+import {OtSupplementPanelComponent} from '../../shared/ot-supplement-panel';
+import {RowViewDirective} from '../../shared/row-view.directive';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +9,7 @@ import { Observable, finalize } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDetail, OtFilter, OtBreak, OtWorkflow, OtRegistration, OtActual, OtWindow } from './overtime-api.service';
 
-@Component({selector:'app-overtime',standalone:true,imports:[CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
+@Component({selector:'app-overtime',standalone:true,imports: [DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
 export class OvertimePage implements OnInit {
   private readonly api=inject(OvertimeApiService);private readonly destroyRef=inject(DestroyRef);
   private readonly host=inject(ElementRef) as ElementRef<HTMLElement>;
@@ -59,7 +62,7 @@ export class OvertimePage implements OnInit {
   time(value:string|null|undefined){return value?value.replace('T',' ').slice(0,16):'—';}
   utc(value:string|null|undefined){return value?new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(value.endsWith('Z')?value:value+'Z')):'—';}
   hours(minutes:number|null|undefined){return minutes==null?'Chưa xác minh':`${Math.floor(minutes/60)} giờ ${minutes%60} phút`;}
-  label(value:string|null|undefined){return ({CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',DA_HUY:'Đã hủy',HUY_OT:'Hủy OT đã duyệt',OT_VUOT:'Xem xét OT vượt',HR:'Nhân sự (HR)',EMPLOYEE:'Nhân viên',OT_SELF_CHECK_IN:'Tự check-in OT',OT_SELF_CHECK_OUT:'Tự check-out OT',OT_REGISTER:'Gửi đơn',OT_EDIT:'Sửa đơn',OT_APPROVE:'Duyệt đơn',OT_REJECT:'Từ chối đơn',OT_ACTUAL:'Ghi nhận thực tế',OT_CONFIRM:'Xác nhận thực tế',OT_CANCEL:'Hủy đơn chờ',OT_REOPEN_CONFIRMATION:'Mở lại xác nhận',OT_REQUEST_APPROVE:'Duyệt yêu cầu',OT_REQUEST_REJECT:'Từ chối yêu cầu',OT_HUY_OT_SUBMIT:'Gửi yêu cầu hủy',OT_OT_VUOT_SUBMIT:'Gửi yêu cầu phần vượt'}as Record<string,string>)[value??'']??value??'—';}
+  label(value:string|null|undefined){return ({CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',DA_HUY:'Đã hủy',HUY_OT:'Hủy OT đã duyệt',OT_VUOT:'Xem xét OT vượt',HR:'Nhân sự (HR)',EMPLOYEE:'Nhân viên',OT_SELF_CHECK_IN:'Tự check-in OT',OT_SELF_CHECK_OUT:'Tự check-out OT',OT_SUPPLEMENT_SUBMIT:'Gửi yêu cầu bổ sung công OT',OT_SUPPLEMENT_APPROVE:'Duyệt bổ sung công OT',OT_SUPPLEMENT_REJECT:'Từ chối bổ sung công OT',OT_REGISTER:'Gửi đơn',OT_EDIT:'Sửa đơn',OT_APPROVE:'Duyệt đơn',OT_REJECT:'Từ chối đơn',OT_ACTUAL:'Ghi nhận thực tế',OT_CONFIRM:'Xác nhận thực tế',OT_CANCEL:'Hủy đơn chờ',OT_REOPEN_CONFIRMATION:'Mở lại xác nhận',OT_REQUEST_APPROVE:'Duyệt yêu cầu',OT_REQUEST_REJECT:'Từ chối yêu cầu',OT_HUY_OT_SUBMIT:'Gửi yêu cầu hủy',OT_OT_VUOT_SUBMIT:'Gửi yêu cầu phần vượt'}as Record<string,string>)[value??'']??value??'—';}
   employeeNotes(e:OtEmployee):string {
     const notes:string[]=[];
     if(e.unresolved)notes.push(e.unresolved+' đơn cần đối soát dữ liệu giờ/nghỉ.');
@@ -95,11 +98,12 @@ export class OvertimePage implements OnInit {
   viewId(id:number,mode:typeof this.mode='view'){if(this.saving)return;const version=++this.detailVersion;this.detailLoading=true;this.detail=null;this.mode='view';this.actionError='';this.alignSelected(this.selectedWorkflow?'workflow-'+this.selectedWorkflow.requestId:this.tab==='employees'&&this.selectedEmployee?'employee-'+this.selectedEmployee.employeeId:'request-'+id);this.api.detail(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:d=>{if(version!==this.detailVersion)return;this.detail=d;this.detailLoading=false;if(mode!=='view')this.openForm(mode);},error:e=>{if(version===this.detailVersion){this.detailLoading=false;this.actionError=this.api.message(e);}}});}
   closePanel(){if(this.saving)return;++this.detailVersion;++this.employeeVersion;this.detail=null;this.selectedEmployee=null;this.selectedWorkflow=null;this.detailLoading=false;this.employeeLoading=false;this.mode='view';this.actionError='';}
   create(){if(!this.context?.canRegister||this.busy)return;this.closePanel();this.mode='create';this.start='';this.end='';this.reason='';this.workContent='';this.breaks=[];}
+  get actualRecorded():boolean{return this.detail?.audit.some(a=>a.action==='OT_ACTUAL')??false;}
   openForm(mode:typeof this.mode){const r=this.detail?.row;if(!r||this.saving)return;const allowed={view:true,create:false,edit:r.actions.edit,actual:r.actions.recordActual,reject:r.actions.approve,cancel:r.actions.cancel,cancelRequest:r.actions.cancelRequest,overflow:r.actions.overflowRequest,reopen:r.actions.reopen};if(!allowed[mode])return;this.mode=mode;this.reason=mode==='edit'?r.ot.reason:'';this.workContent=r.workContent??'';this.windows=[];
     this.start=mode==='actual'?r.ot.actualStart??'':r.ot.requestedStart;this.end=mode==='actual'?r.ot.actualEnd??'':r.ot.requestedEnd;this.breaks=(mode==='actual'?this.detail!.actualBreaks:this.detail!.plannedBreaks).map(b=>({...b}));this.actionError='';}
   addBreak(){if(!this.saving)this.breaks.push({breakStart:'',breakEnd:''});}removeBreak(index:number){if(!this.saving)this.breaks.splice(index,1);}
   addWindow(){if(!this.saving)this.windows.push({workDate:'',start:'',end:''});}removeWindow(index:number){if(!this.saving)this.windows.splice(index,1);}
-  breakTotal():number{return this.breaks.reduce((sum,b)=>{const diff=(Date.parse(b.breakEnd)-Date.parse(b.breakStart))/60000;return sum+(Number.isFinite(diff)&&diff>0?diff:0);},0);}
+  breakTotal():number{return this.breaks.reduce((sum,b)=>{const diff=(Date.parse(b.breakEnd)-Date.parse(b.breakStart))/60000;return sum+(Number.isFinite(diff)&&diff>0?Math.floor(diff):0);},0);}
   private validTimes(){
     const start=Date.parse(this.start),end=Date.parse(this.end);
     if(!Number.isFinite(start))return this.invalid('Vui lòng chọn ngày và giờ bắt đầu.','otStart');

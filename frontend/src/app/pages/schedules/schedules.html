@@ -7,7 +7,8 @@
 }
 @if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
 
-@if (!requestsOpen) {
+@if(personal&&!requestsOpen){<button class="btn btn-outline-primary mb-3" [disabled]="busy" (click)="openRequests()">Yêu cầu đổi lịch của tôi</button><app-personal-calendar /> }
+@if (!requestsOpen&&!personal) {
 <section class="surface mb-3">
   <h2 class="h6 mb-3">{{ "Tìm kiếm và lọc" | translate }}</h2>
   <div class="row g-3 align-items-start">
@@ -17,12 +18,11 @@
         class="form-control" [(ngModel)]="to" [disabled]="loading"></div>
     <div class="col-md-6">
       <label for="filterEmployee" class="form-label">{{ "Mã hoặc tên nhân viên" | translate }}</label>
-      <input id="filterEmployee" class="form-control" type="text" list="filterEmployees" autocomplete="off"
+      <div class="lookup-anchor"><input id="filterEmployee" class="form-control" type="text"  autocomplete="off"
         maxlength="200" [ngModel]="filterEmployee.text" (ngModelChange)="employeeChanged(filterEmployee,$event)"
-        (focus)="employeeFocus(filterEmployee)" (blur)="validateEmployee(filterEmployee,false)" (keydown.enter)="load()"
+        (focus)="employeeFocus(filterEmployee)" (blur)="filterEmployee.open=false" (keydown.escape)="filterEmployee.open=false"  (keydown.enter)="load()"
         [disabled]="loading" [class.is-invalid]="!!filterEmployee.error" placeholder="Nhập mã/tên và chọn gợi ý">
-      <datalist id="filterEmployees">@for (e of filterEmployee.options; track e.employeeId) { <option
-          [value]="employeeLabel(e)"></option> }</datalist>
+      @if(filterEmployee.open&&!filterEmployee.selected&&filterEmployee.options.length){<div class="list-group shadow-sm lookup-dropdown" aria-label="Gợi ý nhân viên">@for(e of filterEmployee.options;track e.employeeId){<button type="button" class="list-group-item list-group-item-action" (pointerdown)="$event.preventDefault()" (click)="chooseEmployee(filterEmployee,e)">{{employeeLabel(e)}}</button>}</div>}</div>
       @if (filterEmployee.loading) { <div class="form-text">{{ "Đang tìm nhân viên..." | translate }}</div> }
       @if (filterEmployee.error) { <div class="invalid-feedback">{{ filterEmployee.error }}</div> }
     </div>
@@ -62,7 +62,7 @@
         <table class="table table-hover align-middle">
           <thead>
             <tr>
-              <th>{{ "Lịch" | translate }}</th>
+              <th><div class="d-flex align-items-center gap-1"><span>Lịch</span><button type="button" class="btn btn-sm p-1" [class.btn-primary]="sortDirection==='asc'" [class.btn-outline-secondary]="sortDirection!=='asc'" [attr.aria-pressed]="sortDirection==='asc'" aria-label="Sắp xếp ID lịch từ nhỏ đến lớn" title="ID nhỏ đến lớn" [disabled]="busy" (click)="sortSchedules('asc')">↑</button><button type="button" class="btn btn-sm p-1" [class.btn-primary]="sortDirection==='desc'" [class.btn-outline-secondary]="sortDirection!=='desc'" [attr.aria-pressed]="sortDirection==='desc'" aria-label="Sắp xếp ID lịch từ lớn đến nhỏ" title="ID lớn đến nhỏ, lịch mới nhất trước" [disabled]="busy" (click)="sortSchedules('desc')">↓</button></div></th>
               <th>{{ "Nhân viên" | translate }}</th>
               <th>{{ "Ca làm" | translate }}</th>
               <th>{{ "Ngày làm" | translate }}</th>
@@ -76,7 +76,7 @@
           </thead>
           <tbody>
             @for (row of records; track row.schedule.scheduleId) {
-            <tr [class.table-active]="selected?.schedule?.scheduleId === row.schedule.scheduleId">
+            <tr (appRowView)="view(row)" [rowViewDisabled]="busy" [class.table-active]="selected?.schedule?.scheduleId === row.schedule.scheduleId">
               <td>#{{ row.schedule.scheduleId }}</td>
               <td>{{ row.employeeLabel }}</td>
               <td>{{ row.shiftLabel }}</td>
@@ -136,7 +136,7 @@
   </div>
   @if (selected || mode !== 'view') {
   <div class="col-12 col-lg-6" style="min-width:0">
-    <section class="surface">
+    <section class="surface" [appDetailFocus]="detailFocusVersion+':'+mode">
       <div class="d-flex justify-content-between align-items-center mb-3">
         <h2 class="h5 mb-0">{{ mode==='create' ? 'Thêm lịch làm việc' : mode==='edit' ? 'Chỉnh sửa lịch' : mode==='lock'
           ? 'Khóa sửa lịch' : mode==='unlock' ? 'Mở khóa sửa lịch' : mode==='cancel' ? 'Hủy lịch làm việc' : 'Thông tin
@@ -205,13 +205,12 @@
           </div>
           <div class="mb-3">
             <label for="formEmployee" class="form-label">{{ "Mã - tên nhân viên *" | translate }}</label>
-            <input id="formEmployee" name="employee" type="text" class="form-control" list="formEmployees"
+            <div class="lookup-anchor"><input id="formEmployee" name="employee" type="text" class="form-control" 
               autocomplete="off" maxlength="200" [ngModel]="formEmployee.text"
-              (ngModelChange)="employeeChanged(formEmployee,$event)" (focus)="employeeFocus(formEmployee)"
-              (blur)="validateEmployee(formEmployee,true)" [readOnly]="mode==='edit'"
+              (ngModelChange)="employeeChanged(formEmployee,$event)" (focus)="employeeFocus(formEmployee)" (blur)="formEmployee.open=false" (keydown.escape)="formEmployee.open=false"
+               [readOnly]="mode==='edit'"
               [class.is-invalid]="!!formEmployee.error" placeholder="Nhập mã/tên và chọn nhân viên" required>
-            <datalist id="formEmployees">@for (e of formEmployee.options; track e.employeeId) { <option
-                [value]="employeeLabel(e)"></option> }</datalist>
+            @if(formEmployee.open&&!formEmployee.selected&&formEmployee.options.length){<div class="list-group shadow-sm lookup-dropdown" aria-label="Gợi ý nhân viên">@for(e of formEmployee.options;track e.employeeId){<button type="button" class="list-group-item list-group-item-action" (pointerdown)="$event.preventDefault()" (click)="chooseEmployee(formEmployee,e)">{{employeeLabel(e)}}</button>}</div>}</div>
             @if (formEmployee.loading) { <div class="form-text">{{ "Đang tìm nhân viên..." | translate }}</div> }
             @if (formEmployee.error) { <div class="invalid-feedback">{{ formEmployee.error }}</div> }
             @if (mode==='edit') { <div class="form-text">{{ "Không được thay đổi nhân viên của lịch đã tạo." | translate }}</div> }
@@ -254,7 +253,7 @@
   </div>
   }
 </div>
-} @else {
+} @if(requestsOpen) {
 <section class="surface">
   <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
     <h2 class="h5 mb-0">Yêu cầu đổi lịch và duyệt ({{ requestTotal }})</h2>
@@ -318,7 +317,7 @@
             </tr>
           </thead>
           <tbody>
-            @for (r of requests; track r.requestId) { <tr>
+            @for (r of requests; track r.requestId) { <tr (appRowView)="viewRequest(r)" [rowViewDisabled]="busy">
               <td>{{ r.requestCode }}</td>
               <td>{{ displayTime(r.submittedAt) }}</td>
               <td>{{ r.reason }}</td>
@@ -357,7 +356,7 @@
     </div>
     @if (requestDetail; as d) {
     <div class="col-12 col-lg-6" style="min-width:0">
-      <div class="border rounded p-3">
+      <div class="border rounded p-3" [appDetailFocus]="d.request.requestId">
         <div class="d-flex justify-content-between mb-3">
           <h3 class="h6">Chi tiết {{ d.request.requestCode }}</h3><button type="button"
             class="btn btn-outline-secondary btn-sm" [disabled]="requestBusy"
@@ -399,4 +398,4 @@
 <datalist id="activeShifts">@for (s of activeShifts; track s.shift.shiftId) { <option [value]="shiftLabel(s)">{{
     s.shift.breakMinutes }} phút nghỉ</option> }</datalist>
 
-@if(!requestsOpen&&!filterShift.selected){<app-overtime-calendar [mine]="personal" [initialFrom]="from" [initialTo]="to" [employeeId]="filterEmployee.selected?.employeeId??null" [departmentId]="departmentId" /> }
+@if(!requestsOpen&&!personal&&!filterShift.selected){<app-overtime-calendar [mine]="personal" [initialFrom]="from" [initialTo]="to" [employeeId]="filterEmployee.selected?.employeeId??null" [departmentId]="departmentId" /> }

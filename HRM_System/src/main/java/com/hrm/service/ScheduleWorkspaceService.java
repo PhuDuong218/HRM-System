@@ -57,11 +57,12 @@ public class ScheduleWorkspaceService {
         if (q.length()>200 || q.matches("-\\d+(\\.\\d+)?"))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Nhân viên không hợp lệ");
         LocalDate on=date==null ? LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")) : date;
+        q=java.text.Normalizer.normalize(q,java.text.Normalizer.Form.NFD).replaceAll("\\p{M}+", "").replace('đ','d').replace('Đ','D');
         String term="%"+q.replace("[","[[]").replace("%","[%]").replace("_","[_]")+"%";
         StringBuilder sql=new StringBuilder("""
                 SELECT TOP (50) e.employee_id,e.employee_code,e.full_name FROM dbo.employees e
                 WHERE e.employment_status='DANG_LAM' AND e.termination_date IS NULL
-                  AND e.hire_date<=? AND CONCAT(e.employee_code,N' - ',e.full_name) COLLATE Vietnamese_100_CI_AI LIKE ?
+                  AND e.hire_date<=? AND REPLACE(REPLACE(CONCAT(e.employee_code,N' - ',e.full_name),N'đ',N'd'),N'Đ',N'D') COLLATE Latin1_General_100_CI_AI LIKE ?
                 """);
         List<Object> args=new ArrayList<>(List.of(on,term));
         if ("HR".equals(actor.roleCode())) {
@@ -93,15 +94,17 @@ public class ScheduleWorkspaceService {
 
     public PageResponse<Row> search(AuthenticatedAccount actor, Long employee, Long department, Long shift,
             LocalDate from, LocalDate to, int page) {
-        return searchRows(actor,employee,department,shift,from,to,page,false);
+        return searchRows(actor,employee,department,shift,from,to,page,false,"desc");
     }
     public PageResponse<Row> mine(AuthenticatedAccount actor,Long shift,LocalDate from,LocalDate to,int page){
         context(actor);if(!"HR".equals(actor.roleCode()))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ HR xem lịch cá nhân trên giao diện này.");
-        return searchRows(actor,null,null,shift,from,to,page,true);
+        return searchRows(actor,null,null,shift,from,to,page,true,"desc");
     }
-    private PageResponse<Row> searchRows(AuthenticatedAccount actor,Long employee,Long department,Long shift,LocalDate from,LocalDate to,int page,boolean mine){
+    public PageResponse<Row> searchSorted(AuthenticatedAccount actor,Long employee,Long department,Long shift,LocalDate from,LocalDate to,int page,String sort){return searchRows(actor,employee,department,shift,from,to,page,false,sort);}
+    public PageResponse<Row> mineSorted(AuthenticatedAccount actor,Long shift,LocalDate from,LocalDate to,int page,String sort){context(actor);if(!"HR".equals(actor.roleCode()))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ HR xem lịch cá nhân.");return searchRows(actor,null,null,shift,from,to,page,true,sort);}
+    private PageResponse<Row> searchRows(AuthenticatedAccount actor,Long employee,Long department,Long shift,LocalDate from,LocalDate to,int page,boolean mine,String sort){
         context(actor);
-        var result=queries.search(actor,employee,department,shift,from,to,page,mine);
+        var result=queries.search(actor,employee,department,shift,from,to,page,mine,sort);
         if (result.items().isEmpty()) return new PageResponse<>(List.of(),result.page(),result.size(),result.totalElements(),result.totalPages());
         var ids=result.items().stream().map(ScheduleView::scheduleId).toList();
         String markers=String.join(",",Collections.nCopies(ids.size(),"?"));
