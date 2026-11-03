@@ -18,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly=true)
 public class EmployeeRequestService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
     private final JdbcTemplate jdbc;
     private final PersonnelAccessService access;
     private final PersonnelWorkflowSupport support;
@@ -43,7 +45,7 @@ public class EmployeeRequestService {
         LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id
         """;
     private Map<String,Object> required(long id) {
-        var rows=jdbc.queryForList(SELECT+" WHERE r.request_id=?",id);
+        var rows=jdbc.queryForList(SELECT+" WHERE r.request_id=? AND r.request_type IN ('NGHI_PHEP','NGHI_VIEC')",id);
         if(rows.isEmpty()) throw new ResourceNotFoundException("Không tìm thấy đơn: "+id);
         return rows.get(0);
     }
@@ -57,7 +59,8 @@ public class EmployeeRequestService {
         if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
         if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
-        String where=" WHERE (?=0 OR r.employee_id=?) AND (? IS NULL OR r.status=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR r.status=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
         Object[] params={mine?1:0,actor.employeeId(),status,status,type,type,mine?1:0};
         long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,params);
         var args=new ArrayList<Object>(Arrays.asList(params));args.add((long)page*size);args.add(size);
@@ -172,7 +175,7 @@ public class EmployeeRequestService {
         if(!resigned.isEmpty()) throw PersonnelWorkflowSupport.conflict("Thời gian nghỉ vượt ngày làm cuối đã duyệt");
         var schedules=jdbc.queryForList("""
             SELECT schedule_id,work_date,planned_start,planned_end,planned_break_minutes FROM dbo.work_schedules WITH(UPDLOCK,HOLDLOCK)
-            WHERE employee_id=? AND planned_start<? AND planned_end>? ORDER BY planned_start,schedule_id
+            WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>? ORDER BY planned_start,schedule_id
             """,employee,end,start);
         if(schedules.isEmpty()) throw PersonnelWorkflowSupport.conflict("Chưa có lịch làm việc trong khoảng nghỉ");
         var charges=new ArrayList<Charge>();var totals=new HashMap<Long,BigDecimal>();LocalDateTime previousEnd=null;
@@ -226,7 +229,7 @@ public class EmployeeRequestService {
             """,Long.class,employee,last.plusDays(1));
         if(heads>0) throw PersonnelWorkflowSupport.conflict("Phải kết thúc/thay trưởng phòng trước ngày nghỉ việc");
         long incompatible=jdbc.queryForObject("""
-            SELECT (SELECT COUNT_BIG(*) FROM dbo.work_schedules WHERE employee_id=? AND planned_end>?)
+            SELECT (SELECT COUNT_BIG(*) FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND planned_end>?)
               +(SELECT COUNT_BIG(*) FROM dbo.contracts WHERE employee_id=? AND status='DA_KY' AND (end_date IS NULL OR end_date>?))
               +(SELECT COUNT_BIG(*) FROM dbo.employee_assignments WHERE employee_id=? AND effective_from>=?)
               +(SELECT COUNT_BIG(*) FROM dbo.employee_requests r JOIN dbo.leave_request_details l ON l.request_id=r.request_id

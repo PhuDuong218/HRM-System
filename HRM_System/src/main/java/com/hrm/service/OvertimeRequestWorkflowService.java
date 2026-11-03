@@ -115,7 +115,7 @@ public class OvertimeRequestWorkflowService {
         noPending(o.id(), type);
         String code = "OTR-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
         Long id = db.queryForObject(
-                "INSERT dbo.employee_requests(employee_id,request_code,request_type,reason,created_by) OUTPUT INSERTED.request_id VALUES(?,?,?,?,?)",
+                "SET NOCOUNT ON; DECLARE @ids TABLE(id bigint); INSERT dbo.employee_requests(employee_id,request_code,request_type,reason,created_by) OUTPUT INSERTED.request_id INTO @ids VALUES(?,?,?,?,?); SELECT id FROM @ids;",
                 Long.class,
                 o.employee(), code, type, reason.trim(), actor.accountId());
         db.update("INSERT dbo.overtime_request_details(request_id,overtime_id,created_by) VALUES(?,?,?)", id, o.id(),

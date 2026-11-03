@@ -30,6 +30,7 @@ public class EmployeeTransferAuditService {
     @Transactional
     public EmployeeAssignmentDTO transfer(Long employeeId, EmployeeTransferRequestDTO request, Long actor) {
         if(actor==null || actor<=0) throw new IllegalArgumentException("Thiếu tài khoản điều chuyển");
+        if(request.reason()!=null && request.reason().isBlank()) throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Phải nhập lý do điều chuyển hợp lệ");
         guard.lockTimeline();
         employees.findByIdForUpdate(employeeId).orElseThrow(()->new com.hrm.exception.ResourceNotFoundException("Không tìm thấy nhân viên: "+employeeId));
         var current=assignments.findCurrentAssignments(employeeId,LocalDate.now(clock));
@@ -43,7 +44,8 @@ public class EmployeeTransferAuditService {
         var next=assignments.findById(result.assignmentId()).orElseThrow();
         next.setCreatedBy(actor);
         assignments.flush();
-        audit.recordTransfer(actor,employeeId,before,snapshot(next));
+        if(request.reason()==null) audit.recordTransfer(actor,employeeId,before,snapshot(next));
+        else audit.recordTransferWithReason(actor,employeeId,before,snapshot(next),request.reason().trim());
         return result;
     }
 

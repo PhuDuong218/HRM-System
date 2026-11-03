@@ -20,7 +20,25 @@ public class WorkShiftPermissionService {
         this.db = db;
     }
 
+    public void requireView(AuthenticatedAccount actor) {
+        verifyAccount(actor);
+    }
+
     public void requireManage(AuthenticatedAccount actor) {
+        verifyAccount(actor);
+        if ("ADMIN".equals(actor.roleCode()))
+            return;
+        Long granted = db.queryForObject("""
+                SELECT COUNT_BIG(*) FROM dbo.accounts a
+                JOIN dbo.role_permissions rp ON rp.role_id=a.role_id
+                JOIN dbo.permissions p ON p.permission_id=rp.permission_id
+                WHERE a.account_id=? AND a.is_active=1 AND p.permission_code='WORK_SHIFT_MANAGE'
+                """, Long.class, actor.accountId());
+        if (granted == null || granted == 0)
+            deny();
+    }
+
+    private void verifyAccount(AuthenticatedAccount actor) {
         if (actor == null || actor.accountId() == null || actor.roleCode() == null)
             deny();
         List<ActorRole> rows = db.query("""

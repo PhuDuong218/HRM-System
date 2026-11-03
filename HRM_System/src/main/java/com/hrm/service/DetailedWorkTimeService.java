@@ -7,6 +7,7 @@ import java.sql.Timestamp;
 import java.time.*;
 import java.util.*;
 import org.springframework.http.HttpStatus;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -93,6 +94,7 @@ public class DetailedWorkTimeService {
         if (request == null)
             throw bad("Missing body");
         List<OffsetBreak> breaks = offsetBreaks(request.breaks(), request.shift());
+        shiftBreaks(0); // Check detailed storage before inserting the parent shift.
         ShiftView shift = shifts.createWithVerifiedBreaks(actor, request.shift());
         writeShiftBreaks(shift.shiftId(), breaks);
         return shift;
@@ -103,6 +105,7 @@ public class DetailedWorkTimeService {
         if (request == null)
             throw bad("Missing body");
         List<OffsetBreak> breaks = offsetBreaks(request.breaks(), request.shift());
+        shiftBreaks(id); // Fail clearly if the migration has not been applied.
         // Preserve old schedules as snapshots. The original service also protects
         // changes to used shift time.
         ShiftView result = shifts.updateWithVerifiedBreaks(actor, id, request.shift());
@@ -116,7 +119,7 @@ public class DetailedWorkTimeService {
     private void writeShiftBreaks(long id, List<OffsetBreak> breaks) {
         for (OffsetBreak b : breaks) {
             db.update(
-                    "INSERT dbo.work_shift_breaks(shift_id,break_start_offset_minutes,break_end_offset_minutes) VALUES(?,?,?)",
+                    "INSERT INTO dbo.work_shift_breaks(shift_id,break_start_offset_minutes,break_end_offset_minutes) VALUES(?,?,?)",
                     id, b.startMinute(), b.endMinute());
         }
     }
@@ -198,7 +201,7 @@ public class DetailedWorkTimeService {
         List<Object[]> rows = db.query("""
                 SELECT schedule_id, planned_start, planned_end, break_detail_status
                 FROM dbo.work_schedules WITH(HOLDLOCK)
-                WHERE employee_id=? AND planned_start<? AND planned_end>?
+                WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>?
                 """, (rs, i) -> new Object[] { rs.getLong(1), rs.getTimestamp(2).toLocalDateTime(),
                 rs.getTimestamp(3).toLocalDateTime(), rs.getString(4) }, employeeId, Timestamp.valueOf(to),
                 Timestamp.valueOf(from));
@@ -230,8 +233,13 @@ public class DetailedWorkTimeService {
     }
 
     public List<OffsetBreak> shiftBreaks(long shiftId) {
-        return db.query(
+        try {
+            return db.query(
                 "SELECT break_start_offset_minutes,break_end_offset_minutes FROM dbo.work_shift_breaks WHERE shift_id=? AND superseded_at IS NULL ORDER BY break_start_offset_minutes",
                 (rs, i) -> new OffsetBreak(rs.getInt(1), rs.getInt(2)), shiftId);
+        } catch (BadSqlGrammarException ex) {
+            throw new ResponseStatusException(HttpStatus.SERVICE_UNAVAILABLE,
+                    "Kho lưu khoảng nghỉ chưa sẵn sàng. Kiểm tra migration 004_work_shift_breaks.sql và schema dbo.work_shift_breaks.", ex);
+        }
     }
 }

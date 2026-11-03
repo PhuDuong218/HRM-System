@@ -76,6 +76,15 @@ public class ScheduleQueryService {
 
     public PageResponse<ScheduleView> search(AuthenticatedAccount actor, Long employeeId,
             Long departmentId, LocalDate from, LocalDate to, int page, boolean personal) {
+        return search(actor, employeeId, departmentId, null, from, to, page, personal);
+    }
+
+    public PageResponse<ScheduleView> search(AuthenticatedAccount actor, Long employeeId,
+            Long departmentId, Long shiftId, LocalDate from, LocalDate to, int page, boolean personal) {
+        return search(actor,employeeId,departmentId,shiftId,from,to,page,personal,"date");
+    }
+    public PageResponse<ScheduleView> search(AuthenticatedAccount actor,Long employeeId,Long departmentId,Long shiftId,LocalDate from,LocalDate to,int page,boolean personal,String sort) {
+        if(!java.util.Set.of("date","asc","desc").contains(sort))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Thứ tự lịch không hợp lệ");
         checkActor(actor);
         if (from == null || to == null || from.isAfter(to))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khoảng ngày không hợp lệ");
@@ -83,6 +92,8 @@ public class ScheduleQueryService {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Phân trang không hợp lệ");
         if ((employeeId != null && employeeId <= 0) || (departmentId != null && departmentId <= 0))
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID không hợp lệ");
+        if (shiftId != null && shiftId <= 0)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ca được chọn không hợp lệ");
         if (!personal && actor.roleCode().equals("EMPLOYEE"))
             throw new ResponseStatusException(HttpStatus.FORBIDDEN, "Chỉ được tra cứu lịch cá nhân");
 
@@ -92,7 +103,12 @@ public class ScheduleQueryService {
         where.append(" AND s.work_date>=? AND s.work_date<=?");
         params.add(from);
         params.add(to);
+        if (shiftId != null) {
+            where.append(" AND s.shift_id=?");
+            params.add(shiftId);
+        }
         if (personal) {
+            where.append(" AND s.cancelled_at IS NULL");
             where.append(" AND s.employee_id=?");
             params.add(actor.employeeId());
         } else {
@@ -116,7 +132,7 @@ public class ScheduleQueryService {
         paged.add(PAGE_SIZE);
         List<ScheduleView> items = db.query("SELECT s.schedule_id,s.employee_id,s.shift_id,s.work_date," +
                 "s.planned_start,s.planned_end,s.planned_break_minutes,s.note" + where +
-                " ORDER BY s.planned_start,s.schedule_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
+                " ORDER BY "+(sort.equals("asc")?"s.schedule_id ASC":sort.equals("desc")?"s.schedule_id DESC":"s.planned_start,s.schedule_id")+" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",
                 MAPPER, paged.toArray());
         int totalPages = (int) Math.min(Integer.MAX_VALUE, (count + PAGE_SIZE - 1) / PAGE_SIZE);
         return new PageResponse<>(items, page, PAGE_SIZE, count, totalPages);

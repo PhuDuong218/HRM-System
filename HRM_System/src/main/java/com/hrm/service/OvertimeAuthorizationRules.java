@@ -55,7 +55,7 @@ public final class OvertimeAuthorizationRules {
         if (!isEligibleApplicant(applicantRole))
             return false;
         if ("ADMIN".equals(actorRole))
-            return true;
+            return actorAccountId != approvedByAccountId;
         if (isSelf(actorEmployeeId, applicantEmployeeId))
             return false;
         return "HR".equals(actorRole) && "EMPLOYEE".equals(applicantRole)

@@ -31,6 +31,8 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeAssignmentService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
 
         private final EmployeeAssignmentRepository assignmentRepository;
         private final EmployeeRepository employeeRepository;
@@ -58,7 +60,8 @@ public class EmployeeAssignmentService {
         // 1. Lay toan bo danh sach phan cong
         @Transactional(readOnly = true)
         public List<EmployeeAssignmentDTO> getAllAssignments() {
-                return assignmentRepository.findAllWithDetails()
+                var allowed=PersonnelScopeService.isHr()?personnelScope.employees():null;
+                return assignmentRepository.findAllWithDetails().stream().filter(a->allowed==null||allowed.contains(a.getEmployee().getEmployeeId())).toList()
                                 .stream()
                                 .map(this::convertToDTO)
                                 .toList();
@@ -242,6 +245,7 @@ public class EmployeeAssignmentService {
                         int page,
                         int size) {
 
+                if(PersonnelScopeService.isHr()) return assignmentRepository.findScoped(personnelScope.employees(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
                 return assignmentRepository.findAllPagedWithDetails(
                                 PagingUtils.create(
                                                 page,

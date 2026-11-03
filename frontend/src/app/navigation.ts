@@ -2,11 +2,13 @@
 export interface NavigationLink {
   path: string;
   label: string;
+  roles?: string[];
 }
 
 export interface NavigationItem {
   id: string;
   label: string;
+  roles?: string[];
   path?: string;
   children?: NavigationLink[];
 }
@@ -16,16 +18,23 @@ export const navigation: NavigationItem[] = [
   {
     id: 'personnel', label: 'Quản lý Nhân sự', children: [
       { path: 'employees', label: 'Nhân viên' },
+      {path:'assignments',label:'Phân công / Điều chuyển'},
+      {path:'certificates',label:'Bằng cấp / Chứng chỉ'},
       { path: 'contracts', label: 'Hợp đồng' },
+      { path: 'contract-types', label: 'Loại hợp đồng' },
       { path: 'decisions', label: 'Khen thưởng / Kỷ luật' }
     ]
   },
   {
     id: 'time', label: 'Thời gian & Chấm công', children: [
+      { path: 'work-shifts', label: 'Danh mục ca' },
       { path: 'schedules', label: 'Lịch làm việc' },
       { path: 'attendance', label: 'Chấm công' },
+      { path: 'attendance/summary', label: 'Tổng hợp công theo kỳ' },
       { path: 'overtime', label: 'Tăng ca' },
-      { path: 'requests', label: 'Quản lý đơn từ' }
+      { path: 'requests', label: 'Quản lý đơn từ' },
+      { path: 'leave-types', label: 'Loại nghỉ phép' },
+      {path:'leave-entitlements',label:'Quỹ phép'}
     ]
   },
   {
@@ -45,8 +54,9 @@ export const navigation: NavigationItem[] = [
   { id: 'reports', path: 'reports', label: 'Báo cáo' },
   {
     id: 'system', label: 'Hệ thống', children: [
-      { path: 'accounts', label: 'Tài khoản và phân quyền' },
-      { path: 'connection', label: 'Kiểm tra kết nối' }
+      { path: 'accounts', label: 'Tài khoản và phân quyền', roles:['ADMIN'] },
+      { path: 'connection', label: 'Kiểm tra kết nối', roles:['ADMIN'] },
+      {path:'audit',label:'Lịch sử thay đổi'}
     ]
   }
 ];
