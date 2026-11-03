@@ -28,6 +28,9 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
    if(body instanceof EmployeeRequestDTO r && r.getDepartmentId()!=null)scope.department(r.getDepartmentId());
    if(body instanceof EmployeeTransferRequestDTO r && r.departmentId()!=null)scope.department(r.departmentId());
    if(body instanceof LeaveEntitlementRequestDTO r && r.getEmployeeId()!=null)scope.employee(r.getEmployeeId(),false);
+   if(body instanceof ContractCreateRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
+   if(body instanceof ContractRenewRequest r && r.newContract()!=null && r.newContract().employeeId()!=null)scope.managedEmployee(r.newContract().employeeId());
+   if(body instanceof DecisionRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
   }
   var attrs=RequestContextHolder.getRequestAttributes();if(!(attrs instanceof ServletRequestAttributes servlet))return body;
   var matcher=java.util.regex.Pattern.compile("^/employees/(\\d+)(?:/contact)?$").matcher(servlet.getRequest().getRequestURI());

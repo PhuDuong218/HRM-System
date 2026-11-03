@@ -5,7 +5,10 @@ const path = require('node:path');
 const { pathToFileURL } = require('node:url');
 const esbuild = require('esbuild');
 
-test('overview respects HR scope and displays independent report results for admins', async () => {
+test('HR overview uses its scoped endpoint while admin retains report access', async () => {
+  const proxy = JSON.parse(fs.readFileSync(path.join(__dirname, '../proxy.conf.json'), 'utf8'));
+  assert.equal(proxy['/api/overview'].target, 'http://localhost:2005');
+  assert.equal(proxy['/api/overview'].pathRewrite, undefined);
   const output = path.join(__dirname, `.overview-${process.pid}.mjs`);
   await esbuild.build({ entryPoints: [path.join(__dirname, 'overview-harness.ts')], bundle: true,
     packages: 'external', platform: 'node', format: 'esm', outfile: output });
@@ -16,15 +19,46 @@ test('overview respects HR scope and displays independent report results for adm
     const hr = setup();
     hr.page.ngOnInit();
     hr.profile.next({ role: 'HR' });
-    assert.equal(hr.page.employeeState, 'error');
-    assert.match(hr.page.employeeError, /HR/);
+    hr.http.expectOne('/api/overview/hr').flush({
+      employees: { byDepartment: [{ groupName: 'Đào tạo', employeeCount: 2 },
+        { groupName: 'Kế toán', employeeCount: 1 }], byStatus: [{ groupCode: 'DANG_LAM', employeeCount: 3 }] },
+      contracts: { effectiveCount: 1, expiringCount: 0 },
+      work: { confirmedWorkDays: 3, confirmedAbsentDays: 0 }
+    });
+    assert.equal(hr.page.employeeState, 'ready');
+    assert.equal(hr.page.totalEmployees, 3);
+    assert.equal(hr.page.work.confirmedWorkDays, 3);
+    assert.equal(hr.page.departments.length, 2);
+    hr.http.expectNone('/api/reports/employees');
     hr.http.expectNone(request => request.url.startsWith('/api/reports/'));
+    assert.equal(hr.page.isAdmin, false);
     hr.http.verify();
     hr.injector.destroy();
+
+    const unassigned = setup();
+    unassigned.page.ngOnInit();
+    unassigned.profile.next({ role: 'HR' });
+    unassigned.http.expectOne('/api/overview/hr').flush({ employees: { byDepartment: [], byStatus: [] },
+      contracts: { effectiveCount: 0, expiringCount: 0 }, work: { confirmedWorkDays: 0, confirmedAbsentDays: 0 } });
+    assert.equal(unassigned.page.totalEmployees, 0);
+    assert.equal(unassigned.page.employeeState, 'ready');
+    unassigned.http.verify();
+    unassigned.injector.destroy();
+
+    const failed = setup();
+    failed.page.ngOnInit();
+    failed.profile.next({ role: 'HR' });
+    failed.http.expectOne('/api/overview/hr').flush('Unavailable', { status: 503, statusText: 'Unavailable' });
+    assert.equal(failed.page.employeeState, 'error');
+    assert.equal(failed.page.contractState, 'error');
+    assert.equal(failed.page.workState, 'error');
+    failed.http.verify();
+    failed.injector.destroy();
 
     const admin = setup();
     admin.page.ngOnInit();
     admin.profile.next({ role: 'ADMIN' });
+    assert.equal(admin.page.isAdmin, true);
     const employee = admin.http.expectOne('/api/reports/employees');
     assert.equal(employee.request.headers.get('Authorization'), 'Bearer test-token');
     employee.flush({ byDepartment: [

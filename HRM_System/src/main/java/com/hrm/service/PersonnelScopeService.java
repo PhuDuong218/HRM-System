@@ -28,8 +28,13 @@ public class PersonnelScopeService {
  OR (e.employment_status='DA_NGHI' AND NOT EXISTS(SELECT 1 FROM dbo.employee_assignments newer WHERE newer.employee_id=e.employee_id AND newer.effective_from>a.effective_from AND newer.effective_from<=CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time'))))
  """,Long.class,a.accountId());return ids.isEmpty()?List.of(-1L):ids;}
  public void employee(long id,boolean read){var a=current();if(a==null)throw denied();if("ADMIN".equals(a.roleCode()))return;if(read&&Objects.equals(a.employeeId(),id))return;if("HR".equals(a.roleCode())&&employees().contains(id))return;throw denied();}
+ public void managedEmployee(long id){var a=current();if(a==null)throw denied();if("ADMIN".equals(a.roleCode()))return;if("HR".equals(a.roleCode())&&employees().contains(id))return;throw denied();}
  public void department(long id){if(isHr()&&!departments().contains(id))throw denied();}
- public long employeeOf(String table,String idColumn,long id){if(!Set.of("employee_qualifications","leave_entitlements","employee_requests").contains(table))throw new IllegalArgumentException();var rows=jdbc.queryForList("SELECT employee_id FROM dbo."+table+" WHERE "+idColumn+"=?",Long.class,id);if(rows.isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Không tìm thấy bản ghi");return rows.get(0);}
+ public long employeeOf(String table,String idColumn,long id){
+  if(!Map.of("employee_qualifications","employee_qualification_id","leave_entitlements","entitlement_id",
+      "employee_requests","request_id","contracts","contract_id","employee_decisions","decision_id").getOrDefault(table, "").equals(idColumn))
+   throw new IllegalArgumentException("Bảng hoặc khóa không hợp lệ");
+  var rows=jdbc.queryForList("SELECT employee_id FROM dbo."+table+" WHERE "+idColumn+"=?",Long.class,id);if(rows.isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Không tìm thấy bản ghi");return rows.get(0);}
  public String sqlEmployees(String column){return column+" IN ("+employees().stream().map(String::valueOf).collect(java.util.stream.Collectors.joining(","))+")";}
  private static ResponseStatusException denied(){return new ResponseStatusException(HttpStatus.FORBIDDEN,"Đối tượng nằm ngoài phạm vi phòng ban được giao");}
 }

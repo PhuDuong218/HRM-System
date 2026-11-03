@@ -44,6 +44,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/overview": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:2005",
     "secure": false,

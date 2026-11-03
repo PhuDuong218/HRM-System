@@ -37,6 +37,10 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
         Optional<Account> findByUsername(String username);
 
+        @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        @Query("select a from Account a where a.username = :username")
+        Optional<Account> findByUsernameForRecovery(@Param("username") String username);
+
         // Vo hieu hoa tai khoan khi nhan vien nghi viec
         // Dong thoi tang tokenVersion de thu hoi JWT cu
         @Modifying(clearAutomatically = true, flushAutomatically = true)

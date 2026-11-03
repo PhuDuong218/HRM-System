@@ -4,9 +4,7 @@ import com.hrm.dto.AdminAccessDTOs.*;
 import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.AdminAccessService;
 import jakarta.validation.Valid;
-import java.net.URI;
 import java.util.List;
-import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
@@ -21,18 +19,10 @@ public class AdminPermissionController {
     public List<PermissionView> list() { return service.permissions(); }
     @GetMapping("/{id}")
     public PermissionView get(@PathVariable long id) { return service.permission(id); }
-    @PostMapping
-    public ResponseEntity<PermissionView> create(@AuthenticationPrincipal AuthenticatedAccount actor,
-            @Valid @RequestBody CreatePermission request) {
-        var result = service.createPermission(actor, request);
-        return ResponseEntity.created(URI.create("/api/admin/permissions/" + result.permissionId())).body(result);
-    }
     @PutMapping("/{id}")
     public PermissionView update(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
             @Valid @RequestBody UpdatePermission request) { return service.updatePermission(actor, id, request); }
-    @DeleteMapping("/{id}")
-    public ResponseEntity<Void> delete(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id) {
-        service.deletePermission(actor, id);
-        return ResponseEntity.noContent().build();
-    }
+    @PatchMapping("/{id}/details")
+    public PermissionView details(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody EditPermissionDetails request) { return service.editPermissionDetails(actor, id, request); }
 }

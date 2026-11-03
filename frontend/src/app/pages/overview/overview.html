@@ -11,9 +11,10 @@
 
   <section class="overview-intro">
     <div><span class="intro-kicker">HRM CENTER / INSIGHTS</span><h2>{{ language.t('Một cái nhìn rõ hơn về đội ngũ.') }}</h2><p>{{ language.t('Theo dõi cơ cấu nhân sự, hợp đồng và công việc từ dữ liệu báo cáo hiện có.') }}</p></div>
-    <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a>
+    @if (isAdmin) { <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a> }
   </section>
 
+  @if (isHr) { <p>{{ language.t('Số liệu chỉ bao gồm các phòng ban bạn được phân công quản lý.') }}</p> }
   <section class="metric-grid" [attr.aria-label]="language.t('Chỉ số nổi bật')">
     <article class="metric-card"><span>{{ language.t('Tổng hồ sơ nhân sự') }}</span><strong>{{ employeeReport ? number(totalEmployees) : '—' }}</strong><small>{{ language.t('Bao gồm cả nhân viên đã nghỉ') }}</small></article>
     <article class="metric-card"><span>{{ language.t('Đang làm việc') }}</span><strong>{{ employeeReport ? number(activeEmployees) : '—' }}</strong><small>{{ language.t('Theo trạng thái hồ sơ') }}</small></article>
@@ -96,7 +97,6 @@
       }
     </article>
   </section>
-
   <section class="next-insights">
     <div><p class="chart-kicker">{{ language.t('PHÁT TRIỂN TIẾP') }}</p><h2>{{ language.t('Các chỉ số nên bổ sung') }}</h2><p>{{ language.t('Cần dữ liệu theo kỳ và xác nhận phạm vi truy cập trước khi hiển thị.') }}</p></div>
     <ul><li>{{ language.t('Biến động nhân sự theo tháng') }}</li><li>{{ language.t('Xu hướng công và tăng ca') }}</li><li>{{ language.t('Quỹ lương theo kỳ') }}</li></ul>

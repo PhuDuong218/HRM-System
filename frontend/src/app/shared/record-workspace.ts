@@ -34,9 +34,14 @@ import { Component, ElementRef, EventEmitter, Input, Output, ViewChild } from '@
     .record-backdrop{display:none}
     @media(max-width:1250px){
       .has-detail{grid-template-columns:minmax(0,1fr)}
-      .record-detail{position:fixed;right:0;top:0;bottom:0;width:min(560px,100%);max-height:100dvh;z-index:101;border-radius:16px 0 0 16px;box-shadow:-12px 0 40px #17365324;overscroll-behavior:contain}
+      .record-detail{position:fixed;right:0;top:0;bottom:0;width:min(560px,100dvw);max-width:100dvw;max-height:100dvh;box-sizing:border-box;overflow-x:hidden;overflow-y:auto;z-index:101;border-radius:16px 0 0 16px;box-shadow:-12px 0 40px #17365324;overscroll-behavior:contain}
       .record-backdrop{display:block;position:fixed;inset:0;z-index:100;border:0;background:#112b4566;cursor:pointer}
       .record-backdrop:disabled{cursor:wait}
+    }
+    @media(max-width:575px){
+      .panel-toolbar{min-width:0;gap:8px;padding:12px 16px}
+      .panel-toolbar span{min-width:0;overflow-wrap:anywhere}
+      .panel-toolbar button{flex:0 0 auto}
     }
   `]
 })

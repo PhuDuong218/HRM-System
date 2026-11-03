@@ -6,6 +6,7 @@ import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.AdminAccessService;
 import jakarta.validation.Valid;
 import java.net.URI;
+import org.springframework.http.CacheControl;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -24,8 +25,18 @@ public class AdminAccountManagementController {
             @RequestParam(required = false) Boolean active, @RequestParam(required = false) Long roleId) {
         return service.accounts(page, size, keyword, active, roleId);
     }
+    @GetMapping("/eligible-employees")
+    public PageResponse<EligibleEmployee> eligibleEmployees(@RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = "0") int page, @RequestParam(defaultValue = "10") int size) {
+        return service.eligibleEmployees(keyword, page, size);
+    }
     @GetMapping("/{id}")
     public AccountView get(@PathVariable long id) { return service.account(id); }
+
+    @GetMapping("/{id}/contact")
+    public ResponseEntity<AccountContact> contact(@PathVariable long id) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.accountContact(id));
+    }
 
     @PostMapping
     public ResponseEntity<AccountView> create(@AuthenticationPrincipal AuthenticatedAccount actor,
@@ -36,6 +47,14 @@ public class AdminAccountManagementController {
     @PutMapping("/{id}")
     public AccountView update(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
             @Valid @RequestBody UpdateAccount request) { return service.updateAccount(actor, id, request); }
+
+    @PatchMapping("/{id}/status")
+    public AccountView status(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody ChangeAccountStatus request) { return service.changeAccountStatus(actor, id, request); }
+
+    @PatchMapping("/{id}/identity")
+    public AccountView identity(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody EditAccountIdentity request) { return service.editAccountIdentity(actor, id, request); }
 
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id) {

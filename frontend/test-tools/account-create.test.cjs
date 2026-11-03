@@ -1,0 +1,65 @@
+const { test } = require('node:test');
+const assert = require('node:assert/strict');
+const fs = require('node:fs');
+const path = require('node:path');
+const { pathToFileURL } = require('node:url');
+const esbuild = require('esbuild');
+
+test('account creation validates, sends once and refreshes after success', async () => {
+  const output = path.join(__dirname, `.account-create-${process.pid}.mjs`);
+  await esbuild.build({ entryPoints: [path.join(__dirname, 'account-create-harness.ts')], bundle: true,
+    packages: 'external', platform: 'node', format: 'esm', outfile: output });
+  try {
+    const { setup } = await import(pathToFileURL(output).href);
+    const { page, http, injector } = setup();
+    page.openDialog('account-create');
+    const employeesUrl = '/api/admin/accounts/eligible-employees';
+    const employee = { employeeId: 4, employeeCode: 'E4', fullName: 'Nhân viên 4' };
+    http.expectOne(request => request.url === employeesUrl).flush({ items: [employee], page: 0, totalPages: 1, totalElements: 1 });
+    page.selectEmployee(employee);
+    page.createForm = { employeeId: 4, roleId: 2, username: 'new.user', password: 'password1', confirmPassword: 'wrong', active: true };
+    page.createAccount();
+    assert.match(page.createError, /không khớp/);
+    http.expectNone('/api/admin/accounts');
+    page.createForm.confirmPassword = 'password1';
+    page.createAccount();
+    page.createAccount();
+    const request = http.expectOne('/api/admin/accounts');
+    assert.equal(request.request.method, 'POST');
+    assert.equal(request.request.body.employeeId, 4);
+    assert.equal(page.saving, true);
+    page.closeDialog();
+    assert.equal(page.dialogMode, 'account-create');
+    request.flush({ username: 'new.user' }, { status: 201, statusText: 'Created' });
+    assert.equal(page.dialogMode, null);
+    assert.equal(page.createForm.password, '');
+    assert.match(page.message, /new.user/);
+    http.expectOne(req => req.method === 'GET' && req.url === '/api/admin/accounts').flush({ items: [], page: 0, totalPages: 0, totalElements: 0 });
+    page.openDialog('account-create');
+    http.expectOne(request => request.url === employeesUrl).flush({ items: [employee], page: 0, totalPages: 1, totalElements: 1 });
+    page.selectEmployee(employee);
+    page.createForm = { employeeId: 4, roleId: 2, username: 'new.user', password: 'password1', confirmPassword: 'password1', active: true };
+    page.createAccount();
+    http.expectOne('/api/admin/accounts').flush({ loi_chi_tiet: 'Nhân viên đã có tài khoản' }, { status: 409, statusText: 'Conflict' });
+    assert.match(page.createError, /đã có tài khoản/);
+    assert.equal(page.saving, false);
+    page.openDialog('account-view', { accountId: 7, roleId: 2, roleCode: 'HR', username: 'hr', createdAt: null, updatedAt: null });
+    http.expectOne('/api/admin/accounts/7/contact').flush({ email: 'hr@example.com', phone: '0912345678' });
+    assert.equal(page.contact.email, 'hr@example.com');
+    assert.equal(page.contact.phone, '0912345678');
+    assert.equal(page.hrDepartmentsLoading, true);
+    http.expectOne('/api/admin/hr-scopes/account/7/active-departments').flush([{ departmentId: 3, departmentName: 'Nhân sự' }]);
+    assert.equal(page.hrDepartments[0].departmentName, 'Nhân sự');
+    assert.equal(page.dateOnly('2026-01-01T20:00:00'), '02/01/2026');
+    page.closeDialog();
+    assert.deepEqual(page.hrDepartments, []);
+    page.openDialog('account-view', { accountId: 8, roleId: 3, roleCode: 'EMPLOYEE', username: 'first' });
+    const oldContact = http.expectOne('/api/admin/accounts/8/contact');
+    page.openDialog('account-view', { accountId: 9, roleId: 3, roleCode: 'EMPLOYEE', username: 'second' });
+    assert.equal(oldContact.cancelled, true);
+    http.expectOne('/api/admin/accounts/9/contact').flush({ email: null, phone: null });
+    assert.equal(page.contact.email, null);
+    http.verify();
+    injector.destroy();
+  } finally { fs.unlinkSync(output); }
+});

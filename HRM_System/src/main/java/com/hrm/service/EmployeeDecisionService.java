@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class EmployeeDecisionService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
     private final EmployeeDecisionRepository decisions;
     private final EmployeeRepository employees;
     private final DecisionActorProvider actors;
@@ -44,8 +45,10 @@ public class EmployeeDecisionService {
         actors.requireManager();
         if (page < 0 || size < 1 || size > 100 || employeeId != null && employeeId <= 0)
             throw error(HttpStatus.BAD_REQUEST, "page>=0; size 1..100; employeeId phải dương");
-        var rows = decisions.search(employeeId, status, PageRequest.of(page, size,
-                Sort.by(Sort.Direction.DESC, "issuedDate", "decisionId")));
+        var pageable = PageRequest.of(page, size, Sort.by(Sort.Direction.DESC, "issuedDate", "decisionId"));
+        var rows = PersonnelScopeService.isHr()
+                ? decisions.searchScoped(employeeId, status, personnelScope.employees(), pageable)
+                : decisions.search(employeeId, status, pageable);
         return new PageResponse<>(rows.getContent().stream().map(this::dto).toList(),
                 rows.getNumber(), rows.getSize(), rows.getTotalElements(), rows.getTotalPages());
     }

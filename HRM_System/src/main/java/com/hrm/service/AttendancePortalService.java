@@ -92,10 +92,7 @@ public class AttendancePortalService {
         permissions.requirePermission(a.id(),AttendancePermissionService.MANAGE);
         if(a.role().equals("ADMIN"))return new Scope("",new ArrayList<>());
         return new Scope("""
-          AND s.employee_id<>? AND EXISTS(SELECT 1 FROM dbo.accounts ta JOIN dbo.roles tr ON tr.role_id=ta.role_id
-             WHERE ta.employee_id=s.employee_id AND ta.is_active=1 AND tr.role_code='EMPLOYEE')
-          AND NOT EXISTS(SELECT 1 FROM dbo.accounts ha JOIN dbo.roles hr ON hr.role_id=ha.role_id
-             WHERE ha.employee_id=s.employee_id AND ha.is_active=1 AND hr.role_code='HR')
+          AND s.employee_id<>?
           AND EXISTS(SELECT 1 FROM dbo.employee_assignments ea JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id
              WHERE ea.employee_id=s.employee_id AND ea.effective_from<=s.work_date AND (ea.effective_to IS NULL OR ea.effective_to>s.work_date)
              AND hs.hr_account_id=? AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME()

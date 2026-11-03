@@ -22,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class ContractService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
     private final ContractRepository contracts;
     private final ContractTypeRepository types;
     private final EmployeeRepository employees;
@@ -59,7 +60,9 @@ public class ContractService {
                 .replace("_", "!_").replace("[", "![") + "%";
         var pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "startDate", "contractId"));
-        var result = contracts.search(employeeId, status, pattern, pageable);
+        var result = PersonnelScopeService.isHr()
+                ? contracts.searchScoped(employeeId, status, pattern, personnelScope.employees(), pageable)
+                : contracts.search(employeeId, status, pattern, pageable);
         return new PageResponse<>(result.getContent().stream().map(this::toResponse).toList(),
                 result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());

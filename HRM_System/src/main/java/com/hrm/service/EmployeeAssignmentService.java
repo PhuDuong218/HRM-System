@@ -61,7 +61,8 @@ public class EmployeeAssignmentService {
         @Transactional(readOnly = true)
         public List<EmployeeAssignmentDTO> getAllAssignments() {
                 var allowed=PersonnelScopeService.isHr()?personnelScope.employees():null;
-                return assignmentRepository.findAllWithDetails().stream().filter(a->allowed==null||allowed.contains(a.getEmployee().getEmployeeId())).toList()
+                var departments=PersonnelScopeService.isHr()?personnelScope.departments():null;
+                return assignmentRepository.findAllWithDetails().stream().filter(a->allowed==null||(allowed.contains(a.getEmployee().getEmployeeId())&&departments.contains(a.getDepartment().getDepartmentId()))).toList()
                                 .stream()
                                 .map(this::convertToDTO)
                                 .toList();
@@ -76,8 +77,10 @@ public class EmployeeAssignmentService {
                                         "Không tìm thấy nhân viên có ID: " + employeeId);
                 }
 
+                var departments=PersonnelScopeService.isHr()?personnelScope.departments():null;
                 return assignmentRepository.findHistoryByEmployeeId(employeeId)
                                 .stream()
+                                .filter(a->departments==null||departments.contains(a.getDepartment().getDepartmentId()))
                                 .map(this::convertToDTO)
                                 .toList();
         }
@@ -245,7 +248,7 @@ public class EmployeeAssignmentService {
                         int page,
                         int size) {
 
-                if(PersonnelScopeService.isHr()) return assignmentRepository.findScoped(personnelScope.employees(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
+                if(PersonnelScopeService.isHr()) return assignmentRepository.findScoped(personnelScope.employees(),personnelScope.departments(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
                 return assignmentRepository.findAllPagedWithDetails(
                                 PagingUtils.create(
                                                 page,
@@ -268,6 +271,7 @@ public class EmployeeAssignmentService {
                                         "Không tìm thấy nhân viên: " + employeeId);
                 }
 
+                if(PersonnelScopeService.isHr()) return assignmentRepository.findHistoryScoped(employeeId,personnelScope.departments(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
                 return assignmentRepository.findHistoryPagedByEmployeeId(
                                 employeeId,
                                 PagingUtils.create(

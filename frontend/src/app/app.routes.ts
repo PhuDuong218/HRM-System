@@ -105,6 +105,7 @@ export const routes: Routes = [
       },
       {
         path: "reports",
+        canActivate: [adminGuard],
         loadComponent: () => import("./pages/reports/reports").then(m => m.ReportsPage),
       },
       {

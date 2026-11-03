@@ -22,6 +22,15 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
+    @Query("""
+            SELECT e FROM Employee e
+            WHERE e.employmentStatus = :status
+              AND (LOWER(e.employeeCode) LIKE :keyword ESCAPE '!' OR LOWER(e.fullName) LIKE :keyword ESCAPE '!')
+              AND NOT EXISTS (SELECT a.accountId FROM Account a WHERE a.employeeId = e.employeeId)
+            """)
+    Page<Employee> findWithoutAccount(@Param("keyword") String keyword,
+            @Param("status") EmploymentStatus status, Pageable pageable);
+
     // Kiem tra ma nhan vien da ton tai hay chua
     boolean existsByEmployeeCode(String employeeCode);
 

@@ -12,6 +12,7 @@ import org.springframework.jdbc.datasource.embedded.*;
 import org.springframework.orm.jpa.*;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -65,6 +66,26 @@ class ModuleRepositoryIntegrationTest {
     }
     @Test void contractOverlapIncludesLastDayButNotFollowingDay(){tx.execute(s->{assertEquals(1,contracts.countOverlapping(1L,TODAY.plusDays(30),null));assertEquals(0,contracts.countOverlapping(1L,TODAY.plusDays(31),null));return null;});}
     @Test void overlapDoesNotLeakAcrossEmployees(){tx.execute(s->{assertEquals(0,contracts.countOverlapping(2L,TODAY,null));return null;});}
+    @Test void contractSearchFiltersBeforePaginationAndCount(){
+        jdbc.update("insert into dbo.contracts(contract_id,employee_id,contract_type_id,contract_number,signed_date,start_date,end_date,status,created_at) values (4,2,2,'OTHER',?,?,?,'DA_KY',CURRENT_TIMESTAMP)",TODAY,TODAY,TODAY.plusDays(30));
+        tx.execute(s->{
+            var page=contracts.searchScoped(null,null,"%",List.of(1L),PageRequest.of(0,1));
+            assertEquals(1,page.getTotalElements());assertEquals(1L,page.getContent().get(0).getEmployee().getEmployeeId());
+            assertEquals(0,contracts.searchScoped(2L,null,"%",List.of(1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,contracts.searchScoped(null,null,"%",List.of(-1L),PageRequest.of(0,1)).getTotalElements());
+            return null;
+        });
+    }
+    @Test void decisionSearchFiltersBeforePaginationAndCount(){
+        decisionRow(10,1,"CHO_DUYET","NONE",null);decisionRow(11,2,"CHO_DUYET","NONE",null);
+        tx.execute(s->{
+            var page=decisions.searchScoped(null,null,List.of(1L),PageRequest.of(0,1));
+            assertEquals(1,page.getTotalElements());assertEquals(1L,page.getContent().get(0).getEmployee().getEmployeeId());
+            assertEquals(0,decisions.searchScoped(2L,null,List.of(1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,decisions.searchScoped(null,null,List.of(-1L),PageRequest.of(0,1)).getTotalElements());
+            return null;
+        });
+    }
     @Test void salaryOverlapExcludesCurrentRowWhenUpdating(){tx.execute(s->{assertEquals(1,terms.countOverlapping(3L,TODAY,TODAY.plusDays(9),null));assertEquals(0,terms.countOverlapping(3L,TODAY,TODAY.plusDays(9),4L));return null;});}
     @Test void adjacentSalaryDatesAreNotOverlapping(){tx.execute(s->{assertEquals(0,terms.countOverlapping(3L,TODAY.plusDays(10),null,null));return null;});}
     @Test void allowancesOverlapIncludesLastDayAndFiltersTypeAndEmployee(){tx.execute(s->{assertEquals(1,allowances.countOverlapping(1L,2L,TODAY.plusDays(9),null,null));assertEquals(0,allowances.countOverlapping(1L,2L,TODAY.plusDays(10),null,null));assertEquals(0,allowances.countOverlapping(2L,2L,TODAY,null,null));assertEquals(0,allowances.countOverlapping(1L,999L,TODAY,null,null));return null;});}
