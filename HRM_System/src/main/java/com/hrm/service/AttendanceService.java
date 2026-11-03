@@ -163,6 +163,7 @@ public class AttendanceService {
                                                 FROM dbo.work_schedules WITH (UPDLOCK, HOLDLOCK)
                                                 WHERE schedule_id = ?
                                                   AND employee_id = ?
+                                                  AND cancelled_at IS NULL
                                                 """,
                                 (rs, rowNum) -> rs.getDate("work_date").toLocalDate(),
                                 input.scheduleId(),

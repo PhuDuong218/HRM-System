@@ -13,7 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.json.JsonMapper;
 
-/** Dedicated management writes; never enable all hrm.task APIs. */
+/** Detailed shift CRUD without enabling unrelated hrm.task APIs. */
 @Service
 public class WorkShiftManagementWriteService {
     private final JdbcTemplate db;
@@ -58,23 +58,54 @@ public class WorkShiftManagementWriteService {
     @Transactional("scheduleTransactionManager")
     public ShiftView create(AuthenticatedAccount actor, ShiftWithBreaks input) {
         permissions.requireManage(actor);
-        if (input == null || input.shift() == null || !input.shift().active())
+        if (input == null || input.shift() == null || input.breaks() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu thông tin mẫu ca");
+        ShiftInput shift = input.shift();
+        if (!shift.active())
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Ca mới phải ở trạng thái hoạt động");
+        if (shift.shiftCode() == null || shift.shiftCode().isBlank()
+                || shift.shiftCode().trim().length() > 50
+                || !shift.shiftCode().trim().matches("[A-Za-z0-9_-]+"))
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã ca không hợp lệ");
+        if (shift.shiftName() == null || shift.shiftName().isBlank()
+                || shift.shiftName().trim().length() > 200)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên ca không hợp lệ");
         ShiftView result = detailed.createShift(actor, input);
-        audit(actor, result.shiftId(), "WORK_SHIFT_CREATE", "Tạo mẫu ca", null, result);
+        audit(actor, result.shiftId(), "WORK_SHIFT_CREATE", "Tạo mẫu ca và khoảng nghỉ chi tiết", null, result);
         return result;
     }
 
+    /** Only the name can change while detailed break storage is unavailable. */
     @Transactional("scheduleTransactionManager")
-    public ShiftView update(AuthenticatedAccount actor, long id, ShiftWithBreaks input) {
+    public ShiftView updateBasicInfo(AuthenticatedAccount actor, long id, String shiftName) {
         permissions.requireManage(actor);
+        if (shiftName == null || shiftName.isBlank() || shiftName.trim().length() > 200)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Tên ca không hợp lệ");
         ShiftView before = locked(id);
         if (!before.active())
             throw conflict("Phải mở khóa ca trước khi sửa");
-        if (input == null || input.shift() == null || !input.shift().active())
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Không được thay đổi trạng thái bằng API sửa ca");
+        String name = shiftName.trim();
+        if (before.shiftName().equals(name))
+            return before;
+        int changed = db.update("UPDATE dbo.work_shifts SET shift_name=? WHERE shift_id=? AND is_active=1", name, id);
+        if (changed != 1)
+            throw conflict("Trạng thái ca đã thay đổi");
+        ShiftView after = locked(id);
+        audit(actor, id, "WORK_SHIFT_BASIC_INFO_UPDATE", "Đổi tên mẫu ca", before, after);
+        return after;
+    }
+
+    /** Preserve existing schedules; update only the template and its break history. */
+    @Transactional("scheduleTransactionManager")
+    public ShiftView update(AuthenticatedAccount actor, long id, ShiftWithBreaks input) {
+        permissions.requireManage(actor);
+        if (input == null || input.shift() == null || input.breaks() == null)
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Thiếu thông tin mẫu ca");
+        ShiftView before = locked(id);
+        if (!before.shiftCode().equals(input.shift().shiftCode()))
+            throw conflict("Không được thay đổi mã ca");
         ShiftView after = detailed.updateShift(actor, id, input);
-        audit(actor, id, "WORK_SHIFT_UPDATE", "Sửa mẫu ca", before, after);
+        audit(actor, id, "WORK_SHIFT_UPDATE", "Cập nhật mẫu ca và khoảng nghỉ chi tiết", before, after);
         return after;
     }
 
@@ -93,15 +124,16 @@ public class WorkShiftManagementWriteService {
                     + 1440L * before.endDayOffset();
             if (duration <= 0 || duration > 1440 || before.breakMinutes() < 0 || before.breakMinutes() > duration)
                 throw conflict("Thông tin ca không hợp lệ để mở khóa");
-            Long total = db.queryForObject("""
-                    SELECT COALESCE(SUM(break_end_offset_minutes-break_start_offset_minutes),0)
-                    FROM dbo.work_shift_breaks WHERE shift_id=? AND superseded_at IS NULL
-                    """, Long.class, id);
-            if (total == null || total != before.breakMinutes())
-                throw conflict("Khoảng nghỉ mẫu ca chưa được xác minh");
+            // Re-activation restores the existing template only. No detailed-break
+            // verification is possible in hrm_db (no work_shift_breaks table).
+            // This check validates aggregate minutes, NOT break interval timing.
+            // Do not mutate break_minutes, times, code, or schedules here.
         }
-        db.update("UPDATE dbo.work_shifts SET is_active=? WHERE shift_id=?", active, id);
-        ShiftView after = shifts.get(id);
+        int changed = db.update("UPDATE dbo.work_shifts SET is_active=? WHERE shift_id=? AND is_active=?",
+                active, id, !active);
+        if (changed != 1)
+            throw conflict("Trạng thái ca đã thay đổi");
+        ShiftView after = locked(id);
         audit(actor, id, active ? "WORK_SHIFT_ACTIVATE" : "WORK_SHIFT_DEACTIVATE", reason.trim(), before, after);
         return after;
     }

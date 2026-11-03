@@ -29,6 +29,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/attendance-workspace": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/attendance": {
     "target": "http://localhost:2005",
     "secure": false,

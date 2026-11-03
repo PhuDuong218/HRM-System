@@ -31,9 +31,9 @@ public class OvertimePermissionService {
                 + " AND (ea.effective_to IS NULL OR ea.effective_to>" + dateExpr + ") "
                 + "AND CONVERT(date,hs.effective_from)<=" + dateExpr
                 + " AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>" + dateExpr + ") "
-                + "AND hs.revoked_at IS NULL) "
+                + "AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME() AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())) "
                 + "AND EXISTS (SELECT 1 FROM dbo.accounts ta JOIN dbo.roles tr ON tr.role_id=ta.role_id "
-                + "WHERE ta.employee_id=" + employeeIdExpr + " AND ta.is_active=1 AND tr.role_code='EMPLOYEE'))";
+                + "WHERE ta.employee_id=" + employeeIdExpr + " AND ta.is_active=1 AND tr.role_code='EMPLOYEE') AND NOT EXISTS(SELECT 1 FROM dbo.accounts ha JOIN dbo.roles hr ON hr.role_id=ha.role_id WHERE ha.employee_id="+employeeIdExpr+" AND ha.is_active=1 AND hr.role_code IN ('HR','ADMIN')))";
     }
 
     public record VerifiedActor(long accountId, Long employeeId, String roleCode) {
@@ -170,12 +170,18 @@ public class OvertimePermissionService {
         String targetRole = roleOfEmployee(target);
         if (!OvertimeAuthorizationRules.isEligibleApplicant(targetRole))
             deny();
+        if(java.util.Objects.equals(actor.employeeId(),target))deny();
         if ("ADMIN".equals(actor.roleCode())) {
+            if(confirming && java.util.Objects.equals(approver,actor.accountId())){
+                Long admins=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id WHERE a.is_active=1 AND r.role_code='ADMIN'",Long.class);
+                if(!"HR".equals(targetRole)||admins==null||admins!=1L)deny();
+                return actor;
+            }
             // ADMIN manages other employees' OT; ADMIN never registers or accrues OT.
             boolean ok = confirming
-                    ? OvertimeAuthorizationRules.canConfirm("ADMIN", null, actor.employeeId(), target, 0L,
+                    ? OvertimeAuthorizationRules.canConfirm("ADMIN", targetRole, actor.employeeId(), target, approver,
                             actor.accountId(), false)
-                    : OvertimeAuthorizationRules.canApprove("ADMIN", null, actor.employeeId(), target, false);
+                    : OvertimeAuthorizationRules.canApprove("ADMIN", targetRole, actor.employeeId(), target, false);
             if (!ok)
                 deny();
             return actor;
@@ -194,7 +200,7 @@ public class OvertimePermissionService {
     public String roleOfEmployee(long employeeId) {
         return db.query("""
                 SELECT r.role_code FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id
-                WHERE a.employee_id=? AND a.is_active=1
+                WHERE a.employee_id=? AND a.is_active=1 ORDER BY CASE r.role_code WHEN 'ADMIN' THEN 0 WHEN 'HR' THEN 1 ELSE 2 END
                 """, rs -> rs.next() ? rs.getString(1) : null, employeeId);
     }
 
@@ -205,7 +211,7 @@ public class OvertimePermissionService {
                 WHERE hs.hr_account_id=? AND ta.employee_id=?
                   AND CONVERT(date,hs.effective_from)<=?
                   AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>?)
-                  AND hs.revoked_at IS NULL
+                  AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME() AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())
                   AND ta.effective_from<=? AND (ta.effective_to IS NULL OR ta.effective_to>?)
                 """, Long.class, accountId, targetEmployeeId, date, date, date, date);
         return count != null && count > 0;

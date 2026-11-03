@@ -1,0 +1,9 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.HRMEmployee" parent="Theme.Material3.DayNight.NoActionBar"><item name="colorPrimary">#004581</item><item name="colorOnPrimary">#FFFFFF</item><item name="colorPrimaryContainer">#E8F2FD</item><item name="colorOnPrimaryContainer">#163D5C</item><item name="colorSecondary">#137957</item>
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    </style>
+
+    <style name="Theme.HRMEmployee" parent="Base.Theme.HRMEmployee" />
+<style name="HrmNavigationIndicator"><item name="android:color">#E8F2FD</item></style></resources>

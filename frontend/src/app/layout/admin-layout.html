@@ -33,7 +33,7 @@
             </button>
             <div class="nav-children" [id]="'nav-group-' + item.id" [hidden]="!expandedGroups.has(item.id)">
               @for (child of children; track child.path) {
-                <a [routerLink]="['/', child.path]" routerLinkActive="active"
+                <a [routerLink]="['/' + child.path]" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }"
                    ariaCurrentWhenActive="page" (click)="menuOpen = false">{{language.t(child.label)}}</a>
               }
             </div>
@@ -62,7 +62,7 @@
       @if (item.children; as children) {
         <div class="flyout-heading">{{language.t(item.label)}}</div>
         @for (child of children; track child.path) {
-          <a [routerLink]="['/', child.path]" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeFlyout()">{{language.t(child.label)}}</a>
+          <a [routerLink]="['/' + child.path]" routerLinkActive="active" [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', fragment: 'ignored', matrixParams: 'ignored' }" ariaCurrentWhenActive="page" (click)="closeFlyout()">{{language.t(child.label)}}</a>
         }
       } @else {
         <a class="flyout-single" [routerLink]="['/', item.path]" routerLinkActive="active" ariaCurrentWhenActive="page" (click)="closeFlyout()">{{language.t(item.label)}}</a>
