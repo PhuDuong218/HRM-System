@@ -174,7 +174,7 @@ public class OvertimePermissionService {
         if ("ADMIN".equals(actor.roleCode())) {
             if(confirming && java.util.Objects.equals(approver,actor.accountId())){
                 Long admins=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id WHERE a.is_active=1 AND r.role_code='ADMIN'",Long.class);
-                if(!"HR".equals(targetRole)||admins==null||admins!=1L)deny();
+                if(admins==null||admins!=1L)deny();
                 return actor;
             }
             // ADMIN manages other employees' OT; ADMIN never registers or accrues OT.

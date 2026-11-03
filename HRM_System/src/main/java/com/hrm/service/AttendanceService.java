@@ -208,7 +208,35 @@ public class AttendanceService {
         public AttendanceView createManual(
                         AttendanceInput input, long actorAccountId) {
 
-                // 1. Kiểm tra đầu vào
+                validate(input);
+                if(input.correctionReason()==null||input.correctionReason().isBlank())throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Phải nhập lý do ghi nhận vắng.");
+                if (!"VANG".equals(input.attendanceResult()))
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,"Chỉ bổ sung giờ công qua yêu cầu của người lao động đã được tiếp nhận và phê duyệt.");
+                permissionService.requireAttendanceAccess(actorAccountId,input.employeeId(),input.workDate(),AttendancePermissionService.MANAGE);
+                validateAndLockSchedule(input);
+                java.time.LocalDateTime end=db.queryForObject("SELECT planned_end FROM dbo.work_schedules WHERE schedule_id=?",java.time.LocalDateTime.class,input.scheduleId());
+                java.time.LocalDateTime now=java.time.LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh"));
+                if(end==null||!now.isAfter(end.toLocalDate().plusDays(requestDays).atTime(23,59,59)))
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,"Chưa hết hạn giải trình; không được ghi nhận vắng.");
+                Long open=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.attendance_portal_requests WITH(UPDLOCK,HOLDLOCK) WHERE schedule_id=? AND status IN ('CHO_XU_LY','DANG_XU_LY')",Long.class,input.scheduleId());
+                if(open==null||open>0)throw new ResponseStatusException(HttpStatus.CONFLICT,"Lịch đang có yêu cầu cần xử lý.");
+                Long closed=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.payroll_periods p WITH(HOLDLOCK) JOIN dbo.payroll_batches b WITH(HOLDLOCK) ON b.period_id=p.period_id WHERE p.period_start<=? AND p.period_end>=? AND (b.locked_at IS NOT NULL OR b.published_at IS NOT NULL OR b.status='DA_CHOT')",Long.class,input.workDate(),input.workDate());
+                if(closed==null||closed>0)throw new ResponseStatusException(HttpStatus.CONFLICT,"Kỳ đã khóa.");
+                return insertManual(input,actorAccountId);
+        }
+
+        @org.springframework.beans.factory.annotation.Value("${hrm.attendance.checkout-request-days:7}")
+        private int requestDays=7;
+
+        @Transactional("scheduleTransactionManager")
+        AttendanceView createApprovedRequest(AttendanceInput input,long actorAccountId,long requestId){
+                validate(input);
+                Long valid=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.attendance_portal_requests WITH(UPDLOCK,HOLDLOCK) WHERE request_id=? AND schedule_id=? AND request_type='MISSING_ATTENDANCE' AND status='DANG_XU_LY' AND received_by=? AND submitted_by<>?",Long.class,requestId,input.scheduleId(),actorAccountId,actorAccountId);
+                if(valid==null||valid!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"Không có yêu cầu hợp lệ đang xử lý.");
+                return insertManual(input,actorAccountId);
+        }
+
+        private AttendanceView insertManual(AttendanceInput input,long actorAccountId){
                 validate(input);
 
                 // Actor ID must be supplied by trusted internal/authenticated code.
@@ -417,6 +445,8 @@ public class AttendanceService {
                                 correction.attendanceResult(),
                                 correction.correctionReason());
 
+                if(current.actualStart()==null && "DI_LAM".equals(correction.attendanceResult()))
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,"Bổ sung giờ vào/ra phải qua yêu cầu của người lao động.");
                 validate(proposed);
 
                 String beforeJson = attendanceSnapshot(attendanceId);

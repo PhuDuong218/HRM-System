@@ -149,6 +149,8 @@ class AttendanceWorkflowIntegrationTest {
                                 existing,
                                 "Lich so 4 da co cham cong!");
 
+                // Match migration 005 in this legacy test database; DDL is rolled back with the fixture.
+                db.execute("IF COL_LENGTH('dbo.attendance_records','invalidated_at') IS NULL ALTER TABLE dbo.attendance_records ADD invalidated_at datetime2(3) NULL");
                 // 6. Tao cham cong chua xac nhan
                 AttendanceInput input = new AttendanceInput(
                                 3L,
@@ -160,7 +162,9 @@ class AttendanceWorkflowIntegrationTest {
                                 "DI_LAM",
                                 "Kiem thu quy trinh cham cong");
 
-                AttendanceView created = service.createManual(input, TEST_ADMIN_ID);
+                // Fixture represents attendance already recorded by a clock source; this is not a production entry API.
+                long fixtureId=db.queryForObject("INSERT dbo.attendance_records(employee_id,schedule_id,work_date,actual_start,actual_end,actual_break_minutes,attendance_result,verification_status,created_by) OUTPUT INSERTED.attendance_id VALUES(?,?,?,?,?,?,?,'CHUA_XAC_NHAN',?)",Long.class,input.employeeId(),input.scheduleId(),input.workDate(),input.actualStart(),input.actualEnd(),input.actualBreakMinutes(),input.attendanceResult(),TEST_ADMIN_ID);
+                AttendanceView created=service.get(fixtureId);
 
                 assertEquals(
                                 "CHUA_XAC_NHAN",

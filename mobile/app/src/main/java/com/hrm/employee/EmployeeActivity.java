@@ -242,7 +242,7 @@ public class EmployeeActivity extends AppCompatActivity {
             case "CHO_XU_LY":
                 return "Chờ xử lý";
             case "DANG_XU_LY":
-                return "Đang xử lý";
+                return "Đã tiếp nhận";
             case "DA_CHAP_NHAN":
                 return "Đã chấp nhận";
             case "DA_XAC_NHAN":
@@ -253,6 +253,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 return "Đi làm";
             case "VANG":
                 return "Vắng";
+            case "MISSING_ATTENDANCE":
+                return "Bổ sung giờ vào/ra";
             case "MISSING_CHECKOUT":
                 return "Bổ sung giờ ra";
             case "CONFIRMED_CORRECTION":
@@ -1032,8 +1034,16 @@ public class EmployeeActivity extends AppCompatActivity {
                 JSONObject b = rests.getJSONObject(i);
                 info.append("\nNghỉ: ").append(time(str(b, "start"))).append(" → ").append(time(str(b, "end")));
             }
-        new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null)
-                .show();
+        JSONArray linked = detail.optJSONArray("requests");
+        if(linked!=null)for(int i=0;i<linked.length();i++){
+            JSONObject request=linked.getJSONObject(i);
+            info.append("\nYêu cầu: ").append(str(request,"requestCode")).append(" · ").append(label(str(request,"status")))
+                .append("\nTiếp nhận: ").append(str(request,"receiver")).append(" · ").append(utc(str(request,"receivedAt")))
+                .append("\nXử lý: ").append(str(request,"processor")).append(" · ").append(utc(str(request,"processedAt")));
+        }
+        MaterialAlertDialogBuilder details = new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null);
+        if (r.optBoolean("canRequest")) details.setNeutralButton("Gửi yêu cầu điều chỉnh", (dialog, which) -> attendanceProposal(r));
+        details.show();
     }
 
     private void otCalendar() {
@@ -1102,8 +1112,8 @@ public class EmployeeActivity extends AppCompatActivity {
                                                 .setMessage("Trạng thái: " + label(str(q, "status")) + "\nGiờ đề nghị: "
                                                         + time(str(q, "proposedStart")) + " → "
                                                         + time(str(q, "proposedEnd")) + "\nLý do: " + str(q, "reason")
-                                                        + "\nNgười tiếp nhận: " + str(q, "receiver") + "\nNgười xử lý: "
-                                                        + str(q, "processor") + "\nKết quả: "
+                                                        + "\nNgày gửi: " + utc(str(q, "submittedAt")) + "\nNgười tiếp nhận: " + str(q, "receiver") + "\nGiờ tiếp nhận: " + utc(str(q, "receivedAt")) + "\nNgười xử lý: "
+                                                        + str(q, "processor") + "\nGiờ xử lý: " + utc(str(q, "processedAt")) + "\nGiờ được duyệt: " + time(str(q, "acceptedStart")) + " → " + time(str(q, "acceptedEnd")) + "\nLý do điều chỉnh giờ: " + str(q, "adjustmentReason") + "\nKết quả: "
                                                         + str(q, "decisionReason"))
                                                 .setPositiveButton("Đóng", null).show();
                                     }));
@@ -1112,8 +1122,20 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
+    private void attendanceCandidatePages(String url, int candidatePage, JSONArray collected, Reply reply) {
+        fetch(url + "&page=" + candidatePage, data -> {
+            JSONArray rows = data.optJSONArray("items");
+            if (rows == null) throw new org.json.JSONException("Thiếu danh sách công từ máy chủ.");
+            for (int i = 0; i < rows.length(); i++) collected.put(rows.getJSONObject(i));
+            if (candidatePage + 1 < data.optInt("totalPages", 1)) {
+                attendanceCandidatePages(url, candidatePage + 1, collected, reply);
+            } else {
+                reply.accept(json("items", collected));
+            }
+        });
+    }
     private void attendanceCandidates() {
-        fetch("/api/attendance-workspace/records?mine=true&" + query(), data -> {
+        attendanceCandidatePages("/api/attendance-workspace/records?mine=true&from=" + from + "&to=" + to, 0, new JSONArray(), data -> {
             JSONArray items = data.optJSONArray("items");
             List<JSONObject> eligible = new ArrayList<>();
             List<String> names = new ArrayList<>();
@@ -1126,7 +1148,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     }
                 }
             if (names.isEmpty()) {
-                toast("Chưa có bản ghi đủ điều kiện trong trang/khoảng ngày hiện tại. Kiểm tra hạn gửi, trạng thái xác nhận và yêu cầu đang mở.");
+                toast("Không có công đủ điều kiện trong khoảng ngày đã chọn. Có thể bổ sung công cho lịch đã bắt đầu chưa có công, bổ sung giờ ra sau khi ca kết thúc hoặc điều chỉnh công đã xác nhận; bản ghi phải còn hạn, kỳ chưa khóa và chưa có yêu cầu đang mở.");
                 return;
             }
             new MaterialAlertDialogBuilder(this).setTitle("Chọn bản ghi công cá nhân")
@@ -1332,16 +1354,17 @@ public class EmployeeActivity extends AppCompatActivity {
             return;
         }
         LinearLayout box = form();
-        boolean missing = !str(r, "verificationStatus").equals("DA_XAC_NHAN");
+        boolean unrecorded = r.isNull("attendanceId");
+        boolean missing = !unrecorded && !str(r, "verificationStatus").equals("DA_XAC_NHAN");
         box.addView(text(
-                missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
+                unrecorded ? "Bổ sung giờ vào và giờ ra thực tế cho lịch chưa có công. Không nhập giờ tương lai. Công chỉ được ghi sau khi duyệt." : missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
                         : "Đề xuất điều chỉnh công đã xác nhận. Công gốc chỉ thay đổi sau khi được duyệt.",
                 13, MUTED, false));
         Spinner result = new Spinner(this);
         result.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
                 new String[] { "Đi làm", "Vắng" }));
         result.setSelection(str(r, "attendanceResult").equals("VANG") ? 1 : 0);
-        result.setEnabled(!missing);
+        result.setEnabled(!missing && !unrecorded);
         box.addView(result);
         DateField start = new DateField(box, "Giờ vào đề nghị", str(r, "actualStart"), missing),
                 end = new DateField(box, "Giờ ra đề nghị", str(r, "actualEnd"), false);
@@ -1362,7 +1385,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     return;
                 }
                 write("/api/attendance-workspace/requests", "POST",
-                        json("type", missing ? "MISSING_CHECKOUT" : "CONFIRMED_CORRECTION", "attendanceId",
+                        json("type", unrecorded ? "MISSING_ATTENDANCE" : missing ? "MISSING_CHECKOUT" : "CONFIRMED_CORRECTION", "scheduleId", r.optLong("scheduleId"), "attendanceId",
                                 r.optLong("attendanceId"), "actualStart",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : start.value, "actualEnd",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : end.value,

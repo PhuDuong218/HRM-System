@@ -49,7 +49,7 @@ export class OvertimePage implements OnInit {
   departments:Array<{departmentId:number;departmentName:string}>=[];
   rows:OtRow[]=[];employees:OtEmployee[]=[];page=0;pages=0;total=0;
   detail:OtDetail|null=null;selectedEmployee:OtEmployee|null=null;employeeRows:OtRow[]=[];employeePage=0;employeePages=0;
-  mode:'view'|'create'|'edit'|'actual'|'reject'|'cancel'|'cancelRequest'|'overflow'|'reopen'='view';
+  mode:'view'|'create'|'edit'|'actual'|'amend'|'reject'|'cancel'|'cancelRequest'|'overflow'|'reopen'='view';
   start='';end='';reason='';workContent='';breaks:OtBreak[]=[];windows:OtWindow[]=[];
   workflows:OtWorkflow[]=[];selectedWorkflow:OtWorkflow|null=null;inboxMine=false;workflowType='';workflowStatus='CHO_DUYET';
   decisionReason='';accepted:Array<{intervalId:number;approvedStart:string;approvedEnd:string;selected:boolean}>=[];
@@ -62,7 +62,7 @@ export class OvertimePage implements OnInit {
   time(value:string|null|undefined){return value?value.replace('T',' ').slice(0,16):'—';}
   utc(value:string|null|undefined){return value?new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(value.endsWith('Z')?value:value+'Z')):'—';}
   hours(minutes:number|null|undefined){return minutes==null?'Chưa xác minh':`${Math.floor(minutes/60)} giờ ${minutes%60} phút`;}
-  label(value:string|null|undefined){return ({CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',DA_HUY:'Đã hủy',HUY_OT:'Hủy OT đã duyệt',OT_VUOT:'Xem xét OT vượt',HR:'Nhân sự (HR)',EMPLOYEE:'Nhân viên',OT_SELF_CHECK_IN:'Tự check-in OT',OT_SELF_CHECK_OUT:'Tự check-out OT',OT_SUPPLEMENT_SUBMIT:'Gửi yêu cầu bổ sung công OT',OT_SUPPLEMENT_APPROVE:'Duyệt bổ sung công OT',OT_SUPPLEMENT_REJECT:'Từ chối bổ sung công OT',OT_REGISTER:'Gửi đơn',OT_EDIT:'Sửa đơn',OT_APPROVE:'Duyệt đơn',OT_REJECT:'Từ chối đơn',OT_ACTUAL:'Ghi nhận thực tế',OT_CONFIRM:'Xác nhận thực tế',OT_CANCEL:'Hủy đơn chờ',OT_REOPEN_CONFIRMATION:'Mở lại xác nhận',OT_REQUEST_APPROVE:'Duyệt yêu cầu',OT_REQUEST_REJECT:'Từ chối yêu cầu',OT_HUY_OT_SUBMIT:'Gửi yêu cầu hủy',OT_OT_VUOT_SUBMIT:'Gửi yêu cầu phần vượt'}as Record<string,string>)[value??'']??value??'—';}
+  label(value:string|null|undefined){return ({CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',DA_HUY:'Đã hủy',HUY_OT:'Hủy OT đã duyệt',OT_VUOT:'Xem xét OT vượt',HR:'Nhân sự (HR)',EMPLOYEE:'Nhân viên',OT_SELF_CHECK_IN:'Tự check-in OT',OT_SELF_CHECK_OUT:'Tự check-out OT',OT_SUPPLEMENT_SUBMIT:'Gửi yêu cầu bổ sung công OT',OT_SUPPLEMENT_APPROVE:'Duyệt bổ sung công OT',OT_SUPPLEMENT_REJECT:'Từ chối bổ sung công OT',OT_REGISTER:'Gửi đơn',OT_EDIT:'Sửa đơn',OT_APPROVE:'Duyệt đơn',OT_REJECT:'Từ chối đơn',OT_ACTUAL:'Ghi nhận thực tế',OT_ACTUAL_AMEND:'Điều chỉnh OT sau mở lại',OT_CONFIRM:'Xác nhận thực tế',OT_CANCEL:'Hủy đơn chờ',OT_REOPEN_CONFIRMATION:'Mở lại xác nhận',OT_REQUEST_APPROVE:'Duyệt yêu cầu',OT_REQUEST_REJECT:'Từ chối yêu cầu',OT_HUY_OT_SUBMIT:'Gửi yêu cầu hủy',OT_OT_VUOT_SUBMIT:'Gửi yêu cầu phần vượt'}as Record<string,string>)[value??'']??value??'—';}
   employeeNotes(e:OtEmployee):string {
     const notes:string[]=[];
     if(e.unresolved)notes.push(e.unresolved+' đơn cần đối soát dữ liệu giờ/nghỉ.');
@@ -98,12 +98,13 @@ export class OvertimePage implements OnInit {
   viewId(id:number,mode:typeof this.mode='view'){if(this.saving)return;const version=++this.detailVersion;this.detailLoading=true;this.detail=null;this.mode='view';this.actionError='';this.alignSelected(this.selectedWorkflow?'workflow-'+this.selectedWorkflow.requestId:this.tab==='employees'&&this.selectedEmployee?'employee-'+this.selectedEmployee.employeeId:'request-'+id);this.api.detail(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:d=>{if(version!==this.detailVersion)return;this.detail=d;this.detailLoading=false;if(mode!=='view')this.openForm(mode);},error:e=>{if(version===this.detailVersion){this.detailLoading=false;this.actionError=this.api.message(e);}}});}
   closePanel(){if(this.saving)return;++this.detailVersion;++this.employeeVersion;this.detail=null;this.selectedEmployee=null;this.selectedWorkflow=null;this.detailLoading=false;this.employeeLoading=false;this.mode='view';this.actionError='';}
   create(){if(!this.context?.canRegister||this.busy)return;this.closePanel();this.mode='create';this.start='';this.end='';this.reason='';this.workContent='';this.breaks=[];}
-  get actualRecorded():boolean{return this.detail?.audit.some(a=>a.action==='OT_ACTUAL')??false;}
-  openForm(mode:typeof this.mode){const r=this.detail?.row;if(!r||this.saving)return;const allowed={view:true,create:false,edit:r.actions.edit,actual:r.actions.recordActual,reject:r.actions.approve,cancel:r.actions.cancel,cancelRequest:r.actions.cancelRequest,overflow:r.actions.overflowRequest,reopen:r.actions.reopen};if(!allowed[mode])return;this.mode=mode;this.reason=mode==='edit'?r.ot.reason:'';this.workContent=r.workContent??'';this.windows=[];
-    this.start=mode==='actual'?r.ot.actualStart??'':r.ot.requestedStart;this.end=mode==='actual'?r.ot.actualEnd??'':r.ot.requestedEnd;this.breaks=(mode==='actual'?this.detail!.actualBreaks:this.detail!.plannedBreaks).map(b=>({...b}));this.actionError='';}
+  get actualMode(){return this.mode==='actual'||this.mode==='amend';}
+  get actualRecorded():boolean{return this.detail?.audit.some(a=>['OT_ACTUAL','OT_ACTUAL_AMEND'].includes(a.action))??false;}
+  openForm(mode:typeof this.mode){const r=this.detail?.row;if(!r||this.saving)return;const allowed={view:true,create:false,edit:r.actions.edit,actual:r.actions.recordActual,amend:r.actions.amendActual,reject:r.actions.approve,cancel:r.actions.cancel,cancelRequest:r.actions.cancelRequest,overflow:r.actions.overflowRequest,reopen:r.actions.reopen};if(!allowed[mode])return;this.mode=mode;this.reason=mode==='edit'?r.ot.reason:'';this.workContent=r.workContent??'';this.windows=[];
+    this.start=(mode==='actual'||mode==='amend')?r.ot.actualStart??'':r.ot.requestedStart;this.end=(mode==='actual'||mode==='amend')?r.ot.actualEnd??'':r.ot.requestedEnd;this.breaks=((mode==='actual'||mode==='amend')?this.detail!.actualBreaks:this.detail!.plannedBreaks).map(b=>({...b}));this.actionError='';}
   addBreak(){if(!this.saving)this.breaks.push({breakStart:'',breakEnd:''});}removeBreak(index:number){if(!this.saving)this.breaks.splice(index,1);}
   addWindow(){if(!this.saving)this.windows.push({workDate:'',start:'',end:''});}removeWindow(index:number){if(!this.saving)this.windows.splice(index,1);}
-  breakTotal():number{return this.breaks.reduce((sum,b)=>{const diff=(Date.parse(b.breakEnd)-Date.parse(b.breakStart))/60000;return sum+(Number.isFinite(diff)&&diff>0?Math.floor(diff):0);},0);}
+  breakTotal():number{return Math.floor(this.breaks.reduce((sum,b)=>{const diff=(Date.parse(b.breakEnd)-Date.parse(b.breakStart))/60000;return sum+(Number.isFinite(diff)&&diff>0?diff:0);},0));}
   private validTimes(){
     const start=Date.parse(this.start),end=Date.parse(this.end);
     if(!Number.isFinite(start))return this.invalid('Vui lòng chọn ngày và giờ bắt đầu.','otStart');
@@ -118,13 +119,13 @@ export class OvertimePage implements OnInit {
       for(let j=0;j<i;j++){const other=this.breaks[j];if(begin<Date.parse(other.breakEnd)&&finish>Date.parse(other.breakStart))return this.invalid('Khoảng nghỉ '+(i+1)+' chồng lấn khoảng nghỉ '+(j+1)+'.','breakStart'+i);}
     }return true;
   }
-  save(){if(this.saving||this.mode==='create'&&!this.context?.canRegister)return;const r=this.detail?.row;if(['create','edit','actual'].includes(this.mode)&&!this.validTimes())return;
+  save(){if(this.saving||this.mode==='create'&&!this.context?.canRegister)return;const r=this.detail?.row;if(['create','edit','actual','amend'].includes(this.mode)&&!this.validTimes())return;
     if(this.workContent.length>2000){this.invalid('Nội dung công việc tối đa 2000 ký tự.','otWork');return;}
     if(!this.reason.trim()||this.reason.length>1000){this.invalid('Lý do bắt buộc, tối đa 1000 ký tự.','otReason');return;}
-    if(['create','edit','actual'].includes(this.mode)){
+    if(['create','edit','actual','amend'].includes(this.mode)){
       this.actionError='';
-      if(!window.confirm(this.mode==='actual'?'Lưu giờ OT thực tế đã xác minh? Giờ đề nghị sẽ không được tự dùng thay thế.':this.mode==='create'?'Gửi đơn OT để xét duyệt?':'Lưu thay đổi đơn OT chờ duyệt?'))return;
-      if(this.mode==='actual'&&r){const data:OtActual={actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.breakTotal(),breaks:this.breaks.map(b=>({...b})),reason:this.reason.trim()};this.mutate(this.api.action(r,'actual',this.reason.trim(),data),'Đã ghi nhận giờ thực tế.',r.ot.overtimeId);}
+      if(!window.confirm(this.actualMode?'Lưu giờ OT thực tế đã xác minh? Giờ đề nghị sẽ không được tự dùng thay thế.':this.mode==='create'?'Gửi đơn OT để xét duyệt?':'Lưu thay đổi đơn OT chờ duyệt?'))return;
+      if(this.actualMode&&r){const data:OtActual={actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.breakTotal(),breaks:this.breaks.map(b=>({...b})),reason:this.reason.trim()};this.mutate(this.api.action(r,this.mode==='amend'?'amend-actual':'actual',this.reason.trim(),data),'Đã ghi nhận giờ thực tế.',r.ot.overtimeId);}
       else{const body:OtRegistration={requestedStart:this.start,requestedEnd:this.end,reason:this.reason.trim(),workContent:this.workContent.trim(),breaks:this.breaks.map(b=>({...b}))};if(this.mode==='create')this.mutate(this.api.register(body),'Đã gửi đơn OT, chờ duyệt.');else if(r)this.mutate(this.api.edit(r,body),'Đã cập nhật đơn OT.',r.ot.overtimeId);}return;
     }
     if(!r)return;

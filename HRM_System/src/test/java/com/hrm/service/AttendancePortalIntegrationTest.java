@@ -40,7 +40,7 @@ class AttendancePortalIntegrationTest {
     static AuthenticatedAccount principal(String role,int offset){return db.query("SELECT a.account_id,a.employee_id,a.username,r.role_code FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id WHERE a.is_active=1 AND r.role_code=? ORDER BY a.account_id OFFSET ? ROWS FETCH NEXT 1 ROWS ONLY",(rs,n)->new AuthenticatedAccount(rs.getLong(1),rs.getObject(2,Long.class),rs.getString(3),rs.getString(4)),role,offset).get(0);}
     void rollback(Runnable check){new TransactionTemplate(manager).executeWithoutResult(status->{try{check.run();}finally{status.setRollbackOnly();}});}
     long fixture(AuthenticatedAccount owner,int days){LocalDate date=LocalDate.now(clock).minusDays(days);LocalDateTime start=date.atTime(0,5);LocalDateTime end=start.plusMinutes(30);return db.queryForObject("INSERT dbo.work_schedules(employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note,created_by,break_detail_status) OUTPUT INSERTED.schedule_id VALUES(?,NULL,?,?,?,0,N'ROLLBACK-ONLY attendance test',?,'VERIFIED')",Long.class,owner.employeeId(),date,start,end,admin.accountId());}
-    AttendanceView manual(long sid,AuthenticatedAccount owner,int days){LocalDate date=LocalDate.now(clock).minusDays(days);return service.manual(admin,new AttendanceInput(owner.employeeId(),sid,date,date.atTime(0,5),date.atTime(0,35),0,"DI_LAM","Kiểm thử rollback"));}
+    AttendanceView manual(long sid,AuthenticatedAccount owner,int days){LocalDate date=LocalDate.now(clock).minusDays(days);return seed(new AttendanceInput(owner.employeeId(),sid,date,date.atTime(0,5),date.atTime(0,35),0,"DI_LAM","Kiểm thử rollback"));}
     AttendancePortalService.Proposal proposal(AttendanceView a,String type){return new AttendancePortalService.Proposal(type,a.attendanceId(),a.actualStart(),a.actualEnd()==null?a.actualStart().plusMinutes(25):a.actualEnd().minusMinutes(1),0,"DI_LAM","Đề nghị điều chỉnh");}
     @Test void partialVietnameseNamesMatchWithOrWithoutAccents(){rollback(()->{
         db.update("UPDATE dbo.employees SET full_name=N'Trần Thị A' WHERE employee_id=?",employee.employeeId());
@@ -80,9 +80,9 @@ class AttendancePortalIntegrationTest {
     });}
     @Test void rejectedRequestPreservesAttendance(){rollback(()->{long sid=fixture(employee,1);var a=manual(sid,employee,1);service.verify(admin,a.attendanceId(),true,null);long id=service.submit(employee,proposal(attendance.get(a.attendanceId()),"CONFIRMED_CORRECTION"));service.receive(admin,id);service.decide(admin,id,new AttendancePortalService.Decision(false,null,"Không đủ căn cứ"));assertEquals(a.actualEnd(),attendance.get(a.attendanceId()).actualEnd());assertEquals("TU_CHOI",service.request(admin,false,id).request().status());});}
     @Test void singleOpenRequestAndNoSelfApproval(){rollback(()->{long sid=fixture(employee,1);var a=manual(sid,employee,1);service.verify(admin,a.attendanceId(),true,null);var proposal=proposal(attendance.get(a.attendanceId()),"CONFIRMED_CORRECTION");service.submit(employee,proposal);assertThrows(ResponseStatusException.class,()->service.submit(employee,proposal));});rollback(()->{long sid=fixture(hr,1);var a=manual(sid,hr,1);service.verify(admin,a.attendanceId(),true,null);long id=service.submit(hr,proposal(attendance.get(a.attendanceId()),"CONFIRMED_CORRECTION"));assertThrows(ResponseStatusException.class,()->service.receive(hr,id));});}
-    @Test void missingCheckoutRequiresReceiptAndReasonForChangedEnd(){rollback(()->{long sid=fixture(employee,1);LocalDate date=LocalDate.now(clock).minusDays(1);var a=service.manual(admin,new AttendanceInput(employee.employeeId(),sid,date,date.atTime(0,5),null,0,"DI_LAM","Quên giờ ra"));long id=service.submit(employee,proposal(a,"MISSING_CHECKOUT"));service.receive(admin,id);service.decide(admin,id,new AttendancePortalService.Decision(true,a.actualStart().plusMinutes(20),"Giờ ra xác minh khác đề nghị"));assertEquals(a.actualStart().plusMinutes(20),attendance.get(a.attendanceId()).actualEnd());assertEquals("CHUA_XAC_NHAN",attendance.get(a.attendanceId()).verificationStatus());});}
+    @Test void missingCheckoutRequiresReceiptAndReasonForChangedEnd(){rollback(()->{long sid=fixture(employee,1);LocalDate date=LocalDate.now(clock).minusDays(1);var a=seed(new AttendanceInput(employee.employeeId(),sid,date,date.atTime(0,5),null,0,"DI_LAM","Quên giờ ra"));long id=service.submit(employee,proposal(a,"MISSING_CHECKOUT"));service.receive(admin,id);service.decide(admin,id,new AttendancePortalService.Decision(true,a.actualStart().plusMinutes(20),"Đã kiểm tra",null,"Giờ ra xác minh khác đề nghị"));assertEquals(a.actualStart().plusMinutes(20),attendance.get(a.attendanceId()).actualEnd());assertEquals("DA_XAC_NHAN",attendance.get(a.attendanceId()).verificationStatus());});}
     @Test void staleOriginalCannotBeApproved(){rollback(()->{long sid=fixture(employee,1);var a=manual(sid,employee,1);service.verify(admin,a.attendanceId(),true,null);long id=service.submit(employee,proposal(attendance.get(a.attendanceId()),"CONFIRMED_CORRECTION"));service.receive(admin,id);db.update("UPDATE dbo.attendance_records SET correction_reason=N'changed' WHERE attendance_id=?",a.attendanceId());assertThrows(ResponseStatusException.class,()->service.decide(admin,id,new AttendancePortalService.Decision(true,null,"")));});}
-    @Test void expiredMissingCheckoutCannotBeSubmitted(){rollback(()->{long sid=fixture(employee,8);LocalDate date=LocalDate.now(clock).minusDays(8);var a=service.manual(admin,new AttendanceInput(employee.employeeId(),sid,date,date.atTime(0,5),null,0,"DI_LAM","Quên giờ ra"));assertThrows(ResponseStatusException.class,()->service.submit(employee,proposal(a,"MISSING_CHECKOUT")));});}
+    @Test void expiredMissingCheckoutCannotBeSubmitted(){rollback(()->{long sid=fixture(employee,8);LocalDate date=LocalDate.now(clock).minusDays(8);var a=seed(new AttendanceInput(employee.employeeId(),sid,date,date.atTime(0,5),null,0,"DI_LAM","Quên giờ ra"));assertThrows(ResponseStatusException.class,()->service.submit(employee,proposal(a,"MISSING_CHECKOUT")));});}
     @Test void employeeCannotReadOtherAttendance(){rollback(()->{long sid=fixture(employee,1);manual(sid,employee,1);assertThrows(ResponseStatusException.class,()->service.detail(otherEmployee,true,sid));});}
     AuthenticatedAccount scopedEmployee(){return db.query("""
         SELECT TOP(1) a.account_id,a.employee_id,a.username,r.role_code FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id
@@ -105,8 +105,8 @@ class AttendancePortalIntegrationTest {
     });}
     @Test void hrAttendanceOnlyAdminCanManage(){rollback(()->{long sid=fixture(hr,1);manual(sid,hr,1);assertThrows(ResponseStatusException.class,()->service.detail(hr,false,sid));});}
     @Test void invalidatedAttendanceIsNotCountedAsConfirmed(){rollback(()->{long sid=fixture(employee,1);var a=manual(sid,employee,1);service.verify(admin,a.attendanceId(),true,null);var before=service.search(admin,false,a.workDate(),a.workDate(),null,null,null,null,0);db.update("UPDATE dbo.attendance_records SET invalidated_at=SYSUTCDATETIME(),invalidated_by=?,invalidation_reason=N'test' WHERE attendance_id=?",admin.accountId(),a.attendanceId());var after=service.search(admin,false,a.workDate(),a.workDate(),null,null,null,null,0);assertEquals(before.stats().confirmed()-1,after.stats().confirmed());assertNull(service.detail(admin,false,sid).row().attendanceId());});}
-    @Test void overlappingManualAttendanceIsRejected(){rollback(()->{long sid=fixture(employee,1);manual(sid,employee,1);long other=fixture(employee,1);assertThrows(ResponseStatusException.class,()->manual(other,employee,1));});}
-    @Test void payrollLockBlocksManualEntry(){rollback(()->{LocalDate date=db.queryForObject("SELECT TOP(1) p.period_end FROM dbo.payroll_periods p JOIN dbo.payroll_batches b ON b.period_id=p.period_id WHERE b.locked_at IS NOT NULL OR b.published_at IS NOT NULL OR b.status='DA_CHOT' ORDER BY p.period_end DESC",LocalDate.class);int days=(int)java.time.temporal.ChronoUnit.DAYS.between(date,LocalDate.now(clock));long sid=fixture(employee,days);assertThrows(ResponseStatusException.class,()->manual(sid,employee,days));});}
+    @Test void overlappingManualAttendanceIsRejected(){rollback(()->{long sid=fixture(employee,1);manual(sid,employee,1);long other=fixture(employee,1);assertThrows(ResponseStatusException.class,()->service.submit(employee,missing(other,1)));});}
+    @Test void payrollLockBlocksManualEntry(){rollback(()->{LocalDate date=db.queryForObject("SELECT TOP(1) p.period_end FROM dbo.payroll_periods p JOIN dbo.payroll_batches b ON b.period_id=p.period_id WHERE b.locked_at IS NOT NULL OR b.published_at IS NOT NULL OR b.status='DA_CHOT' ORDER BY p.period_end DESC",LocalDate.class);int days=(int)java.time.temporal.ChronoUnit.DAYS.between(date,LocalDate.now(clock));long sid=fixture(employee,days);assertThrows(ResponseStatusException.class,()->service.markAbsent(admin,sid,"Đã kiểm tra kỳ khóa"));});}
     @Test void staleOrdinaryEditVersionIsRejected(){rollback(()->{long sid=fixture(employee,1);var a=manual(sid,employee,1);String version=service.detail(admin,false,sid).row().version();service.correct(admin,a.attendanceId(),new AttendanceCorrection(a.actualStart(),a.actualEnd(),0,"DI_LAM","Một người sửa trước"));assertThrows(ResponseStatusException.class,()->service.correctVersioned(admin,a.attendanceId(),new AttendanceCorrection(a.actualStart(),a.actualEnd(),0,"DI_LAM","Biểu mẫu cũ"),version));});}
     @org.junit.jupiter.params.ParameterizedTest @org.junit.jupiter.params.provider.ValueSource(strings={"HR","EMPLOYEE"}) void hrCanClockOwnShiftUsingServerTime(String role){rollback(()->{var owner=role.equals("HR")?hr:employee;LocalDateTime start=LocalDateTime.now(clock).minusMinutes(1);long sid=db.queryForObject("INSERT dbo.work_schedules(employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note,created_by,break_detail_status) OUTPUT INSERTED.schedule_id VALUES(?,NULL,?,?,?,0,N'ROLLBACK-ONLY self clock',?,'VERIFIED')",Long.class,owner.employeeId(),start.toLocalDate(),start,start.plusMinutes(30),admin.accountId());var event=service.clock(owner,sid,true);assertTrue(event.recordedAt().isAfter(start));assertNotNull(service.detail(owner,true,sid).row().actualStart());assertEquals(db.queryForObject("SELECT full_name FROM dbo.employees WHERE employee_id=?",String.class,owner.employeeId()),service.detail(owner,true,sid).row().enteredByLabel());});}
     @Test void deadlineWaitsForOfficialCalendar(){assertNull(new AttendancePortalDeadlinePolicy(false,"", "SATURDAY,SUNDAY").processingDeadline(LocalDate.of(2026,12,24)));assertEquals(LocalDate.of(2026,12,29),new AttendancePortalDeadlinePolicy(true,"2026-12-25", "SATURDAY,SUNDAY").processingDeadline(LocalDate.of(2026,12,24)).toLocalDate());}
@@ -117,4 +117,81 @@ class AttendancePortalIntegrationTest {
         assertEquals(a.actualEnd(),attendance.get(a.attendanceId()).actualEnd());assertEquals("DANG_XU_LY",service.request(admin,false,id).request().status());
     });}
     @Test void thirtyMinuteEarlyWindowAndLateTolerance(){LocalDateTime start=LocalDateTime.of(2026,11,1,8,0);assertTrue(AttendanceClockPolicy.checkIn(start,start.plusHours(4),start.minusMinutes(30)).allowed());assertFalse(AttendanceClockPolicy.checkIn(start,start.plusHours(4),start.minusMinutes(30).minusNanos(1)).allowed());assertTrue(AttendanceClockPolicy.checkIn(start,start.plusHours(4),start.plusMinutes(16)).allowed());assertFalse(AttendanceClockPolicy.checkIn(start,start.plusHours(4),start.plusHours(4)).allowed());}
+
+    private AttendancePortalService.Proposal missing(long schedule,int days){LocalDate d=LocalDate.now(clock).minusDays(days);return new AttendancePortalService.Proposal("MISSING_ATTENDANCE",0,d.atTime(0,5),d.atTime(0,30),0,"DI_LAM","Quên chấm công",schedule);}
+    @Test void missingAttendanceIsOnlyCreatedAfterIndependentApproval(){rollback(()->{
+        long sid=fixture(employee,1);assertTrue(service.detail(employee,true,sid).row().canRequest());
+        long id=service.submit(employee,missing(sid,1));
+        assertNull(service.detail(employee,true,sid).row().attendanceId());
+        assertFalse(service.detail(employee,true,sid).row().canRequest());
+        assertThrows(ResponseStatusException.class,()->service.submit(employee,missing(sid,1)));
+        assertThrows(ResponseStatusException.class,()->service.receive(employee,id));
+        service.receive(admin,id);service.decide(admin,id,new AttendancePortalService.Decision(true,null,"Đã xác minh"));
+        var row=service.detail(employee,true,sid).row();assertNotNull(row.attendanceId());assertEquals("DA_XAC_NHAN",row.verificationStatus());
+        assertEquals("DA_CHAP_NHAN",service.request(employee,true,id).request().status());
+    });}
+    @Test void rejectingMissingAttendanceLeavesNoAttendance(){rollback(()->{
+        long sid=fixture(employee,1);long id=service.submit(employee,missing(sid,1));service.receive(admin,id);
+        service.decide(admin,id,new AttendancePortalService.Decision(false,null,"Không đủ căn cứ"));
+        assertNull(service.detail(employee,true,sid).row().attendanceId());
+    });}
+    @Test void missingAttendanceEnforcesOwnerDeadlineAndNoFutureTimes(){rollback(()->{
+        long sid=fixture(employee,1);
+        assertThrows(ResponseStatusException.class,()->service.submit(otherEmployee,missing(sid,1)));
+        assertThrows(ResponseStatusException.class,()->service.submit(employee,new AttendancePortalService.Proposal("MISSING_ATTENDANCE",0,LocalDateTime.now(clock).minusMinutes(5),LocalDateTime.now(clock).plusHours(1),0,"DI_LAM","Không hợp lệ",sid)));
+        long expired=fixture(employee,8);assertFalse(service.detail(employee,true,expired).row().canRequest());
+        assertThrows(ResponseStatusException.class,()->service.submit(employee,missing(expired,8)));
+    });}
+    @Test void newAttendanceBeforeApprovalIsNeverOverwritten(){rollback(()->{
+        long sid=fixture(employee,1);long id=service.submit(employee,missing(sid,1));service.receive(admin,id);
+        LocalDate date=LocalDate.now(clock).minusDays(1);seed(new AttendanceInput(employee.employeeId(),sid,date,date.atTime(0,5),date.atTime(0,35),0,"DI_LAM","Concurrent legacy entry"));
+        assertThrows(ResponseStatusException.class,()->service.decide(admin,id,new AttendancePortalService.Decision(true,null,"Đã kiểm tra")));
+        assertEquals("DANG_XU_LY",service.request(admin,false,id).request().status());
+    });}
+
+    AttendanceView seed(AttendanceInput input){
+        long id=db.queryForObject("INSERT dbo.attendance_records(employee_id,schedule_id,work_date,actual_start,actual_end,actual_break_minutes,attendance_result,verification_status,created_by) OUTPUT INSERTED.attendance_id VALUES(?,?,?,?,?,?,?,'CHUA_XAC_NHAN',?)",Long.class,input.employeeId(),input.scheduleId(),input.workDate(),input.actualStart(),input.actualEnd(),input.actualBreakMinutes(),input.attendanceResult(),admin.accountId());
+        db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason) VALUES(?,'ATTENDANCE_CREATE','attendance_records',?,'rollback-only fixture')",admin.accountId(),Long.toString(id));return attendance.get(id);
+    }
+    @Test void directManualEntryIsBlockedWithoutEmployeeRequest(){rollback(()->{
+        long sid=fixture(employee,1);var input=new AttendanceInput(employee.employeeId(),sid,LocalDate.now(clock).minusDays(1),LocalDate.now(clock).minusDays(1).atTime(0,5),LocalDate.now(clock).minusDays(1).atTime(0,30),0,"DI_LAM","Không có đơn");
+        assertFalse(service.detail(admin,false,sid).row().canEdit());
+        assertThrows(ResponseStatusException.class,()->attendance.createManual(input,admin.accountId()));
+        assertThrows(ResponseStatusException.class,()->service.manual(admin,input));
+        assertNull(service.detail(admin,false,sid).row().attendanceId());
+    });}
+    @Test void absenceOnlyAfterDeadlineAndWithoutOpenRequest(){rollback(()->{
+        long fresh=fixture(employee,1);assertThrows(ResponseStatusException.class,()->service.markAbsent(admin,fresh,"Chưa có giải trình"));
+        long old=fixture(employee,8);var row=service.detail(admin,false,old).row();assertTrue(row.canMarkAbsent());
+        var absent=service.markAbsent(admin,old,"Đã kiểm tra, hết hạn không có giải trình");assertEquals("VANG",absent.attendanceResult());assertNull(absent.actualStart());assertNull(absent.actualEnd());
+        service.verify(admin,absent.attendanceId(),true,null);assertEquals("DA_XAC_NHAN",attendance.get(absent.attendanceId()).verificationStatus());
+    });}
+
+    @Test void changedApprovalTimesRequireSeparateReason(){rollback(()->{
+        long sid=fixture(employee,1);long id=service.submit(employee,missing(sid,1));service.receive(admin,id);
+        var end=LocalDate.now(clock).minusDays(1).atTime(0,25);
+        assertThrows(ResponseStatusException.class,()->service.decide(admin,id,new AttendancePortalService.Decision(true,end,"Quyết định chung")));
+        assertNull(service.detail(employee,true,sid).row().attendanceId());
+        service.decide(admin,id,new AttendancePortalService.Decision(true,end,"Đồng ý",null,"Giờ ra được đối chiếu lại"));
+        assertEquals(end,service.detail(employee,true,sid).row().actualEnd());
+        assertEquals("Giờ ra được đối chiếu lại",service.request(admin,false,id).request().adjustmentReason());
+    });}
+    @Test void missingRequestDeadlineUsesEndDateForOvernightShift(){rollback(()->{
+        long sid=fixture(employee,8);LocalDate end=LocalDate.now(clock).minusDays(7);
+        db.update("UPDATE dbo.work_schedules SET planned_end=? WHERE schedule_id=?",end.atTime(6,0),sid);
+        assertTrue(service.detail(employee,true,sid).row().canRequest());
+        assertFalse(service.detail(admin,false,sid).row().canMarkAbsent());
+    });}
+
+    @Test void activeInboxRetainsReceivedRequestAndDetailShowsLifecycle(){rollback(()->{
+        long sid=fixture(employee,1);long id=service.submit(employee,missing(sid,1));LocalDate day=LocalDate.now(clock).minusDays(1);
+        assertTrue(service.requests(admin,false,day,day,null,"ACTIVE",0).items().stream().anyMatch(row->row.requestId()==id));
+        service.receive(admin,id);
+        assertTrue(service.requests(admin,false,day,day,null,"ACTIVE",0).items().stream().anyMatch(row->row.requestId()==id&&row.canDecide()));
+        assertFalse(service.requests(admin,false,day,day,null,"CHO_XU_LY",0).items().stream().anyMatch(row->row.requestId()==id));
+        var received=service.detail(employee,true,sid);assertEquals("DANG_XU_LY",received.requests().get(0).status());assertNotNull(received.requests().get(0).receivedAt());assertNull(received.requests().get(0).processedAt());
+        assertTrue(received.audit().stream().anyMatch(event->event.action().equals("ATTENDANCE_REQUEST_RECEIVED")));
+        service.decide(admin,id,new AttendancePortalService.Decision(true,null,"Đã đối chiếu"));
+        var done=service.detail(employee,true,sid);assertNotNull(done.requests().get(0).processedAt());assertEquals("DA_XAC_NHAN",done.row().verificationStatus());
+    });}
 }

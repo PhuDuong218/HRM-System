@@ -20,6 +20,7 @@ public class AttendancePortalController {
       @RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,
       @RequestParam(required=false) String verification,@RequestParam(required=false) String anomaly,@RequestParam(defaultValue="0") int page){return service.search(a,mine,from,to,q,departmentId,verification,anomaly,page);}
     @GetMapping("/schedules/{id}") public Object detail(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestParam(defaultValue="false") boolean mine){return service.detail(a,mine,id);}
+    @PostMapping("/schedules/{id}/absence") public Object absence(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestBody VersionCommand body){return service.markAbsent(a,id,body.reason());}
     @PostMapping("/manual") public Object manual(@AuthenticationPrincipal AuthenticatedAccount a,@Valid @RequestBody AttendanceInput body){return service.manual(a,body);}
     @PutMapping("/records/{id}") public Object correct(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody CorrectionCommand body){return service.correctVersioned(a,id,body.correction(),body.expectedVersion());}
     @PostMapping("/records/{id}/confirm") public Object confirm(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return service.verifyVersioned(a,id,true,null,body.expectedVersion());}
