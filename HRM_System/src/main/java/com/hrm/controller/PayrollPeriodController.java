@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/payroll-periods")
+@RequestMapping({"/payroll-periods", "/api/payroll-periods"})
 public class PayrollPeriodController {
 
     private final PayrollPeriodService service;

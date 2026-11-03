@@ -7,6 +7,8 @@ import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { DepartmentsPage } from "./pages/departments/departments";
 import { LoginPage } from "./pages/login/login";
 import { authGuard } from "./services/auth.guard";
+import { PayslipsPage } from './pages/payslips/payslips';
+import { PayrollPage } from './pages/payroll/payroll';
 export const routes: Routes = [
   { path: "login", component: LoginPage },
   {
@@ -69,14 +71,14 @@ export const routes: Routes = [
         component: PlaceholderPage,
         data: { title: "Khen thưởng / kỷ luật" },
       },
-      {
-        path: "payroll",
-        component: PlaceholderPage,
-        data: { title: "Tiền lương" },
+      { 
+        path: 'payroll', 
+        component: PayrollPage,
+        data: { title: 'Tiền lương' },
       },
-      {
-        path: "payslips",
-        component: PlaceholderPage,
+      { 
+        path: "payslips", 
+        component: PayslipsPage,
         data: { title: "Phiếu lương" },
       },
       {
