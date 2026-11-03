@@ -47,3 +47,38 @@ export interface ContractTypeRequest {
   typeName: string;
   isActive: boolean | null;
 }
+
+export type PayBasis = 'THANG' | 'NGAY' | 'GIO';
+
+export interface SalaryTermResponse {
+  salaryTermId: number;
+  contractId: number;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  baseSalary: number;
+  payBasis: PayBasis;
+  documentReference: string | null;
+}
+
+export interface SalaryTermRequest {
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  baseSalary: number;
+  payBasis: PayBasis;
+  documentReference: string | null;
+  reason: string;
+}
+
+export interface SalaryRateSegment {
+  employeeId: number;
+  contractId: number;
+  salaryTermId: number;
+  from: string;
+  to: string;
+  baseSalary: number;
+  payBasis: PayBasis;
+}
+
+export interface SalaryTermChangeRequest {
+  newTerm: SalaryTermRequest;
+}

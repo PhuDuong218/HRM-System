@@ -71,7 +71,7 @@ public class OvertimePreviewService {
             Long unconfirmed = db.queryForObject(
                     """
                             SELECT COUNT_BIG(*) FROM dbo.work_schedules s
-                            WHERE s.employee_id=? AND s.planned_start<? AND s.planned_end>?
+                            WHERE s.cancelled_at IS NULL AND s.employee_id=? AND s.planned_start<? AND s.planned_end>?
                               AND NOT EXISTS(SELECT 1 FROM dbo.attendance_records a
                                 WHERE a.schedule_id=s.schedule_id AND a.invalidated_at IS NULL AND a.verification_status='DA_XAC_NHAN')
                             """,

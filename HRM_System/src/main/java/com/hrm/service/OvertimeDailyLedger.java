@@ -10,6 +10,7 @@ import org.springframework.http.HttpStatus;
 /** Calculates reproducible, confirmed net OT minutes per calendar day. */
 @Service
 public class OvertimeDailyLedger {
+    private record ActualInterval(LocalDateTime start, LocalDateTime end) {}
     private final JdbcTemplate db;
 
     public OvertimeDailyLedger(JdbcTemplate db) {
@@ -17,18 +18,17 @@ public class OvertimeDailyLedger {
     }
 
     public Map<LocalDate, Long> netMinutes(long otId, LocalDateTime start, LocalDateTime end, int totalBreak) {
-        if (start == null || end == null || !end.isAfter(start) || start.getSecond() != 0 || end.getSecond() != 0
-                || start.getNano() != 0 || end.getNano() != 0)
-            throw invalid("OT times must be positive and minute-aligned");
+        if (start == null || end == null || !end.isAfter(start) || totalBreak < 0)
+            throw invalid("Giờ OT thực tế không hợp lệ. Kết thúc phải sau bắt đầu, phút nghỉ không được âm.");
         var breaks = db.query(
                 "SELECT break_start,break_end FROM dbo.overtime_breaks WHERE overtime_id=? AND is_active=1 ORDER BY break_start",
-                (rs, n) -> new OvertimeDailyCalculation.Interval(rs.getObject(1, LocalDateTime.class),
+                (rs, n) -> new ActualInterval(rs.getObject(1, LocalDateTime.class),
                         rs.getObject(2, LocalDateTime.class)),
                 otId);
         long detailTotal = 0;
         LocalDateTime previous = null;
         for (var b : breaks) {
-            if (b.start().isBefore(start) || b.end().isAfter(end) || (previous != null && b.start().isBefore(previous)))
+            if (b.start() == null || b.end() == null || !b.end().isAfter(b.start()) || b.start().isBefore(start) || b.end().isAfter(end) || (previous != null && b.start().isBefore(previous)))
                 throw invalid("Invalid or overlapping OT break intervals");
             detailTotal += Duration.between(b.start(), b.end()).toMinutes();
             previous = b.end();

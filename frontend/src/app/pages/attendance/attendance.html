@@ -1,27 +1,711 @@
-<p class="eyebrow">{{ "N-07 → N-10 · BẢN SAO ĐỘC LẬP" | translate }}</p>
-<h1>{{ "Đối chiếu và chấm công" | translate }}</h1>
-<p class="page-description">{{ "Không gian quản lý ghi nhận công, đối chiếu, xác nhận, hủy xác nhận và điều chỉnh theo đúng quyền backend." | translate }}</p>
-<div class="alert alert-warning"><strong>{{ "Chưa có API danh sách công quản lý được xác minh:" | translate }}</strong> {{ " AttendanceController hiện cung cấp API ghi công/sửa/xác nhận/hủy xác nhận nhưng không cung cấp GET danh sách chung. Vì vậy chưa được tự suy diễn dữ liệu hay gọi endpoint không tồn tại." | translate }}</div>
-<div class="row g-3">
-    <div class="col-md-6">
-        <section class="surface h-100">
-            <h2 class="h5">{{ "N-07, N-08 · Ghi nhận và tra cứu" | translate }}</h2>
-            <p>{{ "Giao diện nhập công thủ công, thời điểm vào/ra, lịch sử và phạm vi nhân viên được quản lý." | translate }}</p><span
-                class="badge text-bg-secondary">{{ "Chờ xác minh API đọc bản ghi" | translate }}</span>
-        </section>
-    </div>
-    <div class="col-md-6">
-        <section class="surface h-100">
-            <h2 class="h5">{{ "N-09, N-10 · Đối chiếu và xử lý" | translate }}</h2>
-            <p>{{ "Xác nhận hoặc hủy xác nhận có lý do; hiển thị nhật ký chỉnh sửa và phân quyền xác nhận." | translate }}</p><span
-                class="badge text-bg-secondary">{{ "Khóa thao tác ghi" | translate }}</span>
-        </section>
-    </div>
-    <div class="col-12">
-        <section class="surface">
-            <h2 class="h5">{{ "N-11 · Tổng công đã xác nhận" | translate }}</h2>
-            <p>{{ "Đã đối chiếu endpoint tổng hợp theo khoảng ngày và nhân viên." | translate }}</p><a routerLink="/attendance/summary"
-                class="btn btn-primary">{{ "Mở tổng hợp công theo kỳ" | translate }}</a>
-        </section>
-    </div>
+<h1>{{ "Chấm công và đối chiếu" | translate }}</h1>
+
+<p class="page-description">{{ "Ghi nhận, đối soát và xác nhận giờ làm việc theo quyền quản lý." | translate }}</p>
+
+@if (context) {
+
+<div class="d-flex gap-2 flex-wrap mb-3" role="tablist" aria-label="Chức năng chấm công">
+
+    @if (context.mine) { <button type="button" role="tab" class="btn" [class.btn-primary]="tab==='mine'"
+        [class.btn-outline-primary]="tab!=='mine'" [attr.aria-selected]="tab==='mine'" [disabled]="busy"
+        (click)="switchTab('mine')">{{ "Công của tôi" | translate }}</button> }
+
+    @if (context.manage) { <button type="button" role="tab" class="btn" [class.btn-primary]="tab==='manage'"
+        [class.btn-outline-primary]="tab!=='manage'" [attr.aria-selected]="tab==='manage'" [disabled]="busy"
+        (click)="switchTab('manage')">{{ "Quản lý công" | translate }}</button> }
+
+    <button type="button" role="tab" class="btn" [class.btn-primary]="tab==='requests'"
+        [class.btn-outline-primary]="tab!=='requests'" [attr.aria-selected]="tab==='requests'" [disabled]="busy"
+        (click)="switchTab('requests')">{{ "Yêu cầu điều chỉnh" | translate }}</button>
+
 </div>
+
+}
+
+@if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }
+
+@if (actionError) { <div class="alert alert-warning" role="alert">{{ actionError }}</div> }
+
+@if (loading && !context) { <p role="status">{{ "Đang tải quyền chấm công..." | translate }}</p> }
+
+@if(context?.mine&&tab==='mine'){<app-personal-calendar [attendance]="true" />}
+@if (context && tab!=='requests') {<div [hidden]="tab==='mine'">
+@if(tab==='mine'){<div class="alert alert-info small">Để tạo yêu cầu điều chỉnh công của chính mình, chọn ngày ca trong danh sách rồi bấm <strong>Gửi yêu cầu</strong>. Nút chỉ xuất hiện khi bản ghi đủ điều kiện và còn hạn gửi; bản ghi đang có yêu cầu mở không được gửi trùng.</div>}
+
+@if (stats) {
+
+<div class="row g-2 mb-3">
+
+    <div class="col-6 col-lg">
+        <div class="surface">
+            <div class="small text-muted">{{ "Chờ xác nhận" | translate }}</div><strong class="h4">{{ stats.waiting }}</strong>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="surface">
+            <div class="small text-muted">{{ "Đã xác nhận" | translate }}</div><strong class="h4">{{ stats.confirmed }}</strong>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="surface">
+            <div class="small text-muted">{{ "Thiếu giờ vào/ra" | translate }}</div><strong class="h4">{{ stats.missing }}</strong>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="surface">
+            <div class="small text-muted">{{ "Cần rà soát" | translate }}</div><strong class="h4">{{ stats.review }}</strong>
+        </div>
+    </div>
+
+    <div class="col-6 col-lg">
+        <div class="surface">
+            <div class="small text-muted">{{ "Yêu cầu đang mở" | translate }}</div><strong class="h4">{{ stats.openRequests }}</strong>
+        </div>
+    </div>
+
+</div>
+
+<p class="small text-muted">{{ "Thống kê công theo bộ lọc hiện tại; yêu cầu đang mở theo phạm vi tài khoản." | translate }}</p>
+
+}
+
+@if (tab==='mine') {
+
+<section class="surface mb-3">
+
+    <div class="d-flex justify-content-between mb-3">
+        <h2 class="h5">{{ "Ca làm việc hôm nay" | translate }}</h2><button type="button" class="btn btn-sm btn-outline-primary"
+            [disabled]="todayLoading||saving" (click)="loadToday()">{{ "Tải lại" | translate }}</button>
+    </div>
+
+    <p class="small text-muted">{{ "Check-in sớm tối đa 30 phút. Dung sai muộn 15 phút không cộng bù vào giờ công. Giờ vào/ra ghi nhận từ máy chủ." | translate }}</p>
+
+    @if (todayLoading) { <p role="status">{{ "Đang tải ca hôm nay..." | translate }}</p> }
+
+    <div class="row g-3">
+
+        @for (row of todayRows; track row.scheduleId) {
+
+        <div class="col-12 col-lg-6">
+            <div class="border rounded p-3 h-100">
+
+                <h3 class="h6">{{ row.shift || 'Ca theo lịch' }} · {{ row.workDate }}</h3>
+
+                <p class="mb-1">Dự kiến: {{ time(row.plannedStart) }} → {{ time(row.plannedEnd) }}</p>
+
+                <p class="mb-1">Nghỉ theo lịch: {{ row.plannedBreakMinutes }} phút · <button type="button"
+                        class="btn btn-link btn-sm p-0" [disabled]="saving" (click)="view(row)">{{ "Xem chi tiết ca và khoảng nghỉ" | translate }}</button></p>
+
+                <p class="mb-1">Giờ vào: {{ time(row.actualStart) }} · Giờ ra: {{ time(row.actualEnd) }}</p>
+
+                <p><span class="badge text-bg-secondary">{{ shiftState(row) }}</span></p>
+
+                <div class="d-flex flex-wrap gap-2">
+
+                    <button type="button" class="btn btn-primary btn-sm" [disabled]="saving||!row.canCheckIn"
+                        (click)="clock(row,true)">{{ "Check-in" | translate }}</button>
+
+                    <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="saving||!row.canCheckOut"
+                        (click)="clock(row,false)">{{ "Check-out" | translate }}</button>
+
+                    @if (row.canRequest) { <button type="button" class="btn btn-outline-secondary btn-sm"
+                        [disabled]="saving" (click)="view(row,'proposal')">{{ "Yêu cầu bổ sung/điều chỉnh" | translate }}</button> }
+
+                </div>
+
+            </div>
+        </div>
+
+        } @empty { @if (!todayLoading) { <p class="text-muted">Không có lịch làm việc hôm nay hoặc ca qua đêm đang mở.
+        </p> } }
+
+    </div>
+
+</section>
+
+}
+
+<section class="surface mb-3">
+
+    <h2 class="h5">{{ tab==='mine'?'Tra cứu công cá nhân':'Tìm kiếm và lọc công' }}</h2>
+
+    <form (ngSubmit)="search()">
+
+        <fieldset [disabled]="busy">
+            <div class="row g-3">
+
+                <div class="col-md-3"><label for="attendanceFrom" class="form-label">{{ "Từ ngày" | translate }}</label><input
+                        id="attendanceFrom" name="from" type="date" class="form-control" [(ngModel)]="from" required>
+                </div>
+
+                <div class="col-md-3"><label for="attendanceTo" class="form-label">{{ "Đến ngày" | translate }}</label><input
+                        id="attendanceTo" name="to" type="date" class="form-control" [(ngModel)]="to" required></div>
+
+                @if (tab==='manage') {
+
+                <div class="col-md-3"><label for="attendanceEmployee" class="form-label">{{ "Mã hoặc tên nhân viên" | translate }}</label><input id="attendanceEmployee" name="q" class="form-control" [(ngModel)]="q"
+                        maxlength="200" placeholder="Nhập một phần mã/tên: tr, th, tran, a..."></div>
+
+                <div class="col-md-3"><label for="attendanceDepartment" class="form-label">{{ "Phòng ban" | translate }}</label><select
+                        id="attendanceDepartment" name="department" class="form-select" [(ngModel)]="departmentId">
+                        <option value="">{{ "Tất cả trong phạm vi" | translate }}</option>@for (d of departments; track d.departmentId) {
+                        <option [value]="d.departmentId">{{ d.departmentName }}</option> }
+                    </select></div>
+
+                }
+
+                <div class="col-md-3"><label for="attendanceVerification" class="form-label">{{ "Xác nhận" | translate }}</label><select
+                        id="attendanceVerification" name="verification" class="form-select" [(ngModel)]="verification">
+                        <option value="">{{ "Tất cả" | translate }}</option>
+                        <option value="CHUA_CO_CONG">{{ "Chưa có công" | translate }}</option>
+                        <option value="CHUA_XAC_NHAN">{{ "Chưa xác nhận" | translate }}</option>
+                        <option value="DA_XAC_NHAN">{{ "Đã xác nhận" | translate }}</option>
+                    </select></div>
+
+                <div class="col-md-3"><label for="attendanceAnomaly" class="form-label">{{ "Bất thường" | translate }}</label><select
+                        id="attendanceAnomaly" name="anomaly" class="form-select" [(ngModel)]="anomaly">
+                        <option value="">{{ "Tất cả" | translate }}</option>
+                        <option value="THIEU_GIO">{{ "Thiếu giờ vào/ra" | translate }}</option>
+                        <option value="DI_MUON">{{ "Đi muộn" | translate }}</option>
+                        <option value="VE_SOM">{{ "Về sớm" | translate }}</option>
+                        <option value="VANG">{{ "Vắng" | translate }}</option>
+                    </select></div>
+
+            </div>
+            <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{ "Tìm kiếm" | translate }}</button><button
+                    type="button" class="btn btn-outline-secondary" (click)="reset()">{{ "Đặt lại" | translate }}</button></div>
+        </fieldset>
+
+    </form>
+
+</section>
+
+<div class="row g-3">
+
+    <div [ngClass]="detail||detailLoading?'col-12 col-lg-6':'col-12'" style="min-width:0">
+        <section class="surface">
+
+            <div class="attendance-list-header mb-3">
+                <h2 class="h5 mb-0">{{ tab==='mine'?'Lịch sử công cá nhân':'Danh sách công' }} ({{ total }})</h2>
+                <div class="attendance-notification-slot" role="status" aria-live="polite" aria-atomic="true">
+
+                    @if (feedback) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
+                        (pendingNotifications) { <small>+{{ pendingNotifications }} thông báo</small> }</div> }
+
+                </div><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy"
+                    (click)="loadRecords()">{{ "Tải lại" | translate }}</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+
+                    <thead>
+                        <tr>
+                            <th>{{ "ID công" | translate }}</th>@if (tab==='manage') { <th>{{ "Nhân viên" | translate }}</th>
+                            <th>{{ "Phòng ban" | translate }}</th> }<th>{{ "Ngày / ca" | translate }}</th>
+                            <th>{{ "Giờ dự kiến" | translate }}</th>
+                            <th>{{ "Giờ thực tế" | translate }}</th>
+                            <th>{{ "Kết quả / bất thường" | translate }}</th>
+                            <th>{{ "Xác nhận" | translate }}</th>
+                            <th>{{ "Thao tác" | translate }}</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                        @for (r of rows; track r.scheduleId) {
+
+                        <tr (appRowView)="view(r)" [rowViewDisabled]="saving" [class.table-active]="detail?.row?.scheduleId===r.scheduleId">
+                            <td>{{ r.attendanceId ? '#'+r.attendanceId : 'Chưa có' }}</td>
+
+                            @if (tab==='manage') { <td>{{ r.employeeLabel }}</td>
+                            <td>{{ r.department || 'Chưa xác định' }}</td> }
+
+                            <td>{{ r.workDate }}<div class="small text-muted">{{ r.shift || 'Ca theo lịch' }}</div>
+                            </td>
+
+                            <td>{{ time(r.plannedStart) }}<br>{{ time(r.plannedEnd) }}</td>
+                            <td>{{ time(r.actualStart) }}<br>{{ time(r.actualEnd) }}</td>
+
+                            <td>
+                                <div class="attendance-result" [ngClass]="'result-'+resultSeverity(r)"><span
+                                        class="attendance-result-level">{{ severityLabel(r) }}</span><strong>{{
+                                        r.attendanceResult ? label(r.attendanceResult) : 'Chưa ghi nhận' }}</strong>@for
+                                    (a of r.anomalies; track a) { <div class="small">{{ label(a) }}</div> }</div>
+                            </td>
+
+                            <td><span class="badge" [class.text-bg-success]="r.verificationStatus==='DA_XAC_NHAN'"
+                                    [class.text-bg-secondary]="r.verificationStatus!=='DA_XAC_NHAN'">{{
+                                    label(r.verificationStatus) }}</span></td>
+
+                            <td>
+                                <div class="d-flex flex-wrap gap-1">
+
+                                    <button type="button" class="btn btn-sm btn-outline-primary" [disabled]="saving"
+                                        (click)="view(r)">{{ "Chi tiết" | translate }}</button>
+
+                                    @if (r.canEdit) { <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        [disabled]="saving" (click)="view(r,r.attendanceId?'edit':'manual')">{{
+                                        r.attendanceId?'Đối soát / sửa':'Nhập công' }}</button> }
+
+                                    @if (r.canConfirm) { <button type="button" class="btn btn-sm btn-primary"
+                                        [disabled]="saving" (click)="confirm(r)">{{ "Xác nhận" | translate }}</button> }
+
+                                    @if (r.canUnconfirm) { <button type="button" class="btn btn-sm btn-outline-warning"
+                                        [disabled]="saving" (click)="view(r);">{{ "Xem để hủy xác nhận" | translate }}</button> }
+
+                                    @if (r.canRequest) { <button type="button" class="btn btn-sm btn-outline-secondary"
+                                        [disabled]="saving" (click)="view(r,'proposal')">{{ "Gửi yêu cầu" | translate }}</button> }
+
+                                </div>
+                            </td>
+
+                        </tr>
+
+                        } @empty { <tr>
+                            <td [attr.colspan]="tab==='manage'?9:7" class="text-center text-muted py-4">{{ loading?'Đang
+                                tải công...':'Không có công hoặc lịch phù hợp.' }}</td>
+                        </tr> }
+
+                    </tbody>
+
+                </table>
+            </div>
+
+            @if (pages>1) { <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang công">
+
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page===0"
+                    (click)="goPage(0)" aria-label="Trang đầu">&lt;&lt;</button>
+
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page===0"
+                    (click)="goPage(page-1)" aria-label="Trang trước">&lt;</button>
+
+                @for (p of pagination(pages,page); track $index) { @if (p==='...') { <span class="px-1">…</span> } @else
+                { <button type="button" class="btn btn-sm" [class.btn-primary]="p===page"
+                    [class.btn-outline-secondary]="p!==page" [attr.aria-current]="p===page?'page':null"
+                    [disabled]="busy" (click)="goPage(p)">{{ p+1 }}</button> } }
+
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page+1>=pages"
+                    (click)="goPage(page+1)" aria-label="Trang sau">&gt;</button>
+
+                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page+1>=pages"
+                    (click)="goPage(pages-1)" aria-label="Trang cuối">&gt;&gt;</button>
+
+            </nav> }
+
+        </section>
+    </div>
+
+    @if (detail||detailLoading) {
+
+    <div class="col-12 col-lg-6" style="min-width:0">
+        <section class="surface" [appDetailFocus]="detail ? detail.row.scheduleId+':'+mode : null">
+
+            <div class="d-flex justify-content-between mb-3">
+                <h2 class="h5">{{ mode==='view'?'Chi tiết và đối soát':mode==='proposal'?'Yêu cầu bổ sung / điều
+                    chỉnh':mode==='unconfirm'?'Hủy xác nhận':mode==='manual'?'Nhập công thủ công':'Sửa công chưa xác
+                    nhận' }}</h2><button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="saving"
+                    (click)="closeDetail()">{{ "Đóng" | translate }}</button>
+            </div>
+
+            @if (detailLoading) { <p role="status">{{ "Đang tải chi tiết..." | translate }}</p> }
+
+            @if (detail; as d) {
+
+            <p><strong>{{ d.row.employeeLabel }}</strong> · {{ d.row.workDate }}</p>
+
+            @if (d.periodLocked) { <div class="alert alert-warning">{{ "Kỳ công/lương đã khóa hoặc công bố. Không được thay đổi công." | translate }}</div> }
+
+            @if (mode==='view') {
+
+            <h3 class="h6 border-bottom pb-2">{{ "Lịch dự kiến" | translate }}</h3>
+
+            <p>{{ d.row.shift || 'Ca theo lịch' }} · {{ time(d.row.plannedStart) }} → {{ time(d.row.plannedEnd) }}</p>
+
+            <p>Nghỉ theo lịch: {{ d.row.plannedBreakMinutes }} phút.</p>
+
+            <ul>@for (b of d.breaks; track $index) { <li>{{ time(b.start) }} → {{ time(b.end) }}</li> } @empty { <li>{{
+                    d.row.plannedBreakMinutes===0?'Không có khoảng nghỉ.':'Chưa có đủ chi tiết nghỉ để đối chiếu.' }}
+                </li> }</ul>
+
+            @if (d.row.breakDetailStatus!=='VERIFIED') { <p class="text-warning-emphasis small">{{ "Chi tiết nghỉ của lịch cũ chưa được xác minh." | translate }}</p> }
+
+            <h3 class="h6 border-bottom pb-2">{{ "Công thực tế" | translate }}</h3>
+
+            <dl class="row">
+                <dt class="col-5">{{ "Giờ vào / ra" | translate }}</dt>
+                <dd class="col-7">{{ time(d.row.actualStart) }}<br>{{ time(d.row.actualEnd) }}</dd>
+                <dt class="col-5">{{ "Phút nghỉ ghi nhận" | translate }}</dt>
+                <dd class="col-7">{{ d.row.actualBreakMinutes }}</dd>
+                <dt class="col-5">{{ "Nguồn" | translate }}</dt>
+                <dd class="col-7">{{ d.row.source }}</dd>
+                <dt class="col-5">{{ "Kết quả" | translate }}</dt>
+                <dd class="col-7">{{ d.row.attendanceResult?label(d.row.attendanceResult):'Chưa ghi nhận' }}</dd>
+            </dl>
+
+            <p class="small text-muted">{{ "Phút nghỉ thực tế là số đã lưu; không tự sao chép nghỉ dự kiến hoặc tự tính giờ công qua ngày khi chưa có chi tiết nghỉ thực tế." | translate }}</p>
+
+            <h3 class="h6 border-bottom pb-2">{{ "Đối soát" | translate }}</h3>
+            <div class="attendance-result mb-3" [ngClass]="'result-'+resultSeverity(d.row)"><span
+                    class="attendance-result-level">{{ severityLabel(d.row) }}</span><strong>{{
+                    d.row.attendanceResult?label(d.row.attendanceResult):'Chưa ghi nhận' }}</strong>@for (a of
+                d.row.anomalies; track a) { <div>{{ label(a) }}</div> }</div>
+
+            <h3 class="h6 border-bottom pb-2">{{ "Xác nhận và lịch sử" | translate }}</h3>
+
+            <dl class="row">
+                <dt class="col-5">{{ "Trạng thái" | translate }}</dt>
+                <dd class="col-7">{{ label(d.row.verificationStatus) }}</dd>
+                <dt class="col-5">{{ "Người nhập công" | translate }}</dt>
+                <dd class="col-7 text-break">{{ d.row.enteredByLabel || (d.row.attendanceId?'Chưa xác định':'—') }}</dd>
+                <dt class="col-5">{{ "Cập nhật gần nhất bởi" | translate }}</dt>
+                <dd class="col-7 text-break">{{ d.row.updatedByLabel || '—' }}</dd>
+                <dt class="col-5">{{ "Người xác nhận công" | translate }}</dt>
+                <dd class="col-7 text-break">{{ d.row.confirmedByLabel ||
+                    (d.row.verificationStatus==='DA_XAC_NHAN'?'Chưa xác định':'Chưa xác nhận') }}</dd>
+                <dt class="col-5">{{ "Lúc xác nhận" | translate }}</dt>
+                <dd class="col-7">{{ utc(d.row.confirmedAt) }}</dd>
+                <dt class="col-5">{{ "Lý do gần nhất" | translate }}</dt>
+                <dd class="col-7 text-break">{{ d.row.correctionReason||'—' }}</dd>
+            </dl>
+
+            @if (d.row.verificationStatus==='DA_XAC_NHAN') { <p class="small text-muted">{{ "Công đã xác nhận không được sửa trực tiếp. Điều chỉnh phải được xét duyệt." | translate }}</p> }
+
+            <div class="d-flex flex-wrap gap-2 mb-3">
+
+                @if (d.row.canEdit) { <button type="button" class="btn btn-primary" [disabled]="saving"
+                    (click)="openForm(d.row.attendanceId?'edit':'manual')">{{ d.row.attendanceId?'Đối soát / sửa':'Nhập
+                    công' }}</button> }
+
+                @if (d.row.canConfirm) { <button type="button" class="btn btn-outline-primary" [disabled]="saving"
+                    (click)="confirm(d.row)">{{ "Xác nhận" | translate }}</button> }
+
+                @if (d.row.canUnconfirm) { <button type="button" class="btn btn-outline-warning" [disabled]="saving"
+                    (click)="openForm('unconfirm')">{{ "Hủy xác nhận" | translate }}</button> }
+
+                @if (d.row.canRequest) { <button type="button" class="btn btn-outline-primary" [disabled]="saving"
+                    (click)="openForm('proposal')">{{ "Gửi yêu cầu điều chỉnh" | translate }}</button> }
+
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>{{ "Thời điểm" | translate }}</th>
+                            <th>{{ "Thao tác" | translate }}</th>
+                            <th>{{ "Người xử lý" | translate }}</th>
+                            <th>{{ "Lý do" | translate }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>@for (a of d.audit; track $index) { <tr>
+                            <td>{{ utc(a.occurredAt) }}</td>
+                            <td>{{ actionLabel(a.action) }}</td>
+                            <td>{{ a.actor }}</td>
+                            <td class="text-break">{{ a.reason||'—' }}</td>
+                        </tr> } @empty { <tr>
+                            <td colspan="4">Chưa có lịch sử xử lý.</td>
+                        </tr> }</tbody>
+                </table>
+            </div>
+
+            } @else {
+
+            @if (mode==='proposal') { <p class="alert alert-info">{{ missingCheckoutProposal?'Bổ sung check-out':'Điều
+                chỉnh công đã xác nhận' }}. Hạn gửi: {{
+                missingCheckoutProposal?context.checkoutRequestDays:context.correctionRequestDays }} ngày sau ngày bắt
+                đầu ca, theo chính sách máy chủ. Công gốc giữ nguyên đến khi được duyệt.</p> }
+
+            <form (ngSubmit)="save()">
+                <fieldset [disabled]="saving">
+
+                    @if (mode!=='unconfirm') {
+
+                    <div class="mb-3"><label for="actualResult" class="form-label">{{ "Kết quả công" | translate }}</label><select
+                            id="actualResult" name="result" class="form-select" [(ngModel)]="result"
+                            (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal">
+                            <option value="DI_LAM">{{ "Đi làm" | translate }}</option>
+                            <option value="VANG">{{ "Vắng" | translate }}</option>
+                        </select></div>
+
+                    <div class="mb-3"><label for="actualStart" class="form-label">{{ "Giờ vào thực tế" | translate }}</label><input
+                            id="actualStart" name="actualStart" type="datetime-local" step="1" class="form-control"
+                            [(ngModel)]="actualStart" [disabled]="result==='VANG'||missingCheckoutProposal"></div>
+
+                    <div class="mb-3"><label for="actualEnd" class="form-label">{{ "Giờ ra thực tế / đề xuất" | translate }}</label><input
+                            id="actualEnd" name="actualEnd" type="datetime-local" step="1" class="form-control"
+                            [(ngModel)]="actualEnd" [disabled]="result==='VANG'"></div>
+
+                    <div class="mb-3"><label for="actualBreaks" class="form-label">{{ "Phút nghỉ thực tế" | translate }}</label><input
+                            id="actualBreaks" name="breaks" type="number" min="0" step="1" class="form-control"
+                            [(ngModel)]="breakMinutes" [disabled]="result==='VANG'">
+                        <div class="form-text">{{ "Nhập theo dữ liệu thực tế đã xác minh; không tự lấy phút nghỉ theo ca." | translate }}</div>
+                    </div>
+
+                    }
+
+                    <div class="mb-3"><label for="attendanceReason" class="form-label">{{ "Lý do *" | translate }}</label><textarea
+                            id="attendanceReason" name="reason" rows="3" maxlength="1000" class="form-control"
+                            [(ngModel)]="reason" required></textarea></div>
+
+                    <div class="d-flex gap-2"><button type="submit" class="btn btn-primary">{{ saving?'Đang xử
+                            lý...':mode==='proposal'?'Gửi yêu cầu':mode==='unconfirm'?'Xác nhận hủy':'Lưu công'
+                            }}</button><button type="button" class="btn btn-outline-secondary"
+                            (click)="mode='view';actionError=''">{{ "Hủy thao tác" | translate }}</button></div>
+
+                </fieldset>
+            </form>
+
+            }
+
+            }
+
+        </section>
+    </div>
+
+    }
+
+</div>
+
+</div>}
+@if (context && tab==='requests') {
+<app-ot-supplement-panel [mineAllowed]="context.mine" [manage]="context.manage" />
+@if(feedback){<div class="alert alert-success" role="status">{{feedback}}</div>}
+@if(ownRequestOpen){<section class="surface mb-3" [appDetailFocus]="ownSchedule||'create-own-request'"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">Tạo yêu cầu điều chỉnh công của tôi</h2><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving" (click)="closeOwnRequest()">Đóng</button></div>
+  <p class="small text-muted">Chọn ngày ca, bản ghi công và nhập nội dung đề nghị. Công gốc chỉ thay đổi sau khi được duyệt.</p>
+  <form class="row g-2 align-items-end mb-3" (ngSubmit)="loadOwnRequestRows()"><div class="col-md-4"><label for="ownRequestFrom" class="form-label">Ngày ca từ</label><input id="ownRequestFrom" name="from" type="date" class="form-control" [(ngModel)]="ownRequestFrom" [disabled]="saving" required></div><div class="col-md-4"><label for="ownRequestTo" class="form-label">Đến ngày</label><input id="ownRequestTo" name="to" type="date" class="form-control" [(ngModel)]="ownRequestTo" [disabled]="saving" required></div><div class="col-md-auto"><button class="btn btn-outline-primary" [disabled]="saving||ownRequestLoading">Tìm công của tôi</button></div></form>
+  <label for="ownRequestSchedule" class="form-label">Bản ghi công cần điều chỉnh *</label><select id="ownRequestSchedule" class="form-select mb-2" [(ngModel)]="ownSchedule" (ngModelChange)="selectOwnRequest()" [disabled]="saving||ownRequestLoading"><option value="">{{ownRequestLoading?'Đang tải công cá nhân…':'Chọn ngày / ca / bản ghi công'}}</option>@for(r of ownRequestRows;track r.scheduleId){<option [value]="r.scheduleId" [disabled]="!r.canRequest">{{r.workDate}} — {{r.shift}} — {{r.attendanceId?'Công #'+r.attendanceId:'Chưa có bản ghi công'}}{{r.canRequest?'':' (Chưa đủ điều kiện gửi yêu cầu)'}}</option>}</select>
+  <p class="small text-muted">Có thể gửi điều chỉnh công đã xác nhận hoặc bổ sung giờ ra còn thiếu theo chính sách máy chủ. Bản ghi hết hạn, kỳ khóa hoặc đang có yêu cầu mở không được chọn.</p>
+  @if(!ownRequestLoading&&!ownRequestRows.length){<div class="alert alert-info">Không có lịch/công cá nhân trong khoảng ngày đã chọn. Hãy kiểm tra ngày ca.</div>}
+  @if(ownRequestPages>1){<div class="d-flex gap-2 align-items-center mb-3"><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage===0" (click)="loadOwnRequestRows(ownRequestPage-1)">Trang trước</button><span>{{ownRequestPage+1}} / {{ownRequestPages}}</span><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage+1>=ownRequestPages" (click)="loadOwnRequestRows(ownRequestPage+1)">Trang sau</button></div>}
+  @if(detailLoading){<p role="status">Đang kiểm tra bản ghi công…</p>}
+  @if(detail&&mode==='proposal'){<div class="alert alert-info small">{{missingCheckoutProposal?'Yêu cầu bổ sung check-out':'Yêu cầu điều chỉnh công đã xác nhận'}} — {{detail.row.employeeLabel}}<br>Đang lưu: {{time(detail.row.actualStart)}} → {{time(detail.row.actualEnd)}}; nghỉ {{detail.row.actualBreakMinutes}} phút.</div><form (ngSubmit)="save()"><fieldset [disabled]="saving"><div class="row g-3"><div class="col-md-4"><label for="ownProposedResult" class="form-label">Kết quả đề nghị</label><select id="ownProposedResult" name="result" class="form-select" [(ngModel)]="result" (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal"><option value="DI_LAM">Đi làm</option><option value="VANG">Vắng</option></select></div><div class="col-md-4"><label for="ownProposedStart" class="form-label">Giờ vào đề nghị</label><input id="ownProposedStart" name="start" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualStart" [disabled]="missingCheckoutProposal||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedEnd" class="form-label">Giờ ra đề nghị</label><input id="ownProposedEnd" name="end" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualEnd" [disabled]="result==='VANG'"></div><div class="col-md-4"><label for="ownProposedBreaks" class="form-label">Phút nghỉ thực tế đề nghị</label><input id="ownProposedBreaks" name="breaks" type="number" min="0" step="1" class="form-control" [(ngModel)]="breakMinutes" [disabled]="result==='VANG'"></div><div class="col-12"><label for="ownProposedReason" class="form-label">Lý do *</label><textarea id="ownProposedReason" name="reason" class="form-control" rows="3" maxlength="1000" [(ngModel)]="reason" required></textarea></div></div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{saving?'Đang gửi…':'Gửi yêu cầu điều chỉnh'}}</button><button type="button" class="btn btn-outline-secondary" (click)="closeOwnRequest()">Hủy</button></div></fieldset></form>}
+</section>}
+
+
+<section class="surface mb-3">
+
+    <div class="d-flex justify-content-between align-items-center gap-2 flex-wrap mb-3"><h2 class="h5 mb-0">{{ "Yêu cầu bổ sung và điều chỉnh công" | translate }}</h2>@if(context.mine){<button type="button" class="btn btn-primary" [disabled]="busy" (click)="createOwnRequest()">Tạo yêu cầu điều chỉnh công của tôi</button>}</div>
+    @if(context.mine){<p class="small text-muted">Nhấn Tạo yêu cầu để chọn bản ghi công của chính mình và nhập đề xuất ngay tại đây. Đơn của HR do ADMIN xét duyệt.</p>}
+
+    <form (ngSubmit)="loadRequests()">
+        <fieldset [disabled]="busy">
+            <div class="row g-3">
+
+                @if (context.mine && context.manage) { <div class="col-md-3"><label for="requestScope"
+                        class="form-label">{{ "Phạm vi" | translate }}</label><select id="requestScope" name="scope" class="form-select"
+                        [(ngModel)]="requestsMine" (ngModelChange)="requestScopeChanged()">
+                        <option [ngValue]="false">{{ "Cần xử lý trong phạm vi" | translate }}</option>
+                        <option [ngValue]="true">{{ "Yêu cầu của tôi" | translate }}</option>
+                    </select></div> }
+
+                <div class="col-md-3"><label for="requestFrom" class="form-label">{{ "Ngày ca từ" | translate }}</label><input
+                        id="requestFrom" name="from" type="date" class="form-control" [(ngModel)]="requestFrom"
+                        required></div>
+
+                <div class="col-md-3"><label for="requestTo" class="form-label">{{ "Đến ngày" | translate }}</label><input id="requestTo"
+                        name="to" type="date" class="form-control" [(ngModel)]="requestTo" required></div>
+
+                <div class="col-md-3"><label for="requestType" class="form-label">{{ "Loại yêu cầu" | translate }}</label><select
+                        id="requestType" name="type" class="form-select" [(ngModel)]="requestType">
+                        <option value="">{{ "Tất cả" | translate }}</option>
+                        <option value="MISSING_CHECKOUT">{{ "Bổ sung check-out" | translate }}</option>
+                        <option value="CONFIRMED_CORRECTION">{{ "Sửa công đã xác nhận" | translate }}</option>
+                    </select></div>
+
+                <div class="col-md-3"><label for="requestStatus" class="form-label">{{ "Trạng thái" | translate }}</label><select
+                        id="requestStatus" name="status" class="form-select" [(ngModel)]="requestStatus">
+                        <option value="">{{ "Tất cả" | translate }}</option>
+                        <option value="CHO_XU_LY">{{ "Chờ xử lý" | translate }}</option>
+                        <option value="DANG_XU_LY">{{ "Đang xử lý" | translate }}</option>
+                        <option value="HISTORY">{{ "Lịch sử" | translate }}</option>
+                        <option value="DA_CHAP_NHAN">{{ "Đã chấp nhận" | translate }}</option>
+                        <option value="TU_CHOI">{{ "Từ chối" | translate }}</option>
+                    </select></div>
+
+            </div><button type="submit" class="btn btn-primary mt-3">{{ "Tìm kiếm" | translate }}</button>
+        </fieldset>
+    </form>
+
+</section>
+
+<div class="row g-3">
+    <div [ngClass]="requestDetail||requestDetailLoading?'col-12 col-lg-6':'col-12'" style="min-width:0">
+        <section class="surface">
+
+            <div class="attendance-list-header mb-3">
+                <h2 class="h5 mb-0">Danh sách yêu cầu ({{ requestTotal }})</h2>
+                <div class="attendance-notification-slot" role="status" aria-live="polite" aria-atomic="true">
+
+                    @if (feedback) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
+                        (pendingNotifications) { <small>+{{ pendingNotifications }} thông báo</small> }</div> }
+
+                </div><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy"
+                    (click)="loadRequests(false)">{{ "Tải lại" | translate }}</button>
+            </div>
+
+            <div class="table-responsive">
+                <table class="table table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>{{ "Mã / nhân viên" | translate }}</th>
+                            <th>{{ "Loại / ngày ca" | translate }}</th>
+                            <th>{{ "Đề xuất" | translate }}</th>
+                            <th>{{ "Ngày gửi / hạn xử lý" | translate }}</th>
+                            <th>{{ "Trạng thái / người tiếp nhận" | translate }}</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+
+                        @for (r of requestRows; track r.requestId) { <tr (appRowView)="viewRequest(r)" [rowViewDisabled]="saving">
+                            <td>{{ r.requestCode }}<div>{{ r.employeeLabel }}</div>
+                            </td>
+                            <td>{{ label(r.requestType) }}<div>{{ r.workDate }}</div>
+                            </td>
+                            <td>{{ time(r.proposedStart) }} → {{ time(r.proposedEnd) }}<div class="small text-break">{{
+                                    r.reason }}</div>
+                            </td>
+                            <td>{{ utc(r.submittedAt) }}<div class="small">Hạn xử lý: {{
+                                    r.processingDeadline?time(r.processingDeadline):'Chưa xác định' }}</div>
+                            </td>
+                            <td>{{ label(r.status) }}<div class="small">{{ r.receiver||'Chưa tiếp nhận' }}</div>
+                            </td>
+                            <td><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="saving"
+                                    (click)="viewRequest(r)">{{ "Chi tiết" | translate }}</button></td>
+                        </tr> }
+
+                        @empty { <tr>
+                            <td colspan="6" class="text-muted text-center py-4">{{ requestLoading?'Đang tải yêu
+                                cầu...':'Không có yêu cầu phù hợp.' }}</td>
+                        </tr> }
+
+                    </tbody>
+                </table>
+            </div>
+
+            @if (requestPages>1) { <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang yêu cầu"><button
+                    type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage===0"
+                    (click)="requestGoPage(0)">&lt;&lt;</button><button type="button"
+                    class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage===0"
+                    (click)="requestGoPage(requestPage-1)">&lt;</button>
+
+                @for (p of pagination(requestPages,requestPage); track $index) { @if (p==='...') { <span
+                    class="px-1">…</span> } @else { <button type="button" class="btn btn-sm"
+                    [class.btn-primary]="p===requestPage" [class.btn-outline-secondary]="p!==requestPage"
+                    [disabled]="busy" (click)="requestGoPage(p)">{{ p+1 }}</button> } }
+
+                <button type="button" class="btn btn-sm btn-outline-secondary"
+                    [disabled]="busy||requestPage+1>=requestPages"
+                    (click)="requestGoPage(requestPage+1)">&gt;</button><button type="button"
+                    class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage+1>=requestPages"
+                    (click)="requestGoPage(requestPages-1)">&gt;&gt;</button>
+            </nav> }
+
+        </section>
+    </div>
+
+    @if (requestDetailLoading) { <div class="col-12 col-lg-6">
+        <section class="surface" role="status">{{ "Đang tải chi tiết yêu cầu..." | translate }}</section>
+    </div> }
+
+    @if (requestDetail; as d) { <div class="col-12 col-lg-6" style="min-width:0">
+        <section class="surface" [appDetailFocus]="d.request.requestId">
+
+            <div class="d-flex justify-content-between mb-3">
+                <h2 class="h5">{{ d.request.requestCode }}</h2><button type="button"
+                    class="btn btn-outline-secondary btn-sm" [disabled]="saving"
+                    (click)="requestDetail=null">{{ "Đóng" | translate }}</button>
+            </div>
+
+            <p><strong>{{ d.request.employeeLabel }}</strong> · {{ label(d.request.requestType) }} · {{
+                label(d.request.status) }}</p>
+
+            <div class="row g-3 mb-3">
+                <div class="col-6">
+                    <div class="border rounded p-3 h-100">
+                        <h3 class="h6">{{ "Công gốc khi gửi" | translate }}</h3>
+                        <p>Vào: {{ time(d.request.originalStart) }}</p>
+                        <p>Ra: {{ time(d.request.originalEnd) }}</p>
+                        <p>Nghỉ: {{ d.request.originalBreakMinutes }} phút</p>
+                        <p>{{ label(d.request.originalResult) }} · {{ label(d.request.originalVerification) }}</p>
+                        <p>Người xác nhận: {{ d.request.originalConfirmer||'—' }}</p>
+                    </div>
+                </div>
+
+                <div class="col-6">
+                    <div class="border rounded p-3 h-100">
+                        <h3 class="h6">{{ "Dữ liệu đề xuất" | translate }}</h3>
+                        <p>Vào: {{ time(d.request.proposedStart) }}</p>
+                        <p>Ra: {{ time(d.request.proposedEnd) }}</p>
+                        <p>Nghỉ: {{ d.request.proposedBreakMinutes }} phút</p>
+                        <p>{{ label(d.request.proposedResult) }}</p>
+                        <p class="text-break">Lý do: {{ d.request.reason }}</p>
+                    </div>
+                </div>
+            </div>
+
+            <p class="small">Công hiện tại: {{ time(d.current.row.actualStart) }} → {{ time(d.current.row.actualEnd) }}
+                · {{ label(d.current.row.verificationStatus) }}</p>
+
+            @if (d.current.periodLocked) { <p class="alert alert-warning">{{ "Kỳ công/lương đã khóa. Không thể áp dụng thay đổi." | translate }}</p> }
+
+            <dl class="row">
+                <dt class="col-5">{{ "Người gửi / ngày gửi" | translate }}</dt>
+                <dd class="col-7">{{ d.request.sender }}<br>{{ utc(d.request.submittedAt) }}</dd>
+                <dt class="col-5">{{ "Hạn gửi theo loại đơn" | translate }}</dt>
+                <dd class="col-7">{{ time(d.request.submissionDeadline) }}</dd>
+                <dt class="col-5">{{ "Tiếp nhận" | translate }}</dt>
+                <dd class="col-7">{{ d.request.receiver||'Chưa có' }}<br>{{ utc(d.request.receivedAt) }}</dd>
+                <dt class="col-5">{{ "Hạn xử lý" | translate }}</dt>
+                <dd class="col-7">{{ d.request.processingDeadline?time(d.request.processingDeadline):'Chưa xác định:
+                    chưa tiếp nhận hoặc chưa cấu hình lịch ngày làm việc chính thức.' }}</dd>
+                <dt class="col-5">{{ "Quyết định" | translate }}</dt>
+                <dd class="col-7">{{ d.request.processor||'Chưa có' }}<br>{{ utc(d.request.processedAt) }}</dd>
+                <dt class="col-5">{{ "Lý do xử lý" | translate }}</dt>
+                <dd class="col-7 text-break">{{ d.request.decisionReason||'—' }}</dd>
+                <dt class="col-5">{{ "Giờ ra được chấp nhận" | translate }}</dt>
+                <dd class="col-7">{{ time(d.request.acceptedEnd) }}</dd>
+            </dl>
+
+            @if (d.request.canReceive) { <button type="button" class="btn btn-primary mb-3" [disabled]="saving"
+                (click)="receive()">{{ "Tiếp nhận xử lý" | translate }}</button> }
+
+            @if (d.request.canDecide) {
+
+            <fieldset [disabled]="saving">
+
+                @if (d.request.requestType==='MISSING_CHECKOUT') { <div class="mb-3"><label for="acceptedEnd"
+                        class="form-label">{{ "Giờ ra được chấp nhận" | translate }}</label><input id="acceptedEnd" type="datetime-local"
+                        step="1" class="form-control" [(ngModel)]="acceptedEnd">
+                    <div class="form-text">{{ "Nếu khác đề xuất, bắt buộc lý do điều chỉnh riêng." | translate }}</div>
+                </div> }
+
+                <div class="mb-3"><label for="decisionReason" class="form-label">{{ "Lý do quyết định (bắt buộc khi từ chối hoặc đổi giờ)" | translate }}</label><textarea id="decisionReason" class="form-control" rows="3"
+                        maxlength="1000" [(ngModel)]="decisionReason"></textarea></div>
+
+                <div class="d-flex gap-2 mb-3"><button type="button" class="btn btn-primary"
+                        [disabled]="d.current.periodLocked" (click)="decide(true)">{{ "Chấp nhận" | translate }}</button><button
+                        type="button" class="btn btn-outline-danger" (click)="decide(false)">{{ "Từ chối" | translate }}</button></div>
+
+            </fieldset>
+
+            }
+
+            <h3 class="h6">{{ "Lịch sử xử lý" | translate }}</h3>
+            <ul>@for (a of d.audit; track $index) { <li>{{ utc(a.occurredAt) }} · {{ a.actor }} · {{
+                    actionLabel(a.action) }}<div class="small text-break">{{ a.reason||'—' }}</div>
+                </li> } @empty { <li>Chưa có lịch sử xử lý.</li> }</ul>
+
+        </section>
+    </div> }
+
+</div>
+
+}
+
+@if (context?.manage) { <section class="surface mt-3"><a routerLink="/attendance/summary"
+        class="btn btn-outline-primary">{{ "Tổng hợp công theo kỳ" | translate }}</a></section> }

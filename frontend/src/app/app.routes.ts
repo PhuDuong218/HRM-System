@@ -86,15 +86,15 @@ export const routes: Routes = [
         data: { workspace: "requests" },
       },
       { path: "overtime", loadComponent: () => import("./pages/overtime/overtime").then(m => m.OvertimePage) },
-      {
+            {
         path: "allowances",
-        component: PlaceholderPage,
-        data: { title: "Phụ cấp" },
+        loadComponent: () =>
+          import("./pages/allowances/allowances").then((m) => m.AllowancesPage),
       },
       {
         path: "decisions",
-        component: PlaceholderPage,
-        data: { title: "Khen thưởng / kỷ luật" },
+        loadComponent: () =>
+          import("./pages/decisions/decisions").then((m) => m.DecisionsPage),
       },
       {
         path: "payroll",

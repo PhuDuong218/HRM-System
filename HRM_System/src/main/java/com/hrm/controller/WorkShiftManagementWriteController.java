@@ -27,18 +27,6 @@ public class WorkShiftManagementWriteController {
     public record ReasonRequest(@NotBlank String reason) {
     }
 
-    @GetMapping("/capabilities")
-    public java.util.Map<String, Boolean> capabilities(@AuthenticationPrincipal AuthenticatedAccount actor) {
-        try {
-            permissions.requireManage(actor);
-            return java.util.Map.of("canManage", true);
-        } catch (org.springframework.web.server.ResponseStatusException denied) {
-            if (denied.getStatusCode().value() != 403)
-                throw denied;
-            return java.util.Map.of("canManage", false);
-        }
-    }
-
     @PostMapping
     public ShiftView create(@AuthenticationPrincipal AuthenticatedAccount actor,
             @Valid @RequestBody ShiftWithBreaks input) {
@@ -49,6 +37,15 @@ public class WorkShiftManagementWriteController {
     public ShiftView update(@AuthenticationPrincipal AuthenticatedAccount actor,
             @PathVariable long id, @Valid @RequestBody ShiftWithBreaks input) {
         return service.update(actor, id, input);
+    }
+
+    public record BasicInfoRequest(@NotBlank String shiftName) {
+    }
+
+    @PatchMapping("/{id}/basic-info")
+    public ShiftView updateBasicInfo(@AuthenticationPrincipal AuthenticatedAccount actor,
+            @PathVariable long id, @Valid @RequestBody BasicInfoRequest input) {
+        return service.updateBasicInfo(actor, id, input.shiftName());
     }
 
     @PatchMapping("/{id}/deactivate")

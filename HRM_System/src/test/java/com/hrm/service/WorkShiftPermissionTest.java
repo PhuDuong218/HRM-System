@@ -34,7 +34,16 @@ class WorkShiftPermissionTest {
     @Test
     void hrAllowed() throws Exception {
         role("HR", 5L);
+        when(db.queryForObject(contains("WORK_SHIFT_MANAGE"), eq(Long.class), eq(10L))).thenReturn(1L);
         assertDoesNotThrow(() -> svc.requireManage(new AuthenticatedAccount(10L, 5L, "hr", "HR")));
+    }
+
+    @Test
+    void hrWithoutManageGrantDenied() throws Exception {
+        role("HR", 5L);
+        when(db.queryForObject(contains("WORK_SHIFT_MANAGE"), eq(Long.class), eq(10L))).thenReturn(0L);
+        assertThrows(ResponseStatusException.class,
+                () -> svc.requireManage(new AuthenticatedAccount(10L, 5L, "hr", "HR")));
     }
 
     @Test

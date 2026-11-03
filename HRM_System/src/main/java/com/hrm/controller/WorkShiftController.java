@@ -9,6 +9,10 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import com.hrm.service.WorkShiftService;
 import com.hrm.service.DetailedWorkTimeService;
+import com.hrm.service.WorkShiftManagementWriteService;
+import com.hrm.service.WorkShiftPermissionService;
+import com.hrm.dto.DetailedWorkTimeDTOs.OffsetBreak;
+import jakarta.validation.constraints.NotBlank;
 import com.hrm.dto.DetailedWorkTimeDTOs.ShiftWithBreaks;
 import static com.hrm.dto.WorkTimeDTOs.*;
 
@@ -19,12 +23,11 @@ import static com.hrm.dto.WorkTimeDTOs.*;
 public class WorkShiftController {
     private final WorkShiftService shifts;
     private final DetailedWorkTimeService detailed;
-    private final com.hrm.service.WorkShiftManagementWriteService management;
-    private final com.hrm.service.WorkShiftPermissionService permissions;
+    private final WorkShiftManagementWriteService management;
+    private final WorkShiftPermissionService permissions;
 
     public WorkShiftController(WorkShiftService shifts, DetailedWorkTimeService detailed,
-            com.hrm.service.WorkShiftManagementWriteService management,
-            com.hrm.service.WorkShiftPermissionService permissions) {
+            WorkShiftManagementWriteService management, WorkShiftPermissionService permissions) {
         this.shifts = shifts;
         this.detailed = detailed;
         this.management = management;
@@ -55,6 +58,28 @@ public class WorkShiftController {
         return management.update(actor, id, body);
     }
 
+    public record ShiftDetail(ShiftView shift, List<OffsetBreak> breaks) {}
+
+    @GetMapping("/{id}/details")
+    public ShiftDetail details(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id) {
+        permissions.requireView(actor);
+        return new ShiftDetail(shifts.get(id), detailed.shiftBreaks(id));
+    }
+
+    public record ReasonRequest(@NotBlank String reason) {}
+
+    @PatchMapping("/{id}/deactivate")
+    public ShiftView deactivate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest body) {
+        return management.setActive(actor, id, false, body.reason());
+    }
+
+    @PatchMapping("/{id}/activate")
+    public ShiftView activate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
+            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest body) {
+        return management.setActive(actor, id, true, body.reason());
+    }
+
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@AuthenticationPrincipal AuthenticatedAccount actor,
             @PathVariable long id) {
@@ -73,15 +98,5 @@ public class WorkShiftController {
         }
     }
 
-    @PatchMapping("/{id}/deactivate")
-    public ShiftView deactivate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
-            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest request) {
-        return management.setActive(actor, id, false, request.reason());
-    }
 
-    @PatchMapping("/{id}/activate")
-    public ShiftView activate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
-            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest request) {
-        return management.setActive(actor, id, true, request.reason());
-    }
 }

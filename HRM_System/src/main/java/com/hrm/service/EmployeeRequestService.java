@@ -49,7 +49,7 @@ public class EmployeeRequestService {
         LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id
         """;
     private Map<String,Object> required(long id) {
-        var rows=jdbc.queryForList(SELECT+" WHERE r.request_id=?",id);
+        var rows=jdbc.queryForList(SELECT+" WHERE r.request_id=? AND r.request_type IN ('NGHI_PHEP','NGHI_VIEC')",id);
         if(rows.isEmpty()) throw new ResourceNotFoundException("Không tìm thấy đơn: "+id);
         return rows.get(0);
     }
@@ -67,7 +67,7 @@ public class EmployeeRequestService {
         if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI","DA_HUY").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
         if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
-        String where=" WHERE (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.status='DA_DUYET' AND r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.status='DA_DUYET' AND r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
         if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
         Object[] params={mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0};
         long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,params);
@@ -203,7 +203,7 @@ public class EmployeeRequestService {
         if(!resigned.isEmpty()) throw PersonnelWorkflowSupport.conflict("Thời gian nghỉ vượt ngày làm cuối đã duyệt");
         var schedules=jdbc.queryForList("""
             SELECT schedule_id,work_date,planned_start,planned_end,planned_break_minutes FROM dbo.work_schedules WITH(UPDLOCK,HOLDLOCK)
-            WHERE employee_id=? AND planned_start<? AND planned_end>? ORDER BY planned_start,schedule_id
+            WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>? ORDER BY planned_start,schedule_id
             """,employee,end,start);
         if(schedules.isEmpty()) throw PersonnelWorkflowSupport.conflict("Chưa có lịch làm việc trong khoảng nghỉ");
         var charges=new ArrayList<Charge>();var totals=new HashMap<Long,BigDecimal>();LocalDateTime previousEnd=null;
