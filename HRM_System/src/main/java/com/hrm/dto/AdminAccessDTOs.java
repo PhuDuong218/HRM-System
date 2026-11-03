@@ -1,5 +1,6 @@
 package com.hrm.dto;
 
+import com.hrm.enums.EmploymentStatus;
 import jakarta.validation.constraints.*;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -34,13 +35,12 @@ public final class AdminAccessDTOs {
 
     public record AccountView(Long accountId, Long employeeId, String employeeCode, String fullName,
             Long roleId, String roleCode, String roleName, String username, boolean active,
-            LocalDateTime createdAt, LocalDateTime updatedAt) {}
+            LocalDateTime createdAt, LocalDateTime updatedAt, EmploymentStatus employmentStatus) {}
 
     public record AccountContact(String email, String phone) {}
 
     public record EligibleEmployee(Long employeeId, String employeeCode, String fullName) {}
 
-    public record ReplacePermissions(@NotNull @Size(max = 500) Set<@NotNull @Positive Long> permissionIds) {}
     public record RoleView(Long roleId, String roleCode, String roleName, List<PermissionView> permissions) {}
 
     public record UpdatePermission(@NotBlank @Size(max = 200) String permissionName,

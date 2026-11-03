@@ -217,17 +217,6 @@ public class AdminAccessService {
     }
     public RoleView role(long id) { return roleView(roleEntity(id)); }
 
-    @Transactional
-    public RoleView replacePermissions(AuthenticatedAccount actor, long id, ReplacePermissions request) {
-        adminWrite(actor);
-        Role role = roleEntity(id);
-        role.setPermissions(resolvePermissions(role.getRoleCode(), request.permissionIds()));
-        roles.saveAndFlush(role);
-        accounts.revokeRoleTokens(id, actor.accountId());
-        audit(actor, "ROLE_PERMISSIONS_REPLACED", "roles", id);
-        return roleView(role);
-    }
-
     public List<PermissionView> permissions() {
         return permissions.findAll(Sort.by("permissionId")).stream().map(this::permissionView).toList();
     }
@@ -261,17 +250,6 @@ public class AdminAccessService {
         return permissionView(permission);
     }
 
-    private Set<Permission> resolvePermissions(String roleCode, Set<Long> ids) {
-        Set<Permission> resolved = new HashSet<>(permissions.findAllById(ids));
-        if (resolved.size() != ids.size()) throw new ResourceNotFoundException("Có quyền không tồn tại");
-        if (resolved.stream().anyMatch(p -> p.getPermissionCode().toUpperCase(Locale.ROOT).startsWith("ROLE_")))
-            throw new IllegalArgumentException("Không được cấp quyền có tiền tố ROLE_");
-        boolean managesAccounts = resolved.stream().anyMatch(p -> "ACCOUNT_MANAGE".equals(p.getPermissionCode()));
-        if ("ADMIN".equals(roleCode) && !managesAccounts) conflict("ADMIN phải giữ quyền ACCOUNT_MANAGE");
-        if (!"ADMIN".equals(roleCode) && managesAccounts) conflict("Chỉ ADMIN được cấp quyền ACCOUNT_MANAGE");
-        return resolved;
-    }
-
     private void adminWrite(AuthenticatedAccount actor) {
         // All writes lock the same existing system role before reading mutable authorization state.
         roles.findByCodeForUpdate("ADMIN").orElseThrow(() -> new AccessDeniedException("Thiếu vai trò ADMIN"));
@@ -298,7 +276,8 @@ public class AdminAccessService {
     private AccountView view(Account a, Employee e) {
         return new AccountView(a.getAccountId(), a.getEmployeeId(), e == null ? null : e.getEmployeeCode(),
                 e == null ? null : e.getFullName(), a.getRole().getRoleId(), a.getRole().getRoleCode(),
-                a.getRole().getRoleName(), a.getUsername(), a.isActive(), a.getCreatedAt(), a.getUpdatedAt());
+                a.getRole().getRoleName(), a.getUsername(), a.isActive(), a.getCreatedAt(), a.getUpdatedAt(),
+                e == null ? null : e.getEmploymentStatus());
     }
     private PermissionView permissionView(Permission p) {
         return new PermissionView(p.getPermissionId(), p.getPermissionCode(), p.getPermissionName(), p.getDescription());

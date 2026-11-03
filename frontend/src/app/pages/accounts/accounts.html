@@ -142,26 +142,15 @@
 <section recordDetail class="account-detail" aria-labelledby="action-dialog-title">
   <div class="dialog-header"><div><p class="eyebrow mb-2">TÀI KHOẢN VÀ PHÂN QUYỀN</p><h2 id="action-dialog-title" class="mb-0">{{ dialogTitle }}</h2></div></div>
   <div class="dialog-body">
-    @if (dialogMode === 'role-permissions') {
-      <div class="preview-notice" role="status">Biểu mẫu xem trước. Chức năng lưu thay đổi sẽ được kết nối khi API hoàn thiện.</div>
-    }
-
     @if (dialogMode === 'account-view' && selectedAccount; as account) {
       @if (actionMessage) { <p class="alert alert-success" role="status">{{ actionMessage }}</p> }
       <section class="detail-section" aria-labelledby="account-info-title">
         <h3 id="account-info-title">Thông tin tài khoản</h3>
-        <dl class="detail-grid"><div><dt>Tên đăng nhập</dt><dd>{{ account.username }}</dd></div><div><dt>ID tài khoản</dt><dd>{{ account.accountId }}</dd></div><div><dt>Trạng thái</dt><dd><span class="account-status" [class.active]="account.active" [class.inactive]="!account.active">{{ account.active ? 'Đang hoạt động' : 'Đã khóa' }}</span></dd></div><div><dt>Ngày tạo</dt><dd>{{ dateOnly(account.createdAt) }}</dd></div><div><dt>Cập nhật gần nhất</dt><dd>{{ dateOnly(account.updatedAt) }}</dd></div></dl>
+        <dl class="detail-grid"><div><dt>Tên đăng nhập</dt><dd>{{ account.username }}</dd></div><div><dt>ID tài khoản</dt><dd>{{ account.accountId }}</dd></div><div><dt>Trạng thái tài khoản</dt><dd><span class="account-status" [class.active]="account.active" [class.inactive]="!account.active">{{ account.active ? 'Đang hoạt động' : 'Đã khóa' }}</span></dd></div><div><dt>Ngày tạo</dt><dd>{{ dateOnly(account.createdAt) }}</dd></div><div><dt>Cập nhật gần nhất</dt><dd>{{ dateOnly(account.updatedAt) }}</dd></div></dl>
       </section>
       <section class="detail-section" aria-labelledby="owner-info-title">
-        <h3 id="owner-info-title">Chủ tài khoản và quyền</h3>
-        <dl class="detail-grid"><div><dt>Họ và tên</dt><dd>{{ account.fullName || 'Chưa có thông tin' }}</dd></div><div><dt>Mã nhân viên</dt><dd>{{ account.employeeCode || 'Chưa có thông tin' }}</dd></div><div><dt>Vai trò</dt><dd>{{ account.roleName || account.roleCode }}</dd></div></dl>
-        <p class="detail-label detail-subheading">Quyền được gán cho vai trò</p>
-        @if (rolesLoading) { <p class="muted small" role="status">Đang tải quyền…</p> }
-        @else if (rolesError) { <p class="small text-danger">{{ rolesError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadRoles()">Thử lại</button></p> }
-        @else if (roleFor(account); as role) {
-          @if (role.permissions.length) { <ul class="permission-summary">@for (permission of role.permissions; track permission.permissionId) { <li>{{ permission.permissionName }} <span>({{ permission.permissionCode }})</span></li> }</ul> }
-          @else { <p class="muted small mb-0">Vai trò chưa được gán quyền.</p> }
-        } @else { <p class="muted small mb-0">Không tìm thấy thông tin quyền của vai trò.</p> }
+        <h3 id="owner-info-title">Chủ tài khoản</h3>
+        <dl class="detail-grid"><div><dt>Họ và tên</dt><dd>{{ account.fullName || 'Chưa có thông tin' }}</dd></div><div><dt>Mã nhân viên</dt><dd>{{ account.employeeCode || 'Chưa có thông tin' }}</dd></div><div><dt>Trạng thái làm việc</dt><dd><span class="account-status employment-status" [class.active]="account.employmentStatus === 'DANG_LAM'" [class.resigned]="account.employmentStatus === 'DA_NGHI'" [class.unknown]="!account.employmentStatus">{{ account.employmentStatus === 'DANG_LAM' ? 'Đang làm việc' : account.employmentStatus === 'DA_NGHI' ? 'Đã nghỉ việc' : 'Chưa có thông tin' }}</span></dd></div><div><dt>Vai trò</dt><dd>{{ account.roleName || account.roleCode }}</dd></div></dl>
         @if (account.roleCode === 'HR') {
           <p class="detail-label detail-subheading">Phòng ban được giao quản lý</p>
           @if (hrDepartmentsLoading) { <p class="muted small" role="status">Đang tải phạm vi phòng ban…</p> }
@@ -252,14 +241,6 @@
     } @else if (dialogMode === 'role-view' && selectedRole; as role) {
       <dl class="detail-grid"><div><dt>Mã vai trò</dt><dd>{{ role.roleCode }}</dd></div><div><dt>Tên vai trò</dt><dd>{{ role.roleName }}</dd></div></dl>
       <p class="detail-label">Quyền đã gán</p>@if (role.permissions.length) { <ul class="permission-summary">@for (item of role.permissions; track item.permissionId) { <li>{{ item.permissionName }} <span>({{ item.permissionCode }})</span></li> }</ul> } @else { <p class="muted small mb-0">Chưa có quyền được gán.</p> }
-    } @else if (dialogMode === 'role-permissions') {
-      <div class="dialog-grid"><div><label class="form-label" for="role-code">Mã vai trò</label><input id="role-code" class="form-control" readonly [value]="selectedRole?.roleCode || ''"></div><div><label class="form-label" for="role-name">Tên vai trò</label><input id="role-name" class="form-control" readonly [value]="selectedRole?.roleName || ''"></div></div>
-        <div class="permission-picker"><p class="detail-label">Danh mục quyền</p>
-          @if (permissionsLoading) { <p class="muted small">Đang tải quyền…</p> }
-          @else if (permissionsError) { <p class="small text-danger">{{ permissionsError }} <button type="button" class="btn btn-sm btn-outline-primary ms-2" (click)="loadPermissions()">Thử lại</button></p> }
-          @else if (permissions.length === 0) { <p class="muted small">Chưa có quyền để chọn.</p> }
-          @else { @for (item of permissions; track item.permissionId) { <label class="permission-option"><input type="checkbox" [checked]="hasPermission(selectedRole, item)"><span><strong>{{ item.permissionName }}</strong><small>{{ item.permissionCode }}</small></span></label> } }
-        </div>
     } @else if (dialogMode === 'permission-view' && selectedPermission; as permission) {
       @if (actionMessage) { <p class="alert alert-success" role="status">{{ actionMessage }}</p> }
       <dl class="detail-grid"><div><dt>Mã quyền</dt><dd>{{ permission.permissionCode }}</dd></div><div><dt>Tên quyền</dt><dd>{{ permission.permissionName }}</dd></div><div class="detail-wide"><dt>Mô tả</dt><dd>{{ permission.description || '—' }}</dd></div></dl>
@@ -282,8 +263,6 @@
         <button type="button" class="btn btn-outline-primary" (click)="showDetailAction('account-reset')" [disabled]="!account.active" [title]="!account.active ? 'Mở khóa tài khoản trước khi đặt lại mật khẩu' : ''">Đặt lại mật khẩu</button>
       }
       <button type="button" class="btn btn-outline-danger" (click)="showDetailAction('account-lock')">{{ account.active ? 'Khóa' : 'Mở khóa' }}</button>
-    } @else if (dialogMode === 'role-view' && selectedRole; as role) {
-      <button type="button" class="btn btn-outline-primary" (click)="showDetailAction('role-permissions')">Phân quyền</button>
     } @else if (dialogMode === 'permission-view' && selectedPermission; as permission) {
       <button type="button" class="btn btn-outline-primary" (click)="showDetailAction('permission-edit')">Sửa</button>
     }

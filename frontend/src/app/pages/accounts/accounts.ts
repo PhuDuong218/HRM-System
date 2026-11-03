@@ -10,7 +10,7 @@ import { AuthService } from '../../services/auth.service';
 
 type Section = 'accounts' | 'roles' | 'permissions';
 type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-lock' | 'account-reset'
-  | 'role-view' | 'role-permissions'
+  | 'role-view'
   | 'permission-view' | 'permission-edit';
 
 @Component({
@@ -292,7 +292,6 @@ export class AccountsPage implements OnInit {
 
   onEditRoleChange(): void { this.cancelScopeEdit(); }
 
-  roleFor(account: Account): AccountRole | undefined { return this.roles.find(role => role.roleId === account.roleId); }
   dateOnly(value: string | null): string {
     if (!value) return 'Chưa có thông tin';
     const parsed = new Date(/[zZ]|[+-]\d{2}:?\d{2}$/.test(value) ? value : `${value}Z`);
@@ -313,7 +312,6 @@ export class AccountsPage implements OnInit {
       this.editPermissionName = this.selectedPermission.permissionName;
       this.editPermissionDescription = this.selectedPermission.description ?? '';
     }
-    if (mode === 'role-permissions' && !this.permissionsLoaded && !this.permissionsLoading) this.loadPermissions();
     this.dialogMode = mode;
   }
 
@@ -529,10 +527,6 @@ export class AccountsPage implements OnInit {
     return { employeeId: 0, roleId: 0, username: '', password: '', confirmPassword: '', active: true };
   }
 
-  hasPermission(role: AccountRole | null, permission: AccessPermission): boolean {
-    return role?.permissions.some(item => item.permissionId === permission.permissionId) ?? false;
-  }
-
   isSystemRole(role: AccountRole): boolean { return ['ADMIN', 'HR', 'EMPLOYEE'].includes(role.roleCode); }
 
   get dialogTitle(): string {
@@ -541,7 +535,6 @@ export class AccountsPage implements OnInit {
       'account-edit': 'Chỉnh sửa tài khoản', 'account-lock': 'Thay đổi trạng thái tài khoản',
       'account-reset': 'Đặt lại mật khẩu',
       'role-view': 'Chi tiết vai trò',
-      'role-permissions': 'Phân quyền cho vai trò',
       'permission-view': 'Chi tiết quyền',
       'permission-edit': 'Chỉnh sửa quyền'
     };

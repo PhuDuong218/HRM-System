@@ -15,6 +15,7 @@ export interface Account {
   active: boolean;
   createdAt: string | null;
   updatedAt: string | null;
+  employmentStatus: 'DANG_LAM' | 'DA_NGHI' | null;
 }
 
 export interface AccountPage {

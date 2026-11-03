@@ -27,14 +27,6 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                 @Param("keyword") String keyword, @Param("active") Boolean active,
                 @Param("roleId") Long roleId, org.springframework.data.domain.Pageable pageable);
 
-        @Modifying(flushAutomatically = true)
-        @Query("""
-                update Account a set a.tokenVersion = a.tokenVersion + 1,
-                       a.updatedAt = CURRENT_TIMESTAMP, a.updatedBy = :actor
-                where a.role.roleId = :roleId
-                """)
-        int revokeRoleTokens(@Param("roleId") Long roleId, @Param("actor") Long actor);
-
         Optional<Account> findByUsername(String username);
 
         @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)

@@ -29,13 +29,14 @@
 .account-status { display: inline-block; border-radius: 50px; padding: 5px 10px; font-size: 12px; font-weight: 600; white-space: nowrap; }
 .account-status.active { background: #e5f5eb; color: #267246; }
 .account-status.inactive { background: #f1f3f6; color: #637284; }
+.employment-status.resigned { background: #fbe9e8; color: #9b3029; }
+.employment-status.unknown { background: #f1f3f6; color: #526275; }
 .pagination-row { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-top: 18px; }
 .account-detail { min-width:0; max-width:100%; overflow-wrap:anywhere; color: #1e344c; }
 .dialog-header { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; padding: 24px 26px 18px; border-bottom: 1px solid #e8edf3; }
 .dialog-close { border: 0; background: transparent; color: #65788c; font-size: 26px; line-height: 1; }
 .dialog-body { padding: 22px 26px; }
 .dialog-footer { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 10px; padding: 16px 26px 22px; border-top: 1px solid #e8edf3; }
-.preview-notice { margin-bottom: 20px; border: 1px solid #f1ddb0; border-radius: 8px; background: #fff8e9; color: #7c5b1d; padding: 11px 13px; font-size: 13px; }
 .dialog-grid, .detail-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
 .dialog-grid .form-label, .detail-label, .detail-grid dt { margin-bottom: 6px; color: #526c86; font-size: 12px; font-weight: 700; }
 .dialog-grid .form-control, .dialog-grid .form-select { font-size: 13px; min-height: 40px; }
@@ -61,10 +62,6 @@
 .employee-option input { accent-color:#004581; }
 .employee-option small { display:block; color:#718399; }
 .employee-pagination { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-top:10px; color:#64788f; font-size:12px; }
-.permission-picker { margin-top: 22px; }
-.permission-option { display: flex; gap: 10px; align-items: flex-start; padding: 10px 0; border-bottom: 1px solid #eef2f6; font-size: 13px; }
-.permission-option input { margin-top: 3px; accent-color: #004581; }
-.permission-option small { display: block; margin-top: 3px; color: #738397; }
 .permission-summary { padding-left: 19px; margin-bottom: 0; font-size: 13px; }
 .permission-summary li { margin-bottom: 6px; }
 .permission-summary span { color: #738397; }
@@ -78,7 +75,7 @@
 :host-context([data-bs-theme='dark']) .account-list .table tr.is-selected > td { color:#173f76; }
 :host-context([data-bs-theme='dark']) .row-actions .btn-outline-danger { --bs-btn-color: #f5b1a9; --bs-btn-border-color: #bc7771; --bs-btn-hover-bg: #773e3b; --bs-btn-hover-border-color: #d99a94; --bs-btn-hover-color: #fff; --bs-btn-disabled-color: #c88f89; --bs-btn-disabled-border-color: #8a5c58; }
 :host-context([data-bs-theme='dark']) .account-detail { background: #1c2a3c; color: #e4ebf5; }
-:host-context([data-bs-theme='dark']) .dialog-header, :host-context([data-bs-theme='dark']) .dialog-footer, :host-context([data-bs-theme='dark']) .permission-option { border-color: #35465d; }
+:host-context([data-bs-theme='dark']) .dialog-header, :host-context([data-bs-theme='dark']) .dialog-footer { border-color: #35465d; }
 :host-context([data-bs-theme='dark']) .detail-section + .detail-section { border-color:#35465d; }
 :host-context([data-bs-theme='dark']) .detail-section h3 { color:#e4ebf5; }
 :host-context([data-bs-theme='dark']) .employee-options, :host-context([data-bs-theme='dark']) .employee-option + .employee-option { border-color:#40536a; }
@@ -89,7 +86,6 @@
 :host-context([data-bs-theme='dark']) .edit-account-owner { border-color:#35465d; }
 :host-context([data-bs-theme='dark']) .edit-account-owner span, :host-context([data-bs-theme='dark']) .edit-account-owner small { color:#b5c8db; }
 :host-context([data-bs-theme='dark']) .edit-account-owner strong { color:#e4ebf5; }
-:host-context([data-bs-theme='dark']) .preview-notice { color: #f3d59a; background: #463a25; border-color: #78643e; }
 @container (max-width: 850px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-search { grid-column: span 2; } }
 @container (max-width: 740px) {
   .account-list .table { display:block; min-width:0 !important; }

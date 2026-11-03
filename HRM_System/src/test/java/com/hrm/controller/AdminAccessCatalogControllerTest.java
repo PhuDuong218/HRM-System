@@ -25,6 +25,8 @@ class AdminAccessCatalogControllerTest {
                 .andExpect(status().isMethodNotAllowed());
         mvc.perform(put("/api/admin/roles/1").contentType(MediaType.APPLICATION_JSON).content("{\"roleName\":\"New\"}"))
                 .andExpect(status().isMethodNotAllowed());
+        mvc.perform(put("/api/admin/roles/1/permissions").contentType(MediaType.APPLICATION_JSON).content("{\"permissionIds\":[]}"))
+                .andExpect(status().isNotFound());
         mvc.perform(delete("/api/admin/roles/1")).andExpect(status().isMethodNotAllowed());
         mvc.perform(delete("/api/admin/permissions/1")).andExpect(status().isMethodNotAllowed());
         verifyNoInteractions(service);

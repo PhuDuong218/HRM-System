@@ -226,7 +226,7 @@ class AdminAccessApiIntegrationTest {
     }
 
     @Test
-    void roleAndPermissionCrudMaintainsReferencesAndRevokesAffectedTokens() throws Exception {
+    void roleAndPermissionDetailsRemainAvailableWhenRoleCanBeAssigned() throws Exception {
         db.update("INSERT INTO permissions(permission_code, permission_name, description) VALUES ('custom.view','Xem','Mo ta')");
         long permissionId = db.queryForObject("SELECT permission_id FROM permissions WHERE permission_code='custom.view'", Long.class);
         db.update("INSERT INTO roles(role_code, role_name) VALUES ('AUDITOR','Kiem tra')");
@@ -241,9 +241,7 @@ class AdminAccessApiIntegrationTest {
         assertEquals(200, call("PUT", "/accounts/3", admin,
                 "{\"roleId\":" + roleId + ",\"username\":\"user3\",\"active\":true}").statusCode());
         assertEquals(405, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
-        assertEquals(200, call("PUT", "/roles/" + roleId + "/permissions", admin, "{\"permissionIds\":[]}").statusCode());
-        assertEquals(2, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=3", Integer.class));
-        assertEquals(401, call("GET", "/roles", token(3, 1), null).statusCode());
+        assertEquals(1, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=3", Integer.class));
         assertEquals(200, call("PUT", "/accounts/3", admin,
                 "{\"roleId\":3,\"username\":\"user3\",\"active\":true}").statusCode());
         assertEquals(405, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
@@ -261,7 +259,6 @@ class AdminAccessApiIntegrationTest {
                 new String[]{"PUT", "/accounts/1", "{\"roleId\":1,\"username\":\"user1\",\"active\":true}"},
                 new String[]{"DELETE", "/accounts/1", null},
                 new String[]{"GET", "/roles", null}, new String[]{"GET", "/roles/1", null},
-                new String[]{"PUT", "/roles/1/permissions", "{\"permissionIds\":[1]}"},
                 new String[]{"GET", "/permissions", null}, new String[]{"GET", "/permissions/1", null},
                 new String[]{"PUT", "/permissions/1", "{\"permissionName\":\"New\"}"});
         for (var route : routes) {
@@ -287,8 +284,6 @@ class AdminAccessApiIntegrationTest {
         assertEquals(400, call("GET", "/accounts?size=101", admin, null).statusCode());
         assertEquals(405, call("POST", "/roles", admin, "{}").statusCode());
         assertEquals(405, call("POST", "/permissions", admin, "{}").statusCode());
-        assertEquals(404, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[999]}").statusCode());
-        assertEquals(400, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[null]}").statusCode());
     }
 
     @Test
@@ -297,8 +292,6 @@ class AdminAccessApiIntegrationTest {
         assertEquals(409, call("PUT", "/accounts/1", admin, "{\"roleId\":1,\"username\":\"user1\",\"active\":false}").statusCode());
         assertEquals(409, call("PUT", "/accounts/1", admin, "{\"roleId\":2,\"username\":\"user1\",\"active\":true}").statusCode());
         assertEquals(405, call("DELETE", "/roles/1", admin, null).statusCode());
-        assertEquals(409, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[2]}").statusCode());
-        assertEquals(409, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[1]}").statusCode());
         assertEquals(405, call("DELETE", "/permissions/1", admin, null).statusCode());
         db.update("UPDATE employees SET employment_status='DA_NGHI' WHERE employee_id=3");
         assertEquals(409, call("PUT", "/accounts/3", admin, "{\"roleId\":3,\"username\":\"user3\",\"active\":true}").statusCode());
@@ -306,10 +299,11 @@ class AdminAccessApiIntegrationTest {
     }
 
     @Test
-    void replacingAdminGrantsPreservesManagementAndInvalidatesCurrentSession() throws Exception {
-        assertEquals(200, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[1]}").statusCode());
-        assertEquals(401, call("GET", "/accounts", admin, null).statusCode());
-        assertEquals(200, call("GET", "/accounts", token(1, 1), null).statusCode());
+    void rolePermissionChangesAreUnavailableAndPreserveExistingGrantsAndSessions() throws Exception {
+        assertEquals(404, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[]}").statusCode());
+        assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM role_permissions WHERE role_id=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=1", Integer.class));
+        assertEquals(200, call("GET", "/accounts", admin, null).statusCode());
     }
 
     @Test
