@@ -1,12 +1,6 @@
 export type ContractStatus = 'DA_KY' | 'DA_KET_THUC';
 
-export interface PageResponse<T> {
-  items: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-}
+export type {ItemPage as PageResponse} from './page.model';
 
 export interface ContractResponse {
   contractId: number;

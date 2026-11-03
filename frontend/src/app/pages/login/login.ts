@@ -63,7 +63,7 @@ export class LoginPage {
     this.loading = true;
     this.error = '';
     this.auth.login(username, password).pipe(finalize(() => this.loading = false)).subscribe({
-      next: () => void this.router.navigateByUrl('/overview', { info: { showLoginSuccess: true } }),
+      next: () => void this.router.navigateByUrl(['ADMIN','HR'].includes(this.auth.profile()?.role||'')?'/overview':'/requests/head', { info: { showLoginSuccess: true } }),
       error: (error: unknown) => {
         if (error instanceof ManagementAccessDeniedError) {
           this.error = error.message;

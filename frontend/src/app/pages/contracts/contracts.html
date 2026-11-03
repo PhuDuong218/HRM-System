@@ -1,3 +1,4 @@
+<p class="eyebrow">HRM CENTER</p>
 <div class="contracts-heading d-flex justify-content-between align-items-center mb-3">
   <h1 class="mb-0">{{language.t("Hợp đồng")}}</h1>
 
@@ -74,7 +75,7 @@
       <td [attr.data-label]="language.t('Nhân viên')">{{c.employeeCode}} — {{c.employeeName}}</td>
       <td [attr.data-label]="language.t('Loại')">{{c.contractTypeName}}</td>
       <td [attr.data-label]="language.t('Hiệu lực')">{{c.startDate}} → {{(c.endDate ?? 'Không xác định') | translate}}</td>
-      <td [attr.data-label]="language.t('Trạng thái')">{{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}</td>
+      <td [attr.data-label]="language.t('Trạng thái')"><span class="status" [class.retired]="c.status!=='DA_KY'">{{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}</span></td>
       <td [attr.data-label]="language.t('Thao tác')">
         <button
           type="button"
@@ -247,7 +248,7 @@
 
       <dt class="col-sm-4">{{language.t("Trạng thái")}}</dt>
       <dd class="col-sm-8">
-        {{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}
+        <span class="status" [class.retired]="c.status!=='DA_KY'">{{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}</span>
       </dd>
     </dl>
     <div class="d-flex flex-wrap gap-2 mt-3">

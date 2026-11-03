@@ -71,13 +71,13 @@ class PersonnelScopePrivacyIntegrationTest {
   assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM dbo.audit_logs WHERE action='EMPLOYEE_TRANSFER' AND target_record_key=?",Integer.class,Long.toString(inside)));
   mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(hr))).andExpect(status().isForbidden());
  }
- @Test void scopedHrCanTransferButInvalidReasonAndFutureDateAreRejected()throws Exception {
+ @Test void scopedHrCanScheduleTransferAndCannotOverwritePendingChange()throws Exception {
   long position=createdId("/positions",admin,"{\"positionCode\":\""+tag+"NEW\",\"positionName\":\"Test new position\",\"isActive\":true}","positionId");
   String target="\"departmentId\":"+departmentA+",\"positionId\":"+position;
   LocalDate today=LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
   mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{"+target+",\"effectiveFrom\":\""+today+"\",\"reason\":\"   \"}")).andExpect(status().isBadRequest());
-  mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{"+target+",\"effectiveFrom\":\""+today.plusDays(1)+"\",\"reason\":\"Future date\"}")).andExpect(status().isBadRequest());
-  mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{"+target+",\"effectiveFrom\":\""+today+"\",\"reason\":\"Change work position\"}")).andExpect(status().isOk());
+  mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{"+target+",\"effectiveFrom\":\""+today.plusDays(1)+"\",\"reason\":\"Future date\"}")).andExpect(status().isOk());
+  mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{"+target+",\"effectiveFrom\":\""+today+"\",\"reason\":\"Change work position\"}")).andExpect(status().isConflict());
  }
  @Test void adminCatalogCrudUsesSoftDeactivation()throws Exception {
   for(String[] c:new String[][]{{"departments","departmentCode","departmentName","departmentId"},{"positions","positionCode","positionName","positionId"},{"qualification-levels","levelCode","levelName","qualificationLevelId"},{"leave-types","typeCode","typeName","leaveTypeId"}}){
@@ -151,4 +151,22 @@ class PersonnelScopePrivacyIntegrationTest {
   mvc.perform(get("/employees/999999999999999999999999/detail").header("Authorization",auth(admin))).andExpect(status().isBadRequest());
  }
  @Test void anonymousCannotReadPersonnel()throws Exception{mvc.perform(get("/employees/"+inside+"/detail")).andExpect(status().isUnauthorized());}
+
+ @Test void vietnameseChangeReasonHeaderIsRecordedAtomically()throws Exception {
+  String reason="Điều chỉnh chức vụ theo quyết định";String encoded=java.util.Base64.getEncoder().encodeToString(reason.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+  String body="{\"positionCode\":\""+tag+"REASON\",\"positionName\":\"QA reason\",\"isActive\":true}";
+  var response=mvc.perform(post("/positions").header("Authorization",auth(admin)).header("X-Change-Reason",encoded).contentType(MediaType.APPLICATION_JSON).content(body)).andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
+  // Read by the synthetic code; avoids any dependency on JSON property order.
+  long id=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag+"REASON");
+  assertEquals(reason,db.queryForObject("SELECT TOP(1) reason FROM dbo.audit_logs WHERE target_table='positions' AND target_record_key=? ORDER BY audit_id DESC",String.class,Long.toString(id)));
+ }
+
+ @Test void optionalGenderIsPersistedWithoutExposingPrivateIdentity()throws Exception {
+  db.execute(java.nio.file.Files.readString(java.nio.file.Path.of("database/migrations/011_employee_optional_gender.sql")));
+  long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag);
+  String body="{\"employeeCode\":\""+tag+"GENDER\",\"fullName\":\"QA gender\",\"hireDate\":\"2020-01-01\",\"departmentId\":"+departmentA+",\"positionId\":"+position+",\"gender\":\"FEMALE\"}";
+  long employee=createdId("/employees",admin,body,"employeeId");
+  mvc.perform(get("/employees/"+employee+"/detail").header("Authorization",auth(admin))).andExpect(status().isOk()).andExpect(jsonPath("$.gender").value("FEMALE"));
+  assertEquals("FEMALE",db.queryForObject("SELECT gender FROM dbo.employees WHERE employee_id=?",String.class,employee));
+ }
 }

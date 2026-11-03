@@ -1,7 +1,14 @@
+import {ACCOUNT_EN, ACCOUNT_LABELS} from './account-translations';
 import {UI_EN} from './ui-translations';
 import { Injectable, signal } from '@angular/core';
 
 const EN: Record<string, string> = {
+  "Có thể tìm không dấu, ví dụ: han": "Accent-insensitive search, e.g. han",
+  "Năm tốt nghiệp đến": "Graduation year to",
+  "Năm tốt nghiệp từ": "Graduation year from",
+  "Có hiệu lực tại ngày": "Effective on",
+  "Xem tất cả": "View all",
+  "Tìm kiếm nâng cao": "Advanced search",
   "Bức tranh nhân sự": "Your people at a glance",
   "Theo dõi những chỉ số quan trọng trong một không gian.": "Keep important workforce indicators in one place.",
   "Cập nhật theo ngày": "As of",
@@ -212,7 +219,7 @@ const EN: Record<string, string> = {
   "Chưa kết nối dữ liệu nghiệp vụ nên trang này chưa hiển thị số liệu thống kê.": "Statistics are not available on this page yet."
 };
 
-const DICTIONARY={...UI_EN,...EN};
+const DICTIONARY={...ACCOUNT_EN,...UI_EN,...EN};
 const LOWER_DICTIONARY=new Map(Object.entries(DICTIONARY).map(([k,v])=>[k.toLocaleLowerCase(),v]));
 
 @Injectable({ providedIn: 'root' })
@@ -229,6 +236,8 @@ export class LanguageService {
     try { localStorage.setItem('hrm.language', next); } catch {}
   }
   t(text: string): string {
+    const contextual=ACCOUNT_LABELS[text];
+    if(contextual)return contextual[this.current()];
     if(this.current()!=='en')return text;
     const original=text.normalize('NFC'),key=original.trim().replace(/\s+/g,' ');
     const dictionary=DICTIONARY;

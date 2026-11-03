@@ -163,16 +163,11 @@ footer { padding: 15px 38px; color: #8a96a7; font-size: 11px; }
 .sidebar-flyout { display:none; }
 @media(min-width:801px) {
  .sidebar-rail { z-index:80; }
- .sidebar-collapsed .sidebar-rail { width:76px; }
- .sidebar-collapsed .sidebar { display:block; width:76px; padding:24px 10px; scrollbar-width:none; }
- .sidebar-collapsed .sidebar::-webkit-scrollbar { display:none; }
- .sidebar-collapsed .brand { padding:0; justify-content:center; margin-bottom:80px; }
- .sidebar-collapsed .brand-text,.sidebar-collapsed .nav-heading,.sidebar-collapsed .sidebar-note,
- .sidebar-collapsed .nav-label,.sidebar-collapsed .chevron,.sidebar-collapsed .nav-children { display:none; }
- .sidebar-collapsed nav { gap:12px; }
- .sidebar-collapsed .nav-group-toggle,.sidebar-collapsed .nav-single { justify-content:center; width:52px; min-height:48px; padding:12px; }
- .sidebar-collapsed .sidebar-handle { left:21px; right:auto; top:82px; z-index:2; }
- .sidebar-collapsed .sidebar-flyout { display:grid; gap:4px; position:fixed; left:75px; width:260px; padding:12px; overflow-y:auto; overscroll-behavior:contain; border:1px solid #dce6f0; border-radius:0 12px 12px 0; background:#fff; box-shadow:8px 10px 30px #17365324; }
+ /* Collapsed navigation keeps only its reopen control, never hidden tab stops. */
+ .sidebar-collapsed .sidebar-rail { width:60px; }
+ .sidebar-collapsed .sidebar { display:none; }
+ .sidebar-collapsed .sidebar-handle { left:8px; right:auto; top:24px; width:44px; height:44px; z-index:2; }
+ .sidebar-collapsed .sidebar-flyout { display:none; }
  .flyout-heading { padding:8px 12px 12px; font-size:13px; font-weight:700; color:#24415f; border-bottom:1px solid #e5eaf0; margin-bottom:4px; }
  .sidebar-flyout a { white-space:normal; }
 }

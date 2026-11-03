@@ -19,8 +19,8 @@ import tools.jackson.databind.json.JsonMapper;
 /** Enforces private employee fields in HTTP responses, including historical audit JSON. */
 @ControllerAdvice(basePackages="com.hrm.controller")
 public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements ResponseBodyAdvice<Object> {
- private final PersonnelScopeService scope;private final JdbcTemplate jdbc;private final JsonMapper json=JsonMapper.builder().build();
- public PersonnelPrivacyAdvice(PersonnelScopeService scope,JdbcTemplate jdbc){this.scope=scope;this.jdbc=jdbc;}
+ private final com.hrm.service.AuditReadPolicy auditPolicy;private final PersonnelScopeService scope;private final JdbcTemplate jdbc;private final JsonMapper json=JsonMapper.builder().build();
+ public PersonnelPrivacyAdvice(PersonnelScopeService scope,JdbcTemplate jdbc,com.hrm.service.AuditReadPolicy auditPolicy){this.scope=scope;this.jdbc=jdbc;this.auditPolicy=auditPolicy;}
  @Override public boolean supports(MethodParameter parameter,Type type,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object afterBodyRead(Object body,HttpInputMessage message,MethodParameter parameter,Type type,Class<? extends HttpMessageConverter<?>> converter){
   var actor=PersonnelScopeService.current();if(actor==null)return body;
@@ -61,9 +61,6 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
   var actor=PersonnelScopeService.current();var query=org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams();
   String table=Objects.toString(map.getOrDefault("targetTable",query.getFirst("targetTable")),"");
   String record=Objects.toString(map.getOrDefault("targetRecordKey",map.getOrDefault("recordKey",query.getFirst("recordId"))),"");
-  boolean own=actor!=null&&"employees".equals(table)&&Objects.equals(String.valueOf(actor.employeeId()),record);
-  if(!own)for(String field:List.of("beforeDataJson","afterDataJson")){Object value=map.get(field);if(value instanceof String text){try{map.put(field,json.writeValueAsString(redact(json.readValue(text,Object.class))));}catch(RuntimeException ex){map.put(field,null);}}}
-  return map;
+  return auditPolicy.row(table,record,map);
  }
- private Object redact(Object value){if(value instanceof Map<?,?> map){var result=new LinkedHashMap<String,Object>();map.forEach((k,v)->{String key=k.toString(),normalized=key.replace("_","").toLowerCase(Locale.ROOT);result.put(key,Set.of("identitynumber","address","homeaddress").contains(normalized)?"[REDACTED]":redact(v));});return result;}if(value instanceof Collection<?> list)return list.stream().map(this::redact).toList();return value;}
 }

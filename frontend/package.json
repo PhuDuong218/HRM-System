@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:accounts": "node --test test-tools/accounts-workflow.test.cjs test-tools/accounts-i18n.test.cjs",
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
     "test:reports": "node --test test-tools/report-format.test.cjs test-tools/report-service.test.cjs",

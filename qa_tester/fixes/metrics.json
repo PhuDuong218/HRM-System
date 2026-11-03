@@ -1,0 +1,19 @@
+{
+  "backend": {
+    "tests": 62,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "frontendTests": {
+    "tests": 7,
+    "pass": 7,
+    "fail": 0
+  },
+  "angularBuild": "PASS",
+  "api": {
+    "requests": 168,
+    "pass": 168,
+    "fail": 0
+  }
+}

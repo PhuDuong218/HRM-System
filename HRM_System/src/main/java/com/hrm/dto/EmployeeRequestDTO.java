@@ -10,6 +10,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class EmployeeRequestDTO {
+    private String gender;
+    public String getGender(){return gender;}
+    public void setGender(String value){gender=value;}
 
     @NotBlank(message = "Mã nhân viên không được để trống")
     @Size(max = 50, message = "Mã nhân viên không vượt quá 50 ký tự")

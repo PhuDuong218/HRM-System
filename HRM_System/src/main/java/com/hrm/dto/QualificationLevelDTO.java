@@ -5,5 +5,6 @@ public record QualificationLevelDTO(
         String levelCode,
         String levelName,
         String description,
-        Boolean isActive) {
+        Boolean isActive,Integer rankOrder) {
+    public QualificationLevelDTO(Long id,String code,String name,String description,Boolean active){this(id,code,name,description,active,null);}
 }

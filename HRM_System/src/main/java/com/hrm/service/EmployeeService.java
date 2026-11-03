@@ -44,6 +44,8 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeService {
+    @org.springframework.beans.factory.annotation.Autowired private EmploymentExitGuard exitGuard;
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeSupplement supplement;
     @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
 
 
@@ -123,7 +125,14 @@ public class EmployeeService {
         LocalDate asOf = businessToday();
         String searchKeyword = "%" + (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT)) + "%";
         Pageable pageable = PagingUtils.create(page, size, Sort.by(Sort.Direction.DESC, "employeeId"));
-        Page<Employee> employees = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,personnelScope.employees(),pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
+        Page<Employee> employees;
+        if(keyword!=null&&!keyword.isBlank()) {
+        var candidates = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped("%",status,departmentId,positionId,asOf,personnelScope.employees(),org.springframework.data.domain.Pageable.unpaged(pageable.getSort())) : employeeRepository.searchEmployees("%",status,departmentId,positionId,asOf,org.springframework.data.domain.Pageable.unpaged(pageable.getSort()));
+            var matched=candidates.getContent().stream().filter(e->com.hrm.util.PersonnelSearch.matches(keyword,e.getFullName(),e.getEmployeeCode())).toList();
+            employees=com.hrm.util.PersonnelSearch.page(matched,page,size);
+        } else {
+        employees = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,personnelScope.employees(),pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
+        }
         List<Long> employeeIds = employees.getContent().stream()
                 .map(Employee::getEmployeeId)
                 .toList();
@@ -296,6 +305,7 @@ public class EmployeeService {
         }
 
         LocalDate terminationDate = businessToday();
+        if(exitGuard!=null)exitGuard.check(id,terminationDate);
         List<EmployeeAssignment> currentAssignments = assignmentRepository.findCurrentAssignments(id, terminationDate);
         if (currentAssignments.size() != 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -341,6 +351,7 @@ public class EmployeeService {
     private EmployeeDTO convertToSearchDTO(Employee employee, EmployeeAssignment assignment) {
         EmployeeDTO dto = new EmployeeDTO();
         dto.setEmployeeId(employee.getEmployeeId());
+        if(supplement!=null)dto.setGender(supplement.get(employee.getEmployeeId()));
         dto.setEmployeeCode(employee.getEmployeeCode());
         dto.setFullName(employee.getFullName());
         dto.setBirthDate(employee.getBirthDate());

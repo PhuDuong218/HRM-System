@@ -95,10 +95,13 @@ public class AuthService {
 
     @Transactional
     public void logout(Long accountId) {
-        if (accountRepository.incrementTokenVersion(accountId) != 1) {
-            throw new IllegalStateException(
-                    "Không thể vô hiệu phiên đăng nhập");
-        }
+        // Serialize revocations and verify persistence through the versioned entity,
+        // rather than relying on a driver's bulk-update affected-row count.
+        Account account = accountRepository.findByIdForUpdate(accountId)
+                .orElseThrow(() -> new BadCredentialsException("Phiên đăng nhập không hợp lệ"));
+        account.revokeTokens();
+        account.setUpdatedAt(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
+        accountRepository.saveAndFlush(account);
     }
 
     @Transactional

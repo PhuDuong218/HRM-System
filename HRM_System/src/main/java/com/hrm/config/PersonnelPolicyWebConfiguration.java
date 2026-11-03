@@ -15,7 +15,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class PersonnelPolicyWebConfiguration implements WebMvcConfigurer {
  private final PersonnelScopeService scope;
  public PersonnelPolicyWebConfiguration(PersonnelScopeService scope){this.scope=scope;}
- private static final Set<String> CONTROLLERS=Set.of("EmployeeController","EmployeeDetailController","EmployeeTerminationController","EmployeeRehireController","EmployeeAssignmentController","EmployeeQualificationController","LeaveEntitlementController","DepartmentController","DepartmentHeadController","EmployeeRequestController","G1AuditController","PersonnelAuditController");
+ private static final Set<String> CONTROLLERS=Set.of("EmployeeController","EmployeeDetailController","EmployeeTerminationController","EmployeeRehireController","EmployeeAssignmentController","EmployeeQualificationController","LeaveEntitlementController","DepartmentController","DepartmentHeadController","EmployeeRequestController");
  @Override public void addInterceptors(InterceptorRegistry registry){registry.addInterceptor(new HandlerInterceptor(){
  @Override public boolean preHandle(HttpServletRequest request,HttpServletResponse response,Object handler){
  if(!(handler instanceof HandlerMethod method)||!CONTROLLERS.contains(method.getBeanType().getSimpleName()))return true;
@@ -33,14 +33,7 @@ public class PersonnelPolicyWebConfiguration implements WebMvcConfigurer {
    if(match.matches())scope.employee(scope.employeeOf(entry.getValue()[0],entry.getValue()[1],recordId(match.group(1))),read);
   }
   for(String key:List.of("employeeId")){String id=request.getParameter(key);if(id!=null&&id.matches("[0-9]+"))scope.employee(recordId(id),read);}
-  String table=request.getParameter("targetTable"),id=request.getParameter("recordId");
-  if(table!=null&&id!=null&&id.matches("[0-9]+")){
-   long record=recordId(id);
-   if(table.equals("employees"))scope.employee(record,true);else if(table.equals("departments"))scope.department(record);
-   else if(table.equals("employee_qualifications"))scope.employee(scope.employeeOf(table,"employee_qualification_id",record),true);
-   else if(table.equals("leave_entitlements"))scope.employee(scope.employeeOf(table,"entitlement_id",record),true);
-   else if(table.equals("employee_requests"))scope.employee(scope.employeeOf(table,"request_id",record),true);
-  }
+
  }
  return true;
  }});}

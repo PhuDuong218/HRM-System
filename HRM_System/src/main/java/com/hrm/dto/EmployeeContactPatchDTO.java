@@ -5,6 +5,9 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class EmployeeContactPatchDTO {
+    @Size(max=1000) private String reason;
+    public String getReason(){return reason;}
+    public void setReason(String value){reason=value;}
 
     @Email(message = "Định dạng email không hợp lệ")
     @Size(max = 254, message = "Email không vượt quá 254 ký tự")

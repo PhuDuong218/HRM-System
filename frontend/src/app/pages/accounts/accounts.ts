@@ -1,7 +1,11 @@
+import {TranslatePipe} from '../../shared/translate.pipe';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { Subscription, Observable, finalize } from 'rxjs';
+import { FormsModule } from '@angular/forms';
+import { Employee, errorMessage } from '../../services/employee.service';
+import { toListPage } from '../../models/page.model';
 import { Account, AccountFilters, AccountRole, AccountService, AccessPermission } from '../../services/account.service';
 
 type Section = 'accounts' | 'roles' | 'permissions';
@@ -12,6 +16,7 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 @Component({
   selector: 'app-accounts',
   standalone: true,
+  imports: [TranslatePipe, FormsModule],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css'
 })
@@ -40,6 +45,17 @@ export class AccountsPage implements OnInit {
   permissionsError = '';
   permissionsLoading = false;
   permissionsLoaded = false;
+  saving = false;
+  actionError = '';
+  message = '';
+  employees: Employee[] = [];
+  employeesLoading = false;
+  draft = this.blankDraft();
+
+  private blankDraft() {
+    return {employeeId:null as number|null,roleId:null as number|null,username:'',active:true,password:'',confirmPassword:'',
+      roleCode:'',roleName:'',permissionCode:'',permissionName:'',description:'',permissionIds:[] as number[]};
+  }
 
   ngOnInit(): void {
     this.load();
@@ -70,10 +86,11 @@ export class AccountsPage implements OnInit {
     this.rows = [];
     this.pending = this.api.list(page, this.filters).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: result => {
-        this.rows = result.items;
-        this.page = result.page;
-        this.pages = result.totalPages;
-        this.total = result.totalElements;
+        const list=toListPage(result);
+        this.rows = list.rows;
+        this.page = list.page;
+        this.pages = list.pages;
+        this.total = list.total;
         this.loading = false;
       },
       error: (error: unknown) => {
@@ -119,15 +136,68 @@ export class AccountsPage implements OnInit {
   }
 
   openDialog(mode: DialogMode, item?: Account | AccountRole | AccessPermission): void {
+    if (this.saving) return;
     this.selectedAccount = item && 'accountId' in item ? item : null;
     this.selectedRole = item && 'roleId' in item && !('accountId' in item) ? item : null;
     this.selectedPermission = item && 'permissionId' in item ? item : null;
     this.dialogMode = mode;
+    this.actionError='';
+    this.draft={...this.blankDraft(),
+      employeeId:this.selectedAccount?.employeeId??null,roleId:this.selectedAccount?.roleId??null,
+      username:this.selectedAccount?.username??'',active:this.selectedAccount?.active??true,
+      roleCode:this.selectedRole?.roleCode??'',roleName:this.selectedRole?.roleName??'',
+      permissionIds:this.selectedRole?.permissions.map(p=>p.permissionId)??[],
+      permissionCode:this.selectedPermission?.permissionCode??'',permissionName:this.selectedPermission?.permissionName??'',
+      description:this.selectedPermission?.description??''};
+    if(mode==='role-create'||mode==='role-permissions')this.loadPermissions();
+    if(mode==='account-create'){
+      this.employeesLoading=true;
+      this.api.employees().pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.employeesLoading=false)).subscribe({
+        next:rows=>this.employees=rows.filter(row=>row.employmentStatus==='DANG_LAM'),
+        error:e=>this.actionError=errorMessage(e)});
+    }
     this.actionDialog?.nativeElement.showModal();
   }
 
-  closeDialog(): void { this.actionDialog?.nativeElement.close(); }
+  closeDialog(): void { if(!this.saving)this.actionDialog?.nativeElement.close(); }
+  cancelDialog(event: Event): void { if(this.saving)event.preventDefault(); }
+  togglePermission(id: number,checked: boolean): void {
+    this.draft.permissionIds=checked?[...new Set([...this.draft.permissionIds,id])]:this.draft.permissionIds.filter(value=>value!==id);
+  }
+  saveDialog(): void {
+    if(this.saving||!this.dialogMode)return;
+    const mode=this.dialogMode,d=this.draft;
+    this.actionError='';
+    if(mode==='account-create'||mode==='account-reset'){
+      if(d.password.length<8||new TextEncoder().encode(d.password).length>72||d.password!==d.confirmPassword){
+        this.actionError='Mật khẩu phải từ 8 đến 72 ký tự và xác nhận phải trùng khớp.';return;
+      }
+    }
+    let command:Observable<unknown>|undefined;
+    const account=this.selectedAccount,role=this.selectedRole,permission=this.selectedPermission;
+    if(mode==='account-create'||mode==='account-edit'){
+      if(!d.roleId||!d.username.trim()||(mode==='account-create'&&!d.employeeId)){this.actionError='Vui lòng nhập đầy đủ thông tin bắt buộc.';return;}
+      const body={roleId:d.roleId,username:d.username.trim(),active:d.active};
+      command=mode==='account-create'?this.api.create({...body,employeeId:d.employeeId!,password:d.password,confirmPassword:d.confirmPassword}):this.api.update(account!.accountId,body);
+    }else if(mode==='account-lock'&&account)command=this.api.update(account.accountId,{roleId:account.roleId,username:account.username,active:!account.active});
+    else if(mode==='account-reset'&&account)command=this.api.resetPassword(account.accountId,d.password,d.confirmPassword);
+    else if(mode==='role-create')command=this.api.createRole(d.roleCode.trim(),d.roleName.trim(),d.permissionIds);
+    else if(mode==='role-edit'&&role)command=this.api.updateRole(role.roleId,d.roleName.trim());
+    else if(mode==='role-permissions'&&role){if(this.permissionsLoading||this.permissionsError)return;command=this.api.replacePermissions(role.roleId,d.permissionIds);}
+    else if(mode==='role-delete'&&role&&!this.isSystemRole(role))command=this.api.deleteRole(role.roleId);
+    else if(mode==='permission-create')command=this.api.createPermission(d.permissionCode.trim(),d.permissionName.trim(),d.description.trim());
+    else if(mode==='permission-edit'&&permission)command=this.api.updatePermission(permission.permissionId,d.permissionName.trim(),d.description.trim());
+    else if(mode==='permission-delete'&&permission&&permission.permissionCode!=='ACCOUNT_MANAGE')command=this.api.deletePermission(permission.permissionId);
+    if(!command)return;
+    this.saving=true;
+    command.pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({
+      next:()=>{this.saving=false;this.closeDialog();this.message='Đã lưu thay đổi thành công.';
+        if(mode.startsWith('account-'))this.load();else if(mode.startsWith('role-'))this.loadRoles();else{this.loadPermissions();this.loadRoles();}},
+      error:e=>this.actionError=errorMessage(e)});
+  }
   clearDialog(): void {
+    this.draft=this.blankDraft();
+    this.actionError='';
     this.dialogMode = null;
     this.selectedAccount = null;
     this.selectedRole = null;

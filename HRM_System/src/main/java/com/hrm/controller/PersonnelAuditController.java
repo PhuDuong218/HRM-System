@@ -15,13 +15,15 @@ import org.springframework.web.bind.annotation.*;
 public class PersonnelAuditController {
     private final JdbcTemplate jdbc;
     private final PersonnelAccessService access;
-    public PersonnelAuditController(JdbcTemplate jdbc,PersonnelAccessService access){this.jdbc=jdbc;this.access=access;}
+    private final com.hrm.service.AuditReadPolicy policy;
+    public PersonnelAuditController(JdbcTemplate jdbc,PersonnelAccessService access,com.hrm.service.AuditReadPolicy policy){this.jdbc=jdbc;this.access=access;this.policy=policy;}
     @GetMapping
     public Page<Map<String,Object>> history(@RequestParam String targetTable,@RequestParam long recordId,
         @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p) {
         access.manager(p);
         if(!java.util.Set.of("qualification_levels","employee_qualifications","leave_types","leave_entitlements","employee_requests").contains(targetTable)||recordId<=0)
             throw PersonnelWorkflowSupport.bad("Đối tượng audit G2 không hợp lệ");
+        policy.require(targetTable,recordId);
         var paging=PagingUtils.create(page,size,Sort.unsorted());
         long count=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.audit_logs WHERE target_table=? AND target_record_key=?",Long.class,targetTable,Long.toString(recordId));
         var rows=jdbc.queryForList("""

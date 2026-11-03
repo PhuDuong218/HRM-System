@@ -37,7 +37,7 @@ public interface WorkStatisticsRepository
            from employee_requests er
            join leave_request_details ld on ld.request_id = er.request_id
           where er.request_type = 'NGHI_PHEP'
-            and er.status = 'DA_DUYET'
+            and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
             and ld.leave_start < dateadd(day, 1, :toDate)
             and ld.leave_end >= :fromDate) as approvedLeaveRequests,
         (select coalesce(sum(cast(datediff(minute,
@@ -48,7 +48,7 @@ public interface WorkStatisticsRepository
            from employee_requests er
            join leave_request_details ld on ld.request_id = er.request_id
           where er.request_type = 'NGHI_PHEP'
-            and er.status = 'DA_DUYET'
+            and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
             and ld.leave_start < dateadd(day, 1, :toDate)
             and ld.leave_end >= :fromDate) as approvedLeaveHours,
         (select count(orq.overtime_id)
@@ -97,7 +97,7 @@ public interface WorkStatisticsRepository
       join leave_request_details ld
         on ld.request_id = er.request_id
       where er.request_type = 'NGHI_PHEP'
-        and er.status = 'DA_DUYET'
+        and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
         and ld.leave_end > ld.leave_start
         and ld.leave_start < :endExclusive
         and ld.leave_end > :startInclusive

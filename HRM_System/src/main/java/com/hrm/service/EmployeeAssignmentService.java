@@ -122,6 +122,7 @@ public class EmployeeAssignmentService {
                                         "Nhân viên không còn đang làm việc");
                 }
 
+                if(personnelScope!=null)personnelScope.department(request.departmentId());
                 // Kiem tra phong ban moi
                 Department newDepartment = departmentRepository
                                 .findById(request.departmentId())
@@ -164,12 +165,6 @@ public class EmployeeAssignmentService {
                                         "Ngày điều chuyển không được trước ngày vào làm");
                 }
 
-                if (transferDate.isAfter(asOf)) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Chưa hỗ trợ điều chuyển trong tương lai");
-                }
-
                 // Tim phan cong hien tai theo thoi diem
                 List<EmployeeAssignment> currentList = assignmentRepository.findCurrentAssignments(
                                 employeeId, asOf);
@@ -181,6 +176,10 @@ public class EmployeeAssignmentService {
                 }
 
                 EmployeeAssignment oldAssignment = currentList.get(0);
+                if(oldAssignment.getEffectiveTo()!=null || assignmentRepository.findHistoryByEmployeeId(employeeId).stream()
+                        .anyMatch(a->a.getEffectiveFrom().isAfter(asOf))) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,"Đã có thay đổi phân công được lên lịch; cần đối soát trước khi tạo thay đổi mới");
+                }
 
                 // Truong phong phai theo nghiep vu rieng
                 if (AssignmentGuardService.HEAD_CODE.equals(

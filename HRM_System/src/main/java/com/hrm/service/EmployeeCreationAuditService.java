@@ -15,6 +15,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EmployeeCreationAuditService {
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeSupplement supplement;
 
     private final EmployeeService employeeService;
     private final EmployeeRepository employeeRepository;
@@ -71,6 +72,7 @@ public class EmployeeCreationAuditService {
                 employee.getEmployeeId(),
                 after);
 
+        if(supplement!=null){supplement.save(result.getEmployeeId(),request.getGender(),actorAccountId,"Tạo/cập nhật thông tin hồ sơ");result.setGender(supplement.get(result.getEmployeeId()));}
         return result;
     }
 
@@ -86,7 +88,9 @@ public class EmployeeCreationAuditService {
         employee.setUpdatedBy(actorAccountId);
         EmployeeDTO result = employeeService.updateEmployee(id, request);
         employeeRepository.flush();
-        auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee));
+        if(request.getReason()==null) auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee));
+        else auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee),request.getReason());
+        if(supplement!=null){supplement.save(id,request.getGender(),actorAccountId,request.getReason());result.setGender(supplement.get(id));}
         return result;
     }
 

@@ -1,0 +1,1227 @@
+GIẢI THÍCH CƠ SỞ DỮ LIỆU
+HỆ THỐNG QUẢN LÝ NHÂN SỰ HRM CENTER
+Tài liệu đối chiếu trực tiếp với file create_database.sql
+1. Đánh giá tổng thể thiết kế CSDL
+Kết luận: 
+CSDL hiện tại phù hợp với phạm vi đồ án HRM của trung tâm giáo dục và có tính hợp lý cao. Thiết kế đã bao phủ các nhóm nghiệp vụ chính: tài khoản/phân quyền, hồ sơ nhân viên, phòng ban–chức vụ–trình độ, hợp đồng, lịch làm việc, chấm công, đơn từ, tăng ca, phụ cấp, khen thưởng/kỷ luật, tiền lương, phiếu lương và nhật ký hệ thống.
+Điểm tốt 1 – Giữ lịch sử: phòng ban/chức vụ, hợp đồng và điều kiện lương được tách theo khoảng hiệu lực nên không ghi đè dữ liệu cũ.
+Điểm tốt 2 – Lịch làm việc và chấm công được tách riêng: work_schedules là “phải làm”, attendance_records là “thực tế đã làm”.
+Điểm tốt 3 – Đơn từ có bảng đầu đơn chung và bảng chi tiết theo loại, giúp tránh nhồi nhiều cột NULL vào một bảng.
+Điểm tốt 4 – Phần lương được thiết kế theo kỳ → phiên bản bảng lương → nhân viên → dòng tiền → snapshot → phiếu lương, phù hợp yêu cầu cần chốt và giữ lịch sử.
+Điểm tốt 5 – Có audit, row_version, trigger chống hard-delete và các ràng buộc CHECK/FK, tốt hơn mức tối thiểu của một đồ án môn học.
+Ba lưu ý trước khi code ứng dụng:
+File hiện có 33 bảng nên khá chi tiết. Nếu thời gian đồ án hạn chế, không nhất thiết phải làm giao diện CRUD riêng cho mọi bảng; nhiều bảng là bảng kỹ thuật/danh mục và được thao tác gián tiếp.
+employee_requests hiện chỉ phân loại NGHI_PHEP và NGHI_VIEC. Nghỉ ốm, thai sản, nghỉ không lương có thể triển khai như các leave_types khác nhau dưới NGHI_PHEP; nếu giảng viên muốn từng loại đơn là một workflow riêng thì mới mở rộng request_type.
+CSDL cố ý chưa đóng cứng “công thức lương chính thức”. Đây là hợp lý ở giai đoạn thiết kế; công thức phải được chốt theo yêu cầu nghiệp vụ rồi mới triển khai ở service/backend.
+2. Cách đọc các ký hiệu và kiểu dữ liệu
+PK (Primary Key): khóa chính, định danh duy nhất một bản ghi.
+FK (Foreign Key): khóa ngoại, liên kết tới bảng khác.
+UNIQUE: không cho phép trùng giá trị.
+NOT NULL: bắt buộc phải có dữ liệu.
+IDENTITY(1,1): SQL Server tự tăng số ID.
+bit: dữ liệu đúng/sai (1/0).
+datetime2(3): ngày giờ có độ chính xác mili-giây.
+decimal(19,4): số thập phân chính xác, phù hợp tiền lương.
+rowversion: giá trị phiên bản hàng, dùng kiểm soát cập nhật đồng thời.
+3. Các cột audit dùng chung
+Script tự động thêm 5 cột dưới đây vào tất cả các bảng trừ audit_logs. Vì vậy khi đọc từng bảng ở phần sau, cần hiểu rằng các bảng còn có thêm các cột này.
+Thuộc tính
+Kiểu
+Ràng buộc
+Ý nghĩa
+created_at
+datetime2(3)
+NOT NULL, DEFAULT SYSUTCDATETIME()
+Thời điểm bản ghi được tạo (UTC).
+updated_at
+datetime2(3)
+NULL
+Thời điểm cập nhật gần nhất.
+created_by
+bigint
+FK → accounts.account_id, NULL
+Tài khoản tạo bản ghi.
+updated_by
+bigint
+FK → accounts.account_id, NULL
+Tài khoản cập nhật gần nhất.
+row_version
+rowversion
+Tự tăng bởi SQL Server
+Dấu phiên bản hàng do SQL Server quản lý, giúp phát hiện cập nhật đồng thời.
+4. Giải thích chi tiết 33 bảng
+4.1. roles – Vai trò
+Danh mục các vai trò đăng nhập cố định của hệ thống: ADMIN, HR và EMPLOYEE.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+role_id
+bigint
+PK; Bắt buộc
+Vai trò của tài khoản hoặc khóa tham chiếu vai trò.
+role_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã vai trò dùng trong code/phân quyền.
+role_name
+nvarchar(100)
+Bắt buộc
+Tên hiển thị của vai trò.
+4.2. permissions – Quyền
+Danh mục các quyền thao tác chi tiết để phân quyền theo chức năng.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+permission_id
+bigint
+PK; Bắt buộc
+Khóa tham chiếu quyền.
+permission_code
+varchar(100)
+UNIQUE; Bắt buộc
+Mã quyền dùng trong backend.
+permission_name
+nvarchar(200)
+Bắt buộc
+Tên quyền hiển thị.
+description
+nvarchar(1000)
+Cho phép NULL
+Mô tả bổ sung.
+4.3. departments – Phòng ban
+Danh mục phòng ban/bộ phận của trung tâm.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+department_id
+bigint
+PK; Bắt buộc
+Phòng ban được phân công.
+department_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã phòng ban duy nhất.
+department_name
+nvarchar(200)
+Bắt buộc
+Tên phòng ban.
+description
+nvarchar(1000)
+Cho phép NULL
+Mô tả bổ sung.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.4. positions – Chức vụ
+Danh mục chức vụ/vị trí công việc của nhân viên.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+position_id
+bigint
+PK; Bắt buộc
+Chức vụ được phân công.
+position_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã chức vụ duy nhất.
+position_name
+nvarchar(200)
+Bắt buộc
+Tên chức vụ.
+description
+nvarchar(1000)
+Cho phép NULL
+Mô tả bổ sung.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.5. qualification_levels – Cấp trình độ
+Danh mục cấp trình độ như Đại học, Cao đẳng, Thạc sĩ…
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+qualification_level_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh cấp trình độ.
+level_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã cấp trình độ.
+level_name
+nvarchar(200)
+Bắt buộc
+Tên cấp trình độ.
+description
+nvarchar(1000)
+Cho phép NULL
+Mô tả bổ sung.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.6. contract_types – Loại hợp đồng
+Danh mục loại hợp đồng lao động.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+contract_type_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh loại hợp đồng.
+type_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã loại dữ liệu danh mục.
+type_name
+nvarchar(200)
+Bắt buộc
+Tên loại dữ liệu danh mục.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.7. work_shifts – Ca làm việc
+Khai báo các ca làm chuẩn để dùng khi lập lịch làm việc.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+shift_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh ca làm.
+shift_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã ca làm.
+shift_name
+nvarchar(200)
+Bắt buộc
+Tên ca làm.
+start_time
+time(0)
+Bắt buộc
+Giờ bắt đầu ca.
+end_time
+time(0)
+Bắt buộc
+Giờ kết thúc ca.
+end_day_offset
+int
+Bắt buộc; Mặc định: 0
+0 nếu kết thúc cùng ngày; 1 nếu ca qua ngày hôm sau.
+break_minutes
+int
+Bắt buộc; Mặc định: 0
+Số phút nghỉ trong ca.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.8. leave_types – Loại nghỉ phép
+Danh mục loại nghỉ; cho biết loại nghỉ có hưởng lương hay không.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+leave_type_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh loại nghỉ.
+type_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã loại dữ liệu danh mục.
+type_name
+nvarchar(200)
+Bắt buộc
+Tên loại dữ liệu danh mục.
+is_paid
+bit
+Bắt buộc; Mặc định: 0
+1 = nghỉ có hưởng lương; 0 = không hưởng lương.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.9. allowance_types – Loại phụ cấp
+Danh mục các loại phụ cấp như ăn trưa, đi lại, trách nhiệm.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+allowance_type_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh loại phụ cấp.
+type_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã loại dữ liệu danh mục.
+type_name
+nvarchar(200)
+Bắt buộc
+Tên loại dữ liệu danh mục.
+description
+nvarchar(1000)
+Cho phép NULL
+Mô tả bổ sung.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.10. salary_components – Thành phần lương
+Danh mục các khoản cộng/trừ xuất hiện trong bảng lương.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+component_id
+bigint
+PK; Bắt buộc
+Khóa chính định danh thành phần lương.
+component_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã khoản lương.
+component_name
+nvarchar(200)
+Bắt buộc
+Tên khoản lương.
+direction
+varchar(10)
+Bắt buộc
+ADD = cộng vào lương; DEDUCT = khấu trừ.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+4.11. employees – Nhân viên
+Hồ sơ nhân sự gốc của từng người; không chứa phòng ban/chức vụ hiện tại trực tiếp để giữ được lịch sử điều chuyển.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+employee_id
+bigint
+PK; Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+employee_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã nhân viên duy nhất, dùng trong nghiệp vụ.
+full_name
+nvarchar(200)
+Bắt buộc
+Họ và tên nhân viên.
+birth_date
+date
+Cho phép NULL
+Ngày sinh.
+email
+nvarchar(254)
+Cho phép NULL
+Email liên hệ.
+phone
+varchar(30)
+Cho phép NULL
+Số điện thoại.
+address
+nvarchar(500)
+Cho phép NULL
+Địa chỉ.
+identity_number
+varchar(50)
+Cho phép NULL
+Số giấy tờ định danh/CCCD.
+hire_date
+date
+Bắt buộc
+Ngày bắt đầu làm việc.
+employment_status
+varchar(20)
+Bắt buộc; Mặc định: 'DANG_LAM'
+Trạng thái làm việc: DANG_LAM hoặc DA_NGHI.
+termination_date
+date
+Cho phép NULL
+Ngày nghỉ việc chính thức; chỉ có khi đã nghỉ.
+4.12. accounts – Tài khoản
+Tài khoản đăng nhập gắn 1-1 với nhân viên và một vai trò chính.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+account_id
+bigint
+PK; Bắt buộc
+Khóa chính tài khoản; ở cột FK là tài khoản thực hiện thao tác.
+employee_id
+bigint
+UNIQUE; Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+role_id
+bigint
+Bắt buộc
+Vai trò của tài khoản hoặc khóa tham chiếu vai trò.
+username
+nvarchar(100)
+UNIQUE; Bắt buộc
+Tên đăng nhập duy nhất, không phân biệt hoa/thường theo collation đã chọn.
+password_hash
+varchar(255)
+Bắt buộc
+Mật khẩu đã băm; không lưu mật khẩu thuần.
+is_active
+bit
+Bắt buộc; Mặc định: 1
+1 = đang sử dụng; 0 = ngừng sử dụng.
+token_version
+int
+Bắt buộc; Mặc định: 0
+Phiên bản token, dùng để vô hiệu JWT cũ khi cần.
+last_login_at
+datetime2(3)
+Cho phép NULL
+Thời điểm đăng nhập gần nhất.
+Quan hệ chính: 
+employee_id → employees.employee_id; role_id → roles.role_id.
+4.13. role_permissions – Phân quyền cho vai trò
+Bảng nối nhiều-nhiều giữa vai trò và quyền.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+role_id
+bigint
+Bắt buộc
+Vai trò của tài khoản hoặc khóa tham chiếu vai trò.
+permission_id
+bigint
+Bắt buộc
+Khóa tham chiếu quyền.
+Quan hệ chính: 
+role_id → roles.role_id; permission_id → permissions.permission_id.
+4.14. employee_assignments – Lịch sử phân công nhân viên
+Lưu lịch sử nhân viên thuộc phòng ban nào, giữ chức vụ nào trong từng khoảng thời gian.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+assignment_id
+bigint
+PK; Bắt buộc
+Khóa chính của lần phân công/điều chuyển.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+department_id
+bigint
+Bắt buộc
+Phòng ban được phân công.
+position_id
+bigint
+Bắt buộc
+Chức vụ được phân công.
+effective_from
+date
+Bắt buộc
+Ngày bắt đầu hiệu lực.
+effective_to
+date
+Cho phép NULL
+Ngày kết thúc hiệu lực; NULL nghĩa là còn hiệu lực.
+Quan hệ chính: 
+employee_id → employees.employee_id; department_id → departments.department_id; position_id → positions.position_id.
+4.15. employee_qualifications – Trình độ nhân viên
+Lưu một hoặc nhiều bằng cấp/trình độ của nhân viên và đánh dấu trình độ chính.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+employee_qualification_id
+bigint
+PK; Bắt buộc
+Khóa chính hồ sơ trình độ của nhân viên.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+qualification_level_id
+bigint
+Bắt buộc
+Khóa chính định danh cấp trình độ.
+major
+nvarchar(200)
+Cho phép NULL
+Chuyên ngành.
+institution
+nvarchar(300)
+Cho phép NULL
+Cơ sở đào tạo.
+graduation_year
+int
+Cho phép NULL
+Năm tốt nghiệp.
+certificate_number
+varchar(100)
+Cho phép NULL
+Số hiệu văn bằng/chứng chỉ.
+is_primary
+bit
+Bắt buộc; Mặc định: 0
+1 = trình độ chính đang dùng để thống kê.
+Quan hệ chính: 
+employee_id → employees.employee_id; qualification_level_id → qualification_levels.qualification_level_id.
+4.16. contracts – Hợp đồng lao động
+Lưu lịch sử hợp đồng lao động đã ký của nhân viên.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+contract_id
+bigint
+PK; Bắt buộc
+Khóa chính hợp đồng hoặc khóa tham chiếu hợp đồng.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+contract_type_id
+bigint
+Bắt buộc
+Khóa chính định danh loại hợp đồng.
+contract_number
+varchar(50)
+UNIQUE; Bắt buộc
+Số hợp đồng duy nhất.
+signed_date
+date
+Bắt buộc
+Ngày ký hợp đồng.
+start_date
+date
+Bắt buộc
+Ngày hợp đồng bắt đầu hiệu lực.
+end_date
+date
+Cho phép NULL
+Ngày cuối cùng của hợp đồng; NULL nếu không xác định thời hạn.
+status
+varchar(20)
+Bắt buộc; Mặc định: 'DA_KY'
+Trạng thái nghiệp vụ của bản ghi.
+Quan hệ chính: 
+employee_id → employees.employee_id; contract_type_id → contract_types.contract_type_id.
+4.17. contract_salary_terms – Điều kiện lương theo hợp đồng
+Lưu mức lương/căn cứ trả lương theo từng giai đoạn của hợp đồng, tránh ghi đè lịch sử.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+salary_term_id
+bigint
+PK; Bắt buộc
+Khóa chính điều kiện lương.
+contract_id
+bigint
+Bắt buộc
+Khóa chính hợp đồng hoặc khóa tham chiếu hợp đồng.
+effective_from
+date
+Bắt buộc
+Ngày bắt đầu hiệu lực.
+effective_to
+date
+Cho phép NULL
+Ngày kết thúc hiệu lực; NULL nghĩa là còn hiệu lực.
+base_salary
+decimal(19,4)
+Bắt buộc
+Mức lương cơ bản/thỏa thuận trong giai đoạn.
+pay_basis
+varchar(10)
+Bắt buộc; Mặc định: 'THANG'
+Căn cứ trả lương: THANG, NGAY hoặc GIO.
+document_reference
+nvarchar(500)
+Cho phép NULL
+Tham chiếu văn bản/phụ lục làm căn cứ.
+Quan hệ chính: 
+contract_id → contracts.contract_id.
+4.18. work_schedules – Lịch làm việc
+Lưu lịch mà nhân viên được yêu cầu làm việc: ngày, giờ bắt đầu/kết thúc, ca và thời gian nghỉ.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+schedule_id
+bigint
+PK; Bắt buộc
+Khóa chính lịch làm việc; có thể liên kết bản chấm công.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+shift_id
+bigint
+Cho phép NULL
+Khóa chính định danh ca làm.
+work_date
+date
+Bắt buộc
+Ngày làm việc.
+planned_start
+datetime2(3)
+Bắt buộc
+Thời điểm dự kiến bắt đầu làm.
+planned_end
+datetime2(3)
+Bắt buộc
+Thời điểm dự kiến kết thúc.
+planned_break_minutes
+int
+Bắt buộc; Mặc định: 0
+Số phút nghỉ dự kiến.
+note
+nvarchar(1000)
+Cho phép NULL
+Ghi chú.
+Quan hệ chính: 
+employee_id → employees.employee_id; shift_id → work_shifts.shift_id.
+4.19. attendance_records – Chấm công
+Lưu thời gian làm việc thực tế để so với lịch, phục vụ chấm công và tính lương.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+attendance_id
+bigint
+PK; Bắt buộc
+Khóa chính bản ghi chấm công.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+schedule_id
+bigint
+Cho phép NULL
+Khóa chính lịch làm việc; có thể liên kết bản chấm công.
+work_date
+date
+Bắt buộc
+Ngày làm việc.
+actual_start
+datetime2(3)
+Cho phép NULL
+Thời điểm thực tế bắt đầu tăng ca.
+actual_end
+datetime2(3)
+Cho phép NULL
+Thời điểm thực tế kết thúc tăng ca.
+actual_break_minutes
+int
+Bắt buộc; Mặc định: 0
+Số phút nghỉ trong thời gian tăng ca.
+attendance_result
+varchar(20)
+Bắt buộc
+Kết quả: DI_LAM hoặc VANG.
+verification_status
+varchar(20)
+Bắt buộc; Mặc định: 'CHUA_XAC_NHAN'
+Trạng thái xác nhận chấm công.
+confirmed_by
+bigint
+Cho phép NULL
+Tài khoản xác nhận thời gian thực tế.
+confirmed_at
+datetime2(3)
+Cho phép NULL
+Thời điểm xác nhận.
+correction_reason
+nvarchar(1000)
+Cho phép NULL
+Lý do điều chỉnh chấm công.
+Quan hệ chính: 
+employee_id → employees.employee_id; schedule_id,employee_id → work_schedules.schedule_id,employee_id; confirmed_by → accounts.account_id.
+4.20. employee_requests – Đơn yêu cầu
+Bảng đầu đơn chung cho nghỉ phép và nghỉ việc, quản lý trạng thái duyệt.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+request_id
+bigint
+PK; Bắt buộc
+Khóa chính đơn; ở bảng chi tiết đồng thời là FK về đơn chung.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+request_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã đơn duy nhất.
+request_type
+varchar(20)
+Bắt buộc
+Loại đơn: NGHI_PHEP hoặc NGHI_VIEC.
+reason
+nvarchar(1000)
+Bắt buộc
+Lý do người dùng gửi yêu cầu.
+status
+varchar(20)
+Bắt buộc; Mặc định: 'CHO_DUYET'
+Trạng thái nghiệp vụ của bản ghi.
+submitted_at
+datetime2(3)
+Bắt buộc; Mặc định: SYSUTCDATETIME(
+Thời điểm gửi đơn.
+processed_by
+bigint
+Cho phép NULL
+Tài khoản HR/Admin xử lý.
+processed_at
+datetime2(3)
+Cho phép NULL
+Thời điểm xử lý.
+rejection_reason
+nvarchar(1000)
+Cho phép NULL
+Lý do từ chối, bắt buộc khi trạng thái TU_CHOI.
+Quan hệ chính: 
+employee_id → employees.employee_id; processed_by → accounts.account_id.
+4.21. leave_request_details – Chi tiết đơn nghỉ phép
+Chi tiết riêng chỉ dành cho đơn nghỉ phép.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+request_id
+bigint
+PK; Bắt buộc
+Khóa chính đơn; ở bảng chi tiết đồng thời là FK về đơn chung.
+leave_type_id
+bigint
+Bắt buộc
+Khóa chính định danh loại nghỉ.
+leave_start
+datetime2(3)
+Bắt buộc
+Thời điểm bắt đầu nghỉ.
+leave_end
+datetime2(3)
+Bắt buộc
+Thời điểm kết thúc nghỉ.
+Quan hệ chính: 
+request_id → employee_requests.request_id; leave_type_id → leave_types.leave_type_id.
+4.22. resignation_request_details – Chi tiết đơn nghỉ việc
+Chi tiết riêng chỉ dành cho đơn nghỉ việc.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+request_id
+bigint
+PK; Bắt buộc
+Khóa chính đơn; ở bảng chi tiết đồng thời là FK về đơn chung.
+requested_last_working_date
+date
+Bắt buộc
+Ngày làm việc cuối cùng nhân viên đề nghị.
+approved_last_working_date
+date
+Cho phép NULL
+Ngày làm việc cuối cùng được quản lý phê duyệt.
+Quan hệ chính: 
+request_id → employee_requests.request_id.
+4.23. leave_entitlements – Hạn mức/quyền nghỉ phép
+Lưu số giờ nghỉ được hưởng của từng nhân viên theo loại nghỉ và kỳ áp dụng.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+entitlement_id
+bigint
+PK; Bắt buộc
+Khóa chính hạn mức nghỉ.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+leave_type_id
+bigint
+Bắt buộc
+Khóa chính định danh loại nghỉ.
+period_start
+date
+Bắt buộc
+Ngày bắt đầu kỳ lương.
+period_end
+date
+Bắt buộc
+Ngày kết thúc kỳ lương theo dạng [start, end).
+entitled_hours
+decimal(9,4)
+Bắt buộc; Mặc định: 0
+Tổng số giờ nghỉ được hưởng trong kỳ.
+Quan hệ chính: 
+employee_id → employees.employee_id; leave_type_id → leave_types.leave_type_id.
+4.24. overtime_requests – Yêu cầu tăng ca
+Quản lý đăng ký tăng ca, duyệt tăng ca và thời gian tăng ca thực tế đã xác nhận.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+overtime_id
+bigint
+PK; Bắt buộc
+Khóa chính yêu cầu tăng ca.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+request_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã đơn duy nhất.
+requested_start
+datetime2(3)
+Bắt buộc
+Thời điểm tăng ca đề nghị bắt đầu.
+requested_end
+datetime2(3)
+Bắt buộc
+Thời điểm tăng ca đề nghị kết thúc.
+reason
+nvarchar(1000)
+Bắt buộc
+Lý do người dùng gửi yêu cầu.
+submitted_at
+datetime2(3)
+Bắt buộc; Mặc định: SYSUTCDATETIME(
+Thời điểm gửi đơn.
+status
+varchar(20)
+Bắt buộc; Mặc định: 'CHO_DUYET'
+Trạng thái nghiệp vụ của bản ghi.
+processed_by
+bigint
+Cho phép NULL
+Tài khoản HR/Admin xử lý.
+processed_at
+datetime2(3)
+Cho phép NULL
+Thời điểm xử lý.
+rejection_reason
+nvarchar(1000)
+Cho phép NULL
+Lý do từ chối, bắt buộc khi trạng thái TU_CHOI.
+actual_start
+datetime2(3)
+Cho phép NULL
+Thời điểm thực tế bắt đầu tăng ca.
+actual_end
+datetime2(3)
+Cho phép NULL
+Thời điểm thực tế kết thúc tăng ca.
+actual_break_minutes
+int
+Bắt buộc; Mặc định: 0
+Số phút nghỉ trong thời gian tăng ca.
+confirmed_by
+bigint
+Cho phép NULL
+Tài khoản xác nhận thời gian thực tế.
+confirmed_at
+datetime2(3)
+Cho phép NULL
+Thời điểm xác nhận.
+Quan hệ chính: 
+employee_id → employees.employee_id; processed_by → accounts.account_id; confirmed_by → accounts.account_id.
+4.25. employee_allowances – Phụ cấp nhân viên
+Gán phụ cấp cho nhân viên theo khoảng hiệu lực và cách tính.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+employee_allowance_id
+bigint
+PK; Bắt buộc
+Khóa chính phụ cấp được gán cho nhân viên.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+allowance_type_id
+bigint
+Bắt buộc
+Khóa chính định danh loại phụ cấp.
+effective_from
+date
+Bắt buộc
+Ngày bắt đầu hiệu lực.
+effective_to
+date
+Cho phép NULL
+Ngày kết thúc hiệu lực; NULL nghĩa là còn hiệu lực.
+calculation_basis
+varchar(20)
+Bắt buộc; Mặc định: 'THEO_KY'
+Cách tính: THEO_KY, THEO_NGAY_CONG hoặc THEO_GIO.
+amount
+decimal(19,4)
+Bắt buộc
+Số tiền của khoản phụ cấp/quyết định/dòng lương tùy bảng.
+condition_note
+nvarchar(1000)
+Cho phép NULL
+Ghi chú điều kiện áp dụng.
+Quan hệ chính: 
+employee_id → employees.employee_id; allowance_type_id → allowance_types.allowance_type_id.
+4.26. employee_decisions – Khen thưởng / kỷ luật
+Lưu quyết định khen thưởng/kỷ luật và tác động cộng/trừ vào lương nếu có.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+decision_id
+bigint
+PK; Bắt buộc
+Khóa chính quyết định.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+decision_number
+varchar(50)
+UNIQUE; Bắt buộc
+Số quyết định duy nhất.
+decision_type
+varchar(20)
+Bắt buộc
+KHEN_THUONG hoặc KY_LUAT.
+content
+nvarchar(2000)
+Bắt buộc
+Nội dung quyết định.
+issued_date
+date
+Bắt buộc
+Ngày ban hành.
+issued_by
+bigint
+Bắt buộc
+Tài khoản ban hành quyết định.
+approved_by
+bigint
+Cho phép NULL
+Tài khoản phê duyệt.
+approved_at
+datetime2(3)
+Cho phép NULL
+Thời điểm phê duyệt.
+approval_status
+varchar(20)
+Bắt buộc; Mặc định: 'CHO_DUYET'
+Trạng thái phê duyệt.
+payroll_effect
+varchar(10)
+Bắt buộc; Mặc định: 'NONE'
+NONE = không ảnh hưởng lương; ADD = cộng; DEDUCT = trừ.
+amount
+decimal(19,4)
+Cho phép NULL
+Số tiền của khoản phụ cấp/quyết định/dòng lương tùy bảng.
+apply_date
+date
+Cho phép NULL
+Ngày khoản tiền bắt đầu được áp dụng vào lương.
+Quan hệ chính: 
+employee_id → employees.employee_id; issued_by → accounts.account_id; approved_by → accounts.account_id.
+4.27. payroll_periods – Kỳ lương
+Xác định khoảng thời gian của một kỳ tính lương, ví dụ tháng 09/2026.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+period_id
+bigint
+PK; Bắt buộc
+Khóa chính kỳ lương hoặc khóa tham chiếu kỳ lương.
+period_code
+varchar(50)
+UNIQUE; Bắt buộc
+Mã kỳ lương, ví dụ 2026-09.
+period_start
+date
+Bắt buộc
+Ngày bắt đầu kỳ lương.
+period_end
+date
+Bắt buộc
+Ngày kết thúc kỳ lương theo dạng [start, end).
+4.28. payroll_batches – Phiên bản bảng lương
+Một phiên bản bảng lương của một kỳ; hỗ trợ bản nháp, chốt và tạo phiên bản điều chỉnh.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+batch_id
+bigint
+PK; Bắt buộc
+Khóa chính phiên bản bảng lương hoặc khóa tham chiếu phiên bản.
+period_id
+bigint
+Bắt buộc
+Khóa chính kỳ lương hoặc khóa tham chiếu kỳ lương.
+version_no
+int
+Bắt buộc; Mặc định: 1
+Số phiên bản của bảng lương trong cùng kỳ.
+previous_batch_id
+bigint
+Cho phép NULL
+Phiên bản bảng lương trước đó nếu đây là bản điều chỉnh.
+status
+varchar(20)
+Bắt buộc; Mặc định: 'NHAP'
+Trạng thái nghiệp vụ của bản ghi.
+adjustment_reason
+nvarchar(1000)
+Cho phép NULL
+Lý do tạo phiên bản điều chỉnh.
+locked_by
+bigint
+Cho phép NULL
+Tài khoản chốt bảng lương.
+locked_at
+datetime2(3)
+Cho phép NULL
+Thời điểm chốt.
+published_by
+bigint
+Cho phép NULL
+Tài khoản công bố/phát hành kết quả.
+published_at
+datetime2(3)
+Cho phép NULL
+Thời điểm công bố.
+Quan hệ chính: 
+period_id → payroll_periods.period_id; previous_batch_id,period_id → payroll_batches.batch_id,period_id; locked_by → accounts.account_id; published_by → accounts.account_id.
+4.29. payroll_details – Kết quả lương theo nhân viên
+Mỗi dòng đại diện kết quả lương của một nhân viên trong một phiên bản bảng lương.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+payroll_detail_id
+bigint
+PK; Bắt buộc
+Khóa chính kết quả lương của một nhân viên; ở bảng con dùng làm FK.
+batch_id
+bigint
+Bắt buộc
+Khóa chính phiên bản bảng lương hoặc khóa tham chiếu phiên bản.
+employee_id
+bigint
+Bắt buộc
+Khóa định danh nhân viên; ở bảng con dùng để tham chiếu nhân viên.
+Quan hệ chính: 
+batch_id → payroll_batches.batch_id; employee_id → employees.employee_id.
+4.30. payroll_lines – Các dòng thành phần lương
+Chi tiết từng khoản cộng/trừ tạo nên lương của một nhân viên.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+payroll_line_id
+bigint
+PK; Bắt buộc
+Khóa chính dòng thành phần lương.
+payroll_detail_id
+bigint
+Bắt buộc
+Khóa chính kết quả lương của một nhân viên; ở bảng con dùng làm FK.
+component_id
+bigint
+Bắt buộc
+Khóa chính định danh thành phần lương.
+line_no
+int
+Bắt buộc
+Số thứ tự dòng trong chi tiết lương.
+component_code_snapshot
+varchar(50)
+Bắt buộc
+Mã thành phần lương được chụp lại tại thời điểm tính.
+component_name_snapshot
+nvarchar(200)
+Bắt buộc
+Tên thành phần lương được chụp lại.
+direction_snapshot
+varchar(10)
+Bắt buộc
+Hướng cộng/trừ được chụp lại.
+quantity
+decimal(9,4)
+Cho phép NULL
+Số lượng dùng để tính, ví dụ số giờ/ngày.
+unit_rate
+decimal(19,4)
+Cho phép NULL
+Đơn giá.
+multiplier
+decimal(9,4)
+Cho phép NULL
+Hệ số nhân, ví dụ hệ số tăng ca.
+amount
+decimal(19,4)
+Bắt buộc
+Số tiền của khoản phụ cấp/quyết định/dòng lương tùy bảng.
+explanation
+nvarchar(2000)
+Cho phép NULL
+Diễn giải cách hình thành khoản tiền.
+Quan hệ chính: 
+payroll_detail_id → payroll_details.payroll_detail_id; component_id → salary_components.component_id.
+4.31. payroll_snapshots – Ảnh chụp dữ liệu đầu vào tính lương
+Lưu lại dữ liệu/căn cứ đã dùng khi tính lương để có thể kiểm tra về sau.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+payroll_detail_id
+bigint
+PK; Bắt buộc
+Khóa chính kết quả lương của một nhân viên; ở bảng con dùng làm FK.
+schema_version
+int
+Bắt buộc; Mặc định: 1
+Phiên bản cấu trúc dữ liệu snapshot.
+policy_version
+varchar(100)
+Bắt buộc
+Phiên bản chính sách/công thức tính lương.
+input_snapshot_json
+nvarchar(max)
+Bắt buộc
+JSON lưu toàn bộ căn cứ đầu vào của lần tính lương.
+captured_at
+datetime2(3)
+Bắt buộc; Mặc định: SYSUTCDATETIME(
+Thời điểm chụp dữ liệu.
+Quan hệ chính: 
+payroll_detail_id → payroll_details.payroll_detail_id.
+4.32. payslips – Phiếu lương
+Thông tin phiếu lương đã phát hành cho nhân viên từ bảng lương đã chốt.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+payslip_id
+bigint
+PK; Bắt buộc
+Khóa chính phiếu lương.
+payroll_detail_id
+bigint
+UNIQUE; Bắt buộc
+Khóa chính kết quả lương của một nhân viên; ở bảng con dùng làm FK.
+payslip_number
+varchar(50)
+UNIQUE; Bắt buộc
+Số phiếu lương duy nhất.
+issued_at
+datetime2(3)
+Bắt buộc; Mặc định: SYSUTCDATETIME(
+Thời điểm phát hành phiếu.
+file_reference
+nvarchar(1000)
+Cho phép NULL
+Đường dẫn/tham chiếu file PDF nếu hệ thống sinh file.
+Quan hệ chính: 
+payroll_detail_id → payroll_details.payroll_detail_id.
+4.33. audit_logs – Nhật ký hệ thống
+Nhật ký bất biến ghi ai đã làm gì, trên bản ghi nào và dữ liệu trước/sau thay đổi.
+Thuộc tính
+Kiểu dữ liệu
+Khóa / ràng buộc
+Ý nghĩa
+audit_id
+bigint
+PK; Bắt buộc
+Khóa chính nhật ký.
+actor_account_id
+bigint
+Cho phép NULL
+Tài khoản thực hiện hành động; có thể NULL cho tác vụ hệ thống.
+occurred_at
+datetime2(3)
+Bắt buộc; Mặc định: SYSUTCDATETIME(
+Thời điểm hành động xảy ra.
+action
+varchar(100)
+Bắt buộc
+Tên hành động, ví dụ UPDATE_EMPLOYEE, LOCK_PAYROLL.
+target_table
+varchar(128)
+Bắt buộc
+Tên bảng bị tác động.
+target_record_key
+nvarchar(100)
+Bắt buộc
+Khóa bản ghi bị tác động.
+reason
+nvarchar(1000)
+Cho phép NULL
+Lý do người dùng gửi yêu cầu.
+before_data_json
+nvarchar(max)
+Cho phép NULL
+Dữ liệu trước thay đổi ở dạng JSON.
+after_data_json
+nvarchar(max)
+Cho phép NULL
+Dữ liệu sau thay đổi ở dạng JSON.
+correlation_id
+uniqueidentifier
+Cho phép NULL
+Mã liên kết nhiều log thuộc cùng một giao dịch/request.
+Quan hệ chính: 
+actor_account_id → accounts.account_id.
+5. Nhìn CSDL theo luồng nghiệp vụ
+Tài khoản & quyền: 
+employees → accounts → roles → role_permissions → permissions
+Cơ cấu nhân sự: 
+employees → employee_assignments → departments / positions
+Trình độ: 
+employees → employee_qualifications → qualification_levels
+Hợp đồng & lương cơ bản: 
+employees → contracts → contract_types → contract_salary_terms
+Lịch & chấm công: 
+employees → work_schedules → attendance_records
+Nghỉ phép/nghỉ việc: 
+employees → employee_requests → leave_request_details / resignation_request_details; leave_entitlements quản lý hạn mức nghỉ
+Tăng ca: 
+employees → overtime_requests → duyệt/xác nhận → dữ liệu đầu vào tính lương
+Phụ cấp & quyết định: 
+employees → employee_allowances / employee_decisions
+Tính lương: 
+payroll_periods → payroll_batches → payroll_details → payroll_lines + payroll_snapshots → payslips
+Theo dõi thay đổi: 
+audit_logs ghi lại các thao tác quan trọng của tài khoản
+6. Kết luận
+Với phạm vi đồ án quản lý nhân sự đã xác định, schema này có thể dùng làm nền tảng để triển khai backend Java Spring Boot và frontend Angular. Khi code, nên triển khai theo thứ tự: danh mục cơ bản → nhân viên → hợp đồng → lịch/chấm công → đơn/tăng ca → phụ cấp/quyết định → lương → báo cáo. Không cần xây tất cả 33 bảng thành 33 màn hình riêng.

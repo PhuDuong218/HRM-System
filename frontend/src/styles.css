@@ -67,3 +67,28 @@ html[data-bs-theme="dark"] .language-toggle:hover { background:#34557e; }
 
 pre.health-response{background:#f4f7fb;color:#1e344c}
 html[data-bs-theme="dark"] pre.health-response{background:#101d2d;color:#e4ebf5;border:1px solid #35465d}
+/* Shared visual contract for personnel and team modules. */
+app-admin-layout .table{--bs-table-striped-bg:#f4f6f9}
+app-admin-layout .table tbody tr:nth-child(odd)>td{background-color:var(--bs-body-bg,#fff);--bs-table-bg-type:var(--bs-body-bg,#fff)}
+app-admin-layout .table tbody tr:nth-child(even)>td{background-color:var(--bs-table-striped-bg);--bs-table-bg-type:var(--bs-table-striped-bg)}
+app-admin-layout .table tbody tr.selected>td,app-admin-layout .table tbody tr.selected-row>td{--bs-table-bg-type:var(--bs-primary-bg-subtle,#eaf3fe);background:var(--bs-primary-bg-subtle,#eaf3fe)}
+app-admin-layout .table th,app-admin-layout .table td{vertical-align:middle;padding:12px 14px}
+app-admin-layout .table thead th{background:var(--bs-tertiary-bg,#f5f7fb);font-size:13px;color:var(--bs-secondary-color,#60748d)}
+app-admin-layout :is(.filter-actions,.form-actions,.detail-actions,.page-actions){display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+app-admin-layout .filter-actions{grid-column:1/-1;justify-content:flex-end}
+app-admin-layout .btn{min-height:40px;border-radius:6px}
+app-admin-layout :is(.status,.account-status){display:inline-flex;align-items:center;border-radius:999px;padding:5px 12px;font-size:12px;line-height:1.6;font-weight:600;background:#e4f4eb;color:#206b43;white-space:nowrap}
+app-admin-layout :is(.status.retired,.account-status.inactive){background:#eef1f5;color:#59687d}
+app-admin-layout .status.status-pending{background:#fff3cd;color:#755b0c}
+html[data-bs-theme="dark"] app-admin-layout .table{--bs-table-striped-bg:#223247}
+html[data-bs-theme="dark"] app-admin-layout :is(.status,.account-status.active){background:#193d31;color:#9de0b8}
+html[data-bs-theme="dark"] app-admin-layout :is(.status.retired,.account-status.inactive){background:#344154;color:#d2dcea}
+html[data-bs-theme="dark"] app-admin-layout .status.status-pending{background:#4b3d1c;color:#ffe197}
+@media(max-width:600px){app-admin-layout .filter-actions>.btn{flex:1}app-admin-layout .table th,app-admin-layout .table td{padding:10px}}
+/* Headings and filter controls follow one rhythm across routed modules. */
+app-admin-layout h1{font-size:clamp(24px,2.2vw,32px);line-height:1.25;font-weight:700;color:var(--bs-emphasis-color,#17324d);margin-bottom:12px}
+app-admin-layout .eyebrow{font-size:11px;letter-spacing:.12em;font-weight:600;color:var(--bs-secondary-color,#60748d);margin-bottom:8px}
+app-admin-layout .filter-bar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:16px;align-items:end}
+app-admin-layout .filter-bar>label{display:grid;gap:6px;min-width:0}
+app-admin-layout .filter-bar :is(.form-select,.form-control){min-height:40px}
+@media(max-width:600px){app-admin-layout .filter-bar{grid-template-columns:minmax(0,1fr)}}

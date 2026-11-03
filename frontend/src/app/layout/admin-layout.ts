@@ -42,7 +42,10 @@ export class AdminLayout {
 
   get menu():NavigationItem[]{
     const role=this.auth.profile()?.role||'';
-    return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:item.children.filter(child=>!child.roles||child.roles.includes(role))}:item);
+    if(!role)return [];
+    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'time',label:'Thời gian & Chấm công',children:[{path:'requests/head',label:'Quản lý đơn từ'}]}]:[];
+    const extra=this.auth.profile()?.departmentHead?[{path:'requests/head',label:'Duyệt cấp 1'}]:[];
+    return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:[...item.children.filter(child=>!child.roles||child.roles.includes(role)),...(item.id==='time'?extra:[])]}:item);
   }
   @ViewChild('mobilePanel') private mobilePanel?: ElementRef<HTMLElement>;
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;

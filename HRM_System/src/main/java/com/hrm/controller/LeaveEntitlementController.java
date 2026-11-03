@@ -25,6 +25,6 @@ public class LeaveEntitlementController {
     @GetMapping("/employee/{employeeId}") public List<LeaveEntitlementDTO> getByEmployeeId(@PathVariable Long employeeId,Principal p){access.ownerOrManager(p,employeeId);return service.getByEmployeeId(employeeId);}
     @GetMapping("/{id}") public LeaveEntitlementDTO getById(@PathVariable Long id,Principal p){access.actor(p);var result=service.getById(id);access.ownerOrManager(p,result.employeeId());return result;}
     @PostMapping @ResponseStatus(HttpStatus.CREATED)
-    public LeaveEntitlementDTO addLeaveEntitlement(@Valid @RequestBody LeaveEntitlementRequestDTO request,Principal p){return writes.write(p,"leave_entitlements",null,"LEAVE_ENTITLEMENT_CREATE",()->service.addLeaveEntitlement(request),LeaveEntitlementDTO::entitlementId);}
-    @PutMapping("/{id}") public LeaveEntitlementDTO updateLeaveEntitlement(@PathVariable Long id,@Valid @RequestBody LeaveEntitlementRequestDTO request,Principal p){return writes.write(p,"leave_entitlements",id,"LEAVE_ENTITLEMENT_UPDATE",()->service.updateLeaveEntitlement(id,request),LeaveEntitlementDTO::entitlementId);}
+    public LeaveEntitlementDTO addLeaveEntitlement(@Valid @RequestBody LeaveEntitlementRequestDTO request,Principal p){return writes.write(p,"leave_entitlements",null,"LEAVE_ENTITLEMENT_CREATE",()->service.addLeaveEntitlement(request),LeaveEntitlementDTO::entitlementId,request.getReason());}
+    @PutMapping("/{id}") public LeaveEntitlementDTO updateLeaveEntitlement(@PathVariable Long id,@Valid @RequestBody LeaveEntitlementRequestDTO request,Principal p){return writes.write(p,"leave_entitlements",id,"LEAVE_ENTITLEMENT_UPDATE",()->service.updateLeaveEntitlement(id,request),LeaveEntitlementDTO::entitlementId,request.getReason());}
 }

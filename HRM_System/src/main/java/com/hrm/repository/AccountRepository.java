@@ -37,13 +37,17 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
 
         Optional<Account> findByUsername(String username);
 
+        @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        @Query("select a from Account a where a.accountId = :accountId")
+        Optional<Account> findByIdForUpdate(@Param("accountId") Long accountId);
+
         // Vo hieu hoa tai khoan khi nhan vien nghi viec
         // Dong thoi tang tokenVersion de thu hoi JWT cu
         @Modifying(clearAutomatically = true, flushAutomatically = true)
         @Query("""
                         update Account a
                            set a.active = false,
-                               a.tokenVersion = a.tokenVersion + 1,
+                               a.tokenVersion = coalesce(a.tokenVersion, 0) + 1,
                                a.updatedAt = CURRENT_TIMESTAMP
                          where a.employeeId = :employeeId
                         """)
@@ -51,6 +55,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                         @Param("employeeId") Long employeeId);
 
         // Vo hieu hoa cac JWT hien tai khi dang xuat
+        // Compatibility only: AuthService.logout now locks and updates the versioned entity.
+        @Deprecated(forRemoval = false)
         @Modifying(clearAutomatically = true, flushAutomatically = true)
         @Query("""
                         update Account a

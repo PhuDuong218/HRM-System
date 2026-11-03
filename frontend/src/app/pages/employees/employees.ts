@@ -25,6 +25,8 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     keyword = '';
     status = '';
     department = '';
+    position = '';
+    advancedSearch = false;
     departments: {
         id: number;
         name: string;
@@ -43,8 +45,10 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     mode: string | null = null;
     form = blank();
     confirmTermination = false;
+    exitDecision={reason:'',lastWorkingDate:'',decisionType:'MUTUAL_AGREEMENT',decisionNumber:''};
     rehireDate = '';
     rehireReason = '';
+    genderLabel(value?:string|null){return ({MALE:"Nam",FEMALE:"Nữ",OTHER:"Khác",UNDISCLOSED:"Không muốn cung cấp"} as Record<string,string>)[value||""]||"Chưa cung cấp";}
     get admin() { return this.auth.profile()?.role === 'ADMIN'; }
     get canSearch(){return ['ADMIN','HR'].includes(this.auth.profile()?.role||'');}
     get ownProfile(){return !!this.selected && this.selected.employeeCode===this.auth.profile()?.employeeCode;}
@@ -55,7 +59,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
             else
                 this.positions = c; }, error: e => this.choicesError = (path === 'positions' ? 'Danh mục chức vụ: ' : 'Danh mục phòng ban: ') + errorMessage(e) }); }
     load(page = 0) { if (this.loading || this.saving)
-        return; this.loading = true; this.error = ''; this.api.list(this.canSearch, page, this.keyword.trim(), this.status, this.department).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
+        return; this.loading = true; this.error = ''; this.api.list(this.canSearch, page, this.applied.keyword, this.applied.status, this.applied.department, this.applied.position).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
             this.rows = r;
             this.page = 0;
             this.pages = r.length ? 1 : 0;
@@ -67,20 +71,22 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
             this.pages = r.totalPages;
             this.total = r.totalElements;
         } }, error: e => this.error = errorMessage(e) }); }
-    reset() { this.keyword = ''; this.status = ''; this.department = ''; this.load(); }
+    private applied = {keyword:'',status:'',department:'',position:''};
+    search() { if(this.loading||this.saving)return; this.applied={keyword:this.keyword.trim(),status:this.status,department:this.department,position:this.position};this.close();this.load(0); }
+    reset() { this.keyword = ''; this.status = ''; this.department = ''; this.position=''; this.search(); }
     select(row: Employee) { if (this.saving)
         return; this.detailRequest?.unsubscribe(); this.mode = 'detail'; this.selected = row; this.detailLoading = true; this.detailError = ''; this.detailRequest = this.api.detail(row.employeeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { this.selected = r; this.detailLoading = false; }, error: e => { this.detailError = errorMessage(e); this.detailLoading = false; } }); }
     close() { if (this.saving)
         return; this.detailRequest?.unsubscribe(); this.mode = null; this.selected = null; this.detailLoading = false; this.detailError = ''; }
     edit(mode: string) { if (this.saving || this.detailLoading)
-        return; this.form.privateFieldsEditable=this.ownProfile; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '', privateFieldsEditable:this.ownProfile }; }
+        return; this.form.privateFieldsEditable=this.ownProfile; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), gender:p.gender, employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '', privateFieldsEditable:this.ownProfile }; }
     save(f: NgForm) { if (this.saving)
         return; if (f.invalid || !this.form.fullName.trim()) {
         f.control.markAllAsTouched();
         return;
     } this.saving = true; this.message = ''; this.detailError = ''; this.api.save(this.mode!, this.selected?.employeeId, this.form).pipe(timeout(20000), takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: r => { this.saving = false; this.message = 'Đã lưu hồ sơ thành công.'; this.load(this.page); this.select(r); }, error: e => this.detailError = errorMessage(e) }); }
-    terminate() { if (this.saving || !this.confirmTermination || !this.selected)
-        return; const row = this.selected; this.message = ''; this.detailError = ''; this.saving = true; this.api.terminate(row.employeeId).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: () => { this.saving = false; this.message = 'Đã xử lý thôi việc, giữ lại lịch sử hồ sơ.'; this.load(this.page); this.select(row); }, error: e => this.detailError = errorMessage(e) }); }
+    terminate() { if (this.saving || !this.confirmTermination || !this.selected || !this.exitDecision.reason.trim() || !this.exitDecision.lastWorkingDate || !this.exitDecision.decisionNumber.trim())
+        return; const row = this.selected; this.message = ''; this.detailError = ''; this.saving = true; this.api.terminate(row.employeeId,this.exitDecision).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: () => { this.saving = false; this.message = 'Đã lưu quyết định. Thôi việc được thực thi sau ngày làm cuối; lịch sử được giữ lại.'; this.load(this.page); this.select(row); }, error: e => this.detailError = errorMessage(e) }); }
     rehire() {
         if (this.saving || !this.selected || !this.admin || !this.rehireDate || !this.rehireReason.trim() || !this.form.departmentId || !this.form.positionId) return;
         const row = this.selected;

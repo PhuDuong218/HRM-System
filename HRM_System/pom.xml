@@ -91,6 +91,14 @@
 
 	</dependencies>
 
+	<profiles>
+		<profile>
+			<id>merge-verification</id>
+			<!-- Isolate regression artifacts from an IDE/backend build using target/classes. -->
+			<build><directory>${project.basedir}/target/merge-verification</directory></build>
+		</profile>
+	</profiles>
+
 	<build>
 		<plugins>
 			<!-- Local datasource credentials remain usable by local runs/tests, never shipped in the jar. -->

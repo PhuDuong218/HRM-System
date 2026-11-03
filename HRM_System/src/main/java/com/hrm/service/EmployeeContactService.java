@@ -70,11 +70,8 @@ public class EmployeeContactService {
         // Chụp dữ liệu thực tế sau khi service cập nhật.
         Map<String, String> after = snapshot(employee);
 
-        auditService.recordContactUpdate(
-                actorAccountId,
-                employeeId,
-                before,
-                after);
+        if(request.getReason()==null) auditService.recordContactUpdate(actorAccountId,employeeId,before,after);
+        else auditService.recordContactUpdate(actorAccountId,employeeId,before,after,request.getReason());
 
         return result;
     }

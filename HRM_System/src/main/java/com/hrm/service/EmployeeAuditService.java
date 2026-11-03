@@ -10,6 +10,14 @@ import org.springframework.transaction.annotation.*;
 public class EmployeeAuditService {
     private final AuditLogService audit;
     public EmployeeAuditService(AuditLogService audit){this.audit=audit;}
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void recordProfileUpdate(Long actor,Long id,Map<String,String> before,Map<String,String> after,String reason){recordReason("EMPLOYEE_PROFILE_UPDATE",actor,id,before,after,reason);}
+    @Transactional(propagation=Propagation.MANDATORY)
+    public void recordContactUpdate(Long actor,Long id,Map<String,String> before,Map<String,String> after,String reason){recordReason("EMPLOYEE_CONTACT_UPDATE",actor,id,before,after,reason);}
+    private void recordReason(String action,Long actor,Long id,Map<String,String> before,Map<String,String> after,String reason){
+        if(reason==null||reason.isBlank()||reason.length()>1000)throw PersonnelWorkflowSupport.bad("Lý do bắt buộc, tối đa 1000 ký tự");
+        if(!before.equals(after))audit.record(new AuditEvent(actor,action,"employees",id.toString(),reason.trim(),before,after));
+    }
     private void change(String action,String table,Long actor,Long id,Map<String,String> before,Map<String,String> after) {
         if(actor==null||actor<=0||id==null||id<=0)throw new IllegalArgumentException("Phải xác định tài khoản và đối tượng thực hiện");
         Objects.requireNonNull(before);Objects.requireNonNull(after);

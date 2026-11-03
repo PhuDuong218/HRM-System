@@ -1,6 +1,6 @@
 import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { tap, timeout } from 'rxjs';
+import { tap, timeout, switchMap, forkJoin, map, catchError, throwError } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 
 interface LoginResponse {
@@ -16,6 +16,7 @@ interface Session {
 }
 
 export interface CurrentUser {
+  departmentHead?: boolean;
   username: string;
   role: string;
   employeeCode: string | null;
@@ -34,7 +35,7 @@ const SESSION_KEY = 'hrm.session';
 
 export class ManagementAccessDeniedError extends Error {
   constructor() {
-    super('Cổng quản lý chỉ dành cho tài khoản ADMIN hoặc HR.');
+    super('Web dành cho ADMIN/HR hoặc trưởng phòng đang có nhiệm kỳ hợp lệ.');
   }
 }
 
@@ -44,7 +45,7 @@ function managementRole(token: string): boolean {
     if (parts.length !== 3) return false;
     const payload: unknown = JSON.parse(atob(parts[1].replace(/-/g, '+').replace(/_/g, '/')));
     if (!payload || typeof payload !== 'object' || !('role' in payload)) return false;
-    return payload.role === 'ADMIN' || payload.role === 'HR';
+    return payload.role === 'ADMIN' || payload.role === 'HR' || payload.role === 'EMPLOYEE';
   } catch {
     return false;
   }
@@ -77,7 +78,9 @@ export class AuthService {
         this.currentUser.set(null);
         this.session.set(session);
         try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* Keep the session in memory. */ }
-      })
+      }),
+      switchMap(()=>this.loadCurrentUser()),
+      catchError(error=>{this.clear();return throwError(()=>error);})
     );
   }
 
@@ -118,12 +121,13 @@ export class AuthService {
 
   loadCurrentUser() {
     const token = this.token();
-    return this.http.get<CurrentUser>(`${API_BASE_URL}/auth/me`).pipe(
+    return forkJoin({user:this.http.get<CurrentUser>(`${API_BASE_URL}/auth/me`),
+      capabilities:this.http.get<{departmentHead:boolean}>(`${API_BASE_URL}/employee-requests/capabilities`)}).pipe(
       timeout(15000),
-      tap(user => {
-        if (token && token === this.token() && typeof user.fullName === 'string') {
-          this.currentUser.set(user);
-        }
+      map(({user,capabilities})=>({...user,departmentHead:capabilities.departmentHead})),
+      tap(user=>{
+        if(!['ADMIN','HR'].includes(user.role)&&!user.departmentHead){this.clear();throw new ManagementAccessDeniedError();}
+        if(token&&token===this.token())this.currentUser.set(user);
       })
     );
   }

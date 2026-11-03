@@ -1,3 +1,4 @@
+import {personnelPortalGuard} from './services/personnel-portal.guard';
 import {adminGuard} from './services/admin.guard';
 import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
@@ -10,6 +11,7 @@ export const routes: Routes = [
     path: "",
     component: AdminLayout,
     canActivate: [authGuard],
+    canActivateChild:[personnelPortalGuard],
     children: [
       { path: "", redirectTo: "overview", pathMatch: "full" },
       { path: "overview", loadComponent: () => import("./pages/overview/overview").then(m => m.OverviewPage) },
@@ -77,6 +79,7 @@ export const routes: Routes = [
       { path: "schedules", loadComponent: () => import("./pages/schedules/schedules").then(m => m.SchedulesPage) },
       { path: "attendance", loadComponent: () => import("./pages/attendance/attendance").then(m => m.AttendancePage) },
       { path: "attendance/summary", loadComponent: () => import("./pages/attendance-summary/attendance-summary").then(m => m.AttendanceSummaryPage) },
+      {path:'requests/head',loadComponent:()=>import('./pages/head-requests/head-requests').then(m=>m.HeadRequestsPage)},
       {
         path: "requests",
         loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),

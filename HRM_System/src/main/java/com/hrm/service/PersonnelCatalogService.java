@@ -29,7 +29,10 @@ public class PersonnelCatalogService {
     }
     private Object snapshot(String table,long id) {
         Target t=TARGETS.get(table);
-        var rows=jdbc.queryForList("SELECT "+t.columns()+" FROM dbo."+table+" WHERE "+t.key()+"=?",id);
+        String columns=t.columns();
+        if("employee_qualifications".equals(table)&&jdbc.queryForObject("SELECT CASE WHEN COL_LENGTH('dbo.employee_qualifications','issued_date') IS NULL THEN 0 ELSE 1 END",Integer.class)==1)columns+=",issued_date,expiry_date";
+        if("qualification_levels".equals(table)&&jdbc.queryForObject("SELECT CASE WHEN COL_LENGTH('dbo.qualification_levels','rank_order') IS NULL THEN 0 ELSE 1 END",Integer.class)==1)columns+=",rank_order";
+        var rows=jdbc.queryForList("SELECT "+columns+" FROM dbo."+table+" WHERE "+t.key()+"=?",id);
         return rows.isEmpty()?null:rows.get(0);
     }
     @Transactional
@@ -58,6 +61,10 @@ public class PersonnelCatalogService {
     }
     @Transactional
     public <T> T write(Principal p,String table,Long id,String action,Supplier<T> operation,ToLongFunction<T> identify) {
+        return write(p,table,id,action,operation,identify,null);
+    }
+    @Transactional
+    public <T> T write(Principal p,String table,Long id,String action,Supplier<T> operation,ToLongFunction<T> identify,String reason) {
         var actor=access.manager(p);support.lock();
         Target target=TARGETS.get(table);if(target==null) throw new IllegalArgumentException("Unsupported G2 target");
         Object before=id==null?null:snapshot(table,id);
@@ -75,6 +82,6 @@ public class PersonnelCatalogService {
             if(outside>0) throw PersonnelWorkflowSupport.conflict("Không thể đổi kỳ làm mất phạm vi phép đã duyệt");
         }
         em.flush();Object after=snapshot(table,key);
-        support.audit(actor.accountId(),action,table,key,null,before,after);return result;
+        support.audit(actor.accountId(),action,table,key,reason==null?null:reason.trim(),before,after);return result;
     }
 }

@@ -1,0 +1,6 @@
+{
+  "port": 2009,
+  "pid": 35304,
+  "jobs": "scheduled jobs suppressed in QA launcher",
+  "database": "hrm_test"
+}

@@ -3,6 +3,9 @@ package com.hrm.dto;
 import java.time.LocalDate;
 
 public class EmployeeDTO {
+    private String gender;
+    public String getGender(){return gender;}
+    public void setGender(String value){gender=value;}
 
     // --- THÔNG TIN CÁ NHÂN CƠ BẢN ---
     private Long employeeId;

@@ -1,0 +1,8 @@
+Case,Bug,Trước sửa,Sau sửa,Kết quả,Phạm vi và giới hạn,Bằng chứng
+SES-05,BUG-002,Logout500; token cũ200,Logout204; DB token_version+1; tất cả JWT cũ401; login mới200,PASS,SQL integration và API 2 vòng; UI về login,backend-results.json; http-results.json; ui-retest.json
+FEG-02,BUG-003,Không có filter trên hai danh mục,Tìm từ khóa/trạng thái hoạt động; chưa Search không đổi list; F5 giữ; View all reset cả URL,PASS,Hai route qualifications/leave-types; không coi mọi bộ lọc hệ thống đã nghiệm thu,backend-results.json; http-results.json; ui-retest.json
+FEG-12,BUG-004,Accounts vẫn tiếng Việt khi EN,VI/EN và F5 đúng; nhãn bảng/dialog/roles/permissions dịch; dữ liệu giữ nguyên,PASS,"Accounts, không phải mọi bản dịch trên toàn website",backend-results.json; http-results.json; ui-retest.json
+FEG-14,BUG-005,Baseline toàn hàng NOT-RUN; nhánh thiếu ngày từng401,Lỗi400 chỉ rõ from/to; UI hiển thị from và giữ phiên,PASS,Nhánh lỗi binding400 và bảo toàn401 khi không JWT; offline/throttle/500 không kiểm trong lượt sửa,backend-results.json; http-results.json; ui-retest.json
+BEG-03,BUG-001,HR-B đọc được16giờ của NV-A,HR-B403; nhân viên khác403; owner/HR-A/ADMIN200,PASS,Endpoint balances; không suy rộng mọi endpoint IDOR,backend-results.json; http-results.json; ui-retest.json
+BEG-06,BUG-005,Thiếu from/to trả401,Thiếu một/hai ngày hoặc sai định dạng đều400 có tên tham số,PASS,Các biến thể from/to; không tuyên bố đã quét mọi body sai kiểu,backend-results.json; http-results.json; ui-retest.json
+ENT-03,BUG-001,Quỹ phép ngoài scope bị lộ qua balances,"Chặn403 trước truy vấn quỹ, bên trong phạm vi vẫn200",PASS,SQL Server hrm_test có quỹ thật16giờ,backend-results.json; http-results.json; ui-retest.json

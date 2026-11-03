@@ -16,7 +16,9 @@ public final class EmployeeRequestDTOs {
      * Local Vietnam wall clock, matching work_schedules. Audit timestamps use UTC.
      */
     public record Leave(@NotNull @Positive Long leaveTypeId, @NotNull LocalDateTime leaveStart,
-            @NotNull LocalDateTime leaveEnd, @NotBlank @Size(max = 1000) String reason) {
+            @NotNull LocalDateTime leaveEnd, @NotBlank @Size(max = 1000) String reason,
+            @Size(max=500) String evidenceReference) {
+        public Leave(Long type,LocalDateTime start,LocalDateTime end,String reason){this(type,start,end,reason,null);}
     }
 
     public record Resignation(@NotNull LocalDate requestedLastWorkingDate, @NotBlank @Size(max = 1000) String reason) {
