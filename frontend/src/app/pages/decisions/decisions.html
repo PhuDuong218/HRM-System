@@ -1,0 +1,393 @@
+<div class="mb-4">
+  <p class="eyebrow">{{ "QUẢN LÝ NHÂN SỰ" | translate }}</p>
+  <h1 class="mb-0">{{ "Khen thưởng / Kỷ luật" | translate }}</h1>
+</div>
+
+@if (message) {
+  <div class="alert alert-success" role="status">{{ message | translate }}</div>
+}
+@if (error) {
+  <div class="alert alert-danger" role="alert">{{ error | translate }}</div>
+}
+
+<ul class="nav nav-tabs mb-3">
+  <li class="nav-item">
+    <button type="button" class="nav-link" [class.active]="tab === 'list'" (click)="setTab('list')">
+      {{ "Danh sách quyết định" | translate }}
+    </button>
+  </li>
+  <li class="nav-item">
+    <button type="button" class="nav-link" [class.active]="tab === 'payroll'" (click)="setTab('payroll')">
+      {{ "Thưởng / khấu trừ theo kỳ" | translate }}
+    </button>
+  </li>
+</ul>
+
+@if (tab === 'list') {
+  @if (employeesError) {
+    <div class="alert alert-warning d-flex justify-content-between align-items-center gap-2" role="alert">
+      <span>{{ employeesError | translate }}</span>
+      <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="employeesLoading" (click)="loadEmployees()">
+        {{ (employeesLoading ? 'Đang tải…' : 'Thử lại') | translate }}
+      </button>
+    </div>
+  }
+
+  <app-record-workspace [open]="panelOpen" [busy]="saving" (dismiss)="closeWorkspace()">
+    <section recordList class="surface">
+      <div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-2">
+        <div class="d-flex flex-wrap gap-2 align-items-end">
+          <div>
+            <label class="form-label" for="d-f-emp">{{ "Nhân viên" | translate }}</label>
+            <select id="d-f-emp" class="form-select" #fEmp [value]="filterEmployee ?? ''"
+                    [disabled]="employeesLoading || loading"
+                    (change)="applyFilter(fEmp.value, fStatus.value)">
+              <option value="">{{ "Tất cả" | translate }}</option>
+              @for (employee of employees; track employee.employeeId) {
+                <option [value]="employee.employeeId">{{ employeeLabel(employee) }}</option>
+              }
+            </select>
+          </div>
+          <div>
+            <label class="form-label" for="d-f-st">{{ "Trạng thái" | translate }}</label>
+            <select id="d-f-st" class="form-select" #fStatus [value]="filterStatus" [disabled]="loading"
+                    (change)="applyFilter(fEmp.value, fStatus.value)">
+              <option value="">{{ "Tất cả" | translate }}</option>
+              @for (status of statuses; track status) {
+                <option [value]="status">{{ statusLabels[status] | translate }}</option>
+              }
+            </select>
+          </div>
+          <button type="button" class="btn btn-outline-secondary" [disabled]="loading || (!filterEmployee && !filterStatus)"
+                  (click)="clearFilters()">{{ "Xóa lọc" | translate }}</button>
+        </div>
+        <button type="button" class="btn btn-primary" [disabled]="saving || employeesLoading || employees.length === 0"
+                (click)="openCreate()">{{ "Tạo quyết định" | translate }}</button>
+      </div>
+
+      @if (employeesLoading) {
+        <p role="status">{{ "Đang tải nhân viên…" | translate }}</p>
+      }
+      @if (loading) {
+        <p role="status">{{ "Đang tải danh sách quyết định…" | translate }}</p>
+      } @else if (listError) {
+        <div class="alert alert-danger" role="alert">
+          {{ listError | translate }}
+          <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load(page)">{{ "Thử lại" | translate }}</button>
+        </div>
+      } @else if (rows.length === 0) {
+        <p class="muted">{{ "Chưa có quyết định nào phù hợp." | translate }}</p>
+      } @else {
+        <div class="table-responsive">
+          <table class="table table-striped align-middle">
+            <thead>
+              <tr>
+                <th>{{ "Số QĐ" | translate }}</th>
+                <th>{{ "Nhân viên" | translate }}</th>
+                <th>{{ "Loại" | translate }}</th>
+                <th>{{ "Nội dung" | translate }}</th>
+                <th>{{ "Ngày ban hành" | translate }}</th>
+                <th>{{ "Ảnh hưởng lương" | translate }}</th>
+                <th class="text-end">{{ "Số tiền" | translate }}</th>
+                <th>{{ "Ngày áp dụng" | translate }}</th>
+                <th>{{ "Trạng thái" | translate }}</th>
+                <th></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of rows; track row.decisionId) {
+                <tr [class.selected-row]="selectedDecision?.decisionId === row.decisionId">
+                  <td>
+                    <button type="button" class="btn btn-link p-0 text-start" (click)="openDetail(row)">
+                      {{ row.decisionNumber }}
+                    </button>
+                  </td>
+                  <td>{{ employeeName(row.employeeId) }}</td>
+                  <td>{{ typeLabels[row.decisionType] | translate }}</td>
+                  <td class="decision-content">{{ row.content }}</td>
+                  <td>{{ row.issuedDate }}</td>
+                  <td>{{ effectLabels[row.payrollEffect] | translate }}</td>
+                  <td class="text-end">{{ row.payrollEffect === 'NONE' ? '—' : money(row.amount) }}</td>
+                  <td>{{ row.applyDate || '—' }}</td>
+                  <td>{{ statusLabels[row.approvalStatus] | translate }}</td>
+                  <td class="text-end text-nowrap">
+                    @if (row.approvalStatus === 'CHO_DUYET') {
+                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving"
+                              (click)="openAction(row, 'approve')">{{ "Duyệt" | translate }}</button>
+                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving"
+                              (click)="openAction(row, 'reject')">{{ "Từ chối" | translate }}</button>
+                      <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving"
+                              (click)="openEdit(row)">{{ "Sửa" | translate }}</button>
+                      <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving"
+                              (click)="remove(row)">{{ "Xóa" | translate }}</button>
+                    }
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <app-pagination [page]="page" [pages]="totalPages" [busy]="loading" (pageChange)="load($event)" />
+      }
+    </section>
+
+    <section recordDetail class="surface decision-panel">
+      @if (showForm) {
+        <div class="decision-form-heading">
+          <p class="eyebrow mb-1">{{ "QUYẾT ĐỊNH" | translate }}</p>
+          <h2>{{ (editing ? 'Sửa quyết định đang chờ duyệt' : 'Tạo quyết định') | translate }}</h2>
+          <p class="muted">{{ "Quyết định mới được tạo ở trạng thái chờ duyệt." | translate }}</p>
+        </div>
+        @if (employeesError) {
+          <div class="alert alert-warning" role="alert">{{ employeesError | translate }}</div>
+        } @else if (employees.length === 0) {
+          <div class="alert alert-warning" role="alert">{{ "Chưa có nhân viên để chọn." | translate }}</div>
+        }
+
+        <form #formRef="ngForm" class="row g-3" (ngSubmit)="save()">
+          <div class="col-12">
+            <label class="form-label" for="d-emp">{{ "Nhân viên" | translate }}</label>
+            <select id="d-emp" name="employeeId" class="form-select" required
+                    [(ngModel)]="form.employeeId" [disabled]="saving || employeesLoading || !!editing">
+              <option [ngValue]="0">{{ "— Chọn nhân viên —" | translate }}</option>
+              @for (employee of employees; track employee.employeeId) {
+                <option [ngValue]="employee.employeeId">{{ employeeLabel(employee) }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="d-no">{{ "Số quyết định" | translate }}</label>
+            <input id="d-no" name="decisionNumber" class="form-control" maxlength="50" required
+                   pattern="[A-Za-z0-9_-]+" [(ngModel)]="form.decisionNumber" [disabled]="saving || !!editing">
+            <div class="form-text">{{ "Chỉ dùng chữ không dấu, số, dấu gạch dưới hoặc dấu gạch ngang. Mã không đổi sau khi tạo." | translate }}</div>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="d-issued">{{ "Ngày ban hành" | translate }}</label>
+            <input id="d-issued" name="issuedDate" type="date" class="form-control" required [max]="maxIssuedDate"
+                   [(ngModel)]="form.issuedDate" [disabled]="saving">
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="d-type">{{ "Loại quyết định" | translate }}</label>
+            <select id="d-type" name="decisionType" class="form-select" required
+                    [(ngModel)]="form.decisionType" [disabled]="saving">
+              @for (type of types; track type) {
+                <option [ngValue]="type">{{ typeLabels[type] | translate }}</option>
+              }
+            </select>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="d-effect">{{ "Ảnh hưởng đến lương" | translate }}</label>
+            <select id="d-effect" name="payrollEffect" class="form-select" required
+                    [(ngModel)]="form.payrollEffect" (ngModelChange)="onEffectChange()" [disabled]="saving">
+              @for (effect of effects; track effect) {
+                <option [ngValue]="effect">{{ effectLabels[effect] | translate }}</option>
+              }
+            </select>
+            <div class="form-text">{{ "Khen thưởng/kỷ luật không mặc định quyết định cộng/trừ lương; hãy chọn theo quyết định được duyệt." | translate }}</div>
+          </div>
+          @if (form.payrollEffect !== 'NONE') {
+            <div class="col-12">
+              <label class="form-label" for="d-amount">{{ "Số tiền (> 0)" | translate }}</label>
+              <input id="d-amount" name="amount" type="number" min="0.0001" step="0.0001" class="form-control" required
+                     [(ngModel)]="form.amount" [disabled]="saving">
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="d-apply">{{ "Ngày áp dụng vào lương" | translate }}</label>
+              <input id="d-apply" name="applyDate" type="date" class="form-control" required [min]="form.issuedDate || null"
+                     [(ngModel)]="form.applyDate" [disabled]="saving">
+            </div>
+          }
+          <div class="col-12">
+            <label class="form-label" for="d-content">{{ "Nội dung" | translate }}</label>
+            <textarea id="d-content" name="content" class="form-control" rows="4" maxlength="2000" required
+                      [(ngModel)]="form.content" [disabled]="saving"></textarea>
+          </div>
+          <div class="col-12">
+            <label class="form-label" for="d-reason">{{ "Lý do tạo/cập nhật" | translate }}</label>
+            <input id="d-reason" name="reason" class="form-control" maxlength="500" required
+                   [(ngModel)]="form.reason" [disabled]="saving">
+          </div>
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn btn-primary" [disabled]="saving || formRef.invalid">
+              {{ (saving ? 'Đang lưu…' : 'Lưu quyết định') | translate }}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="cancelForm()">
+              {{ "Hủy" | translate }}
+            </button>
+          </div>
+        </form>
+      } @else if (actionTarget) {
+        <div class="decision-form-heading">
+          <p class="eyebrow mb-1">{{ "QUYẾT ĐỊNH" | translate }}</p>
+          <h2>{{ (actionMode === 'approve' ? 'Duyệt quyết định' : 'Từ chối quyết định') | translate }}</h2>
+          <p class="muted mb-0">{{ actionTarget.decisionNumber }} — {{ employeeName(actionTarget.employeeId) }}</p>
+        </div>
+        <form #actionRef="ngForm" class="row g-3" (ngSubmit)="submitAction()">
+          <div class="col-12">
+            <label class="form-label" for="d-act-reason">{{ "Lý do xử lý" | translate }}</label>
+            <textarea id="d-act-reason" name="reason" class="form-control" rows="3" maxlength="500" required
+                      [(ngModel)]="actionReason" [disabled]="saving"></textarea>
+          </div>
+          <div class="col-12 d-flex gap-2">
+            <button type="submit" class="btn" [class.btn-success]="actionMode === 'approve'"
+                    [class.btn-danger]="actionMode === 'reject'" [disabled]="saving || actionRef.invalid">
+              {{ (saving ? 'Đang xử lý…' : (actionMode === 'approve' ? 'Xác nhận duyệt' : 'Xác nhận từ chối')) | translate }}
+            </button>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="cancelAction()">
+              {{ "Hủy" | translate }}
+            </button>
+          </div>
+        </form>
+      } @else if (detailLoading) {
+        <p role="status">{{ "Đang tải chi tiết quyết định…" | translate }}</p>
+      } @else if (selectedDecision; as decision) {
+        @if (detailError) {
+          <div class="alert alert-warning" role="alert">
+            {{ detailError | translate }}
+            <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="retryDetail()">
+              {{ "Thử lại" | translate }}
+            </button>
+          </div>
+        }
+        <div class="decision-form-heading">
+          <p class="eyebrow mb-1">{{ "CHI TIẾT" | translate }}</p>
+          <h2>{{ decision.decisionNumber }}</h2>
+        </div>
+        <dl class="row">
+          <dt class="col-sm-5">{{ "Nhân viên" | translate }}</dt><dd class="col-sm-7">{{ employeeName(decision.employeeId) }}</dd>
+          <dt class="col-sm-5">{{ "Loại quyết định" | translate }}</dt><dd class="col-sm-7">{{ typeLabels[decision.decisionType] | translate }}</dd>
+          <dt class="col-sm-5">{{ "Nội dung" | translate }}</dt><dd class="col-sm-7">{{ decision.content }}</dd>
+          <dt class="col-sm-5">{{ "Ngày ban hành" | translate }}</dt><dd class="col-sm-7">{{ decision.issuedDate }}</dd>
+          <dt class="col-sm-5">{{ "Trạng thái" | translate }}</dt><dd class="col-sm-7">{{ statusLabels[decision.approvalStatus] | translate }}</dd>
+          <dt class="col-sm-5">{{ "Ảnh hưởng lương" | translate }}</dt><dd class="col-sm-7">{{ effectLabels[decision.payrollEffect] | translate }}</dd>
+          <dt class="col-sm-5">{{ "Số tiền" | translate }}</dt><dd class="col-sm-7">{{ decision.payrollEffect === 'NONE' ? '—' : money(decision.amount) }}</dd>
+          <dt class="col-sm-5">{{ "Ngày áp dụng" | translate }}</dt><dd class="col-sm-7">{{ decision.applyDate || '—' }}</dd>
+          <dt class="col-sm-5">{{ "Người ban hành (ID)" | translate }}</dt><dd class="col-sm-7">{{ decision.issuedBy ?? '—' }}</dd>
+          <dt class="col-sm-5">{{ "Người xử lý (ID)" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedBy ?? '—' }}</dd>
+          <dt class="col-sm-5">{{ "Thời điểm xử lý" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedAt || '—' }}</dd>
+        </dl>
+        @if (decision.approvalStatus === 'CHO_DUYET') {
+          <div class="d-flex flex-wrap gap-2">
+            <button type="button" class="btn btn-outline-success" [disabled]="saving" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="saving" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
+            <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="openEdit(decision)">{{ "Sửa" | translate }}</button>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Xóa" | translate }}</button>
+          </div>
+        }
+      } @else {
+        <p class="muted mb-0">{{ "Chọn số quyết định để xem thông tin chi tiết." | translate }}</p>
+      }
+    </section>
+  </app-record-workspace>
+}
+
+@if (tab === 'payroll') {
+  <section class="surface">
+    <div class="d-flex justify-content-between align-items-start flex-wrap gap-2">
+      <div>
+        <h2>{{ "Khoản thưởng / khấu trừ theo kỳ lương" | translate }}</h2>
+        <p class="muted">{{ "Kết quả do backend trả về; giao diện không tự cộng, trừ hoặc đánh dấu đã thanh toán." | translate }}</p>
+      </div>
+      <button type="button" class="btn btn-outline-secondary" [disabled]="periodsLoading" (click)="reloadPeriods()">
+        {{ "Tải lại kỳ lương" | translate }}
+      </button>
+    </div>
+
+    @if (periodsLoading) {
+      <p role="status">{{ "Đang tải kỳ lương…" | translate }}</p>
+    } @else if (periodsError) {
+      <div class="alert alert-danger" role="alert">
+        {{ periodsError | translate }}
+        <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="reloadPeriods()">{{ "Thử lại" | translate }}</button>
+      </div>
+    } @else if (periods.length === 0) {
+      <p class="muted">{{ "Chưa có kỳ lương để chọn." | translate }}</p>
+    }
+
+    @if (employeesError) {
+      <div class="alert alert-warning" role="alert">
+        {{ employeesError | translate }}
+        <button type="button" class="btn btn-sm btn-outline-secondary ms-2" [disabled]="employeesLoading" (click)="loadEmployees()">
+          {{ "Thử lại" | translate }}
+        </button>
+      </div>
+    }
+
+    <div class="row g-3 align-items-end">
+      <div class="col-md-5">
+        <label class="form-label" for="p-emp">{{ "Nhân viên" | translate }}</label>
+        <select id="p-emp" class="form-select" [(ngModel)]="payEmployee" (ngModelChange)="resetPayroll()"
+                [disabled]="employeesLoading || employees.length === 0">
+          <option [ngValue]="null">{{ "— Chọn nhân viên —" | translate }}</option>
+          @for (employee of employees; track employee.employeeId) {
+            <option [ngValue]="employee.employeeId">{{ employeeLabel(employee) }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-5">
+        <label class="form-label" for="p-period">{{ "Kỳ lương" | translate }}</label>
+        <select id="p-period" class="form-select" [(ngModel)]="payPeriod" (ngModelChange)="resetPayroll()"
+                [disabled]="periodsLoading || periods.length === 0">
+          <option [ngValue]="null">{{ "— Chọn kỳ —" | translate }}</option>
+          @for (period of periods; track period.periodId) {
+            <option [ngValue]="period.periodId">{{ period.periodCode }} ({{ period.periodStart }} → {{ period.periodEnd }})</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-2">
+        <button type="button" class="btn btn-primary" [disabled]="payrollLoading || periodsLoading || !payEmployee || !payPeriod"
+                (click)="loadPayroll()">
+          {{ (payrollLoading ? 'Đang tải…' : 'Xem khoản') | translate }}
+        </button>
+      </div>
+    </div>
+
+    @if (payrollError) {
+      <div class="alert alert-danger mt-3" role="alert">{{ payrollError | translate }}</div>
+    } @else if (payrollLoading) {
+      <p class="mt-3" role="status">{{ "Đang tải khoản thưởng/khấu trừ từ backend…" | translate }}</p>
+    }
+
+    @if (payroll; as result) {
+      <div class="d-flex flex-wrap gap-3 mt-3 small text-secondary">
+        <span>{{ "Thời gian kỳ" | translate }}: {{ result.from }} → {{ result.to }}</span>
+        <span>{{ "Mã nhân viên" | translate }}: {{ result.employeeId }}</span>
+        <span>{{ "Mã kỳ" | translate }}: {{ result.periodId }}</span>
+      </div>
+      <div class="table-responsive mt-3">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>{{ "Mã nguồn" | translate }}</th>
+              <th>{{ "Số quyết định" | translate }}</th>
+              <th>{{ "Loại quyết định" | translate }}</th>
+              <th>{{ "Ngày áp dụng" | translate }}</th>
+              <th>{{ "Hướng" | translate }}</th>
+              <th class="text-end">{{ "Số tiền" | translate }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of result.items; track item.sourceKey) {
+              <tr>
+                <td>{{ item.sourceKey }}</td>
+                <td>{{ item.decisionNumber }}</td>
+                <td>{{ typeLabels[item.decisionType] | translate }}</td>
+                <td>{{ item.applyDate }}</td>
+                <td>{{ effectLabels[item.direction] | translate }}</td>
+                <td class="text-end">{{ money(item.amount) }}</td>
+              </tr>
+            } @empty {
+              <tr><td colspan="6" class="muted text-center">{{ "Không có quyết định áp dụng trong kỳ này." | translate }}</td></tr>
+            }
+          </tbody>
+        </table>
+      </div>
+      <dl class="row mb-0">
+        <dt class="col-sm-3">{{ "Tổng cộng thêm" | translate }}</dt><dd class="col-sm-9">{{ money(result.totalAdd) }}</dd>
+        <dt class="col-sm-3">{{ "Tổng khấu trừ" | translate }}</dt><dd class="col-sm-9">{{ money(result.totalDeduct) }}</dd>
+        <dt class="col-sm-3">{{ "Điều chỉnh ròng" | translate }}</dt><dd class="col-sm-9">{{ money(result.netAdjustment) }}</dd>
+        <dt class="col-sm-3">{{ "Phiên bản chính sách" | translate }}</dt><dd class="col-sm-9">{{ result.policyVersion || '—' }}</dd>
+      </dl>
+    }
+  </section>
+}

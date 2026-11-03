@@ -74,3 +74,17 @@ export interface SalaryTermRequest {
   documentReference: string | null;
   reason: string;
 }
+
+export interface SalaryRateSegment {
+  employeeId: number;
+  contractId: number;
+  salaryTermId: number;
+  from: string;
+  to: string;
+  baseSalary: number;
+  payBasis: PayBasis;
+}
+
+export interface SalaryTermChangeRequest {
+  newTerm: SalaryTermRequest;
+}

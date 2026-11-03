@@ -12,6 +12,8 @@ import {
   ContractTypeRequest,
   SalaryTermResponse,
   SalaryTermRequest,
+  SalaryRateSegment,
+  SalaryTermChangeRequest,
 } from "../models/contract.model";
 
 @Injectable({ providedIn: "root" })
@@ -88,6 +90,42 @@ export class ContractService {
   createSalaryTerm(contractId: number, request: SalaryTermRequest) {
     return this.http.post<SalaryTermResponse>(
       `${API_BASE_URL}/contracts/${contractId}/salary-terms`,
+      request,
+    );
+  }
+
+  salaryRates(employeeId: number, from: string, to: string) {
+    return this.http.get<SalaryRateSegment[]>(
+      `${API_BASE_URL}/employees/${employeeId}/salary-rates`,
+      { params: { from, to } },
+    );
+  }
+
+  updateSalaryTerm(
+    contractId: number,
+    salaryTermId: number,
+    request: SalaryTermRequest,
+  ) {
+    return this.http.put<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}`,
+      request,
+    );
+  }
+
+  deleteSalaryTerm(contractId: number, salaryTermId: number, reason: string) {
+    return this.http.delete<void>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}`,
+      { params: { reason } },
+    );
+  }
+
+  changeSalaryRate(
+    contractId: number,
+    salaryTermId: number,
+    request: SalaryTermChangeRequest,
+  ) {
+    return this.http.post<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}/change-rate`,
       request,
     );
   }
