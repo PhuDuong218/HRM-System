@@ -37,6 +37,52 @@ class PersonnelScopePrivacyIntegrationTest {
   for(String role:new String[]{"ADMIN","HR"})db.update("INSERT dbo.role_permissions(role_id,permission_id) SELECT r.role_id,p.permission_id FROM dbo.roles r CROSS JOIN dbo.permissions p WHERE r.role_code=? AND p.permission_code='EMPLOYEE_MANAGE' AND NOT EXISTS(SELECT 1 FROM dbo.role_permissions x WHERE x.role_id=r.role_id AND x.permission_id=p.permission_id)",role);
  }
  String auth(String token){return "Bearer "+token;}
+ String head(LocalDate from){
+  long leader=employee("HEAD");String token=account(leader,"EMPLOYEE","HEAD");
+  db.update("IF NOT EXISTS(SELECT 1 FROM dbo.positions WHERE position_code='TRUONG_PHONG') INSERT dbo.positions(position_code,position_name) VALUES('TRUONG_PHONG',N'Trưởng phòng')");
+  long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code='TRUONG_PHONG'",Long.class);
+  db.update("INSERT dbo.employee_assignments(employee_id,department_id,position_id,effective_from) VALUES(?,?,?,?)",leader,departmentA,position,from);return token;
+ }
+ @Test void currentHeadReadsDepartmentProfilesAndAuditButCannotMutate()throws Exception{
+  String leader=head(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).minusDays(2));
+  mvc.perform(get("/employees/search").param("keyword",tag).header("Authorization",auth(leader))).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(3));
+  mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(leader))).andExpect(status().isOk()).andExpect(jsonPath("$.identityNumber").value("PRIVATE_ID")).andExpect(jsonPath("$.address").value("PRIVATE_HOME"));
+  mvc.perform(get("/employees/"+outside+"/detail").header("Authorization",auth(leader))).andExpect(status().isForbidden());
+  mvc.perform(put("/employees/"+inside).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Updated profile\",\"reason\":\"QA audit profile\"}")).andExpect(status().isOk());
+  String audit=mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(inside)).header("Authorization",auth(leader))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();
+  assertTrue(audit.contains("PRIVATE_ID"));assertTrue(audit.contains("PRIVATE_HOME"));
+  mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(outside)).header("Authorization",auth(leader))).andExpect(status().isForbidden());
+  mvc.perform(put("/employees/"+inside).header("Authorization",auth(leader)).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Forbidden edit\"}")).andExpect(status().isForbidden());
+  mvc.perform(patch("/employees/"+inside+"/contact").header("Authorization",auth(leader)).contentType(MediaType.APPLICATION_JSON).content("{\"phone\":\"0901234567\"}")).andExpect(status().isForbidden());
+  db.update("UPDATE dbo.employee_assignments SET effective_to=? WHERE employee_id=(SELECT employee_id FROM dbo.accounts WHERE username=?)",LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")),tag+"HEAD");
+  mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(leader))).andExpect(status().isForbidden());
+  mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(inside)).header("Authorization",auth(leader))).andExpect(status().isForbidden());
+ }
+ @Test void futureHeadCannotReadDepartmentBeforeEffectiveDate()throws Exception{
+  String leader=head(LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(1));
+  mvc.perform(get("/employees/search").header("Authorization",auth(leader))).andExpect(status().isForbidden());
+  mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(leader))).andExpect(status().isForbidden());
+ }
+ @Test void futureTerminationDecisionKeepsEmployeeAndTokenActive()throws Exception{
+  LocalDate last=LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")).plusDays(10);
+  mvc.perform(post("/employees/"+inside+"/termination-decisions").header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"reason\":\"Future termination regression\",\"lastWorkingDate\":\""+last+"\",\"decisionType\":\"MUTUAL_AGREEMENT\",\"decisionNumber\":\""+tag+"EXIT\"}"))
+   .andExpect(status().isNoContent());
+  assertEquals("DANG_LAM",db.queryForObject("SELECT employment_status FROM dbo.employees WHERE employee_id=?",String.class,inside));
+  assertEquals(Boolean.TRUE,db.queryForObject("SELECT is_active FROM dbo.accounts WHERE employee_id=?",Boolean.class,inside));
+  mvc.perform(get("/api/auth/me").header("Authorization",auth(owner))).andExpect(status().isOk());
+ }
+ @Test void terminationWithFutureAssignmentReturnsConflictWithoutPartialDecision()throws Exception{
+  LocalDate today=LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+  long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag);
+  db.update("UPDATE dbo.employee_assignments SET effective_to=? WHERE employee_id=? AND effective_to IS NULL",today.plusDays(2),inside);
+  db.update("INSERT dbo.employee_assignments(employee_id,department_id,position_id,effective_from) VALUES(?,?,?,?)",inside,departmentB,position,today.plusDays(2));
+  mvc.perform(post("/employees/"+inside+"/termination-decisions").header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"reason\":\"Pending transfer conflict\",\"lastWorkingDate\":\""+today+"\",\"decisionType\":\"MUTUAL_AGREEMENT\",\"decisionNumber\":\""+tag+"BLOCK\"}"))
+   .andExpect(status().isConflict());
+  assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM dbo.employee_requests WHERE employee_id=?",Integer.class,inside));
+  assertEquals("DANG_LAM",db.queryForObject("SELECT employment_status FROM dbo.employees WHERE employee_id=?",String.class,inside));
+ }
  long createdId(String path,String token,String body,String key)throws Exception {
   String response=mvc.perform(post(path).header("Authorization",auth(token)).contentType(MediaType.APPLICATION_JSON).content(body))
    .andExpect(status().isCreated()).andReturn().getResponse().getContentAsString();
@@ -115,14 +161,19 @@ class PersonnelScopePrivacyIntegrationTest {
   mvc.perform(get("/employee-requests/balances/"+inside).header("Authorization",auth(owner))).andExpect(status().isOk());
   mvc.perform(get("/leave-entitlements").param("employeeId",Long.toString(outside)).header("Authorization",auth(hr))).andExpect(status().isForbidden());
  }
- @Test void adminCannotReadOthersPrivateFields()throws Exception{String body=mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(admin))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();assertFalse(body.contains("PRIVATE_ID"));assertFalse(body.contains("PRIVATE_HOME"));}
+ @Test void adminCanReadEmployeePrivateFields()throws Exception{String body=mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(admin))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();assertTrue(body.contains("PRIVATE_ID"));assertTrue(body.contains("PRIVATE_HOME"));}
+ @Test void hrReadsPrivateFieldsOnlyInsideScope()throws Exception{
+  mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(hr))).andExpect(status().isOk()).andExpect(jsonPath("$.identityNumber").value("PRIVATE_ID")).andExpect(jsonPath("$.address").value("PRIVATE_HOME"));
+  mvc.perform(get("/employees/"+outside+"/detail").header("Authorization",auth(hr))).andExpect(status().isForbidden());
+  mvc.perform(get("/employees/"+inside+"/detail")).andExpect(status().isUnauthorized());
+ }
  @Test void employeeCanReadOwnPrivateFieldsButNotAnotherEmployee()throws Exception{mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(owner))).andExpect(status().isOk()).andExpect(jsonPath("$.identityNumber").value("PRIVATE_ID"));mvc.perform(get("/employees/"+outside+"/detail").header("Authorization",auth(owner))).andExpect(status().isForbidden());}
  @Test void hrSearchIsScopedBeforeCountingAndPaging()throws Exception{String body=mvc.perform(get("/employees/search").param("keyword",tag).param("page","0").param("size","10").header("Authorization",auth(hr))).andExpect(status().isOk()).andExpect(jsonPath("$.totalElements").value(2)).andReturn().getResponse().getContentAsString();assertTrue(body.contains(tag+"IN"));assertFalse(body.contains(tag+"OUT"));}
  @Test void hrCannotReadOrUpdateOutsideScope()throws Exception{mvc.perform(get("/employees/"+outside+"/detail").header("Authorization",auth(hr))).andExpect(status().isForbidden());mvc.perform(put("/employees/"+outside).header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Blocked update\"}")).andExpect(status().isForbidden());assertEquals(tag+"OUT",db.queryForObject("SELECT full_name FROM dbo.employees WHERE employee_id=?",String.class,outside));}
  @Test void publicContactPatchPreservesPrivateFields()throws Exception{mvc.perform(patch("/employees/"+inside+"/contact").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"fixture@example.test\"}")).andExpect(status().isOk());assertEquals("PRIVATE_ID",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,inside));assertEquals("PRIVATE_HOME",db.queryForObject("SELECT address FROM dbo.employees WHERE employee_id=?",String.class,inside));}
  @Test void adminAndHrCannotEditOwnContacts()throws Exception{mvc.perform(patch("/employees/"+adminEmployee+"/contact").header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"self@example.test\"}")).andExpect(status().isForbidden());mvc.perform(patch("/employees/"+hrEmployee+"/contact").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{\"email\":\"self@example.test\"}")).andExpect(status().isForbidden());}
  @Test void profileUpdateDoesNotEraseHiddenIdentity()throws Exception{mvc.perform(put("/employees/"+inside).header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON).content("{\"fullName\":\"Allowed update\"}")).andExpect(status().isOk());assertEquals("PRIVATE_ID",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,inside));}
- @Test void auditCannotLeakPrivateFields()throws Exception{long actor=db.queryForObject("SELECT account_id FROM dbo.accounts WHERE username=?",Long.class,tag+"A");db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,before_data_json,after_data_json) VALUES(?,'TEST_PRIVATE','employees',?,?,?)",actor,Long.toString(inside),"{\"address\":\"PRIVATE_HOME\",\"identityNumber\":\"PRIVATE_ID\"}","{}");String body=mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(inside)).header("Authorization",auth(admin))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();assertFalse(body.contains("PRIVATE_ID"));assertFalse(body.contains("PRIVATE_HOME"));assertTrue(body.contains("REDACTED"));}
+ @Test void adminCanReadPrivateFieldsInEmployeeAudit()throws Exception{long actor=db.queryForObject("SELECT account_id FROM dbo.accounts WHERE username=?",Long.class,tag+"A");db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,before_data_json,after_data_json) VALUES(?,'TEST_PRIVATE','employees',?,?,?)",actor,Long.toString(inside),"{\"address\":\"PRIVATE_HOME\",\"identityNumber\":\"PRIVATE_ID\"}","{}");String body=mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(inside)).header("Authorization",auth(admin))).andExpect(status().isOk()).andReturn().getResponse().getContentAsString();assertTrue(body.contains("PRIVATE_ID"));assertTrue(body.contains("PRIVATE_HOME"));assertFalse(body.contains("REDACTED"));}
  @Test void hrCannotMoveEmployeeToUnassignedDepartment()throws Exception{
   long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag);
   mvc.perform(put("/employees/"+inside+"/transfer").header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON)

@@ -2,7 +2,6 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { timeout } from 'rxjs';
 import { API_BASE_URL } from './api.config';
-import { EmployeeService } from './employee.service';
 
 export interface Account {
   accountId: number;
@@ -16,9 +15,16 @@ export interface Account {
   active: boolean;
   createdAt: string | null;
   updatedAt: string | null;
+  employmentStatus: 'DANG_LAM' | 'DA_NGHI' | null;
 }
 
-export type AccountPage = import('../models/page.model').ItemPage<Account>;
+export interface AccountPage {
+  items: Account[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+}
 
 export interface AccountRole {
   roleId: number;
@@ -39,26 +45,64 @@ export interface AccountFilters {
   active: '' | 'true' | 'false';
   roleId: string;
 }
-
-export interface AccountUpdate { roleId: number; username: string; active: boolean; }
-export interface AccountCreate extends AccountUpdate { employeeId: number; password: string; confirmPassword: string; }
+export interface CreateAccount {
+  employeeId: number;
+  roleId: number;
+  username: string;
+  password: string;
+  confirmPassword: string;
+  active: boolean;
+}
+export interface ActiveDepartment { departmentId: number; departmentName: string; }
+export interface ScopeDepartmentOption extends ActiveDepartment { active: boolean; assigned: boolean; }
+export interface AccountContact { email: string | null; phone: string | null; }
+export interface EligibleEmployee { employeeId: number; employeeCode: string; fullName: string; }
+export interface EligibleEmployeePage { items: EligibleEmployee[]; page: number; totalPages: number; totalElements: number; }
 
 @Injectable({ providedIn: 'root' })
 export class AccountService {
   private http = inject(HttpClient);
-  private employeeApi = inject(EmployeeService);
 
-  employees() { return this.employeeApi.all(); }
-  create(body: AccountCreate) { return this.http.post<Account>(`${API_BASE_URL}/admin/accounts`,body).pipe(timeout(20000)); }
-  update(id: number,body: AccountUpdate) { return this.http.put<Account>(`${API_BASE_URL}/admin/accounts/${id}`,body).pipe(timeout(20000)); }
-  resetPassword(id: number,newPassword: string,confirmPassword: string) { return this.http.post<void>(`${API_BASE_URL}/admin/accounts/${id}/reset-password`,{newPassword,confirmPassword}).pipe(timeout(20000)); }
-  createRole(roleCode: string,roleName: string,permissionIds: number[]) { return this.http.post<AccountRole>(`${API_BASE_URL}/admin/roles`,{roleCode,roleName,permissionIds}).pipe(timeout(20000)); }
-  updateRole(id: number,roleName: string) { return this.http.put<AccountRole>(`${API_BASE_URL}/admin/roles/${id}`,{roleName}).pipe(timeout(20000)); }
-  replacePermissions(id: number,permissionIds: number[]) { return this.http.put<AccountRole>(`${API_BASE_URL}/admin/roles/${id}/permissions`,{permissionIds}).pipe(timeout(20000)); }
-  deleteRole(id: number) { return this.http.delete<void>(`${API_BASE_URL}/admin/roles/${id}`).pipe(timeout(20000)); }
-  createPermission(permissionCode: string,permissionName: string,description: string) { return this.http.post<AccessPermission>(`${API_BASE_URL}/admin/permissions`,{permissionCode,permissionName,description}).pipe(timeout(20000)); }
-  updatePermission(id: number,permissionName: string,description: string) { return this.http.put<AccessPermission>(`${API_BASE_URL}/admin/permissions/${id}`,{permissionName,description}).pipe(timeout(20000)); }
-  deletePermission(id: number) { return this.http.delete<void>(`${API_BASE_URL}/admin/permissions/${id}`).pipe(timeout(20000)); }
+  create(account: CreateAccount) {
+    return this.http.post<Account>(`${API_BASE_URL}/admin/accounts`, account).pipe(timeout(15000));
+  }
+
+  resetPassword(accountId: number, newPassword: string, confirmPassword: string) {
+    return this.http.post<void>(`${API_BASE_URL}/admin/accounts/${accountId}/reset-password`, { newPassword, confirmPassword }).pipe(timeout(15000));
+  }
+
+  changeStatus(accountId: number, expectedActive: boolean, active: boolean) {
+    return this.http.patch<Account>(`${API_BASE_URL}/admin/accounts/${accountId}/status`, { expectedActive, active }).pipe(timeout(15000));
+  }
+
+  editIdentity(accountId: number, change: { expectedUsername: string; expectedRoleId: number; username: string; roleId: number; expectedDepartmentIds?: number[]; departmentIds?: number[] }) {
+    return this.http.patch<Account>(`${API_BASE_URL}/admin/accounts/${accountId}/identity`, change).pipe(timeout(15000));
+  }
+
+  editPermission(permissionId: number, change: { expectedName: string; expectedDescription: string | null; permissionName: string; description: string | null }) {
+    return this.http.patch<AccessPermission>(`${API_BASE_URL}/admin/permissions/${permissionId}/details`, change).pipe(timeout(15000));
+  }
+
+  get(accountId: number) {
+    return this.http.get<Account>(`${API_BASE_URL}/admin/accounts/${accountId}`).pipe(timeout(15000));
+  }
+
+  contact(accountId: number) {
+    return this.http.get<AccountContact>(`${API_BASE_URL}/admin/accounts/${accountId}/contact`).pipe(timeout(15000));
+  }
+
+  activeHrDepartments(accountId: number) {
+    return this.http.get<ActiveDepartment[]>(`${API_BASE_URL}/admin/hr-scopes/account/${accountId}/active-departments`).pipe(timeout(15000));
+  }
+
+  hrDepartmentOptions(accountId: number) {
+    return this.http.get<ScopeDepartmentOption[]>(`${API_BASE_URL}/admin/hr-scopes/account/${accountId}/department-options`).pipe(timeout(15000));
+  }
+
+  eligibleEmployees(keyword: string, page: number) {
+    const params = new HttpParams().set('keyword', keyword).set('page', page).set('size', 10);
+    return this.http.get<EligibleEmployeePage>(`${API_BASE_URL}/admin/accounts/eligible-employees`, { params }).pipe(timeout(15000));
+  }
 
   list(page: number, filters: AccountFilters) {
     let params = new HttpParams().set('page', page).set('size', 10);

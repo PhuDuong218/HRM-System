@@ -2,6 +2,8 @@ package com.hrm.security;
 
 import com.hrm.HrmApplication;
 import com.hrm.service.ContractExpiryJob;
+import com.hrm.service.HrDepartmentScopeService;
+import com.hrm.dto.HrScopeDTOs.ReplaceDepartmentsRequest;
 import java.net.URI;
 import java.net.http.*;
 import java.util.List;
@@ -14,9 +16,12 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.server.ResponseStatusException;
 import tools.jackson.databind.JsonNode;
 import tools.jackson.databind.json.JsonMapper;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
 
 @SpringBootTest(classes = HrmApplication.class, webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
         properties = {
@@ -35,6 +40,7 @@ class AdminAccessApiIntegrationTest {
     @Autowired JwtService jwt;
     @Autowired PasswordEncoder encoder;
     @MockitoBean ContractExpiryJob expiryJob;
+    @MockitoBean HrDepartmentScopeService hrScopes;
     private final HttpClient client = HttpClient.newHttpClient();
     private final JsonMapper json = new JsonMapper();
     private String admin;
@@ -60,6 +66,132 @@ class AdminAccessApiIntegrationTest {
             db.update("INSERT INTO accounts(employee_id, role_id, username, password_hash, is_active, token_version, created_at) VALUES (?, ?, ?, ?, TRUE, 0, CURRENT_TIMESTAMP)",
                     id, id, "user" + id, encoder.encode("Original@123"));
         admin = token(1, 0);
+    }
+
+    @Test
+    void changingRoleAndDepartmentsIsAtomicWhenScopeUpdateFails() throws Exception {
+        String edit = "{\"expectedUsername\":\"user3\",\"expectedRoleId\":3,\"username\":\"changed.user\",\"roleId\":2,\"expectedDepartmentIds\":[],\"departmentIds\":[4]}";
+        when(hrScopes.replaceDepartments(any(), eq(3L), any(ReplaceDepartmentsRequest.class)))
+                .thenThrow(new ResponseStatusException(HttpStatus.CONFLICT, "Phạm vi đã thay đổi"));
+        var failed = call("PATCH", "/accounts/3/identity", admin, edit);
+        assertEquals(409, failed.statusCode(), failed.body());
+        assertEquals("user3", db.queryForObject("SELECT username FROM accounts WHERE account_id=3", String.class));
+        assertEquals(3L, db.queryForObject("SELECT role_id FROM accounts WHERE account_id=3", Long.class));
+        assertEquals(0, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=3", Integer.class));
+        reset(hrScopes);
+        var success = call("PATCH", "/accounts/3/identity", admin, edit);
+        assertEquals(200, success.statusCode(), success.body());
+        var order = inOrder(hrScopes);
+        order.verify(hrScopes).lockAccountForUpdate(any(), eq(3L));
+        order.verify(hrScopes).replaceDepartments(any(), eq(3L), any(ReplaceDepartmentsRequest.class));
+        assertEquals(2L, db.queryForObject("SELECT role_id FROM accounts WHERE account_id=3", Long.class));
+    }
+
+    @Test
+    void scopeOnlyEditDoesNotRevokeSessions() throws Exception {
+        String edit = "{\"expectedUsername\":\"user2\",\"expectedRoleId\":2,\"username\":\"user2\",\"roleId\":2,\"expectedDepartmentIds\":[],\"departmentIds\":[4]}";
+        var response = call("PATCH", "/accounts/2/identity", admin, edit);
+        assertEquals(200, response.statusCode(), response.body());
+        verify(hrScopes).replaceDepartments(any(), eq(2L), any(ReplaceDepartmentsRequest.class));
+        assertEquals(0, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=2", Integer.class));
+    }
+
+    @Test
+    void eligibleEmployeesExcludeAllExistingAccountsAndInactiveEmployees() throws Exception {
+        db.update("UPDATE accounts SET is_active=FALSE WHERE employee_id=3");
+        var response = call("GET", "/accounts/eligible-employees?size=2", admin, null);
+        assertEquals(200, response.statusCode(), response.body());
+        var result = tree(response);
+        assertEquals(3, result.get("totalElements").asInt());
+        assertEquals(2, result.get("items").size());
+        assertEquals(4, result.get("items").get(0).get("employeeId").asLong());
+        var found = tree(call("GET", "/accounts/eligible-employees?keyword=E5", admin, null));
+        assertEquals(1, found.get("totalElements").asInt());
+        assertEquals(5, found.get("items").get(0).get("employeeId").asLong());
+        assertEquals(0, tree(call("GET", "/accounts/eligible-employees?keyword=%25", admin, null)).get("totalElements").asInt());
+        assertEquals(401, call("GET", "/accounts/eligible-employees", null, null).statusCode());
+        assertEquals(403, call("GET", "/accounts/eligible-employees", token(2, 0), null).statusCode());
+        assertEquals(201, call("POST", "/accounts", admin, accountBody(4, "new.user")).statusCode());
+        assertEquals(0, tree(call("GET", "/accounts/eligible-employees?keyword=E4", admin, null)).get("totalElements").asInt());
+        assertEquals(409, call("POST", "/accounts", admin, accountBody(4, "other.user")).statusCode());
+    }
+
+    @Test
+    void accountContactIsVisibleAndRestrictedToAdministrators() throws Exception {
+        db.update("UPDATE employees SET email=?, phone=? WHERE employee_id=2", "nhanvien@example.com", "0912345678");
+        var result = call("GET", "/accounts/2/contact", admin, null);
+        assertEquals(200, result.statusCode(), result.body());
+        assertEquals("nhanvien@example.com", tree(result).get("email").asText());
+        assertEquals("0912345678", tree(result).get("phone").asText());
+        assertEquals(401, call("GET", "/accounts/2/contact", null, null).statusCode());
+        assertEquals(403, call("GET", "/accounts/2/contact", token(2, 0), null).statusCode());
+        assertTrue(tree(call("GET", "/accounts/3/contact", admin, null)).get("email").isNull());
+        assertEquals(404, call("GET", "/accounts/999/contact", admin, null).statusCode());
+    }
+
+    @Test
+    void editingPermissionDetailsPreservesCodeGrantsAndSessions() throws Exception {
+        String body = "{\"expectedName\":\"SELF_READ\",\"expectedDescription\":null,\"permissionName\":\"Xem hồ sơ\",\"description\":\"Thông tin cá nhân\"}";
+        assertEquals(401, call("PATCH", "/permissions/2/details", null, body).statusCode());
+        assertEquals(403, call("PATCH", "/permissions/2/details", token(2, 0), body).statusCode());
+        var response = call("PATCH", "/permissions/2/details", admin, body);
+        assertEquals(200, response.statusCode(), response.body());
+        assertEquals("SELF_READ", tree(response).get("permissionCode").asText());
+        assertEquals("Xem hồ sơ", tree(response).get("permissionName").asText());
+        assertEquals(3, db.queryForObject("SELECT COUNT(*) FROM role_permissions WHERE permission_id=2", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=2", Integer.class));
+        assertEquals(409, call("PATCH", "/permissions/2/details", admin, body).statusCode());
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM audit_logs WHERE action='PERMISSION_UPDATED'", Integer.class));
+    }
+
+    @Test
+    void editingUsernameAndRolePreservesStatusAndRejectsStaleOrUnauthorizedChanges() throws Exception {
+        String edit = "{\"expectedUsername\":\"user3\",\"expectedRoleId\":3,\"username\":\"changed.user\",\"roleId\":2}";
+        assertEquals(401, call("PATCH", "/accounts/3/identity", null, edit).statusCode());
+        assertEquals(403, call("PATCH", "/accounts/3/identity", token(2, 0), edit).statusCode());
+        var result = call("PATCH", "/accounts/3/identity", admin, edit);
+        assertEquals(200, result.statusCode(), result.body());
+        assertEquals("changed.user", tree(result).get("username").asText());
+        assertEquals(2, tree(result).get("roleId").asInt());
+        assertTrue(tree(result).get("active").asBoolean());
+        assertEquals(401, call("GET", "/accounts", token(3, 0), null).statusCode());
+        assertEquals(409, call("PATCH", "/accounts/3/identity", admin, edit).statusCode());
+        assertEquals(409, call("PATCH", "/accounts/3/identity", admin,
+                "{\"expectedUsername\":\"changed.user\",\"expectedRoleId\":2,\"username\":\"user2\",\"roleId\":2}").statusCode());
+        assertEquals(409, call("PATCH", "/accounts/1/identity", admin,
+                "{\"expectedUsername\":\"user1\",\"expectedRoleId\":1,\"username\":\"user1\",\"roleId\":2}").statusCode());
+        assertEquals(200, call("PATCH", "/accounts/1/identity", admin,
+                "{\"expectedUsername\":\"user1\",\"expectedRoleId\":1,\"username\":\"new.admin\",\"roleId\":1}").statusCode());
+        assertEquals(401, call("GET", "/accounts", admin, null).statusCode());
+        assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM audit_logs WHERE action='ACCOUNT_UPDATED'", Integer.class));
+    }
+
+    @Test
+    void lockUnlockAndPasswordResetProtectSessionsAndRejectStaleChanges() throws Exception {
+        var reset = call("POST", "/accounts/2/reset-password", admin,
+                "{\"newPassword\":\"Changed@123\",\"confirmPassword\":\"Changed@123\"}");
+        assertEquals(204, reset.statusCode(), reset.body());
+        assertTrue(encoder.matches("Changed@123", db.queryForObject("SELECT password_hash FROM accounts WHERE account_id=2", String.class)));
+        assertEquals(1, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=2", Integer.class));
+        assertEquals(401, call("GET", "/accounts", token(2, 0), null).statusCode());
+        String tooLong = "Đ".repeat(40);
+        assertEquals(400, call("POST", "/accounts/2/reset-password", admin,
+                "{\"newPassword\":\"" + tooLong + "\",\"confirmPassword\":\"" + tooLong + "\"}").statusCode());
+        assertEquals(400, call("POST", "/accounts/1/reset-password", admin,
+                "{\"newPassword\":\"Changed@123\",\"confirmPassword\":\"Changed@123\"}").statusCode());
+
+        var locked = call("PATCH", "/accounts/2/status", admin, "{\"expectedActive\":true,\"active\":false}");
+        assertEquals(200, locked.statusCode(), locked.body());
+        assertFalse(tree(locked).get("active").asBoolean());
+        assertEquals(2, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=2", Integer.class));
+        assertEquals(409, call("PATCH", "/accounts/2/status", admin, "{\"expectedActive\":true,\"active\":false}").statusCode());
+        assertEquals(409, call("PATCH", "/accounts/1/status", admin, "{\"expectedActive\":true,\"active\":false}").statusCode());
+        db.update("UPDATE employees SET employment_status='DA_NGHI' WHERE employee_id=2");
+        assertEquals(409, call("PATCH", "/accounts/2/status", admin, "{\"expectedActive\":false,\"active\":true}").statusCode());
+        db.update("UPDATE employees SET employment_status='DANG_LAM' WHERE employee_id=2");
+        assertEquals(200, call("PATCH", "/accounts/2/status", admin, "{\"expectedActive\":false,\"active\":true}").statusCode());
+        assertTrue(db.queryForObject("SELECT is_active FROM accounts WHERE account_id=2", Boolean.class));
+        assertEquals(3, db.queryForObject("SELECT COUNT(*) FROM audit_logs WHERE action IN ('PASSWORD_RESET','ACCOUNT_LOCKED','ACCOUNT_UNLOCKED')", Integer.class));
     }
 
     @Test
@@ -94,33 +226,28 @@ class AdminAccessApiIntegrationTest {
     }
 
     @Test
-    void roleAndPermissionCrudMaintainsReferencesAndRevokesAffectedTokens() throws Exception {
-        var p = call("POST", "/permissions", admin,
-                "{\"permissionCode\":\"custom.view\",\"permissionName\":\"Xem\",\"description\":\"Mo ta\"}");
-        assertEquals(201, p.statusCode(), p.body());
-        long permissionId = tree(p).get("permissionId").asLong();
-        var r = call("POST", "/roles", admin,
-                "{\"roleCode\":\"AUDITOR\",\"roleName\":\"Kiem tra\",\"permissionIds\":[" + permissionId + "]}");
-        assertEquals(201, r.statusCode(), r.body());
-        long roleId = tree(r).get("roleId").asLong();
+    void roleAndPermissionDetailsRemainAvailableWhenRoleCanBeAssigned() throws Exception {
+        db.update("INSERT INTO permissions(permission_code, permission_name, description) VALUES ('custom.view','Xem','Mo ta')");
+        long permissionId = db.queryForObject("SELECT permission_id FROM permissions WHERE permission_code='custom.view'", Long.class);
+        db.update("INSERT INTO roles(role_code, role_name) VALUES ('AUDITOR','Kiem tra')");
+        long roleId = db.queryForObject("SELECT role_id FROM roles WHERE role_code='AUDITOR'", Long.class);
+        db.update("INSERT INTO role_permissions(role_id, permission_id) VALUES (?, ?)", roleId, permissionId);
         assertEquals(200, call("GET", "/roles/" + roleId, admin, null).statusCode());
         assertEquals(200, call("GET", "/permissions/" + permissionId, admin, null).statusCode());
-        assertEquals(200, call("PUT", "/roles/" + roleId, admin, "{\"roleName\":\"Kiem toan\"}").statusCode());
+        assertEquals(405, call("PUT", "/roles/" + roleId, admin, "{\"roleName\":\"Kiem toan\"}").statusCode());
         assertEquals(200, call("PUT", "/permissions/" + permissionId, admin,
                 "{\"permissionName\":\"Xem bao cao\",\"description\":null}").statusCode());
-        assertEquals(409, call("DELETE", "/permissions/" + permissionId, admin, null).statusCode());
+        assertEquals(405, call("DELETE", "/permissions/" + permissionId, admin, null).statusCode());
         assertEquals(200, call("PUT", "/accounts/3", admin,
                 "{\"roleId\":" + roleId + ",\"username\":\"user3\",\"active\":true}").statusCode());
-        assertEquals(409, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
-        assertEquals(200, call("PUT", "/roles/" + roleId + "/permissions", admin, "{\"permissionIds\":[]}").statusCode());
-        assertEquals(2, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=3", Integer.class));
-        assertEquals(401, call("GET", "/roles", token(3, 1), null).statusCode());
+        assertEquals(405, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
+        assertEquals(1, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=3", Integer.class));
         assertEquals(200, call("PUT", "/accounts/3", admin,
                 "{\"roleId\":3,\"username\":\"user3\",\"active\":true}").statusCode());
-        assertEquals(204, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
-        assertEquals(204, call("DELETE", "/permissions/" + permissionId, admin, null).statusCode());
-        assertEquals(404, call("GET", "/roles/" + roleId, admin, null).statusCode());
-        assertEquals(404, call("GET", "/permissions/" + permissionId, admin, null).statusCode());
+        assertEquals(405, call("DELETE", "/roles/" + roleId, admin, null).statusCode());
+        assertEquals(405, call("DELETE", "/permissions/" + permissionId, admin, null).statusCode());
+        assertEquals(200, call("GET", "/roles/" + roleId, admin, null).statusCode());
+        assertEquals(200, call("GET", "/permissions/" + permissionId, admin, null).statusCode());
     }
 
     @Test
@@ -132,14 +259,8 @@ class AdminAccessApiIntegrationTest {
                 new String[]{"PUT", "/accounts/1", "{\"roleId\":1,\"username\":\"user1\",\"active\":true}"},
                 new String[]{"DELETE", "/accounts/1", null},
                 new String[]{"GET", "/roles", null}, new String[]{"GET", "/roles/1", null},
-                new String[]{"POST", "/roles", "{\"roleCode\":\"NEW\",\"roleName\":\"New\",\"permissionIds\":[]}"},
-                new String[]{"PUT", "/roles/1", "{\"roleName\":\"New\"}"},
-                new String[]{"PUT", "/roles/1/permissions", "{\"permissionIds\":[1]}"},
-                new String[]{"DELETE", "/roles/1", null},
                 new String[]{"GET", "/permissions", null}, new String[]{"GET", "/permissions/1", null},
-                new String[]{"POST", "/permissions", "{\"permissionCode\":\"NEW\",\"permissionName\":\"New\"}"},
-                new String[]{"PUT", "/permissions/1", "{\"permissionName\":\"New\"}"},
-                new String[]{"DELETE", "/permissions/1", null});
+                new String[]{"PUT", "/permissions/1", "{\"permissionName\":\"New\"}"});
         for (var route : routes) {
             assertEquals(401, call(route[0], route[1], null, route[2]).statusCode(), route[1]);
             for (long id : List.of(2L, 3L))
@@ -161,10 +282,8 @@ class AdminAccessApiIntegrationTest {
         assertEquals(400, call("POST", "/accounts", admin, accountBody(4, "x").replace("\"confirmPassword\":\"NewPassword@123\"", "\"confirmPassword\":\"Mismatch@123\"")).statusCode());
         assertEquals(400, call("GET", "/accounts?page=-1", admin, null).statusCode());
         assertEquals(400, call("GET", "/accounts?size=101", admin, null).statusCode());
-        assertEquals(409, call("POST", "/roles", admin, "{\"roleCode\":\"ADMIN\",\"roleName\":\"X\",\"permissionIds\":[]}").statusCode());
-        assertEquals(409, call("POST", "/permissions", admin, "{\"permissionCode\":\"account_manage\",\"permissionName\":\"X\"}").statusCode());
-        assertEquals(404, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[999]}").statusCode());
-        assertEquals(400, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[null]}").statusCode());
+        assertEquals(405, call("POST", "/roles", admin, "{}").statusCode());
+        assertEquals(405, call("POST", "/permissions", admin, "{}").statusCode());
     }
 
     @Test
@@ -172,31 +291,28 @@ class AdminAccessApiIntegrationTest {
         assertEquals(409, call("DELETE", "/accounts/1", admin, null).statusCode());
         assertEquals(409, call("PUT", "/accounts/1", admin, "{\"roleId\":1,\"username\":\"user1\",\"active\":false}").statusCode());
         assertEquals(409, call("PUT", "/accounts/1", admin, "{\"roleId\":2,\"username\":\"user1\",\"active\":true}").statusCode());
-        assertEquals(409, call("DELETE", "/roles/1", admin, null).statusCode());
-        assertEquals(409, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[2]}").statusCode());
-        assertEquals(409, call("PUT", "/roles/2/permissions", admin, "{\"permissionIds\":[1]}").statusCode());
-        assertEquals(400, call("POST", "/permissions", admin, "{\"permissionCode\":\"ROLE_ADMIN\",\"permissionName\":\"Forged\"}").statusCode());
-        assertEquals(409, call("DELETE", "/permissions/1", admin, null).statusCode());
+        assertEquals(405, call("DELETE", "/roles/1", admin, null).statusCode());
+        assertEquals(405, call("DELETE", "/permissions/1", admin, null).statusCode());
         db.update("UPDATE employees SET employment_status='DA_NGHI' WHERE employee_id=3");
         assertEquals(409, call("PUT", "/accounts/3", admin, "{\"roleId\":3,\"username\":\"user3\",\"active\":true}").statusCode());
         assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM audit_logs", Integer.class));
     }
 
     @Test
-    void replacingAdminGrantsPreservesManagementAndInvalidatesCurrentSession() throws Exception {
-        assertEquals(200, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[1]}").statusCode());
-        assertEquals(401, call("GET", "/accounts", admin, null).statusCode());
-        assertEquals(200, call("GET", "/accounts", token(1, 1), null).statusCode());
+    void rolePermissionChangesAreUnavailableAndPreserveExistingGrantsAndSessions() throws Exception {
+        assertEquals(404, call("PUT", "/roles/1/permissions", admin, "{\"permissionIds\":[]}").statusCode());
+        assertEquals(2, db.queryForObject("SELECT COUNT(*) FROM role_permissions WHERE role_id=1", Integer.class));
+        assertEquals(0, db.queryForObject("SELECT token_version FROM accounts WHERE account_id=1", Integer.class));
+        assertEquals(200, call("GET", "/accounts", admin, null).statusCode());
     }
 
     @Test
-    void deletingUnusedRoleRemovesGrantsAndKeepsPermissionCatalog() throws Exception {
-        var role = call("POST", "/roles", admin,
-                "{\"roleCode\":\"TEMP\",\"roleName\":\"Tam\",\"permissionIds\":[2]}");
-        assertEquals(201, role.statusCode(), role.body());
-        long id = tree(role).get("roleId").asLong();
-        assertEquals(204, call("DELETE", "/roles/" + id, admin, null).statusCode());
-        assertEquals(0, db.queryForObject("SELECT COUNT(*) FROM role_permissions WHERE role_id=?", Integer.class, id));
+    void deletingRoleIsUnavailableAndPreservesGrants() throws Exception {
+        db.update("INSERT INTO roles(role_code, role_name) VALUES ('TEMP','Tam')");
+        long id = db.queryForObject("SELECT role_id FROM roles WHERE role_code='TEMP'", Long.class);
+        db.update("INSERT INTO role_permissions(role_id, permission_id) VALUES (?, 2)", id);
+        assertEquals(405, call("DELETE", "/roles/" + id, admin, null).statusCode());
+        assertEquals(1, db.queryForObject("SELECT COUNT(*) FROM role_permissions WHERE role_id=?", Integer.class, id));
         assertEquals(200, call("GET", "/permissions/2", admin, null).statusCode());
     }
 

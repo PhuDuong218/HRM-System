@@ -1,5 +1,6 @@
 <main class="login-page">
   <section class="intro" aria-labelledby="intro-title">
+    <div class="intro-decoration" aria-hidden="true"></div>
     <div class="brand">
       <span class="brand-mark">H</span>
       <span class="brand-name">HRM Center<small>{{ language.t('TRUNG TÂM GIÁO DỤC') }}</small></span>
@@ -10,28 +11,30 @@
       <h1 id="intro-title">“{{ language.t('Tài sản lớn nhất của tổ chức là con người.') }}”</h1>
       <p class="intro-description">{{ language.t('Một không gian dành cho đội ngũ quản lý, giúp công việc nhân sự mỗi ngày trở nên đơn giản và rõ ràng hơn.') }}</p>
 
-      <button class="intro-card" type="button" (click)="guideToLogin()" [disabled]="loading" aria-controls="username">
+      <div class="intro-card">
         <span class="card-icon" aria-hidden="true">
           <svg viewBox="0 0 24 24" fill="none"><path d="M16 20v-1.5A4.5 4.5 0 0 0 11.5 14h-2A4.5 4.5 0 0 0 5 18.5V20M10.5 10.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7ZM17 8h4m-2-2v4" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
         </span>
         <span class="card-copy">
           <strong>{{ language.t('Đồng hành cùng đội ngũ') }}</strong>
           <span class="card-features">
-            <span>{{ language.t('Nhân viên') }}</span>
-            <span>{{ language.t('Phân công / Điều chuyển') }}</span>
-            <span>{{ language.t('Hợp đồng') }}</span>
-            <span>{{ language.t('Phòng ban') }}</span>
-            <span>{{ language.t('Quản lý đơn từ') }}</span>
-            <span>{{ language.t('Báo cáo') }}</span>
+            @for (item of navigation; track item.id) {
+              @if (item.children; as children) {
+                @for (child of children; track child.path) {
+                  <button type="button" class="feature-button" [class.selected]="selectedPath === child.path" [attr.aria-pressed]="selectedPath === child.path" [disabled]="loading" (click)="selectDestination(child.path, child.label)">{{ language.t(child.label) }}</button>
+                }
+              } @else if (item.path; as path) {
+                <button type="button" class="feature-button" [class.selected]="selectedPath === path" [attr.aria-pressed]="selectedPath === path" [disabled]="loading" (click)="selectDestination(path, item.label)">{{ language.t(item.label) }}</button>
+              }
+            }
           </span>
         </span>
-        <span class="card-arrow" aria-hidden="true">↗</span>
-      </button>
+      </div>
     </div>
     <p class="intro-footer">HRM CENTER <span>·</span> {{ language.t('QUẢN LÝ NHÂN SỰ') }}</p>
   </section>
 
-  <section class="login-side" aria-labelledby="login-title">
+  <section class="login-side" [class.recovering]="showRecoveryHelp" aria-labelledby="login-title">
     <div class="preferences" role="group" [attr.aria-label]="language.t('Tùy chọn hiển thị')">
       <button class="language-switch" type="button" role="switch" (click)="language.toggle()"
               [attr.aria-checked]="language.current() === 'en'"
@@ -45,19 +48,26 @@
       </button>
     </div>
     <div class="login-content">
+      @if (!showRecoveryHelp) {
       <div class="login-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24" fill="none"><rect x="4.5" y="10" width="15" height="10.5" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="M8 10V7.5a4 4 0 0 1 8 0V10m-4 4v2.5" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/></svg>
       </div>
       <p class="form-label-top">{{ language.t('CHÀO MỪNG TRỞ LẠI') }}</p>
       <h2 id="login-title">{{ language.t('Đăng nhập') }}</h2>
       <p class="form-description">{{ language.t('Nhập thông tin tài khoản để truy cập không gian quản lý của bạn.') }}</p>
-      @if (notice) { <p class="login-success" role="status">{{ language.t(notice) }}</p> }
-      @if (showLoginHint) {
-        <div class="login-hint" role="status">
-          <span>{{ language.t('Vui lòng nhập tên đăng nhập và mật khẩu để tiếp tục.') }}</span>
-          <button #hintClose type="button" (click)="dismissLoginHint()" [attr.aria-label]="language.t('Đóng')">×</button>
+      @if (sessionNotice()) {
+        <div class="session-notice" role="alert">
+          <span>{{ language.t(sessionNotice()) }}</span>
+          <button type="button" (click)="dismissSessionNotice()" [attr.aria-label]="language.t('Đóng thông báo')">×</button>
         </div>
       }
+      @if (selectedLabel) {
+        <div class="selected-destination" role="status">
+          <span class="destination-icon" aria-hidden="true">→</span>
+          <span><span class="destination-label">{{ language.t('Vui lòng đăng nhập để đến:') }}</span><strong>{{ language.t(selectedLabel) }}</strong></span>
+        </div>
+      }
+      @if (notice) { <p class="login-success" role="status">{{ language.t(notice) }}</p> }
 
       <form class="login-form" (submit)="submit($event, username.value, password.value)">
         <div class="field">
@@ -72,6 +82,7 @@
           </div>
           @if (capsLock) { <p id="caps-lock-hint" class="caps-hint" role="status">{{ language.t('Caps Lock đang bật') }}</p> }
         </div>
+        <div class="forgot-password-row"><button type="button" class="forgot-password-link" [disabled]="loading" (click)="openRecovery()">{{ language.t('Quên mật khẩu?') }}</button></div>
         @if (error) { <p class="login-error" role="alert">{{ language.t(error) }}</p> }
         <button class="submit-button" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang đăng nhập…' : 'Đăng nhập') }} <span aria-hidden="true">→</span></button>
       </form>
@@ -83,6 +94,79 @@
           <p class="contact-details">{{ language.t('Email') }}: chrisvietvu&#64;gmail.com<br>{{ language.t('Số điện thoại') }}: 0979583586</p>
         </div>
       </div>
+      } @else {
+        <div class="login-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none"><rect x="3" y="5" width="18" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/><path d="m4 7 8 6 8-6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+        <p class="form-label-top">{{ language.t('KHÔI PHỤC TÀI KHOẢN') }}</p>
+        <h2 id="login-title">{{ language.t('Quên mật khẩu?') }}</h2>
+        <div class="recovery-steps" [attr.aria-label]="language.t('Các bước khôi phục mật khẩu')">
+          <span [class.current]="recoveryStep === 'account'">1. {{ language.t('Tài khoản') }}</span>
+          <span [class.current]="recoveryStep === 'code'">2. {{ language.t('Xác nhận') }}</span>
+          <span [class.current]="recoveryStep === 'password'">3. {{ language.t('Mật khẩu mới') }}</span>
+        </div>
+        @if (recoveryStep === 'account') {
+          <div class="recovery-stage">
+          <p class="form-description recovery-description">{{ language.t('Chọn phương thức và nhập tên đăng nhập để khôi phục tài khoản.') }}</p>
+          <form (submit)="sendRecoveryCode($event, recoveryAccount.value)">
+            <fieldset class="recovery-method">
+              <legend>{{ language.t('Phương thức nhận mã') }}</legend>
+              <label><input type="radio" name="recoveryMethod" value="email" checked> <span><strong>{{ language.t('Email') }}</strong><small>{{ language.t('Nhận mã qua email trong hồ sơ nhân viên') }}</small></span></label>
+            </fieldset>
+            <div class="field">
+              <label for="recovery-username">{{ language.t('Tên đăng nhập') }}</label>
+              <input #recoveryAccount id="recovery-username" name="recoveryUsername" type="text" autocomplete="username" [value]="recoveryUsername" [placeholder]="language.t('Nhập tên đăng nhập')" required>
+            </div>
+            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            <button class="submit-button" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Gửi mã xác nhận') }} <span aria-hidden="true">→</span></button>
+          </form>
+          </div>
+        } @else if (recoveryStep === 'code') {
+          <div class="recovery-stage">
+          <p class="form-description recovery-description">{{ language.t('Nếu tài khoản đủ điều kiện, mã đã được gửi đến email trong hồ sơ. Mã có hiệu lực trong 10 phút; có thể yêu cầu mã mới sau 60 giây.') }}</p>
+          <form (submit)="verifyRecoveryCode($event, recoveryCode.value)">
+            <div class="field">
+              <label for="recovery-code">{{ language.t('Mã xác nhận') }}</label>
+              <input #recoveryCode id="recovery-code" name="recoveryCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" maxlength="8" [placeholder]="language.t('Nhập mã xác nhận')" required>
+            </div>
+            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            <button class="submit-button" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Xác nhận mã') }} <span aria-hidden="true">→</span></button>
+          </form>
+          <button type="button" class="recovery-secondary" [disabled]="loading" (click)="recoveryStep = 'account'; recoveryError = ''">{{ language.t('Quay lại bước trước') }}</button>
+          </div>
+        } @else if (recoveryStep === 'password') {
+          <div class="recovery-stage">
+          <p class="form-description recovery-description">{{ language.t('Nhập mật khẩu mới cho tài khoản của bạn.') }}</p>
+          <form (submit)="resetRecoveryPassword($event, recoveryPassword.value, recoveryConfirmation.value)">
+            <div class="field">
+              <label for="recovery-password">{{ language.t('Mật khẩu mới') }}</label>
+              <div class="password-field">
+                <input #recoveryPassword id="recovery-password" [type]="showRecoveryPassword ? 'text' : 'password'" autocomplete="new-password" required minlength="8" maxlength="72">
+                <button class="visibility-button" type="button" (click)="showRecoveryPassword = !showRecoveryPassword" [attr.aria-label]="language.t(showRecoveryPassword ? 'Ẩn mật khẩu mới' : 'Hiện mật khẩu mới')" [attr.aria-pressed]="showRecoveryPassword">{{ language.t(showRecoveryPassword ? 'Ẩn' : 'Hiện') }}</button>
+              </div>
+            </div>
+            <div class="field">
+              <label for="recovery-confirmation">{{ language.t('Xác nhận mật khẩu') }}</label>
+              <div class="password-field">
+                <input #recoveryConfirmation id="recovery-confirmation" [type]="showRecoveryConfirmation ? 'text' : 'password'" autocomplete="new-password" required minlength="8" maxlength="72">
+                <button class="visibility-button" type="button" (click)="showRecoveryConfirmation = !showRecoveryConfirmation" [attr.aria-label]="language.t(showRecoveryConfirmation ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận')" [attr.aria-pressed]="showRecoveryConfirmation">{{ language.t(showRecoveryConfirmation ? 'Ẩn' : 'Hiện') }}</button>
+              </div>
+            </div>
+            <p class="recovery-hint">{{ language.t('Mật khẩu từ 8 đến 72 ký tự và không quá 72 byte UTF-8.') }}</p>
+            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            <button class="submit-button" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Đổi mật khẩu') }} <span aria-hidden="true">→</span></button>
+          </form>
+          <button type="button" class="recovery-secondary" [disabled]="loading" (click)="recoveryStep = 'code'; recoveryError = ''">{{ language.t('Quay lại bước trước') }}</button>
+          </div>
+        } @else {
+          <div class="recovery-stage recovery-complete" role="status">
+            <span class="recovery-complete-icon" aria-hidden="true">✓</span>
+            <h3>{{ language.t('Đổi mật khẩu thành công') }}</h3>
+            <p>{{ language.t('Bạn có thể đăng nhập bằng mật khẩu mới.') }}</p>
+          </div>
+        }
+        <button type="button" class="recovery-back" [disabled]="loading" (click)="closeRecovery()"><span aria-hidden="true">←</span> {{ language.t('Quay lại đăng nhập') }}</button>
+      }
     </div>
     <p class="side-footer">© HRM Center <span>·</span> {{ language.t('Trung tâm giáo dục') }}</p>
   </section>

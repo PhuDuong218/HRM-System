@@ -88,7 +88,7 @@
    }
   }
   @if(mode==='edit'){
-   @if(kind==='assignments'){<p class="selection-note">{{ 'Điều chuyển dành cho nhân viên đang làm việc. Bổ nhiệm, thay hoặc kết thúc trưởng phòng được xử lý tại mục Phòng ban.' | translate }}</p>}
+   @if(kind==='assignments'){<p class="selection-note">{{ 'Điều chuyển dành cho nhân viên đang làm việc. Bổ nhiệm, thay hoặc kết thúc trưởng phòng được xử lý tại mục Phòng ban.' | translate }} {{ 'Chức vụ là công việc đảm nhiệm; điều chuyển không thay đổi vai trò ADMIN/HR của tài khoản.' | translate }}</p>}
    @if(kind==='entitlements'){<p class="selection-note">{{ 'Kỳ phép bao gồm ngày bắt đầu và không bao gồm ngày kết thúc. Ví dụ cả năm 2027: từ 01/01/2027 đến trước 01/01/2028.' | translate }}</p>}
    <form #f="ngForm" (ngSubmit)="save(f)"><fieldset class="editor" [disabled]="saving">
     @for(field of fields;track field.key){

@@ -44,6 +44,14 @@ class AuditReadPolicyTest {
         assertTrue(result.contains("Employee"));assertTrue(result.contains("HR"));
     }
 
+    @Test void privateSnapshotsFollowTheSameEmployeeReadScope() {
+        var scope=mock(PersonnelScopeService.class);
+        when(scope.canReadPrivate(12L)).thenReturn(true);
+        var policy=new AuditReadPolicy(scope);
+        assertTrue(policy.snapshot("employees","12","{\"identityNumber\":\"scoped-id\"}").contains("scoped-id"));
+        assertFalse(policy.snapshot("employees","13","{\"identityNumber\":\"outside-id\"}").contains("outside-id"));
+    }
+
     @Test void ownerCanReadOwnSnapshotButMalformedOtherSnapshotFailsClosed() {
         var actor=new AuthenticatedAccount(1L,12L,"owner","HR");
         SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor,"",List.of()));

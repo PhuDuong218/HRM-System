@@ -1,14 +1,3 @@
-@if (showLoginSuccess) {
-  <div class="login-success-toast" animate.enter="login-toast-enter" animate.leave="login-toast-leave">
-    <button type="button" class="login-success-close" (click)="showLoginSuccess = false" [attr.aria-label]="language.t('Đóng')">×</button>
-    <span class="login-success-icon" aria-hidden="true">✓</span>
-    <div role="status">
-      <p class="login-success-eyebrow">{{ language.t('Đăng nhập thành công!') }}</p>
-      <h2>{{ language.t('Chào mừng bạn trở lại!') }}</h2>
-      <p class="login-success-message">{{ language.t('Chúc bạn một ngày làm việc thật hiệu quả!') }}</p>
-    </div>
-  </div>
-}
 <div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" [class.mobile-menu-open]="menuOpen">
   @if(menuOpen){<button type="button" class="menu-backdrop" [attr.aria-label]="&quot;Đóng danh mục&quot; | translate" tabindex="-1" (click)="closeMobileMenu()"></button>}
   <div class="sidebar-rail" (keydown)="menuKeydown($event)" (mouseleave)="closeFlyout()" (focusout)="railFocusOut($event)">
@@ -72,7 +61,7 @@
   </div>
   <div class="workspace">
     <header class="topbar">
-      <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" #menuTrigger [attr.aria-label]="language.t('Mở danh mục')" (click)="toggleMobileMenu()" [attr.aria-expanded]="menuOpen" aria-controls="main-menu"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Menu</span></button><span class="topbar-title">{{language.t("Quản lý nhân sự")}} <span class="muted">/ HRM-CENTER</span></span></div>
+      <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" #menuTrigger (click)="toggleMobileMenu()" [attr.aria-expanded]="menuOpen" aria-controls="main-menu" [attr.aria-label]="language.t('Danh mục')"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Menu</span></button><span class="topbar-title">{{ language.t("Quản lý nhân sự") }} <span class="muted">/ HRM-CENTER</span></span></div>
       <div class="account-actions">
         <button type="button" class="language-toggle" role="switch"
                 (click)="language.toggle()" [class.is-english]="language.current() === 'en'"
@@ -86,12 +75,27 @@
         <button type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.title]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.aria-pressed]="darkMode">
           @if (darkMode) { <span aria-hidden="true">☀</span> } @else { <span aria-hidden="true">☾</span> }
         </button>
-        <button type="button" class="profile-trigger" [attr.aria-label]="language.t('HỒ SƠ CÁ NHÂN')+': '+auth.displayName()" (click)="openProfile()" aria-haspopup="dialog" aria-controls="profile-dialog">
-          <span class="profile-avatar" aria-hidden="true">{{auth.displayName().charAt(0).toUpperCase()}}</span>
-          <span class="account-name">{{auth.displayName()}}</span>
-          <span class="profile-trigger-arrow" aria-hidden="true">⌄</span>
+        <div class="profile-anchor">
+          <button type="button" class="profile-trigger" (click)="openProfile()" aria-haspopup="dialog" aria-controls="profile-dialog" [attr.aria-label]="language.t('Hồ sơ cá nhân') + ': ' + auth.displayName()" [attr.title]="auth.displayName()">
+            <span class="profile-avatar" aria-hidden="true">{{ auth.displayName().charAt(0).toUpperCase() }}</span>
+            <span class="account-name">{{ auth.displayName() }}</span>
+            <span class="profile-trigger-arrow" aria-hidden="true">⌄</span>
+          </button>
+          @if (showLoginSuccess) {
+            <div class="login-success-toast" animate.enter="login-toast-enter" animate.leave="login-toast-leave">
+              <button type="button" class="login-success-close" (click)="showLoginSuccess = false" [attr.aria-label]="language.t('Đóng')">×</button>
+              <span class="login-success-icon" aria-hidden="true">✓</span>
+              <div role="status">
+                <p class="login-success-eyebrow">{{ language.t('Đăng nhập thành công!') }}</p>
+                <p class="login-success-message">{{ language.t('Chào mừng bạn trở lại!') }} <strong>{{ auth.displayName() }}</strong></p>
+              </div>
+            </div>
+          }
+        </div>
+        <button type="button" class="btn btn-sm btn-outline-primary d-inline-flex align-items-center gap-2 logout-trigger" (click)="confirmLogout()" [disabled]="loggingOut" aria-haspopup="dialog" aria-controls="logout-dialog" [attr.aria-label]="language.t('Đăng xuất')" [attr.title]="language.t('Đăng xuất')">
+          <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9" /></svg>
+          <span class="logout-label">{{ language.t("Đăng xuất") }}</span>
         </button>
-        <button type="button" class="btn btn-sm btn-outline-primary" (click)="confirmLogout()" [disabled]="loggingOut" aria-haspopup="dialog" aria-controls="logout-dialog">{{language.t("Đăng xuất")}}</button>
       </div>
     </header>
     <main class="page-content"><router-outlet /></main>
@@ -123,6 +127,7 @@
     <div class="profile-section-title">{{language.t("Thông tin liên hệ")}}</div>
     <dl class="profile-details">
       <div><dt>{{language.t("Ngày sinh")}}</dt><dd>{{((profile.birthDate | date:'dd/MM/yyyy') || 'Chưa cập nhật') | translate}}</dd></div>
+      <div><dt>{{language.t("CCCD")}}</dt><dd>{{(profile.identityNumber || 'Chưa cập nhật') | translate}}</dd></div>
       <div><dt>{{language.t("Email")}}</dt><dd>{{(profile.email || 'Chưa cập nhật') | translate}}</dd></div>
       <div><dt>{{language.t("Số điện thoại")}}</dt><dd>{{(profile.phone || 'Chưa cập nhật') | translate}}</dd></div>
       <div><dt>{{language.t("Địa chỉ")}}</dt><dd>{{(profile.address || 'Chưa cập nhật') | translate}}</dd></div>
@@ -140,8 +145,7 @@
     <div><h2 id="logout-title">{{language.t("Xác nhận đăng xuất")}}</h2></div>
     <button type="button" class="profile-close" (click)="cancelLogout()" [disabled]="loggingOut" [attr.aria-label]="&quot;Đóng xác nhận&quot; | translate">{{ "×" | translate }}</button>
   </div>
-  <p id="logout-description" class="logout-description">{{language.t("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?")}}</p>
-  @if (logoutError) { <p class="logout-error" role="alert">{{(logoutError) | translate}}</p> }
+  <p id="logout-description" class="logout-description">{{ language.t("Bạn có chắc chắn muốn đăng xuất khỏi tài khoản này không?") }}</p>
   <div class="profile-dialog-footer">
     <button type="button" class="btn btn-outline-primary" (click)="cancelLogout()" [disabled]="loggingOut" autofocus>{{language.t("Hủy")}}</button>
     <button type="button" class="btn btn-primary" (click)="logout()" [disabled]="loggingOut">{{language.t(loggingOut ? 'Đang đăng xuất…' : 'Đăng xuất')}}</button>

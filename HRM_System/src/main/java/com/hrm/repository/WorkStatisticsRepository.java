@@ -89,6 +89,22 @@ public interface WorkStatisticsRepository
       @Param("fromDate") LocalDate fromDate,
       @Param("toDate") LocalDate toDate);
 
+  @Query(value = "SELECT COL_LENGTH('dbo.attendance_records', 'invalidated_at')", nativeQuery = true)
+  Integer attendanceInvalidationColumnLength();
+
+  @Query(value = """
+      select
+        coalesce(sum(cast(case when ar.attendance_result = 'DI_LAM' then 1 else 0 end as bigint)), 0) as confirmedWorkDays,
+        coalesce(sum(cast(case when ar.attendance_result = 'VANG' then 1 else 0 end as bigint)), 0) as confirmedAbsentDays
+      from attendance_records ar
+      where ar.work_date between :fromDate and :toDate
+        and ar.verification_status = 'DA_XAC_NHAN'
+        and ar.confirmed_by is not null and ar.confirmed_at is not null
+        and ar.invalidated_at is null
+      """, nativeQuery = true)
+  Optional<WorkStatisticsRow> summarizeValidAttendance(
+      @Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
   // Lay cac khoang nghi phep duoc duyet
   @Query(value = """
       select ld.leave_start as startsAt,

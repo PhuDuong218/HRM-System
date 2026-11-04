@@ -479,16 +479,16 @@ public class AttendanceService {
                                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
                                                 "HR cannot approve own or unattributed attendance");
                         }
-                        Long lastCorrector = db.query("""
-                                        SELECT TOP (1) actor_account_id FROM dbo.audit_logs WITH (HOLDLOCK)
-                                        WHERE target_table='attendance_records'
-                                          AND target_record_key=? AND action='ATTENDANCE_CORRECT'
-                                        ORDER BY occurred_at DESC, audit_id DESC
-                                        """, rs -> rs.next() ? rs.getObject(1, Long.class) : null,
-                                        String.valueOf(attendanceId));
-                        if (lastCorrector != null && lastCorrector == actorAccountId) {
+                        Long ownEdits = db.queryForObject("""
+                                        SELECT COUNT_BIG(*) FROM dbo.audit_logs WITH (HOLDLOCK)
+                                        WHERE target_table='attendance_records' AND target_record_key=?
+                                          AND actor_account_id=? AND action IN ('ATTENDANCE_CREATE',
+                                              'ATTENDANCE_CORRECT', 'ATTENDANCE_CORRECTION_APPLIED',
+                                              'ATTENDANCE_PORTAL_REQUEST_APPLIED')
+                                        """, Long.class, String.valueOf(attendanceId), actorAccountId);
+                        if (ownEdits == null || ownEdits > 0) {
                                 throw new ResponseStatusException(HttpStatus.FORBIDDEN,
-                                                "HR cannot approve attendance they last corrected");
+                                                "HR cannot approve attendance they have created or corrected");
                         }
                 }
 

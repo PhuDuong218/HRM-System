@@ -11,6 +11,7 @@ import java.time.LocalDate;
 public class ContractStatisticsService {
 
     private final ContractStatisticsRepository repository;
+    @org.springframework.beans.factory.annotation.Autowired private HrScopedReportService hrReports;
 
     public ContractStatisticsService(ContractStatisticsRepository repository) {
         this.repository = repository;
@@ -31,6 +32,8 @@ public class ContractStatisticsService {
         if (expiringWithinDays < 0) {
             throw new IllegalArgumentException("expiringWithinDays không được âm");
         }
+
+        if (PersonnelScopeService.isHr()) return hrReports.contracts(fromDate, toDate, reportDate, expiringWithinDays, departmentId);
 
         ContractStatisticsRow row = repository.summarize(
                         fromDate, toDate, reportDate, expiringWithinDays, departmentId)

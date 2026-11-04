@@ -51,7 +51,7 @@ export const navigation: NavigationItem[] = [
       { path: 'qualifications', label: 'Trình độ' }
     ]
   },
-  { id: 'reports', path: 'reports', label: 'Báo cáo' },
+  { id: 'reports', path: 'reports', label: 'Báo cáo', roles: ['ADMIN'] },
   {
     id: 'system', label: 'Hệ thống', children: [
       { path: 'accounts', label: 'Tài khoản và phân quyền', roles:['ADMIN'] },

@@ -1,6 +1,6 @@
 <p class="eyebrow">PHÂN TÍCH & THỐNG KÊ</p>
 <h1>Báo cáo</h1>
-<p class="page-description">Theo dõi số liệu nhân sự, hợp đồng, thời gian làm việc và quỹ lương.</p>
+<p class="page-description">Theo dõi số liệu nhân sự, hợp đồng, thời gian làm việc và quỹ lương trong phạm vi được cấp.</p>
 
 <nav class="report-tabs" aria-label="Chọn loại báo cáo">
   @for (tab of tabs; track tab.id) {
@@ -21,7 +21,7 @@
       @if (selected === 'contracts') {
         <div><label for="report-date" class="form-label">Ngày báo cáo <span>(không bắt buộc)</span></label><input #reportDate id="report-date" name="reportDate" type="date" class="form-control" [value]="filters.reportDate" (input)="filters.reportDate = reportDate.value"></div>
         <div><label for="report-expiring" class="form-label">Sắp hết hạn trong (ngày)</label><input #expiring id="report-expiring" name="expiringWithinDays" type="number" min="0" max="2147483647" step="1" class="form-control" [value]="filters.expiringWithinDays" (input)="filters.expiringWithinDays = expiring.valueAsNumber" required></div>
-        <div><label for="report-department" class="form-label">ID phòng ban <span>(không bắt buộc)</span></label><input #department id="report-department" name="departmentId" type="text" inputmode="numeric" class="form-control" [value]="filters.departmentId" (input)="filters.departmentId = department.value" placeholder="Tất cả phòng ban"></div>
+        <div><label for="report-department" class="form-label">ID phòng ban <span>(không bắt buộc)</span></label><input #department id="report-department" name="departmentId" type="text" inputmode="numeric" class="form-control" [value]="filters.departmentId" (input)="filters.departmentId = department.value" placeholder="Tất cả trong phạm vi"></div>
       }
       <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">Xem báo cáo</button></div>
     </form>
@@ -42,7 +42,7 @@
           <h3>{{ group.label }}</h3>
           @if (!group.rows.length) { <p class="muted small mb-0">Chưa có dữ liệu.</p> }
           @else {
-            <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ group.label }}</caption><thead><tr><th scope="col">Nhóm</th><th scope="col" class="text-end">Nhân viên</th></tr></thead><tbody>
+            <div class="table-responsive group-table" role="region" [attr.aria-label]="group.label" tabindex="0"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ group.label }}</caption><thead><tr><th scope="col">Nhóm</th><th scope="col" class="text-end">Nhân viên</th></tr></thead><tbody>
               @for (row of group.rows; track $index) { <tr><td>{{ row.groupName || row.groupCode || '—' }}</td><td class="text-end">{{ number(row.employeeCount) }}</td></tr> }
             </tbody></table></div>
           }
@@ -56,7 +56,7 @@
       <div class="metric"><span>Đang hiệu lực</span><strong>{{ number(report.effectiveCount) }}</strong><small>Tại ngày đánh giá</small></div>
       <div class="metric"><span>Sắp hết hạn</span><strong>{{ number(report.expiringCount) }}</strong><small>Trong {{ report.expiringWithinDays }} ngày</small></div>
     </div>
-    <p class="report-note">Phòng ban: {{ report.departmentId === null ? 'Tất cả' : 'ID ' + report.departmentId }}.</p>
+    <p class="report-note">Phòng ban: {{ report.departmentId === null ? 'Tất cả trong phạm vi' : 'ID ' + report.departmentId }}.</p>
   } @else if (workReport; as report) {
     <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
     <div class="metric-grid">
@@ -78,6 +78,7 @@
       <div class="metric metric-highlight"><span>Thực nhận</span><strong>{{ money(report.totals.netPayroll) }} <em>đ</em></strong></div>
     </div>
     <p class="report-note">Phụ cấp và thưởng đã nằm trong quỹ lương trước khấu trừ. Chỉ tính kỳ nằm trọn trong khoảng lọc và phiên bản bảng lương đã chốt mới nhất của mỗi kỳ.</p>
+    <p class="report-note">Đối với HR, chỉ tính bản ghi của nhân viên thuộc phòng được giao trong toàn bộ kỳ lương. Bản ghi có chuyển phòng trong kỳ chưa được tính.</p>
     <div class="batch-heading"><h3>Chi tiết theo kỳ lương</h3><span class="muted small">{{ number(report.batchCount) }} bảng lương · {{ number(report.payrollRecordCount) }} bản ghi lương</span></div>
     @if (!report.batches.length) { <div class="empty-batches">Không có bảng lương đã chốt trong khoảng đã chọn.</div> }
     @else {

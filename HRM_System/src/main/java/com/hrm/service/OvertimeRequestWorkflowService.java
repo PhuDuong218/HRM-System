@@ -194,7 +194,7 @@ public class OvertimeRequestWorkflowService {
         check(o.employee() == employee, "Workflow request owner mismatch");
         var actor = perms.active(principal);
         if (actor.employeeId() == null || actor.employeeId() != employee)
-            perms.requireApprove(principal, employee, o.start().toLocalDate());
+            perms.requireView(principal, employee, o.start().toLocalDate());
         else
             perms.requireOwner(principal, employee);
         return db.queryForList(

@@ -10,6 +10,7 @@ import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollLineRepository;
 import com.hrm.service.PayrollBatchService;
 import com.hrm.service.PayrollExecutionService;
+import com.hrm.service.PersonnelScopeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -22,6 +23,8 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.HashSet;
 
 @RestController
 @RequestMapping("/payroll-batches")
@@ -32,15 +35,18 @@ public class PayrollBatchController {
     private final PayrollExecutionService executionService;
     private final PayrollDetailRepository detailRepository;
     private final PayrollLineRepository lineRepository;
+    private final PersonnelScopeService personnelScope;
 
     public PayrollBatchController(PayrollBatchService batchService,
                                   PayrollExecutionService executionService,
                                   PayrollDetailRepository detailRepository,
-                                  PayrollLineRepository lineRepository) {
+                                  PayrollLineRepository lineRepository,
+                                  PersonnelScopeService personnelScope) {
         this.batchService = batchService;
         this.executionService = executionService;
         this.detailRepository = detailRepository;
         this.lineRepository = lineRepository;
+        this.personnelScope = personnelScope;
     }
 
     @GetMapping
@@ -62,12 +68,14 @@ public class PayrollBatchController {
     }
 
     @PostMapping("/{batchId}/calculate")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
     public ResponseEntity<String> calculatePayroll(@PathVariable Long batchId) {
         return ResponseEntity.ok(executionService.calculateBatch(batchId));
     }
 
     // Keep the legacy query parameter compatible; the authenticated actor is authoritative.
     @PostMapping("/{batchId}/lock")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
     public ResponseEntity<PayrollBatchDTO> lockBatch(@PathVariable Long batchId,
                                                     @RequestParam(required = false) Long actorAccountId) {
         return ResponseEntity.ok(batchService.lockBatch(batchId, currentActorAccountId()));
@@ -75,6 +83,7 @@ public class PayrollBatchController {
 
     // P-12 & P-14: Công bố bảng lương và tự động phát hành phiếu lương
     @PostMapping("/{batchId}/publish")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
     public ResponseEntity<PayrollBatchDTO> publishBatch(@PathVariable Long batchId,
                                                        @RequestParam(required = false) Long actorAccountId) {
         return ResponseEntity.ok(batchService.publishBatch(batchId, currentActorAccountId()));
@@ -82,6 +91,7 @@ public class PayrollBatchController {
 
     // P-13: Tạo phiên bản điều chỉnh có lý do
     @PostMapping("/{batchId}/adjust")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
     public ResponseEntity<PayrollBatchDTO> createAdjustment(@PathVariable Long batchId,
                                                             @Valid @RequestBody AdjustmentBatchRequestDTO request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(batchService.createAdjustmentBatch(batchId, request));
@@ -92,8 +102,10 @@ public class PayrollBatchController {
     public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
         List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
         List<PayrollDetailViewDTO> result = new ArrayList<>();
+        Set<Long> allowedEmployees = PersonnelScopeService.isHr() ? new HashSet<>(personnelScope.employees()) : null;
 
         for (PayrollDetail d : details) {
+            if (allowedEmployees != null && !allowedEmployees.contains(d.getEmployeeId())) continue;
             PayrollDetailViewDTO dto = new PayrollDetailViewDTO();
             dto.setPayrollDetailId(d.getPayrollDetailId());
             dto.setEmployeeId(d.getEmployeeId());

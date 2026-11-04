@@ -32,7 +32,7 @@ class PersonnelBrowserTestServer {
  }
  @Test void serve()throws Exception{
   assertEquals("hrm_test",db.queryForObject("SELECT DB_NAME()",String.class));
-  for(String name:List.of("005_request_approval_stages.sql","006_leave_request_rules.sql","007_qualification_validity_and_rank.sql","008_direct_termination_decisions.sql","009_leave_eligibility_and_accrual.sql","010_leave_cancellation_schedule_guard.sql","011_employee_optional_gender.sql","012_schedule_breaks_for_partial_leave.sql","013_leave_accrual_department_scope.sql"))db.execute(Files.readString(Path.of("database/migrations/"+name)));
+  for(String name:List.of("004_work_shift_breaks.sql","005_schedule_workspace.sql","006_schedule_cancellation.sql","005_request_approval_stages.sql","006_leave_request_rules.sql","007_qualification_validity_and_rank.sql","008_direct_termination_decisions.sql","009_leave_eligibility_and_accrual.sql","010_leave_cancellation_schedule_guard.sql","011_employee_optional_gender.sql","012_schedule_breaks_for_partial_leave.sql","013_leave_accrual_department_scope.sql"))db.execute(Files.readString(Path.of("database/migrations/"+name)));
   new TransactionTemplate(transactions).executeWithoutResult(tx->{
    long a=department("A"),b=department("B");db.update("INSERT dbo.positions(position_code,position_name,is_active) VALUES(?,?,1)",tag,"QA UI Staff");long position=insertId("positions","position_code","position_id",tag);
    long headPosition=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code='TRUONG_PHONG'",Long.class);

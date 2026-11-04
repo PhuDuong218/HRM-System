@@ -17,6 +17,17 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     private auth = inject(AuthService);
     private destroy = inject(DestroyRef);
     private detailRequest?: Subscription;
+    private auditRequest?: Subscription;
+    auditRows:Record<string,unknown>[]=[];
+    auditOpen=false;
+    auditLoading=false;
+    auditError='';
+    auditPage=0;
+    auditPages=0;
+    auditText(row:Record<string,unknown>,key:string){return String(row[key]??'');}
+    auditAction(row:Record<string,unknown>){const action=this.auditText(row,'action');return ({EMPLOYEE_CREATE:'Thêm nhân viên',EMPLOYEE_CONTACT_UPDATE:'Sửa liên hệ',EMPLOYEE_UPDATE:'Sửa hồ sơ',EMPLOYEE_TRANSFER:'Điều chuyển nhân viên',EMPLOYEE_TERMINATE:'Thôi việc',EMPLOYEE_REHIRE:'Tiếp nhận lại'} as Record<string,string>)[action]||action;}
+    loadAudit(page=0){if(!this.selected||this.auditLoading)return;this.auditOpen=true;this.auditError='';this.auditLoading=true;
+        this.auditRequest?.unsubscribe();this.auditRequest=this.api.audit(this.selected.employeeId,page).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.auditLoading=false)).subscribe({next:r=>{this.auditRows=r.content;this.auditPage=r.number;this.auditPages=r.totalPages;},error:e=>this.auditError=errorMessage(e)});}
     rows: Employee[] = [];
     selected: Employee | null = null;
     page = 0;
@@ -50,10 +61,12 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     rehireReason = '';
     genderLabel(value?:string|null){return ({MALE:"Nam",FEMALE:"Nữ",OTHER:"Khác",UNDISCLOSED:"Không muốn cung cấp"} as Record<string,string>)[value||""]||"Chưa cung cấp";}
     get admin() { return this.auth.profile()?.role === 'ADMIN'; }
-    get canSearch(){return ['ADMIN','HR'].includes(this.auth.profile()?.role||'');}
+    get canManage(){return ['ADMIN','HR'].includes(this.auth.profile()?.role||'');}
+    get canSearch(){return this.canManage||!!this.auth.profile()?.departmentHead;}
+    get canReadPrivate(){return this.ownProfile||this.canSearch;}
     get ownProfile(){return !!this.selected && this.selected.employeeCode===this.auth.profile()?.employeeCode;}
     ngOnInit() { this.auth.loadCurrentUser().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.load(), error: () => this.load() }); this.loadChoices(); }
-    loadChoices() { this.choicesError = ''; for (const path of ['departments', 'positions'])
+    loadChoices() { if(!this.canManage)return; this.choicesError = ''; for (const path of ['departments', 'positions'])
         this.api.choices(path).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { const k = path === 'departments' ? 'department' : 'position'; const c = r.filter(x => x['isActive'] !== false).map(x => ({ id: Number(x[k + 'Id']), name: String(x[k + 'Name']) })); if (path === 'departments')
                 this.departments = c;
             else
@@ -75,10 +88,10 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     search() { if(this.loading||this.saving)return; this.applied={keyword:this.keyword.trim(),status:this.status,department:this.department,position:this.position};this.close();this.load(0); }
     reset() { this.keyword = ''; this.status = ''; this.department = ''; this.position=''; this.search(); }
     select(row: Employee) { if (this.saving)
-        return; this.detailRequest?.unsubscribe(); this.mode = 'detail'; this.selected = row; this.detailLoading = true; this.detailError = ''; this.detailRequest = this.api.detail(row.employeeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { this.selected = r; this.detailLoading = false; }, error: e => { this.detailError = errorMessage(e); this.detailLoading = false; } }); }
+        return; this.auditRequest?.unsubscribe();this.auditRows=[];this.auditOpen=false;this.auditError='';this.auditLoading=false; this.detailRequest?.unsubscribe(); this.mode = 'detail'; this.selected = row; this.detailLoading = true; this.detailError = ''; this.detailRequest = this.api.detail(row.employeeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { this.selected = r; this.detailLoading = false; }, error: e => { this.detailError = errorMessage(e); this.detailLoading = false; } }); }
     close() { if (this.saving)
         return; this.detailRequest?.unsubscribe(); this.mode = null; this.selected = null; this.detailLoading = false; this.detailError = ''; }
-    edit(mode: string) { if (this.saving || this.detailLoading)
+    edit(mode: string) { if (!this.canManage || this.saving || this.detailLoading)
         return; this.form.privateFieldsEditable=this.ownProfile; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), gender:p.gender, employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '', privateFieldsEditable:this.ownProfile }; }
     save(f: NgForm) { if (this.saving)
         return; if (f.invalid || !this.form.fullName.trim()) {

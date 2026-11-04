@@ -56,7 +56,7 @@ public class EmployeeController {
     // 1. Lay danh sach nhan vien
     // Giu kiem tra pham vi theo tai khoan dang nhap
     @GetMapping(params = { "!page", "!size" })
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public List<EmployeeDTO> listEmployees(Principal principal) {
 
         AuthenticatedAccount actor = authenticatedAccount(principal);
@@ -72,20 +72,20 @@ public class EmployeeController {
     // 2. Lay danh sach phan trang
     // Tam gioi han ADMIN cho den khi Service ho tro loc pham vi HR
     @GetMapping(params = { "page" })
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public Page<EmployeeDTO> getEmployeesPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
 
-        actorAccountId(principal);
+        accessService.requireReader(principal);
 
         return employeeService.getEmployeesPage(page, size);
     }
 
     // 3. Xem chi tiet nhan vien
     @GetMapping("/{id}")
-    @PreAuthorize("(hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE'))"
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)"
             + " or (hasAuthority('SELF_READ') and #id == authentication.principal.employeeId())")
     public EmployeeDTO getEmployeeDetails(
             @PathVariable Long id,
@@ -145,7 +145,7 @@ public class EmployeeController {
     // 7. Tim kiem nhan vien
     // Tam gioi han ADMIN de tranh HR xem nhan vien ngoai pham vi
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public Page<EmployeeDTO> searchEmployees(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) EmploymentStatus status,
@@ -155,7 +155,7 @@ public class EmployeeController {
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
 
-        actorAccountId(principal);
+        accessService.requireReader(principal);
 
         return employeeService.searchEmployees(
                 keyword,

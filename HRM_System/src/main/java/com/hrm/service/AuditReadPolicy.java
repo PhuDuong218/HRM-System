@@ -38,6 +38,8 @@ public class AuditReadPolicy {
             own = Objects.equals(String.valueOf(actor.employeeId()), key);
         }
         if (own) return value;
+        if ("employees".equals(table) && key != null && key.matches("[0-9]{1,18}")
+                && scope.canReadPrivate(Long.parseLong(key))) return value;
         try { return json.writeValueAsString(redact(json.readValue(value, Object.class))); }
         catch (RuntimeException invalidSnapshot) {
             // A malformed historic snapshot must not disclose private text via fallback.

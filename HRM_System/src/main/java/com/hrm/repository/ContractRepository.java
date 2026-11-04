@@ -24,6 +24,18 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
             @Param("pattern") String pattern,
             Pageable pageable);
 
+    @EntityGraph(attributePaths = { "employee", "contractType" })
+    @Query("""
+            select c from Contract c
+            where (:employeeId is null or c.employee.employeeId = :employeeId)
+              and (:status is null or c.status = :status)
+              and lower(c.contractNumber) like :pattern escape '!'
+              and c.employee.employeeId in :allowedEmployeeIds
+            """)
+    Page<Contract> searchScoped(@Param("employeeId") Long employeeId,
+            @Param("status") ContractStatus status, @Param("pattern") String pattern,
+            @Param("allowedEmployeeIds") java.util.List<Long> allowedEmployeeIds, Pageable pageable);
+
     @Query("""
             select count(c) from Contract c
             where c.employee.employeeId = :employeeId

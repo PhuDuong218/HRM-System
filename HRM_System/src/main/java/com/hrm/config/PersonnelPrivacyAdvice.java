@@ -28,6 +28,9 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
    if(body instanceof EmployeeRequestDTO r && r.getDepartmentId()!=null)scope.department(r.getDepartmentId());
    if(body instanceof EmployeeTransferRequestDTO r && r.departmentId()!=null)scope.department(r.departmentId());
    if(body instanceof LeaveEntitlementRequestDTO r && r.getEmployeeId()!=null)scope.employee(r.getEmployeeId(),false);
+   if(body instanceof ContractCreateRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
+   if(body instanceof ContractRenewRequest r && r.newContract()!=null && r.newContract().employeeId()!=null)scope.managedEmployee(r.newContract().employeeId());
+   if(body instanceof DecisionRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
   }
   var attrs=RequestContextHolder.getRequestAttributes();if(!(attrs instanceof ServletRequestAttributes servlet))return body;
   var matcher=java.util.regex.Pattern.compile("^/employees/(\\d+)(?:/contact)?$").matcher(servlet.getRequest().getRequestURI());
@@ -51,7 +54,7 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
  @Override public boolean supports(MethodParameter parameter,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object beforeBodyWrite(Object body,MethodParameter parameter,MediaType type,Class<? extends HttpMessageConverter<?>> converter,ServerHttpRequest request,ServerHttpResponse response){
   var actor=PersonnelScopeService.current();
-  if(body instanceof EmployeeDetailDTO detail){boolean own=actor!=null&&Objects.equals(actor.employeeId(),detail.getEmployeeId());if(!own){detail.setAddress(null);detail.setIdentityNumber(null);}return detail;}
+  if(body instanceof EmployeeDetailDTO detail){if(!scope.canReadPrivate(detail.getEmployeeId())){detail.setAddress(null);detail.setIdentityNumber(null);}return detail;}
   String controller=parameter.getContainingClass().getSimpleName();
   if(!Set.of("G1AuditController","PersonnelAuditController","AuditLogController").contains(controller))return body;
   if(body instanceof Page<?> page)return page.map(row->scrubAudit(row,request));return body;

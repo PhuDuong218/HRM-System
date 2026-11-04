@@ -29,7 +29,6 @@ export class AdminLayout {
   private theme = inject(ThemeService);
   showLoginSuccess = (this.router.getCurrentNavigation()?.extras.info as { showLoginSuccess?: boolean } | undefined)?.showLoginSuccess === true;
   loggingOut = false;
-  logoutError = '';
   profileLoading = false;
   profileError = '';
   passwordLoading = false;
@@ -43,7 +42,7 @@ export class AdminLayout {
   get menu():NavigationItem[]{
     const role=this.auth.profile()?.role||'';
     if(!role)return [];
-    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'time',label:'Thời gian & Chấm công',children:[{path:'requests/head',label:'Quản lý đơn từ'}]}]:[];
+    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'personnel',label:'Quản lý Nhân sự',children:[{path:'employees',label:'Nhân viên'}]},{id:'time',label:'Thời gian & Chấm công',children:[{path:'requests/head',label:'Quản lý đơn từ'}]}]:[];
     const extra=this.auth.profile()?.departmentHead?[{path:'requests/head',label:'Duyệt cấp 1'}]:[];
     return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:[...item.children.filter(child=>!child.roles||child.roles.includes(role)),...(item.id==='time'?extra:[])]}:item);
   }
@@ -97,6 +96,10 @@ export class AdminLayout {
   expandedGroups = new Set<string>();
 
   constructor() {
+    if (this.showLoginSuccess) {
+      const timer = setTimeout(() => this.showLoginSuccess = false, 5000);
+      this.destroyRef.onDestroy(() => clearTimeout(timer));
+    }
     this.refreshProfile();
     this.expandCurrentGroup();
     this.router.events.pipe(
@@ -208,7 +211,6 @@ export class AdminLayout {
 
   confirmLogout(): void {
     if (this.loggingOut) return;
-    this.logoutError = '';
     this.logoutDialog?.nativeElement.showModal();
   }
 
@@ -223,13 +225,12 @@ export class AdminLayout {
   logout(): void {
     if (this.loggingOut) return;
     this.loggingOut = true;
-    this.logoutError = '';
     this.auth.logout().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loggingOut = false)).subscribe({
-      next: () => {
+      next: loggedOut => {
+        if (!loggedOut) return;
         this.logoutDialog?.nativeElement.close();
         void this.router.navigateByUrl('/login');
-      },
-      error: () => this.logoutError = 'Không thể đăng xuất. Vui lòng kiểm tra kết nối và thử lại.'
+      }
     });
   }
 }

@@ -87,7 +87,7 @@ public class AuthService {
         var assignment = assignments.size() == 1 ? assignments.get(0) : null;
         return new CurrentUserResponse(
                 account.username(), account.roleCode(), employee.getEmployeeCode(), employee.getFullName(),
-                employee.getBirthDate(), employee.getEmail(), employee.getPhone(), employee.getAddress(),
+                employee.getBirthDate(), employee.getEmail(), employee.getPhone(), employee.getAddress(), employee.getIdentityNumber(),
                 employee.getHireDate(), employee.getEmploymentStatus() == null ? null : employee.getEmploymentStatus().name(),
                 assignment == null ? null : assignment.getDepartment().getDepartmentName(),
                 assignment == null ? null : assignment.getPosition().getPositionName());
@@ -213,6 +213,9 @@ public class AuthService {
             String newPassword,
             String confirmPassword) {
 
+        if (newPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Mật khẩu không được vượt quá 72 byte UTF-8");
+        }
         if (!newPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException(
                     "Mật khẩu mới và xác nhận mật khẩu không khớp");

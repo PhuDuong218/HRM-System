@@ -80,12 +80,13 @@ class ScheduleWorkspaceServiceTest {
     }
 
     @SuppressWarnings("unchecked")
-    @Test void hrLookupRestrictsEmployeeRoleAndDepartmentScope() {
+    @Test void hrLookupUsesDepartmentScopeWithoutRequiringEmployeeAccounts() {
         var hr=new AuthenticatedAccount(1L,5L,"hr","HR");
         when(db.query(contains("JOIN dbo.roles r ON r.role_id=a.role_id WHERE"),any(RowMapper.class),eq(1L)))
                 .thenReturn(Collections.singletonList(new Object[]{"HR",5L}));
         service.employees(hr,"Trần",date);
-        verify(db).query(contains("r.role_code='EMPLOYEE'"),any(RowMapper.class),eq(date),eq("%Trần%"),eq(date),eq(date),eq(1L));
+        verify(db).query(contains("dbo.hr_department_scopes"),any(RowMapper.class),eq(date),eq("%Tran%"),eq(date),eq(date),eq(1L));
+        verify(db,never()).query(contains("r.role_code='EMPLOYEE'"),any(RowMapper.class),eq(date),anyString(),eq(date),eq(date),eq(1L));
     }
 
     @Test void negativeShiftFilterRejected() {

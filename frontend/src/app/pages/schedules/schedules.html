@@ -36,7 +36,7 @@
     </div>
     <div class="col-md-6"><label for="filterDepartment" class="form-label">{{ "Phòng ban" | translate }}</label><select
         id="filterDepartment" class="form-select" [(ngModel)]="departmentId" [disabled]="loading">
-        <option value="">{{ "Tất cả phòng ban" | translate }}</option>@for (d of departments; track d.departmentId) { <option
+        <option value="">{{ "Tất cả trong phạm vi" | translate }}</option>@for (d of departments; track d.departmentId) { <option
           [value]="d.departmentId">{{ d.departmentName }}</option> }
       </select></div>
   </div>

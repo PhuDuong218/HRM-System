@@ -3,13 +3,14 @@ import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import {Pagination} from '../../shared/pagination';
 import {RouterLink} from '@angular/router';
+import {FormsModule} from '@angular/forms';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, expand, reduce, takeUntil } from 'rxjs';
 import { DepartmentService, Department, Head, Assignment, Position } from '../../services/department.service';
 
-@Component({ selector: 'app-departments', standalone: true, imports: [PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe], templateUrl: './departments.html' })
+@Component({ selector: 'app-departments', standalone: true, imports: [PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe,FormsModule], templateUrl: './departments.html',styleUrl:'./departments.css' })
 export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDestroy {
   private api = inject(DepartmentService);
   private destroyed = new Subject<void>();
@@ -20,6 +21,13 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
 
   positionsLoading = false; positionsError = '';
   positionsLoaded = false;
+  headAction:'appoint'|'end'|null=null;
+  chosenCandidate:Assignment|null=null;
+  headDraft={employee:'',date:'',position:'',reason:''};
+  chooseAction(action:'appoint'|'end') {if(this.saving)return;this.headAction=action;this.chosenCandidate=null;this.headDraft={employee:'',date:this.today,position:'',reason:''};this.error='';}
+  chooseCandidate(value:string){this.chosenCandidate=this.candidates.find(c=>String(c.employeeId)===value)??null;}
+  get candidateOptions(){return this.chosenCandidate&&!this.candidates.some(c=>c.employeeId===this.chosenCandidate!.employeeId)?[this.chosenCandidate,...this.candidates]:this.candidates;}
+  headState(head:Head){return head.effectiveFrom>this.today?'Sắp đảm nhiệm':head.effectiveTo&&head.effectiveTo<=this.today?'Đã kết thúc':'Đang đảm nhiệm';}
   today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 
   ngOnInit() { this.load(); }
@@ -41,6 +49,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   select(department: Department) {
     if (this.saving) return;
     this.selectionChanged.next(); this.selected = department;
+    this.headAction=null;this.chosenCandidate=null;
     this.heads = []; this.candidates = []; this.historyPages = 0; this.candidatePages = 0;
     this.historyPage = 0; this.candidatePage = 0;
     this.loadHistory(0); if (department.isActive) this.loadCandidates(0);
@@ -78,6 +87,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   appoint(event: Event, employee: string, date: string, position: string, reason: string) {
     event.preventDefault();
     if (!this.selected || this.saving) return;
+    if(!employee||!date||!reason.trim()||(this.selected.headEmployeeId&&!position)){this.error='Nhập đầy đủ người được bổ nhiệm, ngày hiệu lực, chức vụ người cũ và lý do.';return;}
     this.saving = true; this.error = ''; this.message = '';
     this.api.appoint(this.selected.departmentId, Number(employee), date, position ? Number(position) : null, reason)
       .pipe(takeUntil(this.destroyed)).subscribe({ next: () => this.saved('Đã cập nhật trưởng phòng và lưu lịch sử.'), error: e => { this.saving = false; this.fail(e); } });
@@ -85,6 +95,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   end(event: Event, date: string, position: string, reason: string) {
     event.preventDefault();
     if (!this.selected || this.saving) return;
+    if(!date||!position||!reason.trim()){this.error='Nhập đầy đủ ngày kết thúc, chức vụ tiếp theo và lý do.';return;}
     this.saving = true; this.error = ''; this.message = '';
     this.api.end(this.selected.departmentId, date, Number(position), reason).pipe(takeUntil(this.destroyed))
       .subscribe({ next: () => this.saved('Đã kết thúc nhiệm kỳ và lưu phân công tiếp theo.'), error: e => { this.saving = false; this.fail(e); } });

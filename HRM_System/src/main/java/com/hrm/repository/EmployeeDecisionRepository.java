@@ -28,6 +28,16 @@ public interface EmployeeDecisionRepository extends JpaRepository<EmployeeDecisi
 
     @Query("""
         select d from EmployeeDecision d
+        where (:employeeId is null or d.employee.employeeId=:employeeId)
+          and (:status is null or d.approvalStatus=:status)
+          and d.employee.employeeId in :allowedEmployeeIds
+        """)
+    Page<EmployeeDecision> searchScoped(@Param("employeeId") Long employeeId,
+        @Param("status") DecisionApprovalStatus status,
+        @Param("allowedEmployeeIds") List<Long> allowedEmployeeIds, Pageable pageable);
+
+    @Query("""
+        select d from EmployeeDecision d
         where d.employee.employeeId=:employeeId and d.approvalStatus=:status
           and d.payrollEffect<>:noneEffect and d.applyDate between :fromDate and :toDate
         order by d.applyDate,d.decisionId

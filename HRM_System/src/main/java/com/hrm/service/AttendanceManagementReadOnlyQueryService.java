@@ -54,10 +54,7 @@ public class AttendanceManagementReadOnlyQueryService {
                 actorId, AttendancePermissionService.MANAGE);
         // The database does not expose invalidated_at: this endpoint intentionally
         // returns raw records.
-        // An HR can only read employees with active EMPLOYEE accounts AND a historical
-        // department
-        // assignment matching their *currently valid* management scope; no self
-        // attendance.
+        // Match each work date to an assignment in a currently granted department.
         String where = """
                 FROM dbo.attendance_records ar
                 WHERE ar.work_date >= ? AND ar.work_date <= ?
@@ -66,12 +63,6 @@ public class AttendanceManagementReadOnlyQueryService {
                        OR (
                            ? = 'HR'
                            AND ar.employee_id <> ?
-                           AND EXISTS (
-                               SELECT 1 FROM dbo.accounts ea
-                               JOIN dbo.roles er ON er.role_id = ea.role_id
-                               WHERE ea.employee_id = ar.employee_id
-                                 AND ea.is_active = 1 AND er.role_code = 'EMPLOYEE'
-                           )
                            AND EXISTS (
                                SELECT 1
                                FROM dbo.employee_assignments assn

@@ -34,6 +34,8 @@ export class OverviewPage implements OnInit {
   employeeError = '';
   contractError = '';
   workError = '';
+  isHr = false;
+  isAdmin = false;
 
   ngOnInit(): void { this.load(); }
 
@@ -48,11 +50,34 @@ export class OverviewPage implements OnInit {
     this.employeeError = this.contractError = this.workError = '';
     this.requests.add(this.auth.loadCurrentUser().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: profile => {
-        if (profile.role !== 'ADMIN') {
-          this.failAll('Số liệu tổng quan cho HR đang chờ giới hạn theo phòng ban.');
-          return;
-        }
-        this.loadReports();
+        this.isHr = profile.role === 'HR';
+        this.isAdmin = profile.role === 'ADMIN';
+        if (profile.role !== 'ADMIN' && profile.role !== 'HR') { this.failAll('Bạn chưa có quyền xem số liệu tổng quan.'); return; }
+        if (this.isHr) this.loadHrOverview();
+        else this.loadReports();
+      },
+      error: error => this.failAll(this.errorMessage(error))
+    }));
+  }
+
+  private loadHrOverview(): void {
+    this.requests.add(this.api.getHrOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: data => {
+        const employees = data?.employees;
+        const contracts = data?.contracts;
+        const work = data?.work;
+        if (Array.isArray(employees?.byDepartment) && Array.isArray(employees?.byStatus) &&
+            [...employees.byDepartment, ...employees.byStatus].every(row => Number.isSafeInteger(row?.employeeCount) && row.employeeCount >= 0)) {
+          this.employeeReport = employees; this.employeeState = 'ready';
+        } else { this.employeeError = 'Dữ liệu tổng quan chưa hợp lệ.'; this.employeeState = 'error'; }
+        if (Number.isSafeInteger(contracts?.effectiveCount) && contracts.effectiveCount >= 0 &&
+            Number.isSafeInteger(contracts?.expiringCount) && contracts.expiringCount >= 0) {
+          this.contracts = contracts; this.contractState = 'ready';
+        } else { this.contractError = 'Dữ liệu tổng quan chưa hợp lệ.'; this.contractState = 'error'; }
+        if (Number.isSafeInteger(work?.confirmedWorkDays) && work.confirmedWorkDays >= 0 &&
+            Number.isSafeInteger(work?.confirmedAbsentDays) && work.confirmedAbsentDays >= 0) {
+          this.work = work; this.workState = 'ready';
+        } else { this.workError = 'Dữ liệu tổng quan chưa hợp lệ.'; this.workState = 'error'; }
       },
       error: error => this.failAll(this.errorMessage(error))
     }));
@@ -120,7 +145,7 @@ export class OverviewPage implements OnInit {
     this.employeeState = this.contractState = this.workState = 'error';
   }
   private errorMessage(error: unknown): string {
-    if (error instanceof HttpErrorResponse && error.status === 403) return 'Bạn chưa có quyền xem số liệu báo cáo.';
+    if (error instanceof HttpErrorResponse && error.status === 403) return 'Bạn chưa có quyền xem số liệu tổng quan.';
     if (error instanceof HttpErrorResponse && error.status === 401) return 'Phiên đăng nhập đã hết hạn.';
     return 'Không tải được dữ liệu. Vui lòng thử lại.';
   }

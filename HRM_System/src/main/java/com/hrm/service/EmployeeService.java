@@ -89,7 +89,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees(AuthenticatedAccount actor) {
-        if ("EMPLOYEE".equals(actor.roleCode())) {
+        if ("EMPLOYEE".equals(actor.roleCode()) && (personnelScope==null||!personnelScope.isCurrentHead())) {
             throw new AccessDeniedException("EMPLOYEE không được xem danh sách nhân sự");
         }
         return getAllEmployees();
@@ -98,7 +98,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees() {
         LocalDate asOfDate = businessToday();
-        var allowed = PersonnelScopeService.isHr() ? personnelScope.employees() : null;
+        var allowed = personnelScope==null?null:personnelScope.readableEmployees();
         return employeeRepository.findAllWithAssignments().stream().filter(e -> allowed==null || allowed.contains(e.getEmployeeId()))
                 .map(employee -> convertToDTO(employee, asOfDate))
                 .collect(Collectors.toList());
@@ -106,7 +106,8 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public EmployeeDTO getEmployeeById(Long id, AuthenticatedAccount actor) {
-        if ("EMPLOYEE".equals(actor.roleCode()) && !Objects.equals(actor.employeeId(), id)) {
+        if ("EMPLOYEE".equals(actor.roleCode()) && !Objects.equals(actor.employeeId(), id)
+                && (personnelScope==null||!personnelScope.canReadPrivate(id))) {
             throw new AccessDeniedException("Không được truy cập hồ sơ của nhân viên khác");
         }
         Employee employee = employeeRepository.findByIdWithAssignments(id)
@@ -126,12 +127,13 @@ public class EmployeeService {
         String searchKeyword = "%" + (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT)) + "%";
         Pageable pageable = PagingUtils.create(page, size, Sort.by(Sort.Direction.DESC, "employeeId"));
         Page<Employee> employees;
+        var readScope=personnelScope==null?null:personnelScope.readableEmployees();
         if(keyword!=null&&!keyword.isBlank()) {
-        var candidates = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped("%",status,departmentId,positionId,asOf,personnelScope.employees(),org.springframework.data.domain.Pageable.unpaged(pageable.getSort())) : employeeRepository.searchEmployees("%",status,departmentId,positionId,asOf,org.springframework.data.domain.Pageable.unpaged(pageable.getSort()));
+        var candidates = readScope!=null ? employeeRepository.searchEmployeesScoped("%",status,departmentId,positionId,asOf,readScope,org.springframework.data.domain.Pageable.unpaged(pageable.getSort())) : employeeRepository.searchEmployees("%",status,departmentId,positionId,asOf,org.springframework.data.domain.Pageable.unpaged(pageable.getSort()));
             var matched=candidates.getContent().stream().filter(e->com.hrm.util.PersonnelSearch.matches(keyword,e.getFullName(),e.getEmployeeCode())).toList();
             employees=com.hrm.util.PersonnelSearch.page(matched,page,size);
         } else {
-        employees = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,personnelScope.employees(),pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
+        employees = readScope!=null ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,readScope,pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
         }
         List<Long> employeeIds = employees.getContent().stream()
                 .map(Employee::getEmployeeId)
