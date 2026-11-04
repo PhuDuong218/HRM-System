@@ -5,6 +5,8 @@ import { AdminLayout } from "./layout/admin-layout";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { authGuard } from "./services/auth.guard";
+import { PayslipsPage } from './pages/payslips/payslips';
+import { PayrollPage } from './pages/payroll/payroll';
 export const routes: Routes = [
   { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
   {
@@ -96,14 +98,14 @@ export const routes: Routes = [
         loadComponent: () =>
           import("./pages/decisions/decisions").then((m) => m.DecisionsPage),
       },
-      {
-        path: "payroll",
-        component: PlaceholderPage,
-        data: { title: "Tiền lương" },
+      { 
+        path: 'payroll', 
+        component: PayrollPage,
+        data: { title: 'Tiền lương' },
       },
-      {
-        path: "payslips",
-        component: PlaceholderPage,
+      { 
+        path: "payslips", 
+        component: PayslipsPage,
         data: { title: "Phiếu lương" },
       },
       {

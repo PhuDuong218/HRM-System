@@ -1,0 +1,25 @@
+.text-dark-blue {
+  color: #004581 !important;
+}
+
+.stat-card {
+  background: #fff;
+  border: 1px solid #e4eaf2;
+  border-radius: 12px;
+  padding: 18px;
+}
+
+.stat-title {
+  color: #738397;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  margin: 0;
+  font-size: 22px;
+  font-weight: 750;
+}

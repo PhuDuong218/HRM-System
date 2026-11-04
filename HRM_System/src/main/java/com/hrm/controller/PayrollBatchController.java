@@ -8,6 +8,7 @@ import com.hrm.model.PayrollDetail;
 import com.hrm.model.PayrollLine;
 import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollLineRepository;
+import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.PayrollBatchService;
 import com.hrm.service.PayrollExecutionService;
 import com.hrm.service.PersonnelScopeService;
@@ -17,7 +18,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
-import com.hrm.security.AuthenticatedAccount;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -27,7 +27,7 @@ import java.util.Set;
 import java.util.HashSet;
 
 @RestController
-@RequestMapping("/payroll-batches")
+@RequestMapping({"/payroll-batches", "/api/payroll-batches"})
 @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAuthority('PAYROLL_MANAGE')")
 public class PayrollBatchController {
 
@@ -59,6 +59,19 @@ public class PayrollBatchController {
     @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
     public ResponseEntity<List<PayrollBatchDTO>> getByPeriod(@PathVariable Long periodId) {
         return ResponseEntity.ok(batchService.getBatchesByPeriod(periodId));
+    }
+
+    // Tra cứu đợt lương mới nhất của kỳ đang chọn
+    @GetMapping("/period/{periodId}/current")
+    public ResponseEntity<PayrollBatchDTO> getCurrentBatch(@PathVariable Long periodId) {
+        List<PayrollBatchDTO> list = batchService.getBatchesByPeriod(periodId);
+        if (list == null || list.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+        PayrollBatchDTO current = list.stream()
+                .max((a, b) -> Integer.compare(a.getVersionNo(), b.getVersionNo()))
+                .orElse(list.get(0));
+        return ResponseEntity.ok(current);
     }
 
     @PostMapping("/draft")

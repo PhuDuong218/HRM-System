@@ -50,6 +50,21 @@ class PayslipScopeTest {
         login("HR");assertSame(detail,controller.getPayslipDetail(2L).getBody());
         verifyNoInteractions(scope);
     }
+    @Test void previewRejectsAnotherEmployeeBeforeLoadingSalaryData() {
+        login("EMPLOYEE");
+        assertThrows(AccessDeniedException.class,()->controller.previewPayslipByEmployee(20L));
+        login("HR","PAYROLL_VIEW");
+        doThrow(new AccessDeniedException("outside scope")).when(scope).managedEmployee(20L);
+        assertThrows(AccessDeniedException.class,()->controller.previewPayslipByEmployee(20L));
+        verifyNoInteractions(service);
+    }
+    @Test void previewAllowsOwnerAndScopedHrAndAdmin() {
+        when(service.getMyPayslips(anyLong())).thenReturn(List.of());
+        login("EMPLOYEE");assertTrue(controller.previewPayslipByEmployee(10L).getBody().contains("Chưa tìm thấy"));
+        login("HR","PAYROLL_VIEW");controller.previewPayslipByEmployee(20L);verify(scope).managedEmployee(20L);
+        login("ADMIN","PAYROLL_MANAGE");controller.previewPayslipByEmployee(30L);verify(scope,never()).managedEmployee(30L);
+        SecurityContextHolder.clearContext();assertThrows(AccessDeniedException.class,()->controller.previewPayslipByEmployee(10L));
+    }
     @Test void personalAccessDoesNotGrantManagementOfOwnUnassignedDepartment() {
         login("HR");
         var realScope=new PersonnelScopeService(mock(JdbcTemplate.class));

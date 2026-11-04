@@ -14,7 +14,7 @@ import java.util.List;
 import java.util.Objects;
 
 @RestController
-@RequestMapping("/payslips")
+@RequestMapping({"/payslips", "/api/payslips"})
 public class PayslipController {
 
     private final PayslipService payslipService;
@@ -65,4 +65,20 @@ public class PayslipController {
         throw denied();
     }
     private AccessDeniedException denied() { return new AccessDeniedException("Không được xem phiếu lương này"); }
+    // P-15: Xem trước và in phiếu lương theo ID nhân viên
+    @GetMapping(value = "/preview/employee/{employeeId}/html", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    public ResponseEntity<String> previewPayslipByEmployee(@PathVariable Long employeeId) {
+        authorize(employeeId);
+        List<PayslipDetailDTO> myPayslips = payslipService.getMyPayslips(employeeId);
+        if (myPayslips == null || myPayslips.isEmpty()) {
+            return ResponseEntity.ok("""
+                <div style='font-family:Arial,sans-serif;text-align:center;padding:50px;color:#64748b;'>
+                    <h3>Chưa tìm thấy phiếu lương đã công bố của nhân sự này</h3>
+                    <p>Phiếu lương chỉ được phát hành sau khi bảng lương của kỳ đã được <b>CHỐT</b> và <b>CÔNG BỐ</b>.</p>
+                </div>
+            """);
+        }
+        Long targetPayslipId = myPayslips.get(0).getPayslipId();
+        return ResponseEntity.ok(payslipService.renderPayslipHtml(targetPayslipId));
+    }
 }
