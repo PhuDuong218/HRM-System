@@ -22,7 +22,7 @@ import static org.mockito.Mockito.*;
 import static org.mockito.ArgumentMatchers.*;
 
 /** Actual SQL Server, fixture rollback, no deletion of existing data. */
-@SpringBootTest(properties="spring.jpa.show-sql=false")
+@SpringBootTest(properties={"spring.jpa.show-sql=false", "hrm.contracts.expiry-job-enabled=false"})
 class EmployeeRequestWorkflowIntegrationTest {
     @Autowired JdbcTemplate jdbc;
     @Autowired PlatformTransactionManager transactions;

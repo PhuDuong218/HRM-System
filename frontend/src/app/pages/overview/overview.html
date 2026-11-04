@@ -1,10 +1,104 @@
-<p class="eyebrow">TỔNG QUAN</p><h1>Không gian quản lý nhân sự</h1>
-<p class="page-description">Tổ chức hồ sơ, thời gian làm việc và thu nhập trong một hệ thống.</p>
-<section class="hero-panel mb-4"><span class="badge rounded-pill text-bg-light mb-3">HRM-CENTER</span><h2>Bắt đầu từ những phần cơ bản.</h2><p>Bộ khung đã có bố cục và điều hướng. Mỗi màn hình là một component để bạn phát triển từng chức năng.</p><a routerLink="/employees" class="btn btn-primary">Mở trang nhân viên →</a></section>
-<div class="row g-3 mb-4">
-  <div class="col-md-4"><a class="feature-card" routerLink="/employees"><span class="tile-number">01</span><h2>Hồ sơ nhân sự</h2><p>Nhân viên, danh mục và hợp đồng.</p><span class="card-link">Xem trang mẫu →</span></a></div>
-  <div class="col-md-4"><a class="feature-card" routerLink="/schedules"><span class="tile-number">02</span><h2>Thời gian làm việc</h2><p>Lịch, chấm công, đơn và tăng ca.</p><span class="card-link">Mở bộ khung →</span></a></div>
-  <div class="col-md-4"><a class="feature-card" routerLink="/payroll"><span class="tile-number">03</span><h2>Lương và báo cáo</h2><p>Phụ cấp, bảng lương và phiếu lương.</p><span class="card-link">Mở bộ khung →</span></a></div>
+<div class="overview">
+  <header class="overview-heading">
+    <div>
+      <h1>{{ language.t('Tổng quan') }}</h1>
+    </div>
+    <div class="heading-actions">
+      <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}</span>
+      <button type="button" class="overview-refresh" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
+    </div>
+  </header>
+
+  <section class="overview-intro">
+    <div><span class="intro-kicker">HRM CENTER / INSIGHTS</span><h2>{{ language.t('Một cái nhìn rõ hơn về đội ngũ.') }}</h2><p>{{ language.t('Theo dõi cơ cấu nhân sự, hợp đồng và công việc từ dữ liệu báo cáo hiện có.') }}</p></div>
+    <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a>
+  </section>
+
+  <section class="metric-grid" [attr.aria-label]="language.t('Chỉ số nổi bật')">
+    <article class="metric-card"><span>{{ language.t('Tổng hồ sơ nhân sự') }}</span><strong>{{ employeeReport ? number(totalEmployees) : '—' }}</strong><small>{{ language.t('Bao gồm cả nhân viên đã nghỉ') }}</small></article>
+    <article class="metric-card"><span>{{ language.t('Đang làm việc') }}</span><strong>{{ employeeReport ? number(activeEmployees) : '—' }}</strong><small>{{ language.t('Theo trạng thái hồ sơ') }}</small></article>
+    <article class="metric-card"><span>{{ language.t('Hợp đồng hiệu lực') }}</span><strong>{{ contracts ? number(contracts.effectiveCount) : '—' }}</strong><small>{{ language.t('Tại ngày báo cáo') }}</small></article>
+    <article class="metric-card metric-accent"><span>{{ language.t('Hợp đồng sắp hết hạn') }}</span><strong>{{ contracts ? number(contracts.expiringCount) : '—' }}</strong><small>{{ language.t('Trong 30 ngày tới') }}</small></article>
+  </section>
+
+  <section class="chart-grid" [attr.aria-label]="language.t('Biểu đồ tổng quan')">
+    <article class="chart-card chart-wide">
+      <div class="chart-header"><div><p class="chart-kicker">01 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Nhân sự theo phòng ban') }}</h2><p>{{ language.t('Phân công có hiệu lực tại thời điểm hiện tại.') }}</p></div><span class="chart-mark" aria-hidden="true">▥</span></div>
+      @if (employeeState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
+      @else if (employeeState === 'error') { <p class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
+      @else if (!departments.length) { <p class="chart-state">{{ language.t('Chưa có dữ liệu để hiển thị.') }}</p> }
+      @else {
+        <div class="column-chart">
+          <div class="chart-axis" aria-hidden="true">@for (tick of ticks(departmentMax); track $index) { <span>{{ number(tick) }}</span> }</div>
+          <div class="column-scroll" tabindex="0" role="region" [attr.aria-label]="language.t('Nhân sự theo phòng ban')"><div class="column-body" [style.min-width.px]="departments.length * 80">
+            <div class="chart-gridlines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="column-series">
+              @for (row of departments; track $index) {
+                <div class="column-item" role="img" [attr.aria-label]="(row.groupName || row.groupCode || language.t('Chưa xác định')) + ': ' + number(row.employeeCount)" [title]="row.groupName || row.groupCode || language.t('Chưa xác định')">
+                  <div class="column-area"><div class="column-bar department-column" [style.height.%]="row.employeeCount / departmentMax * 100"><span>{{ number(row.employeeCount) }}</span></div></div>
+                  <span class="column-label">{{ row.groupName || row.groupCode || language.t('Chưa xác định') }}</span>
+                </div>
+              }
+            </div>
+          </div></div>
+        </div>
+        <p class="chart-footnote">{{ language.t('Hiển thị tất cả nhóm, bao gồm hồ sơ chưa có phân công hiệu lực; cuộn ngang khi cần.') }}</p>
+      }
+    </article>
+
+    <article class="chart-card">
+      <div class="chart-header"><div><p class="chart-kicker">02 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Trạng thái nhân sự') }}</h2><p>{{ language.t('Cơ cấu hồ sơ theo trạng thái làm việc.') }}</p></div><span class="chart-mark" aria-hidden="true">◉</span></div>
+      @if (employeeState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
+      @else if (employeeState === 'error') { <p class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
+      @else if (!totalEmployees) { <p class="chart-state">{{ language.t('Chưa có dữ liệu để hiển thị.') }}</p> }
+      @else {
+        <div class="donut-layout"><div class="donut" [style.background]="statusGradient" aria-hidden="true"><div><strong>{{ number(totalEmployees) }}</strong><small>{{ language.t('hồ sơ') }}</small></div></div>
+          <ul class="chart-legend">@for (row of statusItems; track $index) { <li><span class="legend-dot" [style.background]="row.color" aria-hidden="true"></span><span>{{ language.t(row.label) }}<small>{{ number(row.count / totalEmployees * 100) }}%</small></span><strong>{{ number(row.count) }}</strong></li> }</ul>
+        </div>
+      }
+    </article>
+
+    <article class="chart-card">
+      <div class="chart-header"><div><p class="chart-kicker">03 / {{ language.t('HỢP ĐỒNG') }}</p><h2>{{ language.t('Theo dõi hợp đồng') }}</h2><p>{{ language.t('Các hợp đồng đã ký có giao với kỳ báo cáo.') }}</p></div><span class="chart-mark" aria-hidden="true">▤</span></div>
+      @if (contractState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
+      @else if (contractState === 'error') { <p class="chart-state error" role="status">{{ language.t(contractError) }}</p> }
+      @else if (contracts; as report) {
+        <div class="column-chart small-chart">
+          <div class="chart-axis" aria-hidden="true">@for (tick of ticks(contractMax); track $index) { <span>{{ number(tick) }}</span> }</div>
+          <div class="column-scroll"><div class="column-body">
+            <div class="chart-gridlines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="column-series">
+              <div class="column-item" role="img" [attr.aria-label]="language.t('Đang hiệu lực') + ': ' + number(report.effectiveCount)"><div class="column-area"><div class="column-bar contract-column" [style.height.%]="report.effectiveCount / contractMax * 100"><span>{{ number(report.effectiveCount) }}</span></div></div><span class="column-label">{{ language.t('Đang hiệu lực') }}</span></div>
+              <div class="column-item" role="img" [attr.aria-label]="language.t('Sắp hết hạn trong 30 ngày') + ': ' + number(report.expiringCount)"><div class="column-area"><div class="column-bar expiry-column" [style.height.%]="report.expiringCount / contractMax * 100"><span>{{ number(report.expiringCount) }}</span></div></div><span class="column-label">{{ language.t('Sắp hết hạn trong 30 ngày') }}</span></div>
+            </div>
+          </div></div>
+        </div>
+        <p class="chart-footnote">{{ language.t('Hai nhóm có thể trùng nhau; ngày đánh giá là hôm nay.') }}</p>
+      }
+    </article>
+
+    <article class="chart-card">
+      <div class="chart-header"><div><p class="chart-kicker">04 / {{ language.t('THỜI GIAN') }}</p><h2>{{ language.t('Công đã xác nhận') }}</h2><p>{{ date(fromDate) }} – {{ date(today) }}</p></div><span class="chart-mark" aria-hidden="true">◷</span></div>
+      @if (workState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
+      @else if (workState === 'error') { <p class="chart-state error" role="status">{{ language.t(workError) }}</p> }
+      @else if (work; as report) {
+        <div class="column-chart small-chart">
+          <div class="chart-axis" aria-hidden="true">@for (tick of ticks(workMax); track $index) { <span>{{ number(tick) }}</span> }</div>
+          <div class="column-scroll"><div class="column-body">
+            <div class="chart-gridlines" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div>
+            <div class="column-series">
+              <div class="column-item" role="img" [attr.aria-label]="language.t('Bản ghi đi làm') + ': ' + number(report.confirmedWorkDays)"><div class="column-area"><div class="column-bar work-column" [style.height.%]="report.confirmedWorkDays / workMax * 100"><span>{{ number(report.confirmedWorkDays) }}</span></div></div><span class="column-label">{{ language.t('Bản ghi đi làm') }}</span></div>
+              <div class="column-item" role="img" [attr.aria-label]="language.t('Bản ghi vắng') + ': ' + number(report.confirmedAbsentDays)"><div class="column-area"><div class="column-bar absent-column" [style.height.%]="report.confirmedAbsentDays / workMax * 100"><span>{{ number(report.confirmedAbsentDays) }}</span></div></div><span class="column-label">{{ language.t('Bản ghi vắng') }}</span></div>
+            </div>
+          </div></div>
+        </div>
+        <p class="chart-footnote">{{ language.t('Đếm bản ghi công, không phải số nhân viên.') }}</p>
+      }
+    </article>
+  </section>
+
+  <section class="next-insights">
+    <div><p class="chart-kicker">{{ language.t('PHÁT TRIỂN TIẾP') }}</p><h2>{{ language.t('Các chỉ số nên bổ sung') }}</h2><p>{{ language.t('Cần dữ liệu theo kỳ và xác nhận phạm vi truy cập trước khi hiển thị.') }}</p></div>
+    <ul><li>{{ language.t('Biến động nhân sự theo tháng') }}</li><li>{{ language.t('Xu hướng công và tăng ca') }}</li><li>{{ language.t('Quỹ lương theo kỳ') }}</li></ul>
+  </section>
 </div>
-<section class="surface"><div class="d-flex flex-wrap justify-content-between gap-3 align-items-center"><div><h2>Kết nối hệ thống</h2><p class="mb-0 muted">Kiểm tra HTTP tới backend Spring Boot từ Angular.</p></div><a routerLink="/connection" class="btn btn-outline-primary">Kiểm tra API</a></div></section>
-<p class="small muted mt-3">Chưa kết nối dữ liệu nghiệp vụ nên trang này chưa hiển thị số liệu thống kê.</p>

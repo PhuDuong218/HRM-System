@@ -15,6 +15,10 @@ import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.hrm.security.AuthenticatedAccount;
 import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
@@ -23,6 +27,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping({"/payroll-batches", "/api/payroll-batches"})
+@PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAuthority('PAYROLL_MANAGE')")
 public class PayrollBatchController {
 
     private final PayrollBatchService batchService;
@@ -41,11 +46,13 @@ public class PayrollBatchController {
     }
 
     @GetMapping
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
     public ResponseEntity<List<PayrollBatchDTO>> getAll() {
         return ResponseEntity.ok(batchService.getAllBatches());
     }
 
     @GetMapping("/period/{periodId}")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
     public ResponseEntity<List<PayrollBatchDTO>> getByPeriod(@PathVariable Long periodId) {
         return ResponseEntity.ok(batchService.getBatchesByPeriod(periodId));
     }
@@ -74,25 +81,18 @@ public class PayrollBatchController {
         return ResponseEntity.ok(executionService.calculateBatch(batchId));
     }
 
-    // P-12: Chốt bảng lương (lấy accountId từ Token JWT, fallback về 1L nếu test cục bộ)
+    // Keep the legacy query parameter compatible; the authenticated actor is authoritative.
     @PostMapping("/{batchId}/lock")
-    public ResponseEntity<PayrollBatchDTO> lockBatch(
-            @PathVariable Long batchId,
-            @AuthenticationPrincipal AuthenticatedAccount actor) {
-
-        Long lockerAccountId = (actor != null && actor.accountId() != null) ? actor.accountId() : 1L;
-        return ResponseEntity.ok(batchService.lockBatch(batchId, lockerAccountId));
+    public ResponseEntity<PayrollBatchDTO> lockBatch(@PathVariable Long batchId,
+                                                    @RequestParam(required = false) Long actorAccountId) {
+        return ResponseEntity.ok(batchService.lockBatch(batchId, currentActorAccountId()));
     }
 
     // P-12 & P-14: Công bố bảng lương và tự động phát hành phiếu lương
     @PostMapping("/{batchId}/publish")
-    public ResponseEntity<PayrollBatchDTO> publishBatch(
-            @PathVariable Long batchId,
-            @RequestParam(required = false) Long actorAccountId,
-            @AuthenticationPrincipal AuthenticatedAccount actor) {
-
-        Long publisherId = actorAccountId != null ? actorAccountId : (actor != null ? actor.accountId() : 1L);
-        return ResponseEntity.ok(batchService.publishBatch(batchId, publisherId));
+    public ResponseEntity<PayrollBatchDTO> publishBatch(@PathVariable Long batchId,
+                                                       @RequestParam(required = false) Long actorAccountId) {
+        return ResponseEntity.ok(batchService.publishBatch(batchId, currentActorAccountId()));
     }
 
     // P-13: Tạo phiên bản điều chỉnh có lý do
@@ -104,6 +104,7 @@ public class PayrollBatchController {
     }
 
     @GetMapping("/{batchId}/details")
+    @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
     public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
         List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
         List<PayrollDetailViewDTO> result = new ArrayList<>();
@@ -142,5 +143,15 @@ public class PayrollBatchController {
         }
 
         return ResponseEntity.ok(result);
+    }
+
+    private Long currentActorAccountId() {
+        var authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.isAuthenticated()
+                && authentication.getPrincipal() instanceof AuthenticatedAccount actor
+                && actor.accountId() != null) {
+            return actor.accountId();
+        }
+        throw new AccessDeniedException("Không xác định được người thực hiện từ phiên đăng nhập");
     }
 }

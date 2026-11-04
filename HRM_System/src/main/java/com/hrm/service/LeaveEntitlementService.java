@@ -29,6 +29,8 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
 @Service
 public class LeaveEntitlementService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+
 
     private final LeaveEntitlementRepository entitlementRepository;
     private final EmployeeRepository employeeRepository;
@@ -81,6 +83,7 @@ public Page<LeaveEntitlementDTO> getAllEntitlements(
     PageRequest pageable = PageRequest.of(page, size, sort);
 
     // 5. Truy vấn Repository và chuyển Entity sang DTO
+    if(PersonnelScopeService.isHr()) return entitlementRepository.searchEntitlementsScoped(employeeId,leaveTypeId,fromDate,toDate,personnelScope.employees(),pageable).map(this::toDTO);
     return entitlementRepository.searchEntitlements(
             employeeId,
             leaveTypeId,

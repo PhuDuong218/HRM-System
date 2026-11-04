@@ -65,4 +65,11 @@ public class Account extends BaseEntity {
     public int getTokenVersion() {
         return tokenVersion;
     }
+
+    public void setEmployeeId(Long employeeId) { this.employeeId = employeeId; }
+    public void setRole(Role role) { this.role = role; }
+    public void setUsername(String username) { this.username = username; }
+    public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
+    public void setActive(boolean active) { this.active = active; }
+    public void revokeTokens() { this.tokenVersion = Math.addExact(this.tokenVersion, 1); }
 }

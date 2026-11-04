@@ -1,0 +1,4 @@
+<resources>
+    <string name="app_name">HRM Employee</string>
+    <string name="api_base_url" translatable="false"></string>
+</resources>

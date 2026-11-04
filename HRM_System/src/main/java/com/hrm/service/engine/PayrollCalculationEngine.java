@@ -102,7 +102,9 @@ public class PayrollCalculationEngine {
         // 5. P-10: THUẾ THU NHẬP CÁ NHÂN (TNCN) LŨY TIẾN TỪNG PHẦN
         // Thu nhập chịu thuế = Lương công + Lương OT + Phụ cấp - Khoản miễn thuế (ăn trưa)
         BigDecimal grossIncome = workSalary.add(otSalary).add(totalAllowance);
-        BigDecimal taxableIncome = grossIncome.subtract(taxExemptAllowance);
+        // The project specification caps the total meal exemption per period,
+        // including when the profile contains more than one meal allowance line.
+        BigDecimal taxableIncome = grossIncome.subtract(taxExemptAllowance.min(new BigDecimal("730000")));
 
         // Thu nhập tính thuế = Thu nhập chịu thuế - Bảo hiểm - Giảm trừ bản thân (11tr)
         BigDecimal assessableIncome = taxableIncome.subtract(insuranceDeduction).subtract(PayrollConstants.GIAM_TRU_BAN_THAN);

@@ -116,6 +116,55 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
             @Param("asOf") LocalDate asOf,
             Pageable pageable);
 
+    @Query(value = """
+            SELECT e
+            FROM Employee e
+            WHERE e.employeeId IN :scopeIds AND (
+                LOWER(e.fullName) LIKE :keyword
+                OR LOWER(e.employeeCode) LIKE :keyword
+            )
+            AND (:status IS NULL OR e.employmentStatus = :status)
+            AND (
+                (:departmentId IS NULL AND :positionId IS NULL)
+                OR EXISTS (
+                    SELECT a.assignmentId
+                    FROM EmployeeAssignment a
+                    WHERE a.employee = e
+                    AND a.effectiveFrom <= :asOf
+                    AND (a.effectiveTo IS NULL OR a.effectiveTo > :asOf)
+                    AND (:departmentId IS NULL OR a.department.departmentId = :departmentId)
+                    AND (:positionId IS NULL OR a.position.positionId = :positionId)
+                )
+            )
+            """, countQuery = """
+            SELECT COUNT(e)
+            FROM Employee e
+            WHERE e.employeeId IN :scopeIds AND (
+                LOWER(e.fullName) LIKE :keyword
+                OR LOWER(e.employeeCode) LIKE :keyword
+            )
+            AND (:status IS NULL OR e.employmentStatus = :status)
+            AND (
+                (:departmentId IS NULL AND :positionId IS NULL)
+                OR EXISTS (
+                    SELECT a.assignmentId
+                    FROM EmployeeAssignment a
+                    WHERE a.employee = e
+                    AND a.effectiveFrom <= :asOf
+                    AND (a.effectiveTo IS NULL OR a.effectiveTo > :asOf)
+                    AND (:departmentId IS NULL OR a.department.departmentId = :departmentId)
+                    AND (:positionId IS NULL OR a.position.positionId = :positionId)
+                )
+            )
+            """)
+    Page<Employee> searchEmployeesScoped(
+            @Param("keyword") String keyword,
+            @Param("status") EmploymentStatus status,
+            @Param("departmentId") Long departmentId,
+            @Param("positionId") Long positionId,
+            @Param("asOf") LocalDate asOf,
+            @org.springframework.data.repository.query.Param("scopeIds") java.util.Collection<Long> scopeIds, org.springframework.data.domain.Pageable pageable);
+
     // Ham tien ich: mac dinh tim kiem theo ngay hien tai tai Viet Nam
     default Page<Employee> searchEmployees(
             String keyword,
