@@ -37,6 +37,12 @@ public class EmployeeUpdateRequestDTO {
     @Size(max = 50)
     private String identityNumber;
 
+    @Size(max = 500, message = "Địa chỉ không vượt quá 500 ký tự")
+    private String address;
+
+    public String getAddress() { return address; }
+    public void setAddress(String address) { this.address = address; }
+
     public String getFullName() {
         return fullName;
     }

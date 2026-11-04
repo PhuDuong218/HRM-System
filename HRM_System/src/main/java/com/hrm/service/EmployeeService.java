@@ -291,6 +291,8 @@ public class EmployeeService {
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
         employee.setPhone(normalizeContactText(requestDTO.getPhone()));
         employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
+        // Omission preserves the address for older PUT clients; an empty string clears it.
+        if (requestDTO.getAddress() != null) employee.setAddress(normalizeContactText(requestDTO.getAddress()));
         employee.setUpdatedAt(auditNow());
         return convertToDTO(employeeRepository.save(employee));
     }

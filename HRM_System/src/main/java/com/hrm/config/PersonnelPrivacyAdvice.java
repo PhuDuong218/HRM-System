@@ -36,21 +36,22 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
   var matcher=java.util.regex.Pattern.compile("^/employees/(\\d+)(?:/contact)?$").matcher(servlet.getRequest().getRequestURI());
   if(!matcher.matches())return body;long id=PersonnelPolicyWebConfiguration.recordId(matcher.group(1));
   if(body instanceof EmployeeUpdateRequestDTO r){
-   var existing=jdbc.queryForList("SELECT email,phone,identity_number FROM dbo.employees WHERE employee_id=?",id);
+   if(!Objects.equals(actor.employeeId(),id))scope.managedEmployee(id);
+   var existing=jdbc.queryForList("SELECT email,phone,identity_number,address FROM dbo.employees WHERE employee_id=?",id);
    if(!existing.isEmpty()){
     var old=existing.get(0);
     if(Objects.equals(actor.employeeId(),id)&&(!Objects.equals(clean(r.getEmail()),clean((String)old.get("email")))||!Objects.equals(clean(r.getPhone()),clean((String)old.get("phone")))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
     if(Objects.equals(actor.employeeId(),id)) {
      if(r.getIdentityNumber()!=null&&!Objects.equals(clean(r.getIdentityNumber()),clean((String)old.get("identity_number"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
-    } else if(r.getIdentityNumber()!=null)throw privateWrite();
-    r.setIdentityNumber((String)old.get("identity_number"));
+     if(r.getAddress()!=null&&!Objects.equals(clean(r.getAddress()),clean((String)old.get("address"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
+    }
+    if(r.getIdentityNumber()==null)r.setIdentityNumber((String)old.get("identity_number"));
    }
   }
-  if(body instanceof EmployeeContactPatchDTO r&&!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))throw privateWrite();
+  if(body instanceof EmployeeContactPatchDTO r&&!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))scope.managedEmployee(id);
   return body;
  }
  private static String clean(String v){return v==null||v.isBlank()?null:v.trim();}
- private static ResponseStatusException privateWrite(){return new ResponseStatusException(HttpStatus.FORBIDDEN,"CCCD và địa chỉ nhà chỉ dành cho chủ hồ sơ");}
  @Override public boolean supports(MethodParameter parameter,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object beforeBodyWrite(Object body,MethodParameter parameter,MediaType type,Class<? extends HttpMessageConverter<?>> converter,ServerHttpRequest request,ServerHttpResponse response){
   var actor=PersonnelScopeService.current();

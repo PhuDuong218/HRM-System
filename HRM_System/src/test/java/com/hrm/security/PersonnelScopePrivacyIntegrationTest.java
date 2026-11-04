@@ -183,18 +183,40 @@ class PersonnelScopePrivacyIntegrationTest {
   mvc.perform(get("/departments/"+departmentB).header("Authorization",auth(hr))).andExpect(status().isForbidden());
   mvc.perform(get("/g1/audit").param("targetTable","employees").param("recordId",Long.toString(outside)).header("Authorization",auth(hr))).andExpect(status().isForbidden());
  }
- @Test void managerCannotWriteAnotherEmployeesPrivateFields()throws Exception{
+ @Test void administratorAndScopedHrCanMaintainPrivateFields()throws Exception{
   mvc.perform(patch("/employees/"+inside+"/contact").header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
-   .content("{\"address\":\"PRIVATE_NEW\"}")).andExpect(status().isForbidden());
+   .content("{\"address\":\"PRIVATE_NEW\"}")).andExpect(status().isOk());
   mvc.perform(put("/employees/"+inside).header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON)
-   .content("{\"fullName\":\"Blocked private update\",\"identityNumber\":\"PRIVATE_NEW\"}")).andExpect(status().isForbidden());
-  assertEquals("PRIVATE_ID",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,inside));
+   .content("{\"fullName\":\"Allowed private update\",\"identityNumber\":\"000000000123\",\"address\":\"Updated home\",\"reason\":\"QA profile update\"}")).andExpect(status().isOk());
+  mvc.perform(get("/employees/"+inside+"/detail").header("Authorization",auth(hr))).andExpect(status().isOk())
+   .andExpect(jsonPath("$.identityNumber").value("000000000123")).andExpect(jsonPath("$.address").value("Updated home"));
+  mvc.perform(put("/employees/"+outside).header("Authorization",auth(hr)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"fullName\":\"Blocked update\",\"identityNumber\":\"000000000999\",\"address\":\"Outside\"}")).andExpect(status().isForbidden());
+  assertEquals("PRIVATE_ID",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,outside));
+ }
+ @Test void privateFieldsCanBeCreatedAndClearedAndOmittedAddressIsPreserved()throws Exception{
+  long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag);
+  long id=createdId("/employees",hr,"{\"employeeCode\":\""+tag+"NEW\",\"fullName\":\"QA private create\",\"hireDate\":\"2020-01-01\",\"departmentId\":"+departmentA+",\"positionId\":"+position+",\"identityNumber\":\"000000000123\",\"address\":\"QA home address\"}","employeeId");
+  mvc.perform(get("/employees/"+id+"/detail").header("Authorization",auth(hr))).andExpect(status().isOk())
+   .andExpect(jsonPath("$.identityNumber").value("000000000123")).andExpect(jsonPath("$.address").value("QA home address"));
+  mvc.perform(put("/employees/"+id).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"fullName\":\"Legacy update\"}")).andExpect(status().isOk());
+  assertEquals("QA home address",db.queryForObject("SELECT address FROM dbo.employees WHERE employee_id=?",String.class,id));
+  assertEquals("000000000123",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,id));
+  mvc.perform(put("/employees/"+id).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"fullName\":\"Clear optional data\",\"identityNumber\":\"\",\"address\":\"\",\"reason\":\"QA clear optional fields\"}")).andExpect(status().isOk());
+  assertNull(db.queryForObject("SELECT address FROM dbo.employees WHERE employee_id=?",String.class,id));
+  assertNull(db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,id));
+ }
+ @Test void privateFieldsRejectOversizedValues()throws Exception{
+  mvc.perform(put("/employees/"+inside).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
+   .content("{\"fullName\":\"Invalid private fields\",\"identityNumber\":\""+"1".repeat(51)+"\",\"address\":\""+"a".repeat(501)+"\"}")).andExpect(status().isBadRequest());
  }
  @Test void ownProfileUpdateCannotChangeContactOrEraseHiddenIdentity()throws Exception{
   mvc.perform(put("/employees/"+adminEmployee).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
    .content("{\"fullName\":\"Allowed work update\"}")).andExpect(status().isOk());
   assertEquals("PRIVATE_ID",db.queryForObject("SELECT identity_number FROM dbo.employees WHERE employee_id=?",String.class,adminEmployee));
-  for(String contact:new String[]{"\"identityNumber\":\"CHANGED\"","\"email\":\"self@example.test\""})
+  for(String contact:new String[]{"\"identityNumber\":\"CHANGED\"","\"address\":\"CHANGED\"","\"email\":\"self@example.test\""})
    mvc.perform(put("/employees/"+adminEmployee).header("Authorization",auth(admin)).contentType(MediaType.APPLICATION_JSON)
     .content("{\"fullName\":\"Blocked contact update\","+contact+"}")).andExpect(status().isForbidden());
  }

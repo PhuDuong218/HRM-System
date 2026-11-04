@@ -10,6 +10,7 @@ import { Subscription, finalize, timeout } from 'rxjs';
 import { EmployeeService, Employee, EmployeeForm, errorMessage } from '../../services/employee.service';
 import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
+import { employeeFormErrors } from './employee-form.validation';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
 @Component({ selector: 'app-employees', standalone: true, imports: [PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage extends ManagementPageBase implements OnInit {
@@ -55,6 +56,17 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     choicesError = '';
     mode: string | null = null;
     form = blank();
+    attemptedSave = false;
+    serverFieldErrors: Record<string,string> = {};
+    get today() { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
+    get formErrors() { return employeeFormErrors(this.form,this.mode || '',this.today); }
+    get formErrorsCount() { return Object.keys(this.formErrors).length; }
+    fieldError(field:string,f:NgForm) {
+        const control=f.controls[field];
+        if(!(this.attemptedSave || control?.touched))return '';
+        return this.serverFieldErrors[field] || this.formErrors[field] || (control?.invalid ? 'Giá trị chưa hợp lệ.' : '');
+    }
+    clearFieldError(field:string) { delete this.serverFieldErrors[field]; }
     confirmTermination = false;
     exitDecision={reason:'',lastWorkingDate:'',decisionType:'MUTUAL_AGREEMENT',decisionNumber:''};
     rehireDate = '';
@@ -91,13 +103,37 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
         return; this.auditRequest?.unsubscribe();this.auditRows=[];this.auditOpen=false;this.auditError='';this.auditLoading=false; this.detailRequest?.unsubscribe(); this.mode = 'detail'; this.selected = row; this.detailLoading = true; this.detailError = ''; this.detailRequest = this.api.detail(row.employeeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { this.selected = r; this.detailLoading = false; }, error: e => { this.detailError = errorMessage(e); this.detailLoading = false; } }); }
     close() { if (this.saving)
         return; this.detailRequest?.unsubscribe(); this.mode = null; this.selected = null; this.detailLoading = false; this.detailError = ''; }
-    edit(mode: string) { if (!this.canManage || this.saving || this.detailLoading)
-        return; this.form.privateFieldsEditable=this.ownProfile; this.mode = mode; this.detailError = ''; this.message = ''; this.confirmTermination = false; const p = this.selected; if (mode === 'create') this.selected = null; this.form = mode === 'create' || !p ? blank() : { ...blank(), gender:p.gender, employeeCode: p.employeeCode, fullName: p.fullName, birthDate: p.birthDate || '', email: p.email || '', phone: p.phone || '', identityNumber: p.identityNumber || '', hireDate: p.hireDate, address: p.address || '', privateFieldsEditable:this.ownProfile }; }
+    edit(mode: string) {
+        if (!this.canManage || this.saving || this.detailLoading || mode===this.mode) return;
+        this.detailError=''; this.message=''; this.confirmTermination=false;
+        this.attemptedSave=false; this.serverFieldErrors={};
+        if(mode==='create') {this.selected=null;this.form={...blank(),privateFieldsEditable:true};this.mode=mode;return;}
+        if(!this.selected)return;
+        if(mode!=='edit' && mode!=='contact'){this.mode=mode;return;}
+        // Always hydrate from the full record, never from the summary table response.
+        // A failed reload leaves the current record/form intact instead of opening a blank editor.
+        const id=this.selected.employeeId;
+        this.detailLoading=true;
+        this.detailRequest?.unsubscribe();
+        this.detailRequest=this.api.detail(id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
+            next:p=>{this.selected=p;this.form={...blank(),gender:p.gender,employeeCode:p.employeeCode,fullName:p.fullName,
+                birthDate:p.birthDate?.slice(0,10)||'',email:p.email||'',phone:p.phone||'',identityNumber:p.identityNumber||'',
+                hireDate:p.hireDate?.slice(0,10)||'',address:p.address||'',privateFieldsEditable:!this.ownProfile};
+                this.detailLoading=false;this.mode=mode;},
+            error:e=>{this.detailLoading=false;this.detailError=errorMessage(e);}
+        });
+    }
     save(f: NgForm) { if (this.saving)
-        return; if (f.invalid || !this.form.fullName.trim()) {
+        return; this.attemptedSave=true; if (f.invalid || Object.keys(this.formErrors).length) {
         f.control.markAllAsTouched();
         return;
-    } this.saving = true; this.message = ''; this.detailError = ''; this.api.save(this.mode!, this.selected?.employeeId, this.form).pipe(timeout(20000), takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: r => { this.saving = false; this.message = 'Đã lưu hồ sơ thành công.'; this.load(this.page); this.select(r); }, error: e => this.detailError = errorMessage(e) }); }
+    } this.saving = true; this.message = ''; this.detailError = ''; this.serverFieldErrors={}; this.api.save(this.mode!, this.selected?.employeeId, this.form).pipe(timeout(20000), takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: r => { this.saving = false; this.message = 'Đã lưu hồ sơ thành công.'; this.load(this.page); this.select(r); }, error: e => {
+        this.detailError=errorMessage(e);
+        const fields=e.error?.fieldErrors ?? e.error?.errors ?? e.error?.loi_chi_tiet;
+        if(fields && typeof fields==='object' && !Array.isArray(fields))for(const [key,value] of Object.entries(fields))this.serverFieldErrors[key==='reason'?'changeReason':key]=String(value);
+        else if(e.status===409 && /mã nhân viên/i.test(this.detailError))this.serverFieldErrors['employeeCode']=this.detailError;
+        f.control.markAllAsTouched();
+    } }); }
     terminate() { if (this.saving || !this.confirmTermination || !this.selected || !this.exitDecision.reason.trim() || !this.exitDecision.lastWorkingDate || !this.exitDecision.decisionNumber.trim())
         return; const row = this.selected; this.message = ''; this.detailError = ''; this.saving = true; this.api.terminate(row.employeeId,this.exitDecision).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: () => { this.saving = false; this.message = 'Đã lưu quyết định. Thôi việc được thực thi sau ngày làm cuối; lịch sử được giữ lại.'; this.load(this.page); this.select(row); }, error: e => this.detailError = errorMessage(e) }); }
     rehire() {

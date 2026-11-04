@@ -76,7 +76,7 @@ public class EmployeeCreationAuditService {
         return result;
     }
 
-    /** Legacy PUT replaces its optional fields; address remains managed by contact PATCH. */
+    /** Legacy PUT keeps an omitted address; profile/contact changes share the audit snapshot. */
     @Transactional
     public EmployeeDTO update(Long id, EmployeeUpdateRequestDTO request, Long actorAccountId) {
         if (actorAccountId == null || actorAccountId <= 0) {

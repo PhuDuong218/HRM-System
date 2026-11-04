@@ -229,6 +229,7 @@ public class EmployeeController {
         update.setEmail(request.getEmail());
         update.setPhone(request.getPhone());
         update.setIdentityNumber(request.getIdentityNumber());
+        update.setAddress(request.getAddress());
 
         return update;
     }
