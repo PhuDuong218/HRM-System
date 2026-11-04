@@ -1,3 +1,4 @@
+import { ContractWarnings } from "./contract-warnings";
 import { TranslatePipe } from "../../shared/translate.pipe";
 import { LanguageService } from "../../services/language.service";
 import { Pagination } from "../../shared/pagination";
@@ -14,13 +15,16 @@ import { Subscription } from "rxjs";
 import { DecimalPipe } from "@angular/common";
 
 import { ContractService } from "../../services/contract.service";
+import { employmentApiError } from "../../shared/employment-api-error";
 import {
+  contractTermKindLabels,
   ContractCreateRequest,
   ContractResponse,
   ContractStatus,
   ContractTypeResponse,
   ContractRenewRequest,
   ContractTerminateRequest,
+  TerminationReasonType,
   SalaryTermResponse,
   SalaryTermRequest,
   PayBasis,
@@ -33,12 +37,13 @@ type SalaryTermDraft = {
   baseSalary: string;
   payBasis: PayBasis | "";
   documentReference: string;
+  officialReferenceSalary: string; officialReferencePayBasis: PayBasis | "";
 };
 
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [Pagination, RecordWorkspace, DecimalPipe, TranslatePipe],
+  imports: [Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
@@ -103,6 +108,31 @@ export class ContractsPage implements OnInit {
   lifecycleMode: "renew" | "terminate" | null = null;
   lifecycleContract: ContractResponse | null = null;
   lifecycleError = "";
+  terminationDateDraft = "";
+  readonly terminationReasons: ReadonlyArray<{ value: TerminationReasonType; label: string }> = [
+    { value: "HET_HAN", label: "Hết hạn" },
+    { value: "THOA_THUAN", label: "Thỏa thuận" },
+    { value: "NLD_DON_PHUONG", label: "Người lao động đơn phương" },
+    { value: "NSDLD_DON_PHUONG", label: "Người sử dụng lao động đơn phương" },
+    { value: "SA_THAI", label: "Sa thải" },
+  ];
+
+  terminationReasonLabel(reason: TerminationReasonType | null): string {
+    return this.terminationReasons.find((item) => item.value === reason)?.label ?? "Chưa ghi nhận";
+  }
+
+  readonly termKindLabels = contractTermKindLabels;
+  readonly statusLabels: Record<ContractStatus, string> = {
+    DA_KY: 'Đã ký', DA_KET_THUC: 'Đã kết thúc', DA_HUY: 'Đã hủy',
+  };
+  readonly probationLabels: Record<NonNullable<ContractResponse['probationGroup']>, string> = {
+    QUAN_LY_DN: 'Quản lý doanh nghiệp', CAO_DANG_TRO_LEN: 'Cao đẳng trở lên',
+    TRUNG_CAP_NGHIEP_VU: 'Trung cấp / nghiệp vụ', CONG_VIEC_KHAC: 'Công việc khác',
+  };
+
+  isRetroactiveTermination(): boolean {
+    return !!this.terminationDateDraft && this.terminationDateDraft < this.localToday();
+  }
 
   renewTypes: ContractTypeResponse[] = [];
   renewTypesLoading = false;
@@ -161,14 +191,16 @@ export class ContractsPage implements OnInit {
         error: (e: HttpErrorResponse) => {
           this.loading = false;
           this.rows = [];
-          this.error =
-            e.error?.loi_chi_tiet ?? "Không tải được danh sách hợp đồng.";
+          this.error = this.readError(e, "Không tải được danh sách hợp đồng.");
         },
       });
   }
 
+  warningRefreshKey = 0;
+
   private clearContractPageCache(): void {
     this.contractPageCache.clear();
+    this.warningRefreshKey++;
   }
 
   search(employeeIdText: string, statusText: string, q: string): void {
@@ -203,6 +235,11 @@ export class ContractsPage implements OnInit {
   // Tạo hợp đồng
   showCreate = false;
   typesLoading = false;
+  createSelectedKind = '';
+  renewSelectedKind = '';
+  contractKind(value: string): string {
+    return [...this.activeTypes,...this.renewTypes].find(t=>t.contractTypeId===Number(value))?.termKind ?? '';
+  }
   activeTypes: ContractTypeResponse[] = [];
   saving = false;
   createError = "";
@@ -271,24 +308,11 @@ export class ContractsPage implements OnInit {
   }
 
   private readError(error: HttpErrorResponse, fallback: string): string {
-    if (error.status === 0) {
-      return "Không kết nối được backend. Hãy kiểm tra server và proxy.";
-    }
-
-    if (error.status === 401) {
-      return "Backend yêu cầu đăng nhập.";
-    }
-
-    if (error.status === 403) {
-      return "Bạn không có quyền thực hiện thao tác này.";
-    }
-
-    const detail = error.error?.loi_chi_tiet;
-
-    return typeof detail === "string" && detail.trim() ? detail : fallback;
+    return employmentApiError(error, fallback);
   }
 
   openCreate(): void {
+    this.createSelectedKind = "";
     if (this.saving || this.typesLoading || this.renewTypesLoading) return;
     this.closeDetail();
     if (this.renewTypesLoading) return;
@@ -373,6 +397,7 @@ export class ContractsPage implements OnInit {
     const request: ContractCreateRequest = {
       employeeId,
       contractTypeId,
+      probationGroup: (value("probationGroup") || null) as ContractCreateRequest["probationGroup"],
       contractNumber,
       signedDate,
       startDate,
@@ -418,13 +443,14 @@ export class ContractsPage implements OnInit {
       return;
     }
 
-    if (mode === "terminate" && contract.status !== "DA_KY") {
-      this.lifecycleError = "Chỉ chấm dứt hợp đồng có trạng thái Đã ký.";
+    if (mode === "terminate" && (contract.status !== "DA_KY" || contract.reasonType != null)) {
+      this.lifecycleError = "Hợp đồng đã kết thúc hoặc đã ghi nhận chấm dứt.";
       return;
     }
 
     this.showCreate = false;
     this.lifecycleContract = contract;
+    this.terminationDateDraft = "";
     this.lifecycleMode = mode;
     this.focusPanel(() => this.lifecycleFormPanel);
 
@@ -518,6 +544,7 @@ export class ContractsPage implements OnInit {
       newContract: {
         employeeId: old.employeeId,
         contractTypeId,
+        probationGroup: (value("probationGroup") || null) as ContractCreateRequest["probationGroup"],
         contractNumber,
         signedDate,
         startDate,
@@ -567,13 +594,14 @@ export class ContractsPage implements OnInit {
 
     const data = new FormData(form);
     const terminationDate = String(data.get("terminationDate") ?? "").trim();
+    const selectedReason = this.terminationReasons.find((item) => item.value === String(data.get("reasonType") ?? ""));
     const reason = String(data.get("reason") ?? "").trim();
 
     this.lifecycleError = "";
     this.message = "";
 
-    if (!terminationDate || !reason) {
-      this.lifecycleError = "Cần nhập ngày chấm dứt và lý do.";
+    if (!terminationDate || !reason || !selectedReason) {
+      this.lifecycleError = "Cần nhập ngày, loại chấm dứt và lý do.";
       return;
     }
 
@@ -588,6 +616,7 @@ export class ContractsPage implements OnInit {
     const request: ContractTerminateRequest = {
       terminationDate,
       reason,
+      reasonType: selectedReason.value,
     };
 
     this.saving = true;
@@ -602,7 +631,10 @@ export class ContractsPage implements OnInit {
           this.cancelLifecycle();
 
           this.selected = updated;
-          this.message = `Đã ghi nhận ngày cuối còn hiệu lực: ${updated.endDate}.`;
+          this.resetSalaryRates();
+          this.message = updated.status === "DA_KET_THUC"
+            ? `Đã chấm dứt hồi tố; ngày cuối còn hiệu lực: ${updated.endDate}.`
+            : `Đã ghi nhận ngày cuối còn hiệu lực: ${updated.endDate}.`;
 
           this.load(this.page);
         },
@@ -650,6 +682,7 @@ export class ContractsPage implements OnInit {
 
   private clearSalaryTerms(): void {
     this.salaryTermsRequest?.unsubscribe();
+    this.resetSalaryRates();
 
     this.salaryTerms = [];
     this.salaryTermsLoading = false;
@@ -681,7 +714,7 @@ export class ContractsPage implements OnInit {
   salaryDraft: SalaryTermDraft = this.emptySalaryDraft();
 
   private emptySalaryDraft(): SalaryTermDraft {
-    return { effectiveFrom: "", effectiveTo: "", baseSalary: "", payBasis: "", documentReference: "" };
+    return { effectiveFrom: "", effectiveTo: "", baseSalary: "", payBasis: "", documentReference: "", officialReferenceSalary: "", officialReferencePayBasis: "" };
   }
 
   private draftFromTerm(term: SalaryTermResponse, effectiveFrom = term.effectiveFrom): SalaryTermDraft {
@@ -691,6 +724,7 @@ export class ContractsPage implements OnInit {
       baseSalary: String(term.baseSalary),
       payBasis: term.payBasis,
       documentReference: term.documentReference ?? "",
+      officialReferenceSalary: term.officialReferenceSalary == null ? "" : String(term.officialReferenceSalary), officialReferencePayBasis: term.officialReferencePayBasis ?? "",
     };
   }
 
@@ -716,7 +750,7 @@ export class ContractsPage implements OnInit {
     if (this.salaryFormMode === "edit") minimums.push(this.addDays(this.localToday(), 1));
     if (this.salaryFormMode === "change" && this.selectedSalaryTerm) {
       // Backend must leave at least one day in the old range before the new rate starts.
-      minimums.push(this.localToday(), this.addDays(this.selectedSalaryTerm.effectiveFrom, 2));
+      minimums.push(this.localToday(), this.addDays(this.selectedSalaryTerm.effectiveFrom, 1));
     }
     return this.maxDate(minimums);
   }
@@ -734,11 +768,11 @@ export class ContractsPage implements OnInit {
     if (!contract || contract.status !== "DA_KY" || term.contractId !== contract.contractId) return false;
     const earliest = this.maxDate([
       this.localToday(),
-      this.addDays(term.effectiveFrom, 2),
+      this.addDays(term.effectiveFrom, 1),
       contract.startDate,
     ]);
     return (!contract.endDate || earliest <= contract.endDate) &&
-      (!term.effectiveTo || earliest < term.effectiveTo);
+      (!term.effectiveTo || earliest <= term.effectiveTo);
   }
 
   salaryFormTitle(): string {
@@ -877,8 +911,8 @@ export class ContractsPage implements OnInit {
       this.salaryFormError = "Vui lòng chọn ngày bắt đầu.";
       return;
     }
-    if (effectiveTo && effectiveTo <= effectiveFrom) {
-      this.salaryFormError = "Ngày cuối phải sau ngày bắt đầu.";
+    if (effectiveTo && effectiveTo < effectiveFrom) {
+      this.salaryFormError = "Ngày kết thúc phải từ ngày bắt đầu trở đi.";
       return;
     }
     if (effectiveFrom < contract.startDate) {
@@ -926,6 +960,8 @@ export class ContractsPage implements OnInit {
     }
 
     const request: SalaryTermRequest = {
+      officialReferenceSalary: contract.termKind === "THU_VIEC" ? Number(value("officialReferenceSalary")) : null,
+      officialReferencePayBasis: contract.termKind === "THU_VIEC" ? value("officialReferencePayBasis") as PayBasis : null,
       effectiveFrom,
       effectiveTo,
       baseSalary,
@@ -977,6 +1013,15 @@ export class ContractsPage implements OnInit {
       },
     });
   }
+  private salaryRatesRequest?: Subscription;
+  private resetSalaryRates(): void {
+    this.salaryRatesRequest?.unsubscribe();
+    this.salaryRates = [];
+    this.salaryRatesLoading = false;
+    this.salaryRatesError = "";
+    this.salaryRatesSearched = false;
+  }
+
   salaryRates: SalaryRateSegment[] = [];
   salaryRatesLoading = false;
   salaryRatesError = "";
@@ -1013,7 +1058,7 @@ export class ContractsPage implements OnInit {
 
     this.salaryRatesLoading = true;
 
-    this.api
+    this.salaryRatesRequest = this.api
       .salaryRates(employeeId, from, to)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({

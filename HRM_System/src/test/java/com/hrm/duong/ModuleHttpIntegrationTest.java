@@ -25,7 +25,7 @@ class ModuleHttpIntegrationTest {
         contracts=mock(ContractRepository.class);var types=mock(ContractTypeRepository.class);var employees=mock(EmployeeRepository.class);
         when(employees.findByIdForUpdate(1L)).thenReturn(Optional.of(employee(1)));when(types.findById(2L)).thenReturn(Optional.of(contractType()));
         when(contracts.saveAndFlush(any())).thenAnswer(x->{var c=(Contract)x.getArgument(0);id(c,"contractId",3);return c;});
-        var contractService=new ContractService(contracts,types,employees,mock(ContractAuditService.class),mock(PayrollHistoryGuard.class));
+        var contractService=new ContractService(contracts,types,employees,mock(ContractAuditService.class),mock(PayrollHistoryGuard.class),new ContractTermPolicy(contracts,30,180,60,30,6));
         decisions=mock(EmployeeDecisionRepository.class);actors=mock(DecisionActorProvider.class);when(actors.requireManager()).thenReturn(new DecisionActor(20L,200L));
         pending=decision(3,DecisionPayrollEffect.NONE);when(decisions.findEmployeeIdById(3L)).thenReturn(Optional.of(1L));when(decisions.findByIdForUpdate(3L)).thenReturn(Optional.of(pending));when(decisions.findById(3L)).thenReturn(Optional.of(pending));
         when(decisions.saveAndFlush(any())).thenAnswer(x->{var d=(EmployeeDecision)x.getArgument(0);if(d.getDecisionId()==null)id(d,"decisionId",4);return d;});
@@ -43,7 +43,7 @@ class ModuleHttpIntegrationTest {
     @Test void invalidEnumAndQueryNumberAre400() throws Exception {mvc.perform(get("/contracts").param("status","UNKNOWN")).andExpect(status().isBadRequest());mvc.perform(get("/contracts").param("page","abc")).andExpect(status().isBadRequest());}
     @Test void forbiddenMethodIs405() throws Exception {mvc.perform(put("/contracts/3").contentType("application/json").content("{}")).andExpect(status().isMethodNotAllowed());}
     @Test void createDecisionIgnoresClientApprovalBecauseDtoHasNoSuchFields() throws Exception {mvc.perform(post("/employee-decisions").contentType("application/json").content("""
-        {"employeeId":1,"decisionNumber":"QD_HTTP","decisionType":"KY_LUAT","content":"Synthetic","issuedDate":"2026-10-26","payrollEffect":"NONE","amount":null,"applyDate":null,"reason":"Test"}
+        {"employeeId":1,"decisionNumber":"QD_HTTP","decisionType":"KY_LUAT","content":"Synthetic","issuedDate":"2026-10-26","payrollEffect":"NONE","amount":null,"applyDate":null,"reason":"Test","disciplineForm":"KHIEN_TRACH","violationDate":"2026-10-25"}
         """)).andExpect(status().isCreated()).andExpect(jsonPath("$.approvalStatus").value("CHO_DUYET")).andExpect(jsonPath("$.issuedBy").value(20)).andExpect(jsonPath("$.approvedBy").isEmpty());}
     @Test void reviewHttpFlowSetsServerReviewerAndBlocksSecondReview() throws Exception {mvc.perform(post("/employee-decisions/3/approve").contentType("application/json").content("{\"reason\":\"Test\"}")).andExpect(status().isOk()).andExpect(jsonPath("$.approvalStatus").value("DA_DUYET")).andExpect(jsonPath("$.approvedBy").value(20));mvc.perform(post("/employee-decisions/3/approve").contentType("application/json").content("{\"reason\":\"Again\"}")).andExpect(status().isConflict());}
     @Test void forgedHeaderDoesNotAllowIssuerToApprove() throws Exception {when(actors.requireManager()).thenReturn(new DecisionActor(10L,100L));mvc.perform(post("/employee-decisions/3/approve").header("X-Actor-Id","20").contentType("application/json").content("{\"reason\":\"Test\"}")).andExpect(status().isForbidden());assertEquals(DecisionApprovalStatus.CHO_DUYET,pending.getApprovalStatus());}

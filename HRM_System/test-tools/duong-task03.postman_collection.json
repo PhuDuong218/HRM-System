@@ -1,0 +1,426 @@
+{
+  "info": {
+    "name": "Dương - Nhiệm vụ 3 - Chấm dứt hợp đồng có hồi tố",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Chỉ chạy trên bản sao DB đã có 011/012/013. Không lưu sẵn token. contractId phải là hợp đồng DA_KY chưa chấm dứt/chưa gia hạn, startDate <= pastDate và endDate >= pastDate. Các request POST thành công ghi dữ liệu: dùng ID khác nhau cho hồi tố/hôm nay/tương lai. Không tự tạo hoặc chốt kỳ lương của thành viên khác. Không chạy cả collection nếu chưa chuẩn bị từng folder."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "type": "string",
+        "value": "{{token}}"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:2005"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "contractId",
+      "value": ""
+    },
+    {
+      "key": "closedContractId",
+      "value": ""
+    },
+    {
+      "key": "todayContractId",
+      "value": ""
+    },
+    {
+      "key": "futureContractId",
+      "value": ""
+    },
+    {
+      "key": "pastDate",
+      "value": "2026-11-02"
+    },
+    {
+      "key": "todayDate",
+      "value": "2026-11-03"
+    },
+    {
+      "key": "futureDate",
+      "value": "2026-11-04"
+    },
+    {
+      "key": "beforeStartDate",
+      "value": ""
+    },
+    {
+      "key": "afterEndDate",
+      "value": ""
+    }
+  ],
+  "item": [
+    {
+      "name": "A - Hồi tố: chạy theo thứ tự trên MỘT hợp đồng thử",
+      "item": [
+        {
+          "name": "01 - Đọc hợp đồng trước khi thử (chỉ đọc)",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/contracts/{{contractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d=pm.response.json();",
+                  "pm.test(\"Hợp đồng chưa chấm dứt\",()=>{pm.expect(d.status).to.eql(\"DA_KY\");pm.expect(d.reasonType).to.eql(null);});",
+                  "pm.collectionVariables.set(\"originalStart\",d.startDate);pm.collectionVariables.set(\"originalEnd\",d.endDate||\"\");",
+                  "const shift=(s,n)=>{const d=new Date(s+\"T12:00:00\");d.setDate(d.getDate()+n);return String(d.getFullYear()).padStart(4,\"0\")+\"-\"+String(d.getMonth()+1).padStart(2,\"0\")+\"-\"+String(d.getDate()).padStart(2,\"0\");};",
+                  "pm.collectionVariables.set(\"beforeStartDate\",shift(d.startDate,-1));",
+                  "if(d.endDate) pm.collectionVariables.set(\"afterEndDate\",shift(d.endDate,1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "02 - Thiếu reasonType",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "03 - reasonType sai enum",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"UNKNOWN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "04 - Lý do rỗng",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \" \",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "05 - Ngày trước startDate",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{beforeStartDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "06 - Ngày sau endDate (hợp đồng có thời hạn)",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{afterEndDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "07 - Hồi tố hợp lệ: GHI DB",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d=pm.response.json();pm.test(\"Kết thúc ngay và lưu loại\",()=>{pm.expect(d.status).to.eql(\"DA_KET_THUC\");pm.expect(d.reasonType).to.eql(\"THOA_THUAN\");pm.expect(d.endDate).to.eql(pm.collectionVariables.get(\"pastDate\"));});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "08 - Chấm dứt lần hai",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{contractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "09 - Đọc lại xác nhận",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/contracts/{{contractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d=pm.response.json();pm.test(\"Kết quả đã lưu\",()=>{pm.expect(d.status).to.eql(\"DA_KET_THUC\");pm.expect(d.reasonType).to.eql(\"THOA_THUAN\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "B - Kỳ lương chốt: chuẩn bị riêng closedContractId",
+      "item": [
+        {
+          "name": "Hồi tố chạm khoảng bị rút ngắn đã chốt",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{closedContractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{pastDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Thông báo bảo vệ lịch sử\",()=>pm.expect(pm.response.json().loi_chi_tiet).to.include(\"đã chốt\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Đọc lại: hợp đồng không đổi",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/contracts/{{closedContractId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Chưa gán loại chấm dứt\",()=>pm.expect(pm.response.json().reasonType).to.eql(null));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "C - Hôm nay và tương lai: mỗi request dùng ID RIÊNG",
+      "item": [
+        {
+          "name": "Ngày hôm nay: GHI DB, vẫn DA_KY đến hết ngày",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{todayContractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{todayDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"THOA_THUAN\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d=pm.response.json();pm.test(\"Còn hiệu lực hết hôm nay\",()=>{pm.expect(d.status).to.eql(\"DA_KY\");pm.expect(d.reasonType).to.eql(\"THOA_THUAN\");});"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Ngày tương lai: GHI DB, giữ loại người lao động đơn phương",
+          "request": {
+            "method": "POST",
+            "url": "{{baseUrl}}/contracts/{{futureContractId}}/terminate",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"terminationDate\": \"{{futureDate}}\",\n  \"reason\": \"Postman task 03 retrospective termination\",\n  \"reasonType\": \"NLD_DON_PHUONG\"\n}"
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d=pm.response.json();pm.test(\"Đã hẹn chấm dứt\",()=>{pm.expect(d.status).to.eql(\"DA_KY\");pm.expect(d.reasonType).to.eql(\"NLD_DON_PHUONG\");});"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -9,6 +9,8 @@
 
 ## 1. Tổng quan
 
+Phần Hợp đồng, Phụ cấp và Khen thưởng/Kỷ luật có [README module Dương](docs/README_MODULE_DUONG.md) với API, thứ tự migration, rollback và demo Postman.
+
 Hệ thống hướng tới quản lý hồ sơ nhân viên, phòng ban, chức vụ, lịch sử phân công và điều chuyển nhân viên; tiếp theo là hợp đồng, lịch làm việc, chấm công, nghỉ phép, tăng ca, phụ cấp, phân quyền và tính lương theo kỳ.
 
 **Lưu ý về tiến độ:** Danh sách trên mô tả **phạm vi dự kiến của đồ án**, không có nghĩa tất cả chức năng đã được lập trình xong. Các API nhân viên, phòng ban, chức vụ và phân công đã được phát triển/kiểm thử ở mức cơ bản.

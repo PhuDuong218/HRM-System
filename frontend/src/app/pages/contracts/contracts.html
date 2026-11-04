@@ -16,6 +16,8 @@
 @if (message) {
 <div class="alert alert-success" role="status">{{(message) | translate}}</div>
 }
+<app-contract-warnings [refreshKey]="warningRefreshKey" (openContract)="viewDetail($event)" />
+
 <app-record-workspace
   [open]="showCreate || !!selected || detailLoading || !!detailError || !!lifecycleContract"
   [busy]="saving || renewTypesLoading"
@@ -67,6 +69,7 @@
           <option value="">{{language.t("Tất cả")}}</option>
           <option value="DA_KY">{{language.t("Đã ký")}}</option>
           <option value="DA_KET_THUC">{{language.t("Đã kết thúc")}}</option>
+          <option value="DA_HUY">{{language.t("Đã hủy")}}</option>
         </select>
       </div>
 
@@ -133,7 +136,7 @@
               {{c.startDate}} → {{(c.endDate ?? 'Không xác định') | translate}}
             </td>
             <td [attr.data-label]="language.t('Trạng thái')">
-              {{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}
+              {{language.t(statusLabels[c.status])}}
             </td>
             <td [attr.data-label]="language.t('Thao tác')">
               <button
@@ -215,7 +218,7 @@
               {{language.t("Loại hợp đồng")}}
             </label>
             <select
-              id="create-type"
+              id="create-type" #createTypeRef (change)="createSelectedKind = contractKind(createTypeRef.value)"
               name="contractTypeId"
               required
               class="form-select"
@@ -224,13 +227,14 @@
               <option value="">{{language.t("Chọn loại hợp đồng")}}</option>
 
               @for (type of activeTypes; track type.contractTypeId) {
-              <option [value]="type.contractTypeId">
+              <option [value]="type.contractTypeId" [disabled]="type.termKind === 'CTV_CAN_RA_SOAT'">
                 {{type.typeCode}} — {{type.typeName}}
               </option>
               }
             </select>
           </div>
 
+@if (createSelectedKind === 'THU_VIEC') {<div class="col-12"><label for="create-group" class="form-label">Nhóm thử việc (chỉ chọn với THU_VIEC)</label><select id="create-group" name="probationGroup" required class="form-select" [disabled]="saving"><option value="">— Không áp dụng / chọn nhóm thử việc —</option><option value="QUAN_LY_DN">Quản lý doanh nghiệp</option><option value="CAO_DANG_TRO_LEN">Cao đẳng trở lên</option><option value="TRUNG_CAP_NGHIEP_VU">Trung cấp / nghiệp vụ</option><option value="CONG_VIEC_KHAC">Công việc khác</option></select></div>}
           <div class="col-md-6">
             <label for="create-number" class="form-label">
               {{language.t("Số hợp đồng")}}
@@ -337,6 +341,13 @@
           <dt class="col-sm-4">{{language.t("Loại hợp đồng")}}</dt>
           <dd class="col-sm-8">{{c.contractTypeName}}</dd>
 
+          <dt class="col-sm-4">{{ 'Nhóm thời hạn' | translate }}</dt>
+          <dd class="col-sm-8">{{ (termKindLabels[c.termKind] || 'Chưa phân loại') | translate }}</dd>
+          @if (c.probationGroup; as group) {
+            <dt class="col-sm-4">{{ 'Nhóm thử việc' | translate }}</dt>
+            <dd class="col-sm-8">{{ probationLabels[group] | translate }}</dd>
+          }
+
           <dt class="col-sm-4">{{language.t("Ngày ký")}}</dt>
           <dd class="col-sm-8">{{c.signedDate}}</dd>
 
@@ -350,8 +361,10 @@
 
           <dt class="col-sm-4">{{language.t("Trạng thái")}}</dt>
           <dd class="col-sm-8">
-            {{language.t(c.status === 'DA_KY' ? 'Đã ký' : 'Đã kết thúc')}}
+            {{language.t(statusLabels[c.status])}}
           </dd>
+          <dt class="col-sm-4">{{language.t("Loại chấm dứt")}}</dt>
+          <dd class="col-sm-8">{{language.t(terminationReasonLabel(c.reasonType))}}</dd>
         </dl>
         <section class="salary-section" aria-labelledby="salary-rate-title">
           <h3 id="salary-rate-title">Tra cứu mức lương theo kỳ</h3>
@@ -477,7 +490,16 @@
                   <td>{{ term.effectiveTo ?? ('Không xác định' | translate) }}</td>
                   <td>{{ term.baseSalary | number:'1.0-4' }}</td>
                   <td>{{ payBasisLabel(term.payBasis) }}</td>
-                  <td>{{ term.documentReference || '—' }}</td>
+                  <td>
+                    {{ term.documentReference || '—' }}
+                    @if (term.officialReferenceSalary !== null && term.officialReferencePayBasis; as referenceBasis) {
+                      <div class="small">{{ 'Lương chính thức tham chiếu' | translate }}:
+                        {{ term.officialReferenceSalary | number:'1.0-4' }} · {{ payBasisLabel(referenceBasis) }}</div>
+                    }
+                    @for (warning of term.warnings; track $index) {
+                      <div class="small text-warning-emphasis">{{ warning }}</div>
+                    }
+                  </td>
                   <td class="text-end text-nowrap">
                     <button
                       type="button"
@@ -559,10 +581,12 @@
 
               <input
                 id="salary-from"
+                #salaryFrom
                 name="effectiveFrom"
                 type="date"
                 class="form-control"
                 [value]="salaryDraft.effectiveFrom"
+                (input)="salaryDraft.effectiveFrom = salaryFrom.value"
                 [min]="minSalaryEffectiveFrom()"
                 [attr.max]="c.endDate"
                 [disabled]="saving"
@@ -581,7 +605,7 @@
                 type="date"
                 class="form-control"
                 [value]="salaryDraft.effectiveTo"
-                [min]="c.startDate"
+                [min]="salaryDraft.effectiveFrom || c.startDate"
                 [attr.max]="c.endDate"
                 [disabled]="saving"
               />
@@ -645,6 +669,10 @@
               />
             </div>
 
+            @if (selected.termKind === 'THU_VIEC') {
+              <div class="col-md-6"><label for="official-reference-salary" class="form-label">Lương chính thức tham chiếu</label><input id="official-reference-salary" name="officialReferenceSalary" type="number" min="0.0001" step="0.0001" required class="form-control" [value]="salaryDraft.officialReferenceSalary" [disabled]="saving"></div>
+              <div class="col-md-6"><label for="official-reference-basis" class="form-label">Đơn vị lương tham chiếu</label><select id="official-reference-basis" name="officialReferencePayBasis" class="form-select" required [value]="salaryDraft.officialReferencePayBasis" [disabled]="saving"><option value="">— Chọn đơn vị —</option><option value="THANG">Tháng</option><option value="NGAY">Ngày</option><option value="GIO">Giờ</option></select></div>
+            }
             <div class="col-12">
               <label for="salary-reason" class="form-label"> Lý do </label>
 
@@ -689,7 +717,7 @@
           <button
             type="button"
             class="btn btn-outline-danger"
-            [disabled]="saving || renewTypesLoading || c.status !== 'DA_KY'"
+            [disabled]="saving || renewTypesLoading || c.status !== 'DA_KY' || c.reasonType != null"
             (click)="openLifecycle('terminate')"
           >
             {{language.t("Chấm dứt")}}
@@ -750,7 +778,7 @@
               {{language.t("Loại hợp đồng mới")}}
             </label>
             <select
-              id="renew-type"
+              id="renew-type" #renewTypeRef (change)="renewSelectedKind = contractKind(renewTypeRef.value)"
               name="contractTypeId"
               class="form-select"
               required
@@ -758,13 +786,14 @@
             >
               <option value="">{{language.t("Chọn loại hợp đồng")}}</option>
               @for (type of renewTypes; track type.contractTypeId) {
-              <option [value]="type.contractTypeId">
+              <option [value]="type.contractTypeId" [disabled]="type.termKind === 'CTV_CAN_RA_SOAT'">
                 {{type.typeCode}} — {{type.typeName}}
               </option>
               }
             </select>
           </div>
 
+@if (renewSelectedKind === 'THU_VIEC') {<div class="col-12"><label for="renew-group" class="form-label">Nhóm thử việc (chỉ chọn với THU_VIEC)</label><select id="renew-group" name="probationGroup" required class="form-select" [disabled]="saving"><option value="">— Không áp dụng / chọn nhóm thử việc —</option><option value="QUAN_LY_DN">Quản lý doanh nghiệp</option><option value="CAO_DANG_TRO_LEN">Cao đẳng trở lên</option><option value="TRUNG_CAP_NGHIEP_VU">Trung cấp / nghiệp vụ</option><option value="CONG_VIEC_KHAC">Công việc khác</option></select></div>}
           <div class="col-md-4">
             <label for="renew-signed" class="form-label"
               >{{language.t("Ngày ký mới")}}</label
@@ -858,9 +887,13 @@
           <p class="contract-form-record">{{old.contractNumber}}</p>
         </div>
 
-        <p>
-          {{ " Ngày chọn là ngày cuối hợp đồng còn hiệu lực. Backend không cho
-          chấm dứt hồi tố. " | translate }}
+        <p class="text-body-secondary">
+          Ngày chọn là ngày cuối hợp đồng còn hiệu lực. Cho phép chọn ngày quá khứ;
+          hồi tố sẽ kết thúc hợp đồng ngay và chỉ được lưu khi khoảng bị rút ngắn không giao kỳ lương đã chốt.
+        </p>
+        <p class="small text-body-secondary">
+          Giữ nguyên lịch sử mức lương và phụ cấp. Mức lương được giới hạn theo ngày cuối hợp đồng;
+          phụ cấp ngừng hưởng qua thao tác riêng.
         </p>
 
         <form class="row g-3" (submit)="saveTerminate($event)">
@@ -869,16 +902,37 @@
               {{language.t("Ngày cuối còn hiệu lực")}}
             </label>
             <input
+              #terminationDateInput
               id="terminate-date"
               name="terminationDate"
               type="date"
               class="form-control"
               [min]="old.startDate"
               [attr.max]="old.endDate"
+              [value]="terminationDateDraft"
+              (input)="terminationDateDraft = terminationDateInput.value"
               required
               [disabled]="saving"
             />
           </div>
+
+          <div class="col-md-6">
+            <label for="terminate-reason-type" class="form-label">{{language.t("Loại chấm dứt")}}</label>
+            <select id="terminate-reason-type" name="reasonType" class="form-select" required [disabled]="saving">
+              <option value="">— Chọn loại chấm dứt —</option>
+              @for (item of terminationReasons; track item.value) {
+                <option [value]="item.value">{{language.t(item.label)}}</option>
+              }
+            </select>
+          </div>
+          @if (isRetroactiveTermination()) {
+            <div class="col-12">
+              <div class="alert alert-warning mb-0" role="status">
+                Bạn đang chấm dứt hồi tố. Hợp đồng sẽ chuyển sang Đã kết thúc ngay khi lưu thành công.
+                Lịch sử kỳ lương đã chốt được bảo vệ.
+              </div>
+            </div>
+          }
 
           <div class="col-12">
             <label for="terminate-reason" class="form-label">

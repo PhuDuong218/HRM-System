@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 public interface EmployeeDecisionRepository extends JpaRepository<EmployeeDecision,Long> {
+    Page<EmployeeDecision> findByEmployee_EmployeeIdAndApprovalStatus(
+            Long employeeId, DecisionApprovalStatus approvalStatus, Pageable pageable);
+
     boolean existsByDecisionNumber(String number);
     @Query("select d.employee.employeeId from EmployeeDecision d where d.decisionId=:id")
     Optional<Long> findEmployeeIdById(@Param("id") Long id);

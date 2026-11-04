@@ -10,14 +10,14 @@
   <div class="alert alert-danger" role="alert">{{ error | translate }}</div>
 }
 
-<ul class="nav nav-tabs mb-3">
+<ul class="module-tabs">
   <li class="nav-item">
-    <button type="button" class="nav-link" [class.active]="tab === 'list'" (click)="setTab('list')">
+    <button type="button"  [class.active]="tab === 'list'" (click)="setTab('list')">
       {{ "Danh sách quyết định" | translate }}
     </button>
   </li>
   <li class="nav-item">
-    <button type="button" class="nav-link" [class.active]="tab === 'payroll'" (click)="setTab('payroll')">
+    <button type="button"  [class.active]="tab === 'payroll'" (click)="setTab('payroll')">
       {{ "Thưởng / khấu trừ theo kỳ" | translate }}
     </button>
   </li>
@@ -34,7 +34,7 @@
   }
 
   <app-record-workspace [open]="panelOpen" [busy]="saving" (dismiss)="closeWorkspace()">
-    <section recordList class="surface">
+    <section recordList class="surface module-list">
       <div class="d-flex flex-wrap justify-content-between align-items-end mb-3 gap-2">
         <div class="d-flex flex-wrap gap-2 align-items-end">
           <div>
@@ -96,21 +96,21 @@
             </thead>
             <tbody>
               @for (row of rows; track row.decisionId) {
-                <tr [class.selected-row]="selectedDecision?.decisionId === row.decisionId">
-                  <td>
+                <tr [class.selected-row]="(actionTarget?.decisionId ?? selectedDecision?.decisionId) === row.decisionId" [appSelectedRowScroll]="actionTarget?.decisionId === row.decisionId ? actionMode : editing?.decisionId === row.decisionId && showForm ? 'edit' : null">
+                  <td [attr.data-label]="'Số QĐ' | translate">
                     <button type="button" class="btn btn-link p-0 text-start" (click)="openDetail(row)">
                       {{ row.decisionNumber }}
                     </button>
                   </td>
-                  <td>{{ employeeName(row.employeeId) }}</td>
-                  <td>{{ typeLabels[row.decisionType] | translate }}</td>
-                  <td class="decision-content">{{ row.content }}</td>
-                  <td>{{ row.issuedDate }}</td>
-                  <td>{{ effectLabels[row.payrollEffect] | translate }}</td>
-                  <td class="text-end">{{ row.payrollEffect === 'NONE' ? '—' : money(row.amount) }}</td>
-                  <td>{{ row.applyDate || '—' }}</td>
-                  <td>{{ statusLabels[row.approvalStatus] | translate }}</td>
-                  <td class="text-end text-nowrap">
+                  <td [attr.data-label]="'Nhân viên' | translate">{{ employeeName(row.employeeId) }}</td>
+                  <td [attr.data-label]="'Loại' | translate">{{ typeLabels[row.decisionType] | translate }}</td>
+                  <td class="decision-content" [attr.data-label]="'Nội dung' | translate">{{ row.content }}</td>
+                  <td [attr.data-label]="'Ngày ban hành' | translate">{{ row.issuedDate }}</td>
+                  <td [attr.data-label]="'Ảnh hưởng lương' | translate">{{ effectLabels[row.payrollEffect] | translate }}</td>
+                  <td class="text-end" [attr.data-label]="'Số tiền' | translate">{{ row.payrollEffect === 'NONE' ? '—' : money(row.amount) }}</td>
+                  <td [attr.data-label]="'Ngày áp dụng' | translate">{{ row.applyDate || '—' }}</td>
+                  <td [attr.data-label]="'Trạng thái' | translate">{{ statusLabels[row.approvalStatus] | translate }}</td>
+                  <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                     @if (row.approvalStatus === 'CHO_DUYET') {
                       <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving"
                               (click)="openAction(row, 'approve')">{{ "Duyệt" | translate }}</button>
@@ -169,7 +169,7 @@
           <div class="col-12">
             <label class="form-label" for="d-type">{{ "Loại quyết định" | translate }}</label>
             <select id="d-type" name="decisionType" class="form-select" required
-                    [(ngModel)]="form.decisionType" [disabled]="saving">
+                    [(ngModel)]="form.decisionType" (ngModelChange)="onTypeChange()" [disabled]="saving">
               @for (type of types; track type) {
                 <option [ngValue]="type">{{ typeLabels[type] | translate }}</option>
               }
@@ -179,12 +179,31 @@
             <label class="form-label" for="d-effect">{{ "Ảnh hưởng đến lương" | translate }}</label>
             <select id="d-effect" name="payrollEffect" class="form-select" required
                     [(ngModel)]="form.payrollEffect" (ngModelChange)="onEffectChange()" [disabled]="saving">
-              @for (effect of effects; track effect) {
+              @for (effect of allowedEffects; track effect) {
                 <option [ngValue]="effect">{{ effectLabels[effect] | translate }}</option>
               }
             </select>
-            <div class="form-text">{{ "Khen thưởng/kỷ luật không mặc định quyết định cộng/trừ lương; hãy chọn theo quyết định được duyệt." | translate }}</div>
+            <div class="form-text">{{ "Kỷ luật không trừ lương. Khen thưởng chỉ cộng hoặc không ảnh hưởng lương. Bồi thường là khoản riêng cần căn cứ hợp lệ." | translate }}</div>
           </div>
+          @if (form.decisionType === 'KY_LUAT') {
+            <div class="col-12">
+              <label class="form-label" for="d-discipline">Hình thức kỷ luật</label>
+              <select id="d-discipline" name="disciplineForm" class="form-select" required [(ngModel)]="form.disciplineForm" (ngModelChange)="onDisciplineChange()" [disabled]="saving">
+                <option [ngValue]="null">— Chọn hình thức —</option>
+                @for (discipline of disciplineForms; track discipline) { <option [ngValue]="discipline">{{ disciplineLabels[discipline] }}</option> }
+              </select>
+            </div>
+            <div class="col-12">
+              <label class="form-label" for="d-violation">Ngày vi phạm</label>
+              <input id="d-violation" name="violationDate" type="date" class="form-control" required [(ngModel)]="form.violationDate" [disabled]="saving">
+            </div>
+            @if (form.disciplineForm === 'KEO_DAI_NANG_LUONG') {
+              <div class="col-12">
+                <label class="form-label" for="d-delay">Số tháng kéo dài nâng lương (1–6)</label>
+                <input id="d-delay" name="salaryIncreaseDelayMonths" type="number" min="1" max="6" step="1" required class="form-control" [(ngModel)]="form.salaryIncreaseDelayMonths" [disabled]="saving">
+              </div>
+            }
+          }
           @if (form.payrollEffect !== 'NONE') {
             <div class="col-12">
               <label class="form-label" for="d-amount">{{ "Số tiền (> 0)" | translate }}</label>
@@ -257,6 +276,11 @@
           <dt class="col-sm-5">{{ "Nhân viên" | translate }}</dt><dd class="col-sm-7">{{ employeeName(decision.employeeId) }}</dd>
           <dt class="col-sm-5">{{ "Loại quyết định" | translate }}</dt><dd class="col-sm-7">{{ typeLabels[decision.decisionType] | translate }}</dd>
           <dt class="col-sm-5">{{ "Nội dung" | translate }}</dt><dd class="col-sm-7">{{ decision.content }}</dd>
+          @if (decision.disciplineForm) {
+            <dt class="col-sm-5">Hình thức kỷ luật</dt><dd class="col-sm-7">{{ disciplineLabels[decision.disciplineForm] }}</dd>
+            <dt class="col-sm-5">Ngày vi phạm</dt><dd class="col-sm-7">{{ decision.violationDate }}</dd>
+            @if (decision.salaryIncreaseDelayMonths) { <dt class="col-sm-5">Số tháng kéo dài nâng lương</dt><dd class="col-sm-7">{{ decision.salaryIncreaseDelayMonths }}</dd> }
+          }
           <dt class="col-sm-5">{{ "Ngày ban hành" | translate }}</dt><dd class="col-sm-7">{{ decision.issuedDate }}</dd>
           <dt class="col-sm-5">{{ "Trạng thái" | translate }}</dt><dd class="col-sm-7">{{ statusLabels[decision.approvalStatus] | translate }}</dd>
           <dt class="col-sm-5">{{ "Ảnh hưởng lương" | translate }}</dt><dd class="col-sm-7">{{ effectLabels[decision.payrollEffect] | translate }}</dd>
@@ -385,6 +409,7 @@
       <dl class="row mb-0">
         <dt class="col-sm-3">{{ "Tổng cộng thêm" | translate }}</dt><dd class="col-sm-9">{{ money(result.totalAdd) }}</dd>
         <dt class="col-sm-3">{{ "Tổng khấu trừ" | translate }}</dt><dd class="col-sm-9">{{ money(result.totalDeduct) }}</dd>
+        <dt class="col-sm-3">Tổng bồi thường đề nghị</dt><dd class="col-sm-9">{{ money(result.totalCompensation) }} — Chưa áp trần khấu trừ; cần module lương xử lý.</dd>
         <dt class="col-sm-3">{{ "Điều chỉnh ròng" | translate }}</dt><dd class="col-sm-9">{{ money(result.netAdjustment) }}</dd>
         <dt class="col-sm-3">{{ "Phiên bản chính sách" | translate }}</dt><dd class="col-sm-9">{{ result.policyVersion || '—' }}</dd>
       </dl>

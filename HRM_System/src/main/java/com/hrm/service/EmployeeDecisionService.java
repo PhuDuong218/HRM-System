@@ -118,6 +118,7 @@ public class EmployeeDecisionService {
         if (Objects.equals(actor.accountId(), d.getIssuedBy()) ||
                 Objects.equals(actor.employeeId(), d.getEmployee().getEmployeeId()))
             throw error(HttpStatus.FORBIDDEN, "Không tự xử lý quyết định do mình ban hành hoặc áp dụng cho mình");
+        DecisionRules.validate(d.getDecisionType(), d.getPayrollEffect(), d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
         if (approve && d.getPayrollEffect() != DecisionPayrollEffect.NONE) {
             policy.requireConfirmed();
             history.assertMutable(d.getEmployee().getEmployeeId(), d.getApplyDate(), d.getApplyDate());
@@ -135,6 +136,7 @@ public class EmployeeDecisionService {
     }
 
     private void validate(DecisionRequest r) {
+        DecisionRules.validate(r.decisionType(), r.payrollEffect(), r.disciplineForm(), r.violationDate(), r.salaryIncreaseDelayMonths());
         if (r.issuedDate().isAfter(LocalDate.now(clock)))
             throw error(HttpStatus.BAD_REQUEST, "Ngày ban hành không được ở tương lai");
         if (r.payrollEffect() == DecisionPayrollEffect.NONE) {
@@ -150,6 +152,9 @@ public class EmployeeDecisionService {
     private void copy(EmployeeDecision d, DecisionRequest r) {
         d.setDecisionNumber(r.decisionNumber().trim());
         d.setDecisionType(r.decisionType());
+        d.setDisciplineForm(r.disciplineForm());
+        d.setViolationDate(r.violationDate());
+        d.setSalaryIncreaseDelayMonths(r.salaryIncreaseDelayMonths());
         d.setContent(r.content().trim());
         d.setIssuedDate(r.issuedDate());
         d.setPayrollEffect(r.payrollEffect());
@@ -186,7 +191,8 @@ public class EmployeeDecisionService {
     private DecisionResponse dto(EmployeeDecision d) {
         return new DecisionResponse(d.getDecisionId(), d.getEmployee().getEmployeeId(), d.getDecisionNumber(),
                 d.getDecisionType(), d.getContent(), d.getIssuedDate(), d.getIssuedBy(), d.getApprovalStatus(),
-                d.getApprovedBy(), d.getApprovedAt(), d.getPayrollEffect(), d.getAmount(), d.getApplyDate());
+                d.getApprovedBy(), d.getApprovedAt(), d.getPayrollEffect(), d.getAmount(), d.getApplyDate(),
+                d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
     }
 
     private BusinessException error(HttpStatus s, String m) {

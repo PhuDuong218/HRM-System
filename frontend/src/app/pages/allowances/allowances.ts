@@ -1,10 +1,12 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { employmentApiError } from '../../shared/employment-api-error';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { RecordWorkspace } from '../../shared/record-workspace';
+import { SelectedRowScrollDirective } from '../../shared/selected-row-scroll.directive';
 import { AllowanceService } from '../../services/allowance.service';
 import { Employee, EmployeeService, errorMessage } from '../../services/employee.service';
 import {
@@ -23,9 +25,9 @@ type AssignMode = 'create' | 'edit' | 'change' | 'end';
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, RecordWorkspace],
+  imports: [FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
-  styleUrl: '../work-module.css',
+  styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class AllowancesPage implements OnInit {
   private api = inject(AllowanceService);
@@ -132,19 +134,12 @@ export class AllowancesPage implements OnInit {
   }
 
   private fail(e: HttpErrorResponse, fallback: string): string {
-    if (e.status === 0) return 'Không kết nối được backend. Hãy kiểm tra kết nối.';
-    if (e.status === 401) return 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.';
-    if (e.status === 403) return 'Tài khoản không có quyền thực hiện thao tác này.';
-    const d = e.error?.loi_chi_tiet ?? e.error?.message;
-    if (typeof d === 'string' && d.trim()) return d;
-    if (e.status === 409) return 'Khoản phụ cấp bị trùng hoặc vi phạm điều kiện nghiệp vụ.';
-    if (e.status === 503) return 'Backend chưa có đủ nguồn dữ liệu để tính phụ cấp.';
-    return fallback;
+    return employmentApiError(e, fallback);
   }
 
   // ================= LOẠI PHỤ CẤP =================
   private emptyType(): AllowanceTypeRequest {
-    return { typeCode: '', typeName: '', description: '', isActive: true, reason: '' };
+    return { typeCode: '', typeName: '', description: '', isActive: true, isTaxable: true, countsForSocialInsurance: false, reason: '' };
   }
 
   loadTypes(): void {
@@ -173,7 +168,8 @@ export class AllowancesPage implements OnInit {
     this.editingType = row;
     this.typeForm = {
       typeCode: row.typeCode, typeName: row.typeName,
-      description: row.description ?? '', isActive: row.isActive, reason: '',
+      description: row.description ?? '', isActive: row.isActive,
+      isTaxable: row.isTaxable, countsForSocialInsurance: row.countsForSocialInsurance, reason: '',
     };
     this.error = ''; this.message = '';
     this.showTypeForm = true;
@@ -192,6 +188,8 @@ export class AllowancesPage implements OnInit {
       typeName: this.typeForm.typeName.trim(),
       description: (this.typeForm.description ?? '').trim() || null,
       isActive: this.typeForm.isActive,
+      isTaxable: this.typeForm.isTaxable,
+      countsForSocialInsurance: this.typeForm.countsForSocialInsurance,
       reason: this.typeForm.reason.trim(),
     };
     this.error = ''; this.message = '';
@@ -230,7 +228,7 @@ export class AllowancesPage implements OnInit {
 
   // ================= PHỤ CẤP CỦA NHÂN VIÊN =================
   private emptyAssign(): EmployeeAllowanceRequest {
-    return { allowanceTypeId: 0, effectiveFrom: '', effectiveTo: null, calculationBasis: 'THEO_KY', amount: 0, conditionNote: '', reason: '' };
+    return { allowanceTypeId: 0, effectiveFrom: '', effectiveTo: null, calculationBasis: 'THEO_KY', amountType: 'FIXED', amount: 0, conditionNote: '', reason: '' };
   }
 
   onEmployeeChange(value: string): void {
@@ -322,6 +320,7 @@ export class AllowancesPage implements OnInit {
         effectiveFrom: mode === 'edit' ? row.effectiveFrom : '',
         effectiveTo: mode === 'edit' || mode === 'change' ? row.effectiveTo : null,
         calculationBasis: row.calculationBasis,
+        amountType: row.amountType,
         amount: row.amount,
         conditionNote: row.conditionNote ?? '',
         reason: '',
@@ -368,24 +367,24 @@ export class AllowancesPage implements OnInit {
   minAssignmentStart(): string | null {
     if (this.assignMode === 'edit') return this.addDays(this.localToday(), 1);
     if (this.assignMode === 'change' && this.target) {
-      return this.maxDate([this.localToday(), this.addDays(this.target.effectiveFrom, 2)]);
+      return this.maxDate([this.localToday(), this.addDays(this.target.effectiveFrom, 1)]);
     }
     return null;
   }
 
   canChangeAllowance(row: EmployeeAllowanceResponse): boolean {
     if (!this.types.some(t => t.allowanceTypeId === row.allowanceTypeId && t.isActive)) return false;
-    const earliest = this.maxDate([this.localToday(), this.addDays(row.effectiveFrom, 2)]);
-    return !row.effectiveTo || earliest < row.effectiveTo;
+    const earliest = this.maxDate([this.localToday(), this.addDays(row.effectiveFrom, 1)]);
+    return !row.effectiveTo || earliest <= row.effectiveTo;
   }
 
   minStopFrom(): string {
     if (!this.target) return this.localToday();
-    return this.maxDate([this.localToday(), this.addDays(this.target.effectiveFrom, 2)]);
+    return this.maxDate([this.localToday(), this.addDays(this.target.effectiveFrom, 1)]);
   }
 
   canEndAllowance(row: EmployeeAllowanceResponse): boolean {
-    const earliest = this.maxDate([this.localToday(), this.addDays(row.effectiveFrom, 2)]);
+    const earliest = this.maxDate([this.localToday(), this.addDays(row.effectiveFrom, 1)]);
     return !row.effectiveTo || earliest <= row.effectiveTo;
   }
 
@@ -418,6 +417,7 @@ export class AllowancesPage implements OnInit {
       effectiveFrom: f.effectiveFrom,
       effectiveTo: f.effectiveTo || null,
       calculationBasis: f.calculationBasis,
+      amountType: f.amountType,
       amount: Number(f.amount),
       conditionNote: (f.conditionNote ?? '').trim() || null,
       reason: f.reason.trim(),
@@ -425,8 +425,12 @@ export class AllowancesPage implements OnInit {
     if (!body.allowanceTypeId) { this.error = 'Vui lòng chọn loại phụ cấp.'; return; }
     if (!this.activeTypes().some(type => type.allowanceTypeId === body.allowanceTypeId)) { this.error = 'Loại phụ cấp đã ngừng dùng; hãy chọn loại đang hoạt động.'; return; }
     if (!body.effectiveFrom) { this.error = 'Vui lòng chọn ngày bắt đầu hiệu lực.'; return; }
-    if (body.effectiveTo && body.effectiveTo <= body.effectiveFrom) { this.error = 'Ngày cuối phải sau ngày bắt đầu.'; return; }
+    if (body.effectiveTo && body.effectiveTo < body.effectiveFrom) { this.error = 'Ngày kết thúc phải từ ngày bắt đầu trở đi.'; return; }
     if (!/^\d{1,15}(\.\d{1,4})?$/.test(amountText)) { this.error = 'Đơn giá phải không âm, tối đa 15 chữ số nguyên và 4 chữ số thập phân.'; return; }
+    if (body.amountType === 'PERCENT_BASE_SALARY' && body.amount > 100) {
+      this.error = 'Tỷ lệ phụ cấp phải từ 0 đến 100%.';
+      return;
+    }
     if ((body.conditionNote ?? '').length > 1000) { this.error = 'Điều kiện / ghi chú tối đa 1000 ký tự.'; return; }
     if (!body.reason) { this.error = 'Vui lòng nhập lý do.'; return; }
     if (body.reason.length > 500) { this.error = 'Lý do không được vượt quá 500 ký tự.'; return; }
@@ -439,7 +443,7 @@ export class AllowancesPage implements OnInit {
     } else if (this.assignMode === 'change') {
       if (!this.target || !this.canChangeAllowance(this.target)) { this.error = 'Không thể đổi mức cho khoảng phụ cấp này.'; return; }
       const minimumStart = this.minAssignmentStart();
-      if (body.effectiveFrom < this.localToday() || (minimumStart !== null && body.effectiveFrom < minimumStart)) { this.error = 'Ngày đổi phải từ hôm nay và cách ngày bắt đầu cũ ít nhất hai ngày.'; return; }
+      if (body.effectiveFrom < this.localToday() || (minimumStart !== null && body.effectiveFrom < minimumStart)) { this.error = 'Ngày đổi phải từ hôm nay và sau ngày bắt đầu cũ.'; return; }
       if (body.allowanceTypeId !== this.target.allowanceTypeId) { this.error = 'Không thể đổi loại phụ cấp trong thao tác đổi mức.'; return; }
       if (body.effectiveTo !== this.target.effectiveTo) { this.error = 'Đổi mức phải giữ nguyên ngày cuối của khoảng cũ.'; return; }
       this.run(this.api.changeFrom(employeeId, this.target.employeeAllowanceId, { newAllowance: body }),

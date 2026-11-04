@@ -65,6 +65,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Query("SELECT e FROM Employee e WHERE e.employeeId = :id")
     Optional<Employee> findByIdForUpdate(@Param("id") Long id);
 
+    @Query("""
+            select e from Employee e
+            where e.hireDate <= :to
+              and (e.terminationDate is null or e.terminationDate >= :from)
+            order by e.employeeId
+            """)
+    List<Employee> findEmployedDuring(@Param("from") LocalDate from, @Param("to") LocalDate to);
+
     // Tim kiem nhan vien co loc theo trang thai,
     // phong ban, chuc vu va thoi diem hieu luc
     @Query(value = """

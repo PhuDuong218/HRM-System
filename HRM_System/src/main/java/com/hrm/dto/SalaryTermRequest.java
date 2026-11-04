@@ -12,5 +12,7 @@ public record SalaryTermRequest(
     BigDecimal baseSalary,
     @NotNull PayBasis payBasis,
     @Size(max=500) String documentReference,
-    @NotBlank @Size(max=500) String reason
+    @NotBlank @Size(max=500) String reason,
+    @DecimalMin("0.0001") @Digits(integer=15, fraction=4) BigDecimal officialReferenceSalary,
+    PayBasis officialReferencePayBasis
 ) {}

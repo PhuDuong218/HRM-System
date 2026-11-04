@@ -6,16 +6,16 @@
 @if (message) { <div class="alert alert-success" role="status">{{ message | translate }}</div> }
 @if (error) { <div class="alert alert-danger" role="alert">{{ error | translate }}</div> }
 
-<ul class="nav nav-tabs mb-3">
-  <li class="nav-item"><button type="button" class="nav-link" [class.active]="tab==='types'" (click)="setTab('types')">{{ "Loại phụ cấp" | translate }}</button></li>
-  <li class="nav-item"><button type="button" class="nav-link" [class.active]="tab==='assigned'" (click)="setTab('assigned')">{{ "Phụ cấp nhân viên" | translate }}</button></li>
-  <li class="nav-item"><button type="button" class="nav-link" [class.active]="tab==='preview'" (click)="setTab('preview')">{{ "Xem trước theo kỳ" | translate }}</button></li>
+<ul class="module-tabs">
+  <li class="nav-item"><button type="button"  [class.active]="tab==='types'" (click)="setTab('types')">{{ "Loại phụ cấp" | translate }}</button></li>
+  <li class="nav-item"><button type="button"  [class.active]="tab==='assigned'" (click)="setTab('assigned')">{{ "Phụ cấp nhân viên" | translate }}</button></li>
+  <li class="nav-item"><button type="button"  [class.active]="tab==='preview'" (click)="setTab('preview')">{{ "Xem trước theo kỳ" | translate }}</button></li>
 </ul>
 
 <!-- ================= TAB 1: LOẠI PHỤ CẤP ================= -->
 @if (tab === 'types') {
   <app-record-workspace [open]="showTypeForm" [busy]="saving" (dismiss)="closeWorkspace()">
-      <section recordList class="surface">
+      <section recordList class="surface module-list">
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
       <h2 class="mb-0">{{ "Danh sách loại phụ cấp" | translate }}</h2>
       <div class="d-flex gap-2">
@@ -32,14 +32,17 @@
         <table class="table table-striped align-middle">
           <thead><tr>
             <th>{{ "Mã" | translate }}</th><th>{{ "Tên" | translate }}</th><th>{{ "Mô tả" | translate }}</th>
+            <th>{{ "Chịu thuế" | translate }}</th><th>{{ "Tính đóng BHXH" | translate }}</th>
             <th>{{ "Trạng thái" | translate }}</th><th></th>
           </tr></thead>
           <tbody>
             @for (t of types; track t.allowanceTypeId) {
-              <tr>
-                <td>{{ t.typeCode }}</td><td>{{ t.typeName }}</td><td>{{ t.description || '—' }}</td>
-                <td>{{ (t.isActive ? 'Đang dùng' : 'Ngừng dùng') | translate }}</td>
-                <td class="text-end">
+              <tr [class.selected-row]="showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId" [appSelectedRowScroll]="showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId ? 'edit' : null">
+                <td [attr.data-label]="'Mã' | translate">{{ t.typeCode }}</td><td [attr.data-label]="'Tên' | translate">{{ t.typeName }}</td><td [attr.data-label]="'Mô tả' | translate">{{ t.description || '—' }}</td>
+                <td [attr.data-label]="'Chịu thuế' | translate">{{ (t.isTaxable ? 'Có' : 'Không') | translate }}</td>
+                <td [attr.data-label]="'Tính đóng BHXH' | translate">{{ (t.countsForSocialInsurance ? 'Có' : 'Không') | translate }}</td>
+                <td [attr.data-label]="'Trạng thái' | translate">{{ (t.isActive ? 'Đang dùng' : 'Ngừng dùng') | translate }}</td>
+                <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                   <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving" (click)="openEditType(t)">{{ "Sửa" | translate }}</button>
                   @if (t.isActive) {
                     <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="saving" (click)="deactivateType(t)">{{ "Ngừng dùng" | translate }}</button>
@@ -73,6 +76,18 @@
           <textarea id="at-desc" name="description" class="form-control" rows="2" maxlength="1000"
                     [(ngModel)]="typeForm.description" [disabled]="saving"></textarea>
         </div>
+        <div class="col-12">
+          <label class="form-check">
+            <input type="checkbox" name="isTaxable" class="form-check-input"
+                   [(ngModel)]="typeForm.isTaxable" [disabled]="saving">
+            <span class="form-check-label">{{ "Chịu thuế" | translate }}</span>
+          </label>
+          <label class="form-check">
+            <input type="checkbox" name="countsForSocialInsurance" class="form-check-input"
+                   [(ngModel)]="typeForm.countsForSocialInsurance" [disabled]="saving">
+            <span class="form-check-label">{{ "Tính vào lương đóng BHXH" | translate }}</span>
+          </label>
+        </div>
         @if (editingType) {
           <div class="col-12">
             <label class="form-check">
@@ -100,7 +115,7 @@
 <!-- ================= TAB 2: PHỤ CẤP NHÂN VIÊN ================= -->
 @if (tab === 'assigned') {
   <app-record-workspace [open]="showAssignForm" [busy]="saving" (dismiss)="closeWorkspace()">
-    <div recordList class="allowance-list-column">
+    <div recordList class="allowance-list-column module-list">
   <section class="surface mb-4">
     <label class="form-label" for="al-emp">{{ "Nhân viên" | translate }}</label>
     @if (employeesLoading) {
@@ -146,14 +161,14 @@
           </tr></thead>
           <tbody>
             @for (r of rows; track r.employeeAllowanceId) {
-              <tr>
-                <td>{{ r.typeCode }} — {{ r.typeName }}</td>
-                <td>{{ r.effectiveFrom }}</td>
-                <td>{{ r.effectiveTo || '∞' }}</td>
-                <td>{{ basisLabels[r.calculationBasis] | translate }}</td>
-                <td class="text-end">{{ money(r.amount) }}</td>
-                <td>{{ r.conditionNote || '—' }}</td>
-                <td class="text-end text-nowrap">
+              <tr [class.selected-row]="showAssignForm && target?.employeeAllowanceId === r.employeeAllowanceId" [appSelectedRowScroll]="showAssignForm && target?.employeeAllowanceId === r.employeeAllowanceId ? assignMode : null">
+                <td [attr.data-label]="'Loại' | translate">{{ r.typeCode }} — {{ r.typeName }}</td>
+                <td [attr.data-label]="'Từ' | translate">{{ r.effectiveFrom }}</td>
+                <td [attr.data-label]="'Đến' | translate">{{ r.effectiveTo || '∞' }}</td>
+                <td [attr.data-label]="'Cách tính' | translate">{{ basisLabels[r.calculationBasis] | translate }}</td>
+                <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">{{ money(r.amount) }}{{ r.amountType === 'PERCENT_BASE_SALARY' ? '%' : '' }}</td>
+                <td [attr.data-label]="'Ghi chú' | translate">{{ r.conditionNote || '—' }}</td>
+                <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                   <button type="button" class="btn btn-sm btn-outline-primary me-1"
                           [disabled]="saving || !canChangeAllowance(r)" (click)="openAssign('change', r)">{{ "Đổi mức" | translate }}</button>
                   <button type="button" class="btn btn-sm btn-outline-secondary me-1"
@@ -224,15 +239,27 @@
           <div class="col-md-4">
             <label class="form-label" for="al-to">{{ "Hiệu lực đến (bỏ trống nếu không giới hạn)" | translate }}</label>
             <input id="al-to" name="effectiveTo" type="date" class="form-control"
-                   [(ngModel)]="assignForm.effectiveTo" [disabled]="saving">
+                   [(ngModel)]="assignForm.effectiveTo" [attr.min]="assignForm.effectiveFrom || null" [disabled]="saving">
             @if (assignMode === 'change') {
               <div class="form-text">{{ "Đổi mức phải giữ nguyên ngày cuối của khoản cũ." | translate }}</div>
             }
           </div>
           <div class="col-md-4">
-            <label class="form-label" for="al-amount">{{ "Đơn giá" | translate }}</label>
-            <input id="al-amount" name="amount" type="number" min="0" step="0.0001" class="form-control" required [(ngModel)]="assignForm.amount" [disabled]="saving">
-            <div class="form-text">{{ "Đây là đơn giá theo cách tính, không phải tiền cuối kỳ." | translate }}</div>
+            <label class="form-label" for="al-amount-type">{{ "Loại số tiền" | translate }}</label>
+            <select id="al-amount-type" name="amountType" class="form-select" required
+                    [(ngModel)]="assignForm.amountType" [disabled]="saving">
+              <option value="FIXED">{{ "Số tiền cố định" | translate }}</option>
+              <option value="PERCENT_BASE_SALARY">{{ "Phần trăm lương cơ bản" | translate }}</option>
+            </select>
+          </div>
+          <div class="col-md-4">
+            <label class="form-label" for="al-amount">{{ (assignForm.amountType === 'PERCENT_BASE_SALARY' ? 'Tỷ lệ (%)' : 'Đơn giá') | translate }}</label>
+            <input id="al-amount" name="amount" type="number" min="0" step="0.0001" class="form-control" required
+                   [max]="assignForm.amountType === 'PERCENT_BASE_SALARY' ? 100 : 999999999999999"
+                   [(ngModel)]="assignForm.amount" [disabled]="saving">
+            <div class="form-text">
+              {{ (assignForm.amountType === 'PERCENT_BASE_SALARY' ? 'Từ 0 đến 100%. Lấy lương cơ bản tại ngày bắt đầu hiệu lực.' : 'Đơn giá theo cách tính đã chọn.') | translate }}
+            </div>
           </div>
           @if (activeTypes().length === 0) {
             <div class="col-12"><p class="text-warning mb-0">{{ "Chưa có loại phụ cấp đang hoạt động." | translate }}</p></div>
@@ -319,11 +346,32 @@
           <tbody>
             @for (l of preview.items; track l.employeeAllowanceId + '|' + l.from) {
               <tr>
-                <td>{{ l.typeCode }}</td><td>{{ l.from }}</td><td>{{ l.to }}</td>
+                <td>
+                  {{ l.typeCode }}
+                  <div class="small text-body-secondary">
+                    {{ "Chịu thuế" | translate }}: {{ (l.isTaxable ? 'Có' : 'Không') | translate }} ·
+                    {{ "Tính đóng BHXH" | translate }}: {{ (l.countsForSocialInsurance ? 'Có' : 'Không') | translate }}
+                  </div>
+                </td>
+                <td>{{ l.from }}</td><td>{{ l.to }}</td>
                 <td>{{ basisLabels[l.basis] | translate }}</td>
-                <td class="text-end">{{ money(l.unitAmount) }}</td>
-                <td class="text-end">{{ money(l.eligibleUnits) }}</td>
-                <td class="text-end">{{ money(l.rawAmount) }}</td>
+                <td class="text-end" [attr.data-label]="'Đơn giá' | translate">
+                  {{ money(l.unitAmount) }}
+                  @if (l.salaryReference; as salary) {
+                    <div class="small text-body-secondary">
+                      {{ money(l.configuredAmount) }}% × {{ money(salary.baseSalary) }} / {{ salary.payBasis }}
+                      <div>{{ salary.from }}</div>
+                    </div>
+                  }
+                </td>
+                <td class="text-end" [attr.data-label]="'Số đơn vị' | translate">
+                  @if (l.basis === 'THEO_KY') {
+                    {{ l.effectiveDays }} / {{ l.periodDays }} {{ "ngày" | translate }}
+                  } @else {
+                    {{ money(l.eligibleUnits) }}
+                  }
+                </td>
+                <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">{{ money(l.rawAmount) }}</td>
               </tr>
             } @empty {
               <tr><td colspan="7" class="muted">{{ "Không có khoản phụ cấp nào trong kỳ này." | translate }}</td></tr>
@@ -332,6 +380,9 @@
           <tfoot><tr>
             <th colspan="6" class="text-end">{{ "Tổng (chưa làm tròn)" | translate }}</th>
             <th class="text-end">{{ money(preview.totalRaw) }}</th>
+          </tr><tr>
+            <th colspan="6" class="text-end">{{ "Tổng sau làm tròn (VND)" | translate }}</th>
+            <th class="text-end">{{ money(preview.totalRounded) }}</th>
           </tr></tfoot>
         </table>
       </div>

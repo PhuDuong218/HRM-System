@@ -63,6 +63,16 @@
                [disabled]="saving">
       </div>
 
+      <div class="col-md-6">
+        <label class="form-label" for="term-kind">Nhóm thời hạn</label>
+        <select id="term-kind" name="termKind" class="form-select" [(ngModel)]="form.termKind" [disabled]="saving || !!editing">
+          <option value="XAC_DINH">Xác định thời hạn</option><option value="KHONG_XAC_DINH">Không xác định thời hạn</option><option value="THU_VIEC">Thử việc</option>
+          @if (editing?.termKind === "CTV_CAN_RA_SOAT") { <option value="CTV_CAN_RA_SOAT">Cộng tác viên — cần rà soát</option> }
+        </select>
+      </div>
+      @if (form.termKind === 'XAC_DINH') {
+        <div class="col-md-6"><label for="max-months" class="form-label">Số tháng tối đa (1–36)</label><input id="max-months" name="maxMonths" type="number" class="form-control" min="1" max="36" step="1" required [(ngModel)]="form.maxMonths" [disabled]="saving || !!editing"></div>
+      }
       @if (editing) {
         <div class="col-12">
           <label class="form-check">
@@ -76,6 +86,7 @@
         </div>
       }
 
+      <div class="col-12"><label for="type-reason" class="form-label">Lý do</label><input id="type-reason" name="reason" class="form-control" maxlength="500" required [(ngModel)]="form.reason" [disabled]="saving"></div>
       <div class="col-12 d-flex gap-2">
         <button type="submit"
                 class="btn btn-primary"
@@ -113,6 +124,7 @@
           <tr>
             <th>{{ "Mã loại" | translate }}</th>
             <th>{{ "Tên loại" | translate }}</th>
+            <th>{{ 'Nhóm thời hạn' | translate }}</th>
             <th>{{ "Trạng thái" | translate }}</th>
             <th>{{ "Thao tác" | translate }}</th>
           </tr>
@@ -123,6 +135,12 @@
             <tr>
               <td>{{row.typeCode}}</td>
               <td>{{row.typeName}}</td>
+              <td>
+                {{ (termKindLabels[row.termKind] || 'Chưa phân loại') | translate }}
+                @if (row.maxMonths !== null) {
+                  <div class="small text-secondary">{{ row.maxMonths }} {{ 'tháng' | translate }}</div>
+                }
+              </td>
               <td>
                 {{(row.isActive ? 'Hoạt động' : 'Ngừng sử dụng') | translate}}
               </td>
@@ -144,7 +162,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="4">{{ 'Chưa có loại hợp đồng.' | translate }}</td>
+              <td colspan="5">{{ 'Chưa có loại hợp đồng.' | translate }}</td>
             </tr>
           }
         </tbody>

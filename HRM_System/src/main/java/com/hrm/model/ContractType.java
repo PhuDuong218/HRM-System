@@ -19,6 +19,14 @@ public class ContractType extends BaseEntity {
     @Column(name = "is_active", nullable = false)
     private Boolean isActive;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name="term_kind", nullable=false, length=20)
+    private com.hrm.enums.ContractTermKind termKind;
+    @Column(name="max_months") private Integer maxMonths;
+    public com.hrm.enums.ContractTermKind getTermKind(){return termKind;}
+    public void setTermKind(com.hrm.enums.ContractTermKind value){termKind=value;}
+    public Integer getMaxMonths(){return maxMonths;}
+    public void setMaxMonths(Integer value){maxMonths=value;}
     public ContractType() {}
     public Long getContractTypeId() { return contractTypeId; }
     public String getTypeCode() { return typeCode; }

@@ -1,4 +1,7 @@
+import type { SalaryRateSegment } from './contract.model';
+
 // Khớp với DTO backend: AllowanceTypeRequest/Response, EmployeeAllowanceRequest/Response, AllowanceCalculationResult.
+export type AllowanceAmountType = 'FIXED' | 'PERCENT_BASE_SALARY';
 export type AllowanceBasis = 'THEO_KY' | 'THEO_NGAY_CONG' | 'THEO_GIO';
 
 export interface AllowanceTypeResponse {
@@ -7,6 +10,8 @@ export interface AllowanceTypeResponse {
   typeName: string;
   description: string | null;
   isActive: boolean;
+  isTaxable: boolean;
+  countsForSocialInsurance: boolean;
 }
 
 export interface AllowanceTypeRequest {
@@ -14,6 +19,8 @@ export interface AllowanceTypeRequest {
   typeName: string;
   description: string | null;
   isActive: boolean | null;
+  isTaxable: boolean;
+  countsForSocialInsurance: boolean;
   reason: string;
 }
 
@@ -26,7 +33,8 @@ export interface EmployeeAllowanceResponse {
   effectiveFrom: string;
   effectiveTo: string | null;
   calculationBasis: AllowanceBasis;
-  amount: number; // ĐƠN GIÁ theo calculationBasis, KHÔNG phải tiền cuối kỳ
+  amountType: AllowanceAmountType;
+  amount: number; // Số tiền cố định hoặc tỷ lệ phần trăm
   conditionNote: string | null;
 }
 
@@ -35,6 +43,7 @@ export interface EmployeeAllowanceRequest {
   effectiveFrom: string;
   effectiveTo: string | null;
   calculationBasis: AllowanceBasis;
+  amountType: AllowanceAmountType;
   amount: number;
   conditionNote: string | null;
   reason: string;
@@ -57,8 +66,15 @@ export interface AllowanceLine {
   to: string;
   basis: AllowanceBasis;
   unitAmount: number;
+  amountType: AllowanceAmountType;
+  configuredAmount: number;
+  salaryReference: SalaryRateSegment | null;
+  effectiveDays: number;
+  periodDays: number;
   eligibleUnits: number;
   rawAmount: number;
+  isTaxable: boolean;
+  countsForSocialInsurance: boolean;
   sourceReference: string | null;
   policyVersion: string | null;
 }
@@ -68,6 +84,7 @@ export interface AllowanceCalculationResult {
   period: { periodId: number; from: string; to: string };
   items: AllowanceLine[];
   totalRaw: number;
+  totalRounded: number;
   roundingStatus: string;
 }
 
