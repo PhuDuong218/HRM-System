@@ -3,9 +3,9 @@ import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
-import { authGuard } from "./services/auth.guard";
+import { authGuard, guestGuard } from "./services/auth.guard";
 export const routes: Routes = [
-  { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
+  { path: "login", canActivate: [guestGuard], loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
   {
     path: "",
     component: AdminLayout,

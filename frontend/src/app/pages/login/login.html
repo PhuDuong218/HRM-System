@@ -18,14 +18,8 @@
         <span class="card-copy">
           <strong>{{ language.t('Đồng hành cùng đội ngũ') }}</strong>
           <span class="card-features">
-            @for (item of navigation; track item.id) {
-              @if (item.children; as children) {
-                @for (child of children; track child.path) {
-                  <button type="button" class="feature-button" [class.selected]="selectedPath === child.path" [attr.aria-pressed]="selectedPath === child.path" [disabled]="loading" (click)="selectDestination(child.path, child.label)">{{ language.t(child.label) }}</button>
-                }
-              } @else if (item.path; as path) {
-                <button type="button" class="feature-button" [class.selected]="selectedPath === path" [attr.aria-pressed]="selectedPath === path" [disabled]="loading" (click)="selectDestination(path, item.label)">{{ language.t(item.label) }}</button>
-              }
+            @for (link of featuredLinks; track link.path) {
+              <button type="button" class="feature-button" [class.selected]="selectedPath === link.path" [attr.aria-pressed]="selectedPath === link.path" [disabled]="loading" (click)="selectDestination(link.path, link.label)">{{ language.t(link.label) }}</button>
             }
           </span>
         </span>

@@ -125,8 +125,10 @@
 @media (min-width: 768px) {
   .login-page { height:100dvh; min-height:0; grid-template-rows:minmax(0, 1fr); overflow:hidden; }
   .intro, .login-side { min-height:0; overflow-y:auto; overscroll-behavior:contain; }
+  .intro-content { margin-left:auto; }
+  .login-content { margin-left:0; }
   .login-side.recovering { padding-top:20px; padding-bottom:20px; }
-  .login-side.recovering .login-content { margin:16px auto 0; padding:0 0 16px; }
+  .login-side.recovering .login-content { margin:16px auto 0 0; padding:0 0 16px; }
   .recovering .login-icon { width:44px; height:44px; margin-bottom:12px; }
   .recovering .recovery-preview { margin:12px 0; padding:10px 12px; }
   .recovering .recovery-steps { margin-top:12px; }

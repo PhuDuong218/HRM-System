@@ -6,7 +6,7 @@ import { API_BASE_URL } from './api.config';
 
 export const authInterceptor: HttpInterceptorFn = (request, next) => {
   const isApiRequest = request.url.startsWith(`${API_BASE_URL}/`);
-  const isPublic = [`${API_BASE_URL}/auth/login`, `${API_BASE_URL}/health`,
+  const isPublic = [`${API_BASE_URL}/auth/login`, `${API_BASE_URL}/auth/web/login`, `${API_BASE_URL}/health`,
     `${API_BASE_URL}/auth/forgot-password`, `${API_BASE_URL}/auth/verify-recovery-code`,
     `${API_BASE_URL}/auth/reset-forgotten-password`].includes(request.url);
   if (!isApiRequest || isPublic) return next(request);

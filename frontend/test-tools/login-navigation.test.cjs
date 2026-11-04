@@ -17,6 +17,13 @@ test('selected destination is used only after successful login', async () => {
     assert.deepEqual(chosen.visits, []);
     chosen.login.next({});
     assert.deepEqual(chosen.visits, ['/contracts']);
+    assert.equal(chosen.navigationOptions[0].replaceUrl, true);
+    assert.equal(chosen.navigationOptions[0].info.showLoginSuccess, true);
+    assert.equal(chosen.guardLogin(), true);
+    chosen.setToken('active-session');
+    const redirect = chosen.guardLogin();
+    assert.equal(redirect.redirectTo.url, '/overview');
+    assert.equal(redirect.navigationBehaviorOptions.replaceUrl, true);
     chosen.injector.destroy();
     const standard = setup();
     standard.page.submit({ preventDefault() {} }, 'hr', 'password');

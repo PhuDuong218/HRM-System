@@ -87,7 +87,7 @@
               <span class="login-success-icon" aria-hidden="true">✓</span>
               <div role="status">
                 <p class="login-success-eyebrow">{{ language.t('Đăng nhập thành công!') }}</p>
-                <p class="login-success-message">{{ language.t('Chào mừng bạn trở lại!') }} <strong>{{ auth.displayName() }}</strong></p>
+                <p class="login-success-message">@if (language.current() === 'vi') { Chào mừng <strong>{{ auth.displayName() }}</strong> trở lại! } @else { Welcome back, <strong>{{ auth.displayName() }}</strong>! }</p>
               </div>
             </div>
           }

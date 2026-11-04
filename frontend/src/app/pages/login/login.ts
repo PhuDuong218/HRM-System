@@ -14,7 +14,13 @@ import { navigation } from '../../navigation';
   styleUrl: './login.css'
 })
 export class LoginPage {
-  readonly navigation = navigation;
+  private readonly featuredPaths = new Set([
+    'employees', 'contracts', 'schedules', 'attendance',
+    'overtime', 'requests', 'payroll', 'reports'
+  ]);
+  readonly featuredLinks = navigation.flatMap(item =>
+    item.children ?? (item.path ? [{ path: item.path, label: item.label }] : [])
+  ).filter(link => this.featuredPaths.has(link.path));
   @ViewChild('username') private usernameInput?: ElementRef<HTMLInputElement>;
   selectedPath = '';
   selectedLabel = '';
@@ -141,7 +147,7 @@ export class LoginPage {
     this.loading = true;
     this.error = '';
     this.auth.login(username, password).pipe(finalize(() => this.loading = false)).subscribe({
-      next: () => void this.router.navigateByUrl('/' + (this.selectedPath || 'overview'), { info: { showLoginSuccess: true } }),
+      next: () => void this.router.navigateByUrl('/' + (this.selectedPath || 'overview'), { replaceUrl: true, info: { showLoginSuccess: true } }),
       error: (error: unknown) => {
         if (error instanceof ManagementAccessDeniedError) {
           this.error = error.message;
