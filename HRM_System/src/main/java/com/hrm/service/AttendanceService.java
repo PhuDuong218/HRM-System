@@ -447,6 +447,8 @@ public class AttendanceService {
 
                 if(current.actualStart()==null && "DI_LAM".equals(correction.attendanceResult()))
                         throw new ResponseStatusException(HttpStatus.CONFLICT,"Bổ sung giờ vào/ra phải qua yêu cầu của người lao động.");
+                if(!java.util.Objects.equals(current.actualStart(),correction.actualStart())||!java.util.Objects.equals(current.actualEnd(),correction.actualEnd())||!java.util.Objects.equals(current.attendanceResult(),correction.attendanceResult()))
+                        throw new ResponseStatusException(HttpStatus.CONFLICT,"Sửa giờ/kết quả công phải qua đơn yêu cầu của người lao động.");
                 validate(proposed);
 
                 String beforeJson = attendanceSnapshot(attendanceId);
@@ -530,6 +532,10 @@ public class AttendanceService {
                                         "Bản ghi chấm công đã được xác nhận");
                 }
 
+                if("DI_LAM".equals(current.attendanceResult())){
+                        Integer reviewed=db.queryForObject("SELECT COUNT(*) FROM dbo.attendance_records WHERE attendance_id=? AND check_in_reviewed_at IS NOT NULL AND check_out_reviewed_at IS NOT NULL AND check_in_reviewed_value=actual_start AND check_out_reviewed_value=actual_end",Integer.class,attendanceId);
+                        if(reviewed==null||reviewed!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"Phải đối soát riêng check-in và check-out trước khi xác nhận công.");
+                }
                 // Công đi làm phải có giờ ra mới được xác nhận
                 if ("DI_LAM".equals(current.attendanceResult())
                                 && current.actualEnd() == null) {

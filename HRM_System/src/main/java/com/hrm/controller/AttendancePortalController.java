@@ -14,7 +14,11 @@ import org.springframework.web.bind.annotation.*;
 public class AttendancePortalController {
     private final AttendancePortalService service;
     public AttendancePortalController(AttendancePortalService service){this.service=service;}
+    @org.springframework.beans.factory.annotation.Autowired private com.hrm.service.AttendanceClockReviewService clockReview;
+    @PostMapping("/records/{id}/review-check-in") public Object reviewIn(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return clockReview.review(a,id,true,body.expectedVersion(),body.reason());}
+    @PostMapping("/records/{id}/review-check-out") public Object reviewOut(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return clockReview.review(a,id,false,body.expectedVersion(),body.reason());}
     @GetMapping("/context") public Object context(@AuthenticationPrincipal AuthenticatedAccount a){return service.context(a);}
+    @GetMapping("/calendar-policy") public Object calendarPolicy(@AuthenticationPrincipal AuthenticatedAccount a){return service.calendarInfo(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
     @GetMapping("/records") public Object records(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="false") boolean mine,
       @RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,

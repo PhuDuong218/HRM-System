@@ -1,3 +1,4 @@
+import { clockTiming } from './clock-timing';
 import {AttendanceActualBreaksComponent} from './attendance-actual-breaks';
 import {Component,DestroyRef,Input,OnInit,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
@@ -13,6 +14,7 @@ import {API_BASE_URL} from '../services/api.config';
 interface Entry {key:string;start:string;end:string;regular?:AttendanceRow;ot?:OvertimeCalendarComponent['items'][number];}
 @Component({selector:'app-personal-calendar',standalone:true,imports:[AttendanceActualBreaksComponent,CommonModule,FormsModule,DetailFocusDirective,OtSupplementPanelComponent],templateUrl:'./personal-calendar.html',styleUrl:'./personal-calendar.css'})
 export class PersonalCalendarComponent extends OvertimeCalendarComponent implements OnInit {
+    readonly clockTiming = clockTiming;
  @Input() attendance=false;
  private readonly client=inject(HttpClient);private readonly lifecycle=inject(DestroyRef);private readonly attendanceApi=inject(AttendanceApiService);private requestVersion=0;
  private selectionVersion=0;private selectedDetailKey='';private regularSubscription?:Subscription;

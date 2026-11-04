@@ -1,3 +1,4 @@
+import { clockTiming } from '../../shared/clock-timing';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {OtSupplementPanelComponent} from '../../shared/ot-supplement-panel';
 import {RowViewDirective} from '../../shared/row-view.directive';
@@ -11,6 +12,7 @@ import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDet
 
 @Component({selector:'app-overtime',standalone:true,imports: [DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
 export class OvertimePage implements OnInit {
+    readonly clockTiming = clockTiming;
   private readonly api=inject(OvertimeApiService);private readonly destroyRef=inject(DestroyRef);
   private readonly host=inject(ElementRef) as ElementRef<HTMLElement>;
   private alignSelected(key:string){

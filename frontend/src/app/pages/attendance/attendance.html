@@ -24,7 +24,7 @@
 
 @if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }
 
-@if (actionError) { <div class="alert alert-warning" role="alert">{{ actionError }}</div> }
+@if (actionError && (tab==='requests' ? !ownRequestOpen && !requestDetail : !detail && !detailLoading)) { <div class="alert alert-warning" role="alert">{{ actionError }}</div> }
 
 @if (loading && !context) { <p role="status">{{ "Đang tải quyền chấm công..." | translate }}</p> }
 
@@ -192,7 +192,7 @@
                 <h2 class="h5 mb-0">{{ tab==='mine'?'Lịch sử công cá nhân':'Danh sách công' }} ({{ total }})</h2>
                 <div class="attendance-notification-slot" role="status" aria-live="polite" aria-atomic="true">
 
-                    @if (feedback) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
+                    @if (feedback && !detail && !detailLoading) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
                         (pendingNotifications) { <small>+{{ pendingNotifications }} thông báo</small> }</div> }
 
                 </div><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy"
@@ -228,7 +228,7 @@
                             </td>
 
                             <td>{{ time(r.plannedStart) }}<br>{{ time(r.plannedEnd) }}</td>
-                            <td>{{ time(r.actualStart) }}<br>{{ time(r.actualEnd) }}</td>
+                            <td>{{ time(r.actualStart) }}<div class="small">{{clockTiming(r.plannedStart,r.actualStart,'in')}}</div>{{ time(r.actualEnd) }}<div class="small">{{clockTiming(r.plannedEnd,r.actualEnd,'out')}}</div></td>
 
                             <td>
                                 <div class="attendance-result" [ngClass]="'result-'+resultSeverity(r)"><span
@@ -250,8 +250,8 @@
                                     @if (!r.attendanceId) { <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="!r.entryRequestId || saving" (click)="openEntryRequest(r)" title="Chỉ bổ sung giờ công qua đơn của người lao động">Nhập công</button> }
                                     @if (r.canMarkAbsent) { <button type="button" class="btn btn-sm btn-outline-warning" (click)="markAbsent(r)">Ghi nhận vắng</button> }
                                     @if (r.canEdit) { <button type="button" class="btn btn-sm btn-outline-secondary"
-                                        [disabled]="saving" (click)="view(r,r.attendanceId?'edit':'manual')">{{
-                                        r.attendanceId?'Đối soát / sửa':'Nhập công' }}</button> }
+                                        [disabled]="saving" (click)="view(r)">{{
+                                        r.attendanceId?'Chi tiết / đối soát':'Nhập công' }}</button> }
 
                                     @if (r.canConfirm) { <button type="button" class="btn btn-sm btn-primary"
                                         [disabled]="saving" (click)="confirm(r)">{{ "Xác nhận" | translate }}</button> }
@@ -313,6 +313,9 @@
                     (click)="closeDetail()">{{ "Đóng" | translate }}</button>
             </div>
 
+            @if (actionError) { <div class="alert alert-warning" role="alert" [appDetailFocus]="actionError">{{ actionError }}</div> }
+            @if (feedback) { <div class="alert alert-success" role="status" aria-live="polite">{{ feedback }}</div> }
+
             @if (detailLoading) { <p role="status">{{ "Đang tải chi tiết..." | translate }}</p> }
 
             @if (detail; as d) {
@@ -339,7 +342,7 @@
 
             <dl class="row">
                 <dt class="col-5">{{ "Giờ vào / ra" | translate }}</dt>
-                <dd class="col-7">{{ time(d.row.actualStart) }}<br>{{ time(d.row.actualEnd) }}</dd>
+                <dd class="col-7">{{ time(d.row.actualStart) }}<div>{{clockTiming(d.row.plannedStart,d.row.actualStart,'in')}}</div>{{ time(d.row.actualEnd) }}<div>{{clockTiming(d.row.plannedEnd,d.row.actualEnd,'out')}}</div></dd>
                 <dt class="col-5">{{ "Phút nghỉ ghi nhận" | translate }}</dt>
                 <dd class="col-7">{{ d.row.actualBreakMinutes }}</dd>
                 <dt class="col-5">{{ "Nguồn" | translate }}</dt>
@@ -386,10 +389,14 @@
 
             <div class="d-flex flex-wrap gap-2 mb-3">
 
-                @if (d.row.canEdit) { <button type="button" class="btn btn-primary" [disabled]="saving"
-                    (click)="openForm(d.row.attendanceId?'edit':'manual')">{{ d.row.attendanceId?'Đối soát / sửa':'Nhập
-                    công' }}</button> }
+                @if(d.row.attendanceId && d.row.attendanceResult==='DI_LAM') {
+                    <button type="button" class="btn btn-primary" [disabled]="saving||!d.row.canReviewCheckIn" (click)="openClockReview('in')">{{d.row.checkInReviewed?'Check-in đã đối soát':'Đối soát check-in'}}</button>
+                    <button type="button" class="btn btn-outline-primary" [disabled]="saving||!d.row.canReviewCheckOut" (click)="openClockReview('out')">{{d.row.checkOutReviewed?'Check-out đã đối soát':!d.row.actualEnd?'Chưa có check-out':'Đối soát check-out'}}</button>
+                    <button type="button" class="btn btn-outline-secondary" disabled title="Sửa giờ công phải qua yêu cầu của nhân viên">Sửa công</button>
+                }
 
+
+                @if(d.row.canMarkAbsent){<button type="button" class="btn btn-outline-warning" [disabled]="saving" (click)="markAbsent(d.row)">Ghi nhận vắng sau hạn giải trình</button>}
                 @if (d.row.canConfirm) { <button type="button" class="btn btn-outline-primary" [disabled]="saving"
                     (click)="confirm(d.row)">{{ "Xác nhận" | translate }}</button> }
 
@@ -401,6 +408,15 @@
 
             </div>
 
+            @if(d.row.attendanceId && d.row.attendanceResult==='DI_LAM') { <div class="small mb-3">
+                <div>Check-in: {{d.row.checkInReviewed?'Đã đối soát — '+d.row.checkInReviewer:'Chưa đối soát'}} · {{utc(d.row.checkInReviewedAt)}}</div>
+                <div>Check-out: {{d.row.checkOutReviewed?'Đã đối soát — '+d.row.checkOutReviewer:!d.row.actualEnd?'Chưa check-out':'Chưa đối soát'}} · {{utc(d.row.checkOutReviewedAt)}}</div>
+            </div> }
+            @if(reviewSide) { <form class="border rounded p-3 mb-3" (ngSubmit)="saveClockReview()"><h3 class="h6">Đối soát check-{{reviewSide}}</h3>
+                <label class="form-label" for="reviewActual">Giờ thực tế (giữ nguyên dữ liệu ghi nhận)</label><input id="reviewActual" type="text" class="form-control mb-2" [value]="time(reviewSide==='in'?d.row.actualStart:d.row.actualEnd)" disabled>
+                <p class="small">{{clockTiming(reviewSide==='in'?d.row.plannedStart:d.row.plannedEnd,reviewSide==='in'?d.row.actualStart:d.row.actualEnd,reviewSide)}}</p><label class="form-label" for="reviewReason">Lý do / kết quả đối soát *</label><textarea id="reviewReason" name="reviewReason" class="form-control" [(ngModel)]="reviewReason" maxlength="1000" required></textarea>
+                <div class="d-flex gap-2 mt-3"><button class="btn btn-primary" [disabled]="saving">Xác nhận đối soát</button><button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="reviewSide=null">Hủy</button></div>
+            </form> }
             <div class="table-responsive">
                 <table class="table table-sm">
                     <thead>
@@ -443,11 +459,11 @@
 
                     <div class="mb-3"><label for="actualStart" class="form-label">{{ "Giờ vào thực tế" | translate }}</label><input
                             id="actualStart" name="actualStart" type="datetime-local" step="1" class="form-control"
-                            [(ngModel)]="actualStart" [disabled]="result==='VANG'||missingCheckoutProposal"></div>
+                            [(ngModel)]="actualStart" [disabled]="mode!=='proposal'||result==='VANG'||missingCheckoutProposal"></div>
 
                     <div class="mb-3"><label for="actualEnd" class="form-label">{{ "Giờ ra thực tế / đề xuất" | translate }}</label><input
                             id="actualEnd" name="actualEnd" type="datetime-local" step="1" class="form-control"
-                            [(ngModel)]="actualEnd" [disabled]="result==='VANG'"></div>
+                            [(ngModel)]="actualEnd" [disabled]="mode!=='proposal'||result==='VANG'"></div>
 
                     <div class="mb-3"><label for="actualBreaks" class="form-label">{{ "Phút nghỉ thực tế" | translate }}</label><input
                             id="actualBreaks" name="breaks" type="number" min="0" step="1" class="form-control"
@@ -483,8 +499,11 @@
 </div>}
 @if (context && tab==='requests') {
 <app-ot-supplement-panel [mineAllowed]="context.mine" [manage]="context.manage" />
-@if(feedback){<div class="alert alert-success" role="status">{{feedback}}</div>}
+
 @if(ownRequestOpen){<section class="surface mb-3" [appDetailFocus]="ownSchedule||'create-own-request'"><div class="d-flex justify-content-between align-items-center mb-3"><h2 class="h5 mb-0">Tạo yêu cầu điều chỉnh công của tôi</h2><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving" (click)="closeOwnRequest()">Đóng</button></div>
+            @if (actionError) { <div class="alert alert-warning" role="alert" [appDetailFocus]="actionError">{{ actionError }}</div> }
+            @if (feedback) { <div class="alert alert-success" role="status" aria-live="polite">{{ feedback }}</div> }
+
   <p class="small text-muted">Chọn ngày ca, bản ghi công và nhập nội dung đề nghị. Công gốc chỉ thay đổi sau khi được duyệt.</p>
   <form class="row g-2 align-items-end mb-3" (ngSubmit)="loadOwnRequestRows()"><div class="col-md-4"><label for="ownRequestFrom" class="form-label">Ngày ca từ</label><input id="ownRequestFrom" name="from" type="date" class="form-control" [(ngModel)]="ownRequestFrom" [disabled]="saving" required></div><div class="col-md-4"><label for="ownRequestTo" class="form-label">Đến ngày</label><input id="ownRequestTo" name="to" type="date" class="form-control" [(ngModel)]="ownRequestTo" [disabled]="saving" required></div><div class="col-md-auto"><button class="btn btn-outline-primary" [disabled]="saving||ownRequestLoading">Tìm công của tôi</button></div></form>
   <label for="ownRequestSchedule" class="form-label">Bản ghi công cần điều chỉnh *</label><select id="ownRequestSchedule" class="form-select mb-2" [(ngModel)]="ownSchedule" (ngModelChange)="selectOwnRequest()" [disabled]="saving||ownRequestLoading"><option value="">{{ownRequestLoading?'Đang tải công cá nhân…':'Chọn ngày / ca / bản ghi công'}}</option>@for(r of ownRequestRows;track r.scheduleId){<option [value]="r.scheduleId" [disabled]="!r.canRequest">{{r.workDate}} — {{r.shift}} — {{r.attendanceId?'Công #'+r.attendanceId:'Chưa có bản ghi công'}}{{r.canRequest?'':' (Chưa đủ điều kiện gửi yêu cầu)'}}</option>}</select>
@@ -492,7 +511,7 @@
   @if(!ownRequestLoading&&!ownRequestRows.length){<div class="alert alert-info">Không có lịch/công cá nhân trong khoảng ngày đã chọn. Hãy kiểm tra ngày ca.</div>}
   @if(ownRequestPages>1){<div class="d-flex gap-2 align-items-center mb-3"><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage===0" (click)="loadOwnRequestRows(ownRequestPage-1)">Trang trước</button><span>{{ownRequestPage+1}} / {{ownRequestPages}}</span><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage+1>=ownRequestPages" (click)="loadOwnRequestRows(ownRequestPage+1)">Trang sau</button></div>}
   @if(detailLoading){<p role="status">Đang kiểm tra bản ghi công…</p>}
-  @if(detail&&mode==='proposal'){<div class="alert alert-info small">{{detail.row.attendanceId==null?'Yêu cầu bổ sung giờ vào/ra':missingCheckoutProposal?'Yêu cầu bổ sung check-out':'Yêu cầu điều chỉnh công đã xác nhận'}} — {{detail.row.employeeLabel}}<br>Đang lưu: {{time(detail.row.actualStart)}} → {{time(detail.row.actualEnd)}}; nghỉ {{detail.row.actualBreakMinutes}} phút.</div><form (ngSubmit)="save()"><fieldset [disabled]="saving"><div class="row g-3"><div class="col-md-4"><label for="ownProposedResult" class="form-label">Kết quả đề nghị</label><select id="ownProposedResult" name="result" class="form-select" [(ngModel)]="result" (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal"><option value="DI_LAM">Đi làm</option><option value="VANG">Vắng</option></select></div><div class="col-md-4"><label for="ownProposedStart" class="form-label">Giờ vào đề nghị</label><input id="ownProposedStart" name="start" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualStart" [disabled]="missingCheckoutProposal||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedEnd" class="form-label">Giờ ra đề nghị</label><input id="ownProposedEnd" name="end" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualEnd" [disabled]="result==='VANG'"></div><div class="col-md-4"><label for="ownProposedBreaks" class="form-label">Phút nghỉ thực tế đề nghị</label><input id="ownProposedBreaks" name="breaks" type="number" min="0" step="1" class="form-control" [(ngModel)]="breakMinutes" [disabled]="result==='VANG'"></div><div class="col-12"><label for="ownProposedReason" class="form-label">Lý do *</label><textarea id="ownProposedReason" name="reason" class="form-control" rows="3" maxlength="1000" [(ngModel)]="reason" required></textarea></div></div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{saving?'Đang gửi…':'Gửi yêu cầu điều chỉnh'}}</button><button type="button" class="btn btn-outline-secondary" (click)="closeOwnRequest()">Hủy</button></div></fieldset></form>}
+  @if(detail&&mode==='proposal'){<div class="alert alert-info small">{{detail.row.attendanceId==null?'Yêu cầu bổ sung giờ vào/ra':missingCheckoutProposal?'Yêu cầu bổ sung check-out':'Yêu cầu điều chỉnh công đã xác nhận'}} — {{detail.row.employeeLabel}}<br>Đang lưu: {{time(detail.row.actualStart)}} → {{time(detail.row.actualEnd)}}; nghỉ {{detail.row.actualBreakMinutes}} phút.</div><form (ngSubmit)="save()"><fieldset [disabled]="saving"><div class="row g-3"><div class="col-md-4"><label for="ownProposedResult" class="form-label">Kết quả đề nghị</label><select id="ownProposedResult" name="result" class="form-select" [(ngModel)]="result" (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal"><option value="DI_LAM">Đi làm</option><option value="VANG">Vắng</option></select></div><div class="col-md-4"><label for="ownProposedStart" class="form-label">Giờ vào đề nghị</label><input id="ownProposedStart" name="start" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualStart" [disabled]="missingCheckoutProposal||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedEnd" class="form-label">Giờ ra đề nghị</label><input id="ownProposedEnd" name="end" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualEnd" [disabled]="mode!=='proposal'||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedBreaks" class="form-label">Phút nghỉ thực tế đề nghị</label><input id="ownProposedBreaks" name="breaks" type="number" min="0" step="1" class="form-control" [(ngModel)]="breakMinutes" [disabled]="result==='VANG'"></div><div class="col-12"><label for="ownProposedReason" class="form-label">Lý do *</label><textarea id="ownProposedReason" name="reason" class="form-control" rows="3" maxlength="1000" [(ngModel)]="reason" required></textarea></div></div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{saving?'Đang gửi…':'Gửi yêu cầu điều chỉnh'}}</button><button type="button" class="btn btn-outline-secondary" (click)="closeOwnRequest()">Hủy</button></div></fieldset></form>}
 </section>}
 
 
@@ -523,7 +542,7 @@
                         id="requestType" name="type" class="form-select" [(ngModel)]="requestType">
                         <option value="">{{ "Tất cả" | translate }}</option>
                         <option value="MISSING_ATTENDANCE">Bổ sung giờ vào/ra</option><option value="MISSING_CHECKOUT">{{ "Bổ sung check-out" | translate }}</option>
-                        <option value="CONFIRMED_CORRECTION">{{ "Sửa công đã xác nhận" | translate }}</option>
+                        <option value="UNCONFIRMED_CORRECTION">Sửa công chưa xác nhận</option><option value="CONFIRMED_CORRECTION">{{ "Sửa công đã xác nhận" | translate }}</option>
                     </select></div>
 
                 <div class="col-md-3"><label for="requestStatus" class="form-label">{{ "Trạng thái" | translate }}</label><select
@@ -550,7 +569,7 @@
                 <h2 class="h5 mb-0">Danh sách yêu cầu ({{ requestTotal }})</h2>
                 <div class="attendance-notification-slot" role="status" aria-live="polite" aria-atomic="true">
 
-                    @if (feedback) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
+                    @if (feedback && !requestDetail && !requestDetailLoading && !ownRequestOpen) { <div class="attendance-notification"><span>{{ feedback }}</span>@if
                         (pendingNotifications) { <small>+{{ pendingNotifications }} thông báo</small> }</div> }
 
                 </div><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy"
@@ -630,6 +649,9 @@
                     class="btn btn-outline-secondary btn-sm" [disabled]="saving"
                     (click)="requestDetail=null">{{ "Đóng" | translate }}</button>
             </div>
+
+            @if (actionError) { <div class="alert alert-warning" role="alert" [appDetailFocus]="actionError">{{ actionError }}</div> }
+            @if (feedback) { <div class="alert alert-success" role="status" aria-live="polite">{{ feedback }}</div> }
 
             <p><strong>{{ d.request.employeeLabel }}</strong> · {{ label(d.request.requestType) }} · {{
                 label(d.request.status) }}</p>

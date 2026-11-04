@@ -86,6 +86,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     : id == R.id.navAttendance ? "attendance"
                             : id == R.id.navRequests ? "requests" : id == R.id.navProfile ? "profile" : "home";
             category = "regular";
+            attendanceCalendarOpen = false;
             page = 0;
             render();
             return true;
@@ -95,6 +96,11 @@ public class EmployeeActivity extends AppCompatActivity {
                 render();
         });
         render();
+    }
+
+    @Override protected void onResume(){
+        super.onResume();
+        if(body!=null && api!=null && session!=null && session.token()!=null && !writing && pendingReads==0)render();
     }
 
     private int dp(float n) {
@@ -168,7 +174,7 @@ public class EmployeeActivity extends AppCompatActivity {
 
     private void badge(LinearLayout box, String value, String state) {
         int color = state.contains("TU_CHOI") || state.contains("VANG") ? 0xffa32b32
-                : state.contains("CHO") || state.contains("THIEU") || state.contains("DANG_XU_LY") ? 0xff8a5b00
+                : state.contains("CHO") || state.contains("CHUA") || state.contains("THIEU") || state.contains("DANG_XU_LY") ? 0xff8a5b00
                         : 0xff137957;
         TextView t = text(value, 12, color, true);
         t.setPadding(dp(10), dp(6), dp(10), dp(6));
@@ -257,6 +263,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 return "Bổ sung giờ vào/ra";
             case "MISSING_CHECKOUT":
                 return "Bổ sung giờ ra";
+            case "UNCONFIRMED_CORRECTION":
+                return "Sửa công chưa xác nhận";
             case "CONFIRMED_CORRECTION":
                 return "Điều chỉnh công";
             default:
@@ -524,7 +532,268 @@ public class EmployeeActivity extends AppCompatActivity {
         return b;
     }
 
+    private List<JSONObject> attendanceLeaves = new ArrayList<>();
+    private Map<Long,String> attendanceLeaveTypes = new HashMap<>();
+    private Set<String> attendanceHolidays = new HashSet<>();
+    private YearMonth attendanceMonth = YearMonth.from(today());
+    private boolean attendanceMonthView = true;
+    private boolean attendanceCalendarOpen = false;
+    private LocalDate attendanceSelectedDay = today();
+    private String attendanceStateFilter = "all";
+
+    private void attendanceMonthCalendar() {
+        button(body, "‹ Quay lại chấm công", false, () -> { attendanceCalendarOpen = false; render(); });
+        title("Lịch xem công", "Chọn ngày để xem ca, giờ vào/ra và gửi yêu cầu hợp lệ.");
+        LinearLayout toolbar = new LinearLayout(this);
+        toolbar.setGravity(Gravity.CENTER_VERTICAL);
+        MaterialButton prev = calendarButton("‹", () -> moveAttendanceCalendar(-1));
+        toolbar.addView(prev, new LinearLayout.LayoutParams(dp(44), dp(48)));
+        MaterialButton month = calendarButton("Tháng " + attendanceMonth.getMonthValue() + "/" + attendanceMonth.getYear(), () -> pickDate(attendanceSelectedDay, d -> {
+            attendanceSelectedDay = d;
+            attendanceMonth = YearMonth.from(d);
+            render();
+        }));
+        month.setContentDescription("Chọn nhanh tháng và năm");
+        toolbar.addView(month, new LinearLayout.LayoutParams(0, dp(48), 1));
+        toolbar.addView(calendarButton("›", () -> moveAttendanceCalendar(1)), new LinearLayout.LayoutParams(dp(44), dp(48)));
+        body.addView(toolbar);
+        LinearLayout modes = new LinearLayout(this);
+        for (boolean monthly : new boolean[]{true, false}) {
+            MaterialButton b = calendarButton(monthly ? "Theo tháng" : "Theo tuần", () -> { attendanceMonthView = monthly; render(); });
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(attendanceMonthView == monthly ? CALENDAR_BLUE : 0xffe8ecf8));
+            b.setTextColor(attendanceMonthView == monthly ? Color.WHITE : CALENDAR_BLUE);
+            modes.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1));
+        }
+        body.addView(modes);
+        HorizontalScrollView filterScroll = new HorizontalScrollView(this);
+        filterScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout filters = new LinearLayout(this);
+        String[] keys = {"all", "late", "missing", "absent", "leave", "maternity", "holiday", "ot"};
+        String[] names = {"Tất cả", "Muộn / sớm", "Chưa chấm công", "Nghỉ không phép", "Nghỉ phép", "Thai sản", "Ngày lễ", "Tăng ca (OT)"};
+        for (int i = 0; i < keys.length; i++) {
+            final String key = keys[i];
+            MaterialButton b = calendarButton(names[i], () -> { attendanceStateFilter = key; render(); });
+            b.setStrokeWidth(dp(1));
+            b.setStrokeColor(android.content.res.ColorStateList.valueOf(0xffcbd2ed));
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(key.equals(attendanceStateFilter) ? CALENDAR_BLUE : 0xfff1f4fa));
+            b.setTextColor(key.equals(attendanceStateFilter) ? Color.WHITE : CALENDAR_BLUE);
+            filters.addView(b);
+        }
+        filterScroll.addView(filters);
+        body.addView(filterScroll);
+        LinearLayout kinds = new LinearLayout(this);
+        String[] kindsKeys = {"all", "regular", "ot"}, kindNames = {"Tất cả ca", "Ca thường", "OT"};
+        for (int i = 0; i < kindsKeys.length; i++) {
+            String key = kindsKeys[i];
+            MaterialButton b = calendarButton(kindNames[i], () -> { attendanceFilter = key; render(); });
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(attendanceFilter.equals(key) ? CALENDAR_BLUE : 0xffe8ecf8));
+            b.setTextColor(attendanceFilter.equals(key) ? Color.WHITE : CALENDAR_BLUE);
+            kinds.addView(b, new LinearLayout.LayoutParams(0, dp(40), 1));
+        }
+        body.addView(kinds);
+        LocalDate first = attendanceMonthView ? attendanceMonth.atDay(1) : attendanceSelectedDay.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate last = attendanceMonthView ? attendanceMonth.atEndOfMonth() : first.plusDays(6);
+        LinearLayout content = column();
+        body.addView(content);
+        content.addView(text("Đang tải lịch công…", 14, MUTED, false));
+        int version = generation;
+        String token = session.token(), kind = attendanceFilter;
+        ++pendingReads;
+        loading.setVisibility(View.VISIBLE);
+        executor.execute(() -> {
+            try {
+                List<JSONObject> entries = new ArrayList<>();
+                if (!kind.equals("ot")) calendarPages("/api/attendance-workspace/records?mine=true&from=" + first.minusDays(1) + "&to=" + last, "regular", token, entries);
+                if (!kind.equals("regular")) calendarPages("/api/overtime/workspace/calendar?mine=true&from=" + first.minusDays(1) + "&to=" + last, "ot", token, entries);
+                List<JSONObject> leaves = new ArrayList<>(); Map<Long,String> types = new HashMap<>(); Set<String> holidays = new HashSet<>();
+                String warning = "";
+                try {
+                    for(int p=0,total=1;p<total;p++) {
+                        JSONObject data=api.get("/api/employee-requests/mine?type=NGHI_PHEP&status=DA_DUYET&size=100&page="+p,token);
+                        JSONArray items=data.getJSONArray("content");total=data.optInt("totalPages",1);
+                        for(int i=0;i<items.length();i++){JSONObject l=items.getJSONObject(i);if(str(l,"withdrawnAt").isEmpty()&&str(l,"leaveStart").compareTo(last.plusDays(1)+"T00:00:00")<0&&str(l,"leaveEnd").compareTo(first+"T00:00:00")>0)leaves.add(l);}
+                    }
+                    for(int p=0,total=1;p<total;p++) {
+                        JSONObject data=api.get("/api/leave-types?size=100&page="+p,token);total=data.optInt("totalPages",1);JSONArray items=data.getJSONArray("content");
+                        for(int i=0;i<items.length();i++){JSONObject t=items.getJSONObject(i);types.put(t.optLong("leaveTypeId"),str(t,"typeCode")+" — "+str(t,"typeName"));}
+                    }
+                }catch(Exception ex){warning="Chưa tải được nghỉ phép / thai sản: "+HrmApi.message(ex);}
+                try{JSONObject policy=api.get("/api/attendance-workspace/calendar-policy",token);if(policy.optBoolean("configured")){JSONArray dates=policy.getJSONArray("holidays");for(int i=0;i<dates.length();i++)holidays.add(dates.getString(i));}else warning+=" Chưa có lịch lễ chính thức.";}catch(Exception ex){warning+=" Chưa tải được lịch lễ chính thức.";}
+                final String calendarWarning=warning;
+                runOnUiThread(() -> {
+                    if (isDestroyed() || generation != version) return;
+                    --pendingReads;
+                    loading.setVisibility(pendingReads > 0 ? View.VISIBLE : View.GONE);
+                    content.removeAllViews();
+                    attendanceLeaves=leaves;attendanceLeaveTypes=types;attendanceHolidays=holidays;
+                    if(!calendarWarning.isBlank())content.addView(text(calendarWarning,12,MUTED,false));
+                    attendanceCalendarGrid(content, first, last, entries);
+                });
+            } catch (Exception ex) {
+                runOnUiThread(() -> {
+                    if (isDestroyed() || generation != version) return;
+                    --pendingReads;
+                    loading.setVisibility(pendingReads > 0 ? View.VISIBLE : View.GONE);
+                    content.removeAllViews();
+                    content.addView(text(HrmApi.message(ex), 14, 0xff9f2534, false));
+                    content.addView(calendarButton("Tải lại", this::render));
+                    if (ex instanceof HrmApi.ApiException && ((HrmApi.ApiException)ex).status == 401) {session.clearSession(); signOutLocal();}
+                });
+            }
+        });
+    }
+
+    private void moveAttendanceCalendar(int n) {
+        if (attendanceMonthView) {attendanceMonth = attendanceMonth.plusMonths(n); attendanceSelectedDay = attendanceMonth.atDay(1);}
+        else {attendanceSelectedDay = attendanceSelectedDay.plusWeeks(n); attendanceMonth = YearMonth.from(attendanceSelectedDay);}
+        render();
+    }
+    private List<JSONObject> entriesOn(LocalDate day, List<JSONObject> entries) {
+        List<JSONObject> out = new ArrayList<>();
+        for (JSONObject e : entries) if (CalendarMonth.overlaps(day, str(e,"calendarStart"), str(e,"calendarEnd"))) out.add(e);
+        return out;
+    }
+    private String calendarRowState(JSONObject e) {
+        JSONObject source = e.optJSONObject("source");
+        boolean ot = str(e,"kind").equals("ot");
+        JSONObject r = ot ? source.optJSONObject("row").optJSONObject("ot") : source;
+        if (str(r,"attendanceResult").equals("VANG")) return "absent";
+        JSONArray anomalies = r.optJSONArray("anomalies");
+        if (!ot && anomalies != null) for (int i=0;i<anomalies.length();i++) if (anomalies.optString(i).equals("DI_MUON") || anomalies.optString(i).equals("VE_SOM")) return "late";
+        if (str(r,"actualStart").isEmpty() || str(r,"actualEnd").isEmpty()) return "missing";
+        return "normal";
+    }
+    private String specialLeaveState(JSONObject l){
+        String value=java.text.Normalizer.normalize(attendanceLeaveTypes.getOrDefault(l.optLong("leaveTypeId"),""),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}+","").replace('_',' ').toLowerCase(Locale.ROOT);
+        if(value.contains("thai san")||value.contains("maternity"))return "maternity";
+        if(value.contains("nghi om")||value.contains("sick")||value.isBlank())return "";
+        return "leave";
+    }
+    private String calendarDayState(LocalDate day, List<JSONObject> entries) {
+        List<JSONObject> allDaily=entriesOn(day,entries);
+        List<JSONObject> daily=new ArrayList<>();
+        for(JSONObject e:allDaily)if(!str(e,"kind").equals("ot"))daily.add(e);
+        for(JSONObject e:daily)if(calendarRowState(e).equals("normal"))return "normal";
+        for(String state:new String[]{"maternity","leave"})for(JSONObject l:attendanceLeaves)if(CalendarMonth.overlaps(day,str(l,"leaveStart"),str(l,"leaveEnd"))&&specialLeaveState(l).equals(state))return state;
+        if(allDaily.isEmpty()&&attendanceHolidays.contains(day.toString()))return "holiday";
+        for (String priority : new String[]{"absent","late"}) for(JSONObject e:daily) if(calendarRowState(e).equals(priority))return priority;
+        for(JSONObject e:daily) if(calendarRowState(e).equals("missing"))return "missing";
+        return daily.isEmpty()?(allDaily.isEmpty()?"empty":"ot"):"normal";
+    }
+    private int calendarStateColor(String state) {
+        switch(state) {case "ot":return 0xfff08a18;case "normal":return 0xff164c96;case "late":return 0xfff4b52f;case "absent":return 0xffca334b;case "missing":return 0xffe7dfd3;case "leave":return 0xffb9e2ff;case "maternity":return 0xffbf347d;case "holiday":return Color.TRANSPARENT;default:return 0xffcbd0d7;}
+    }
+    private int calendarStateInk(String state){return state.equals("normal")||state.equals("absent")||state.equals("maternity")?Color.WHITE:INK;}
+    private String calendarStateLabel(String state) {
+        switch(state) {case "ot":return "Tăng ca (OT)";case "normal":return "Đi làm bình thường";case "late":return "Đi muộn / về sớm";case "absent":return "Nghỉ không phép";case "missing":return "Chưa / thiếu chấm công";case "leave":return "Nghỉ phép";case "maternity":return "Nghỉ thai sản";case "holiday":return "Ngày lễ";default:return "Không có lịch";}
+    }
+
+    private void attendanceCalendarGrid(LinearLayout parent, LocalDate first, LocalDate last, List<JSONObject> entries) {
+        Set<String> planned = new HashSet<>(), present = new HashSet<>(); int late=0; Set<String> absent = new HashSet<>();
+        for(JSONObject e:entries) {
+            if(!str(e,"kind").equals("regular")) continue;
+            JSONObject r=e.optJSONObject("source"); String date=str(r,"workDate");
+            if(date.compareTo(first.toString())<0||date.compareTo(last.toString())>0)continue;
+            planned.add(date);
+            if(str(r,"attendanceResult").equals("VANG"))absent.add(date);
+            if(!str(r,"actualStart").isEmpty()&&!str(r,"attendanceResult").equals("VANG"))present.add(date);
+            JSONArray anomalies=r.optJSONArray("anomalies");
+            if(anomalies!=null)for(int i=0;i<anomalies.length();i++)if(anomalies.optString(i).equals("DI_MUON")){late++;break;}
+        }
+        TextView stats=text("Có lịch: "+planned.size()+" ngày  •  Có giờ vào: "+present.size()+" ngày\nĐi muộn: "+late+" lần  •  Vắng: "+absent.size()+" ngày",12,INK,true);
+        stats.setPadding(dp(10),dp(10),dp(10),dp(10));parent.addView(stats);
+        TextView note=text("Đếm ngày có lịch và ngày có giờ vào, không phải công chuẩn quy đổi.",11,MUTED,false);parent.addView(note);
+        LinearLayout headings=new LinearLayout(this);
+        for(String s:new String[]{"T2","T3","T4","T5","T6","T7","CN"}) {TextView t=text(s,13,INK,true);t.setGravity(Gravity.CENTER);headings.addView(t,new LinearLayout.LayoutParams(0,dp(36),1));}parent.addView(headings);
+        LinearLayout detail=column();
+        LocalDate start=attendanceMonthView?CalendarMonth.firstCell(attendanceMonth):first;
+        LocalDate finish=attendanceMonthView?CalendarMonth.lastCell(attendanceMonth):last;
+        for(LocalDate week=start;!week.isAfter(finish);week=week.plusDays(7)) {
+            LinearLayout row=new LinearLayout(this);
+            for(int i=0;i<7;i++) {
+                LocalDate date=week.plusDays(i);String state=calendarDayState(date,entries);
+                TextView cell=text(String.valueOf(date.getDayOfMonth()),18,calendarStateInk(state),true);
+                cell.setGravity(Gravity.CENTER);cell.setBackground(rounded(calendarStateColor(state),9));
+                if(attendanceHolidays.contains(date.toString()))((android.graphics.drawable.GradientDrawable)cell.getBackground()).setStroke(dp(3),0xffa855c7);
+                List<JSONObject> daily=entriesOn(date,entries);
+                if(!daily.isEmpty())cell.setText(date.getDayOfMonth()+"\n"+daily.size()+" ca");
+                cell.setContentDescription(date+", "+calendarStateLabel(state)+", "+daily.size()+" ca");
+                boolean matches=attendanceStateFilter.equals("all")||state.equals(attendanceStateFilter)||daily.stream().anyMatch(e->calendarRowState(e).equals(attendanceStateFilter));
+                cell.setAlpha(date.isBefore(first)||date.isAfter(last)?.3f:matches?1f:.25f);
+                cell.setFocusable(true);
+                cell.setEnabled(!date.isBefore(first)&&!date.isAfter(last));
+                cell.setOnClickListener(v->{attendanceSelectedDay=date;showAttendanceCalendarDay(detail,date,entries);detail.post(()->{detail.requestFocus();NestedScrollView scroll=findViewById(R.id.employeeScroll);android.graphics.Rect rect=new android.graphics.Rect();detail.getDrawingRect(rect);scroll.offsetDescendantRectToMyCoords(detail,rect);scroll.smoothScrollTo(0,rect.top);});});
+                FrameLayout frame=new FrameLayout(this);
+                frame.addView(cell,new FrameLayout.LayoutParams(-1,-1));
+                LinearLayout dots=new LinearLayout(this);dots.setGravity(Gravity.END);
+                Set<String> statuses=new LinkedHashSet<>();
+                for(JSONObject e:daily)statuses.add(str(e,"kind").equals("ot")?"ot":calendarRowState(e));
+                for(String status:statuses){
+                    View dot=new View(this);dot.setBackground(rounded(calendarStateColor(status),6));
+                    android.graphics.drawable.GradientDrawable circle=(android.graphics.drawable.GradientDrawable)dot.getBackground();circle.setStroke(dp(1),Color.WHITE);
+                    dot.setContentDescription(calendarStateLabel(status));
+                    LinearLayout.LayoutParams dotParams=new LinearLayout.LayoutParams(dp(9),dp(9));dotParams.setMarginStart(dp(3));dots.addView(dot,dotParams);
+                }
+                FrameLayout.LayoutParams dotsParams=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END);dotsParams.setMargins(0,0,dp(5),dp(4));
+                dots.setClickable(false);dots.setFocusable(false);dots.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);frame.addView(dots,dotsParams);
+                cell.setContentDescription(cell.getContentDescription()+", "+String.join(", ",statuses.stream().map(this::calendarStateLabel).toArray(String[]::new)));
+                LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(66),1);p.setMargins(dp(2),dp(2),dp(2),dp(2));row.addView(frame,p);
+            }parent.addView(row);
+        }
+        attendanceColorLegend(parent);
+        parent.addView(text("Thiếu / chưa có công không đồng nghĩa vắng không phép. OT không cộng vào thống kê công thường.",11,MUTED,false));
+        parent.addView(detail);
+        detail.setFocusableInTouchMode(true);
+        if(!attendanceSelectedDay.isBefore(first)&&!attendanceSelectedDay.isAfter(last))showAttendanceCalendarDay(detail,attendanceSelectedDay,entries);
+        button(parent,"Tổng công theo tháng / năm",false,()->{section="summary";render();});
+    }
+    private void attendanceColorLegend(LinearLayout parent) {
+        TextView heading=text("Chú thích màu trạng thái công",13,INK,true);
+        heading.setPadding(dp(12),dp(10),dp(8),dp(4));
+        LinearLayout legendHeader=new LinearLayout(this);
+        legendHeader.setGravity(Gravity.CENTER_VERTICAL);
+        legendHeader.addView(heading,new LinearLayout.LayoutParams(0,-2,1));
+        if (section.equals("attendance") && !attendanceCalendarOpen) {
+            MaterialButton viewCalendar=calendarButton("Xem lịch",()->{
+                attendanceSelectedDay=attendancePeriod.anchor();
+                attendanceMonth=YearMonth.from(attendanceSelectedDay);
+                attendanceMonthView=true;
+                attendanceCalendarOpen=true;
+                render();
+            });
+            viewCalendar.setStrokeWidth(dp(1));
+            viewCalendar.setStrokeColor(android.content.res.ColorStateList.valueOf(CALENDAR_BLUE));
+            viewCalendar.setCornerRadius(dp(8));
+            viewCalendar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xffe8ecf8));
+            viewCalendar.setTag("attendance.viewCalendar");
+            LinearLayout.LayoutParams actionParams=new LinearLayout.LayoutParams(-2,dp(44));
+            actionParams.setMarginEnd(dp(8));
+            legendHeader.addView(viewCalendar,actionParams);
+        }
+        parent.addView(legendHeader);
+        for(String[] pair:new String[][]{{"normal","late"},{"absent","missing"},{"leave","maternity"},{"holiday","empty"},{"ot"}}){
+            LinearLayout row=new LinearLayout(this);
+            for(String state:pair){
+                TextView legend=text("● "+calendarStateLabel(state),12,calendarStateInk(state),false);
+                legend.setPadding(dp(8),dp(8),dp(8),dp(8));
+                legend.setBackground(rounded(calendarStateColor(state),7));
+                if(state.equals("holiday"))((android.graphics.drawable.GradientDrawable)legend.getBackground()).setStroke(dp(2),0xffa855c7);
+                LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);
+                p.setMargins(dp(4),dp(3),dp(4),dp(3));row.addView(legend,p);
+            }parent.addView(row);
+        }
+    }
+
+    private void showAttendanceCalendarDay(LinearLayout target, LocalDate day, List<JSONObject> entries) {
+        target.removeAllViews();
+        for(JSONObject l:attendanceLeaves)if(CalendarMonth.overlaps(day,str(l,"leaveStart"),str(l,"leaveEnd"))&&!specialLeaveState(l).isEmpty()){
+            String state=specialLeaveState(l);TextView leave=text(calendarStateLabel(state)+" · Đã duyệt\n"+time(str(l,"leaveStart"))+" → "+time(str(l,"leaveEnd")),13,calendarStateInk(state),true);leave.setBackground(rounded(calendarStateColor(state),8));leave.setPadding(dp(10),dp(10),dp(10),dp(10));target.addView(leave);
+        }
+        calendarDay(target,day,entriesOn(day,entries));
+    }
+
     private void schedule() {
+        if (section.equals("attendance") && attendanceCalendarOpen) { attendanceMonthCalendar(); return; }
         final boolean attendanceView = section.equals("attendance");
         final SchedulePeriod schedulePeriod = attendanceView ? attendancePeriod : this.schedulePeriod;
         final String scheduleFilter = attendanceView ? attendanceFilter : this.scheduleFilter;
@@ -644,6 +913,7 @@ public class EmployeeActivity extends AppCompatActivity {
             filters.addView(b, p);
         }
         body.addView(filters);
+        if (attendanceView) attendanceColorLegend(body);
         if (attendanceView) {
             LinearLayout summaryLink = column();
             summaryLink.setPadding(dp(16), 0, dp(16), 0);
@@ -855,7 +1125,11 @@ public class EmployeeActivity extends AppCompatActivity {
                     "Check-in OT theo giờ máy chủ?", null));
         if (ot && source.optBoolean("canCheckOut"))
             button(box, "Check-out OT", true, () -> otCheckout(row));
-        if (section.equals("attendance") && !ot && row.optBoolean("canRequest"))
+        if(section.equals("attendance")&&!ot&&"DA_XAC_NHAN".equals(str(row,"verificationStatus"))) {
+            button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
+            box.addView(text("Công đã được xác nhận",12,MUTED,false));
+        }
+        if (section.equals("attendance") && !ot && row.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(row,"verificationStatus")))
             button(box, "Yêu cầu điều chỉnh / bổ sung", false,
                     () -> fetch("/api/attendance-workspace/schedules/" + row.optLong("scheduleId") + "?mine=true",
                             d -> attendanceProposal(d.getJSONObject("row"))));
@@ -865,12 +1139,34 @@ public class EmployeeActivity extends AppCompatActivity {
         parent.addView(outer);
     }
 
+    private String clockReviewState(JSONObject row,boolean checkIn){
+        String side=checkIn?"check-in":"check-out";
+        if(str(row,checkIn?"actualStart":"actualEnd").isEmpty())return "Chưa "+side;
+        return row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed")?"Đã đối soát "+side:"Đã "+side+" — chờ đối soát";
+    }
+    private void clockReviewFacts(LinearLayout box,JSONObject row){
+        for(boolean checkIn:new boolean[]{true,false}){
+            boolean recorded=!str(row,checkIn?"actualStart":"actualEnd").isEmpty();
+            boolean reviewed=row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed");
+            badge(box,clockReviewState(row,checkIn),reviewed?"DA_DOI_SOAT":recorded?"CHO_DOI_SOAT":"CHUA_GHI_NHAN");
+            if(reviewed)box.addView(text(str(row,checkIn?"checkInReviewer":"checkOutReviewer")+" · "+utc(str(row,checkIn?"checkInReviewedAt":"checkOutReviewedAt")),12,MUTED,false));
+        }
+    }
+
+    private void clockTimingFacts(LinearLayout box,String plannedStart,String plannedEnd,String actualStart,String actualEnd){
+        String in=ClockTiming.describe(plannedStart,actualStart,true),out=ClockTiming.describe(plannedEnd,actualEnd,false);
+        if(!in.isEmpty())box.addView(text(in,13,INK,true));
+        if(!out.isEmpty())box.addView(text(out,13,INK,true));
+    }
+
     private void attendanceFacts(LinearLayout box, JSONObject row, JSONObject actual, boolean ot) {
-        line(box, "Giờ vào thực tế", time(str(actual, "actualStart")));
-        line(box, "Giờ ra thực tế", time(str(actual, "actualEnd")));
+        clockTimingFacts(box,str(ot?actual:row,ot?"requestedStart":"plannedStart"),str(ot?actual:row,ot?"requestedEnd":"plannedEnd"),str(actual,"actualStart"),str(actual,"actualEnd"));
+        line(box, "Giờ vào thực tế", str(actual,"actualStart").isEmpty()?"Chưa check-in":time(str(actual,"actualStart")));
+        line(box, "Giờ ra thực tế", str(actual,"actualEnd").isEmpty()?"Chưa check-out":time(str(actual,"actualEnd")));
         if (!ot) {
             String status = str(row, "verificationStatus");
-            badge(box, label(status), status.isEmpty() ? "CHO" : status);
+            badge(box, "DA_XAC_NHAN".equals(status)?"Công đã được xác nhận":"Công chưa xác nhận toàn bộ",status.isEmpty()?"CHO":status);
+            clockReviewFacts(box,row);
             String result = str(row, "attendanceResult");
             if (!result.isEmpty())
                 badge(box, label(result), result);
@@ -995,9 +1291,11 @@ public class EmployeeActivity extends AppCompatActivity {
         LinearLayout box = card(str(r, "shift"));
         line(box, "Ngày ca", str(r, "workDate"));
         line(box, "Dự kiến", time(str(r, "plannedStart")) + " → " + time(str(r, "plannedEnd")));
-        badge(box, label(str(r, "verificationStatus")),
-                str(r, "verificationStatus").isEmpty() ? "CHO" : str(r, "verificationStatus"));
-        line(box, "Giờ vào / ra", time(str(r, "actualStart")) + " → " + time(str(r, "actualEnd")));
+        badge(box, "DA_XAC_NHAN".equals(str(r,"verificationStatus")) ? "Công đã được xác nhận" : "Công chưa xác nhận toàn bộ", str(r,"verificationStatus").isEmpty()?"CHO":str(r,"verificationStatus"));
+        line(box,"Giờ check-in",str(r,"actualStart").isEmpty()?"Chưa check-in":time(str(r,"actualStart")));
+        line(box,"Giờ check-out",str(r,"actualEnd").isEmpty()?"Chưa check-out":time(str(r,"actualEnd")));
+        clockReviewFacts(box,r);
+        clockTimingFacts(box,str(r,"plannedStart"),str(r,"plannedEnd"),str(r,"actualStart"),str(r,"actualEnd"));
         JSONArray anomalies = r.optJSONArray("anomalies");
         if (anomalies != null && anomalies.length() > 0)
             badge(box,
@@ -1014,7 +1312,11 @@ public class EmployeeActivity extends AppCompatActivity {
         if (r.optBoolean("canCheckOut"))
             button(box, "Check-out", true, () -> write("/api/attendance-workspace/schedules/" + id + "/check-out",
                     "POST", new JSONObject(), "Check-out ca này bằng giờ máy chủ?", null));
-        if (r.optBoolean("canRequest"))
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus"))) {
+            button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
+            box.addView(text("Công đã được xác nhận",12,MUTED,false));
+        }
+        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus")))
             button(box, "Yêu cầu điều chỉnh / bổ sung", false,
                     () -> fetch("/api/attendance-workspace/schedules/" + id + "?mine=true",
                             d -> attendanceProposal(d.getJSONObject("row"))));
@@ -1028,6 +1330,11 @@ public class EmployeeActivity extends AppCompatActivity {
                 .append("\nRa: ").append(time(str(r, "actualEnd"))).append("\nNghỉ thực tế: ")
                 .append(r.optInt("actualBreakMinutes")).append(" phút\nNgười nhập: ").append(str(r, "enteredByLabel"))
                 .append("\nNgười xác nhận: ").append(str(r, "confirmedByLabel"));
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus")))info.append("\nCông đã được xác nhận");
+        info.append("\nCheck-in: ").append(clockReviewState(r,true)).append("\nCheck-out: ").append(clockReviewState(r,false));
+        if(r.optBoolean("checkInReviewed"))info.append("\nĐối soát giờ vào: ").append(str(r,"checkInReviewer")).append(" · ").append(utc(str(r,"checkInReviewedAt")));
+        if(r.optBoolean("checkOutReviewed"))info.append("\nĐối soát giờ ra: ").append(str(r,"checkOutReviewer")).append(" · ").append(utc(str(r,"checkOutReviewedAt")));
+        info.append("\n").append(ClockTiming.describe(str(r,"plannedStart"),str(r,"actualStart"),true)).append("\n").append(ClockTiming.describe(str(r,"plannedEnd"),str(r,"actualEnd"),false));
         JSONArray rests = detail.optJSONArray("breaks");
         if (rests != null)
             for (int i = 0; i < rests.length(); i++) {
@@ -1042,7 +1349,7 @@ public class EmployeeActivity extends AppCompatActivity {
                 .append("\nXử lý: ").append(str(request,"processor")).append(" · ").append(utc(str(request,"processedAt")));
         }
         MaterialAlertDialogBuilder details = new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null);
-        if (r.optBoolean("canRequest")) details.setNeutralButton("Gửi yêu cầu điều chỉnh", (dialog, which) -> attendanceProposal(r));
+        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) details.setNeutralButton("Gửi yêu cầu điều chỉnh", (dialog, which) -> attendanceProposal(r));
         details.show();
     }
 
@@ -1142,7 +1449,7 @@ public class EmployeeActivity extends AppCompatActivity {
             if (items != null)
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject r = items.getJSONObject(i);
-                    if (r.optBoolean("canRequest")) {
+                    if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) {
                         eligible.add(r);
                         names.add(str(r, "workDate") + " · " + str(r, "shift"));
                     }
@@ -1349,16 +1656,18 @@ public class EmployeeActivity extends AppCompatActivity {
     }
 
     private void attendanceProposal(JSONObject r) {
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus"))){toast("Công đã được xác nhận");return;}
         if (!r.optBoolean("canRequest")) {
             toast("Bản ghi không còn đủ điều kiện gửi yêu cầu.");
             return;
         }
         LinearLayout box = form();
         boolean unrecorded = r.isNull("attendanceId");
-        boolean missing = !unrecorded && !str(r, "verificationStatus").equals("DA_XAC_NHAN");
+        boolean confirmed = str(r,"verificationStatus").equals("DA_XAC_NHAN");
+        boolean missing = !unrecorded && !confirmed && !str(r,"actualStart").isEmpty() && str(r,"actualEnd").isEmpty();
         box.addView(text(
                 unrecorded ? "Bổ sung giờ vào và giờ ra thực tế cho lịch chưa có công. Không nhập giờ tương lai. Công chỉ được ghi sau khi duyệt." : missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
-                        : "Đề xuất điều chỉnh công đã xác nhận. Công gốc chỉ thay đổi sau khi được duyệt.",
+                        : "Đề xuất điều chỉnh công. Công gốc chỉ thay đổi sau khi được duyệt.",
                 13, MUTED, false));
         Spinner result = new Spinner(this);
         result.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
@@ -1385,7 +1694,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     return;
                 }
                 write("/api/attendance-workspace/requests", "POST",
-                        json("type", unrecorded ? "MISSING_ATTENDANCE" : missing ? "MISSING_CHECKOUT" : "CONFIRMED_CORRECTION", "scheduleId", r.optLong("scheduleId"), "attendanceId",
+                        json("type", unrecorded ? "MISSING_ATTENDANCE" : missing ? "MISSING_CHECKOUT" : confirmed ? "CONFIRMED_CORRECTION" : "UNCONFIRMED_CORRECTION", "scheduleId", r.optLong("scheduleId"), "attendanceId",
                                 r.optLong("attendanceId"), "actualStart",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : start.value, "actualEnd",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : end.value,
