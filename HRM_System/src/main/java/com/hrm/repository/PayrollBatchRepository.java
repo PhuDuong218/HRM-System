@@ -11,6 +11,10 @@ import java.util.Optional;
 @Repository
 public interface PayrollBatchRepository extends JpaRepository<PayrollBatch, Long> {
 
+    @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+    @org.springframework.data.jpa.repository.Query("select b from PayrollBatch b where b.batchId=:id")
+    Optional<PayrollBatch> findForUpdate(@org.springframework.data.repository.query.Param("id") Long id);
+
     // Lấy tất cả các phiên bản của một kỳ lương
     List<PayrollBatch> findByPeriodId(Long periodId);
 

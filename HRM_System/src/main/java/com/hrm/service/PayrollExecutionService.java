@@ -25,6 +25,8 @@ import java.util.List;
 
 @Service
 public class PayrollExecutionService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private PayrollReadinessGuard readiness;
 
     private final PayrollBatchRepository batchRepository;
     private final PayrollPeriodRepository periodRepository;
@@ -58,7 +60,7 @@ public class PayrollExecutionService {
      */
     @Transactional
     public String calculateBatch(Long batchId) {
-        PayrollBatch batch = batchRepository.findById(batchId)
+        PayrollBatch batch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương với ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.NHAP) {
@@ -67,6 +69,8 @@ public class PayrollExecutionService {
 
         PayrollPeriod period = periodRepository.findById(batch.getPeriodId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kỳ lương ID: " + batch.getPeriodId()));
+
+        readiness.requireReady(batch.getPeriodId());
 
         // 1. Xóa các dữ liệu tính toán cũ của đợt này nếu có (để tính lại sạch sẽ)
         List<PayrollDetail> oldDetails = detailRepository.findByBatchId(batchId);

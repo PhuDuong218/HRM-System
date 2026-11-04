@@ -66,8 +66,9 @@ public class OvertimeCalendarService {
             need(!body.breaks().isEmpty()||body.noBreaksConfirmed(),"Xác nhận không nghỉ hoặc nhập các khoảng nghỉ thực tế; không tự lấy nghỉ dự kiến.");
             var rests=new ArrayList<>(body.breaks());
             if(rests.stream().anyMatch(b->b==null||b.breakStart()==null||b.breakEnd()==null))throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Thiếu ngày/giờ nghỉ thực tế.");
-            rests.sort(Comparator.comparing(BreakInput::breakStart));LocalDateTime last=o.actualStart();long minutes=0;
-            for(var b:rests){need(!b.breakStart().isBefore(last)&&b.breakEnd().isAfter(b.breakStart())&&!b.breakEnd().isAfter(time),"Khoảng nghỉ thực tế phải nằm trong giờ vào/ra và không chồng lấn.");minutes+=Duration.between(b.breakStart(),b.breakEnd()).toMinutes();last=b.breakEnd();}
+            rests.sort(Comparator.comparing(BreakInput::breakStart));LocalDateTime last=o.actualStart();Duration exactBreaks=Duration.ZERO;
+            for(var b:rests){need(!b.breakStart().isBefore(last)&&b.breakEnd().isAfter(b.breakStart())&&!b.breakEnd().isAfter(time),"Khoảng nghỉ thực tế phải nằm trong giờ vào/ra và không chồng lấn.");exactBreaks=exactBreaks.plus(Duration.between(b.breakStart(),b.breakEnd()));last=b.breakEnd();}
+            long minutes=exactBreaks.toMinutes();
             need(minutes<Duration.between(o.actualStart(),time).toMinutes(),"Thời gian làm thực tế phải lớn hơn thời gian nghỉ.");
             db.update("UPDATE dbo.overtime_breaks SET is_active=0 WHERE overtime_id=? AND is_active=1",id);
             for(var rest:rests)db.update("INSERT dbo.overtime_breaks(overtime_id,break_start,break_end,created_by) VALUES(?,?,?,?)",id,rest.breakStart(),rest.breakEnd(),actor.accountId());

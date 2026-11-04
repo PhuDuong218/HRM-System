@@ -70,6 +70,17 @@ public class OvertimeService {
             throw bad("Unknown employee");
     }
 
+
+    private void writable(LocalDateTime start,LocalDateTime end) {
+        if(start==null||end==null||!end.isAfter(start)) throw bad("Invalid OT interval");
+        Long count=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.payroll_periods p WITH(HOLDLOCK) JOIN dbo.payroll_batches b WITH(HOLDLOCK) ON b.period_id=p.period_id WHERE p.period_start<=? AND p.period_end>=? AND (b.locked_at IS NOT NULL OR b.published_at IS NOT NULL OR b.status='DA_CHOT')",Long.class,end.minusNanos(1).toLocalDate(),start.toLocalDate());
+        need(count!=null&&count==0,"Kỳ công/lương đã khóa hoặc công bố; không thể thay đổi OT.");
+    }
+    private void writable(OvertimeView value) {
+        writable(value.requestedStart(),value.requestedEnd());
+        if(value.actualStart()!=null) writable(value.actualStart(),value.actualEnd()==null?value.requestedEnd():value.actualEnd());
+    }
+
     private String snapshot(long id) {
         return db.queryForObject(
                 "SELECT (SELECT * FROM dbo.overtime_requests WHERE overtime_id=? FOR JSON PATH, WITHOUT_ARRAY_WRAPPER)",
@@ -111,6 +122,7 @@ public class OvertimeService {
         VerifiedActor a = perms.requireSelfRegistration(principal);
         OvertimePolicy.validateRequest(body.requestedStart(), body.requestedEnd(), body.reason());
         registrationWindow(body.requestedStart(),body.requestedEnd());
+        writable(body.requestedStart(),body.requestedEnd());
         lockEmployee(a.employeeId());
         checkRange(a.employeeId(), body.requestedStart(), body.requestedEnd(), -1,body.breaks());
         String code = "OT-" + UUID.randomUUID().toString().replace("-", "").substring(0, 20);
@@ -126,9 +138,11 @@ public class OvertimeService {
     public OvertimeView update(AuthenticatedAccount principal, long id, Register body) {
         OvertimeView v = locked(id);
         VerifiedActor a = perms.requireOwner(principal, v.employeeId());
+        writable(v);
         need("CHO_DUYET".equals(v.status()), "Only pending requests are editable");
         OvertimePolicy.validateRequest(body.requestedStart(), body.requestedEnd(), body.reason());
         registrationWindow(body.requestedStart(),body.requestedEnd());
+        writable(body.requestedStart(),body.requestedEnd());
         checkRange(v.employeeId(), body.requestedStart(), body.requestedEnd(), id,body.breaks());
         String before = snapshot(id);
         db.update("UPDATE dbo.overtime_requests SET requested_start=?,requested_end=?,reason=? WHERE overtime_id=?",
@@ -142,6 +156,7 @@ public class OvertimeService {
     public OvertimeView decide(AuthenticatedAccount principal, long id, boolean approve, String reason) {
         OvertimeView v = locked(id);
         VerifiedActor a = perms.requireApprove(principal, v.employeeId(), v.requestedStart().toLocalDate());
+        writable(v);
         need("CHO_DUYET".equals(v.status()), "Only pending requests can be decided");
         if (!approve && (reason == null || reason.isBlank()))
             throw bad("Rejection reason required");
@@ -159,26 +174,45 @@ public class OvertimeService {
 
     @Transactional("scheduleTransactionManager")
     public OvertimeView recordActual(AuthenticatedAccount principal, long id, Actual body) {
+        return recordActualInternal(principal,id,body,false,null);
+    }
+    @Transactional("scheduleTransactionManager")
+    public OvertimeView amendActual(AuthenticatedAccount principal,long id,Actual body,String expectedVersion) {
+        return recordActualInternal(principal,id,body,true,expectedVersion);
+    }
+    private OvertimeView recordActualInternal(AuthenticatedAccount principal,long id,Actual body,boolean amendment,String expectedVersion) {
         OvertimeView v = locked(id);
         VerifiedActor a = perms.requireOperate(principal, v.employeeId(), v.requestedStart().toLocalDate());
+        writable(v);
+        if(amendment){
+            byte[] expected;
+            try{expected=Base64.getDecoder().decode(expectedVersion);}catch(Exception ex){throw bad("A valid OT version is required");}
+            byte[] current=db.queryForObject("SELECT row_version FROM dbo.overtime_requests WITH(UPDLOCK,HOLDLOCK) WHERE overtime_id=?",byte[].class,id);
+            need(Arrays.equals(expected,current),"OT changed; reload before amending");
+            need(amendmentOpen(id),"Open a documented correction cycle before amending actual OT");
+        }
         need("DA_DUYET".equals(v.status()) && v.confirmedBy() == null, "Only unconfirmed approved OT can be recorded");
-        if (body.actualStart() == null || body.actualEnd() == null || !body.actualEnd().isAfter(body.actualStart()))
+        if (body == null || body.actualStart() == null || body.actualEnd() == null || !body.actualEnd().isAfter(body.actualStart()))
             throw bad("Invalid actual interval");
-        need(!actualRecorded(id), "Giờ OT thực tế đã được ghi nhận; không được ghi nhận lại.");
+        writable(body.actualStart(),body.actualEnd());
+        need(!body.actualEnd().isAfter(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"))),"Không ghi nhận giờ OT thực tế trong tương lai.");
+        need(amendment || (!actualRecorded(id)&&!amendmentOpen(id)), "Giờ OT thực tế đã được ghi nhận; không được ghi nhận lại.");
+        if(amendment && (body.reason()==null||body.reason().isBlank()||body.reason().length()>1000))throw bad("Amendment reason is required, maximum 1000 characters");
         int breaks = body.actualBreakMinutes() == null ? 0 : body.actualBreakMinutes();
         if (body.breaks() != null && !body.breaks().isEmpty()) {
             var intervals = new ArrayList<>(body.breaks());
             intervals.sort(Comparator.comparing(BreakInput::breakStart));
-            long total = 0;
+            Duration exactBreaks = Duration.ZERO;
             LocalDateTime lastEnd = null;
             for (BreakInput b : intervals) {
                 if (b.breakStart() == null || b.breakEnd() == null || !b.breakEnd().isAfter(b.breakStart())
                         || b.breakStart().isBefore(body.actualStart()) || b.breakEnd().isAfter(body.actualEnd())
                         || (lastEnd != null && b.breakStart().isBefore(lastEnd)))
                     throw bad("Invalid or overlapping detailed OT breaks");
-                total += Duration.between(b.breakStart(), b.breakEnd()).toMinutes();
+                exactBreaks = exactBreaks.plus(Duration.between(b.breakStart(), b.breakEnd()));
                 lastEnd = b.breakEnd();
             }
+            long total = exactBreaks.toMinutes();
             if (total > Integer.MAX_VALUE)
                 throw bad("Excessive break duration");
             if (body.actualBreakMinutes() != null && body.actualBreakMinutes() != total)
@@ -208,7 +242,7 @@ public class OvertimeService {
                         id, b.breakStart(), b.breakEnd(), a.accountId());
             }
         }
-        audit(a.accountId(), id, "OT_ACTUAL", body.reason(), before);
+        audit(a.accountId(), id, amendment?"OT_ACTUAL_AMEND":"OT_ACTUAL", body.reason(), before);
         return load(id);
     }
 
@@ -217,8 +251,10 @@ public class OvertimeService {
         OvertimeView v = locked(id);
         VerifiedActor a = perms.requireConfirm(principal, v.employeeId(), v.requestedStart().toLocalDate(),
                 v.processedBy() == null ? 0 : v.processedBy());
+        writable(v);
         need("DA_DUYET".equals(v.status()) && v.confirmedBy() == null && v.actualStart() != null
                 && v.actualEnd() != null, "OT is not ready for confirmation");
+        need(!amendmentOpen(id),"Save the opened OT amendment before confirming");
         checkedMinutes(v);
         String before = snapshot(id);
         db.update("UPDATE dbo.overtime_requests SET confirmed_by=?,confirmed_at=SYSUTCDATETIME() WHERE overtime_id=?",
@@ -328,6 +364,7 @@ public class OvertimeService {
         OvertimeView current = locked(id);
         VerifiedActor actor = perms.requireOperate(principal, current.employeeId(),
                 current.requestedStart().toLocalDate());
+        writable(current);
         need("DA_DUYET".equals(current.status()) && current.confirmedBy() != null
                 && current.actualStart() != null && current.actualEnd() != null,
                 "Only confirmed approved OT can be reopened");
@@ -414,6 +451,7 @@ public class OvertimeService {
         OvertimeView v = locked(id);
         if ("CHO_DUYET".equals(v.status())) {
             perms.requireOwner(principal, v.employeeId());
+            writable(v);
         } else if ("DA_DUYET".equals(v.status())) {
             throw conflict("Approved OT requires a separate employee cancellation request");
         } else {
@@ -442,6 +480,7 @@ public class OvertimeService {
         OvertimeView v = locked(id);
         VerifiedActor actor = perms.requireOverflowReview(principal, v.employeeId(),
                 v.requestedStart().toLocalDate());
+        writable(v);
         need("DA_DUYET".equals(v.status()) && v.actualStart() != null && v.actualEnd() != null,
                 "No approved request with actual time to review");
         boolean exceeds = v.actualStart().isBefore(v.requestedStart())
@@ -451,7 +490,11 @@ public class OvertimeService {
         return load(id);
     }
     public boolean actualRecorded(long id) {
-        Long count = db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.audit_logs WHERE target_table='overtime_requests' AND target_record_key=? AND action='OT_ACTUAL'", Long.class, Long.toString(id));
+        Long count = db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.audit_logs WHERE target_table='overtime_requests' AND target_record_key=? AND action IN ('OT_ACTUAL','OT_ACTUAL_AMEND')", Long.class, Long.toString(id));
         return count == null || count > 0;
+    }
+    public boolean amendmentOpen(long id) {
+        var rows=db.query("SELECT TOP(1) action FROM dbo.audit_logs WHERE target_table='overtime_requests' AND target_record_key=? AND action IN ('OT_REOPEN_CONFIRMATION','OT_ACTUAL','OT_ACTUAL_AMEND','OT_CONFIRM') ORDER BY occurred_at DESC,audit_id DESC",(rs,n)->rs.getString(1),Long.toString(id));
+        return !rows.isEmpty()&&"OT_REOPEN_CONFIRMATION".equals(rows.get(0));
     }
 }

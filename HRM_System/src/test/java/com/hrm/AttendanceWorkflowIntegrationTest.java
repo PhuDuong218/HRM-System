@@ -149,6 +149,9 @@ class AttendanceWorkflowIntegrationTest {
                                 existing,
                                 "Lich so 4 da co cham cong!");
 
+                // Match migration 005 in this legacy test database; DDL is rolled back with the fixture.
+                db.execute("IF COL_LENGTH('dbo.attendance_records','invalidated_at') IS NULL ALTER TABLE dbo.attendance_records ADD invalidated_at datetime2(3) NULL");
+                db.execute("IF COL_LENGTH('dbo.attendance_records','check_in_reviewed_at') IS NULL ALTER TABLE dbo.attendance_records ADD check_in_reviewed_at datetime2(3) NULL,check_out_reviewed_at datetime2(3) NULL,check_in_reviewed_value datetime2(7) NULL,check_out_reviewed_value datetime2(7) NULL");
                 // 6. Tao cham cong chua xac nhan
                 AttendanceInput input = new AttendanceInput(
                                 3L,
@@ -160,7 +163,10 @@ class AttendanceWorkflowIntegrationTest {
                                 "DI_LAM",
                                 "Kiem thu quy trinh cham cong");
 
-                AttendanceView created = service.createManual(input, TEST_ADMIN_ID);
+                // Fixture represents attendance already recorded by a clock source; this is not a production entry API.
+                long fixtureId=db.queryForObject("INSERT dbo.attendance_records(employee_id,schedule_id,work_date,actual_start,actual_end,actual_break_minutes,attendance_result,verification_status,created_by) OUTPUT INSERTED.attendance_id VALUES(?,?,?,?,?,?,?,'CHUA_XAC_NHAN',?)",Long.class,input.employeeId(),input.scheduleId(),input.workDate(),input.actualStart(),input.actualEnd(),input.actualBreakMinutes(),input.attendanceResult(),TEST_ADMIN_ID);
+                db.update("UPDATE dbo.attendance_records SET check_in_reviewed_value=actual_start,check_out_reviewed_value=actual_end,check_in_reviewed_at=SYSUTCDATETIME(),check_out_reviewed_at=SYSUTCDATETIME() WHERE attendance_id=?",fixtureId);
+                AttendanceView created=service.get(fixtureId);
 
                 assertEquals(
                                 "CHUA_XAC_NHAN",
@@ -178,13 +184,14 @@ class AttendanceWorkflowIntegrationTest {
                                 "DI_LAM",
                                 "Dieu chinh gio vao tu 14:10 thanh 14:05");
 
+                assertThrows(ResponseStatusException.class,()->service.correct(attendanceId,correction,TEST_ADMIN_ID));
                 AttendanceView corrected = service.correct(
                                 attendanceId,
-                                correction,
+                                new AttendanceCorrection(created.actualStart(),created.actualEnd(),45,"DI_LAM","Ghi chú đối soát, không sửa giờ"),
                                 TEST_ADMIN_ID);
 
                 assertEquals(
-                                LocalDateTime.of(2026, 10, 22, 14, 5),
+                                LocalDateTime.of(2026, 10, 22, 14, 10),
                                 corrected.actualStart());
 
                 assertEquals(
