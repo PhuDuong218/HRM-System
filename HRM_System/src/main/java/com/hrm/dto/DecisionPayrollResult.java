@@ -6,5 +6,6 @@ import java.util.List;
 
 public record DecisionPayrollResult(Long employeeId, Long periodId, LocalDate from, LocalDate to,
         List<DecisionPayrollLine> items, BigDecimal totalAdd, BigDecimal totalDeduct,
-        BigDecimal netAdjustment, String policyVersion) {
+        BigDecimal netAdjustment, String policyVersion,
+        BigDecimal totalCompensation) {
 }

@@ -51,6 +51,7 @@ public class DecisionPayrollService {
         List<DecisionPayrollLine> lines = new ArrayList<>();
         Set<Long> ids = new HashSet<>();
         for (var d : rows) {
+            DecisionRules.validate(d.getDecisionType(), d.getPayrollEffect(), d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
             if (d.getApprovalStatus() != DecisionApprovalStatus.DA_DUYET ||
                     !employeeId.equals(d.getEmployee().getEmployeeId()) ||
                     d.getPayrollEffect() == null || d.getPayrollEffect() == DecisionPayrollEffect.NONE ||
@@ -66,7 +67,7 @@ public class DecisionPayrollService {
                     d.getDecisionNumber(), d.getDecisionType(), d.getApplyDate(), d.getPayrollEffect(), d.getAmount()));
         }
         return new DecisionPayrollResult(employeeId, periodId, period.from(), period.to(), List.copyOf(lines),
-                add, deduct, add.subtract(deduct), policy.version());
+                add, deduct, add.subtract(deduct), policy.version(), deduct);
     }
 
     private BusinessException conflict(String m) {

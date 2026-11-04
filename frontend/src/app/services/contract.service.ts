@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { API_BASE_URL } from "./api.config";
 import {
   ContractCreateRequest,
+  ExpiringContractResponse,
+  EmployeeWithoutActiveContractResponse,
   ContractResponse,
   ContractStatus,
   ContractTypeResponse,
@@ -34,6 +36,18 @@ export class ContractService {
 
   get(id: number) {
     return this.http.get<ContractResponse>(`${API_BASE_URL}/contracts/${id}`);
+  }
+
+  expiring(days = 30, page = 0, size = 10) {
+    return this.http.get<PageResponse<ExpiringContractResponse>>(
+      `${API_BASE_URL}/contracts/expiring`, { params: { days, page, size } },
+    );
+  }
+
+  withoutActiveContract(page = 0, size = 10) {
+    return this.http.get<PageResponse<EmployeeWithoutActiveContractResponse>>(
+      `${API_BASE_URL}/employees/without-active-contract`, { params: { page, size } },
+    );
   }
 
   types() {

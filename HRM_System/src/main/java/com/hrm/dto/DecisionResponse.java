@@ -7,5 +7,6 @@ import com.hrm.enums.*;
 public record DecisionResponse(Long decisionId, Long employeeId, String decisionNumber,
         DecisionType decisionType, String content, LocalDate issuedDate, Long issuedBy,
         DecisionApprovalStatus approvalStatus, Long approvedBy, LocalDateTime approvedAt,
-        DecisionPayrollEffect payrollEffect, BigDecimal amount, LocalDate applyDate) {
+        DecisionPayrollEffect payrollEffect, BigDecimal amount, LocalDate applyDate,
+        DisciplineForm disciplineForm, LocalDate violationDate, Integer salaryIncreaseDelayMonths) {
 }

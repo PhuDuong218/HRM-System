@@ -14,5 +14,8 @@ public record DecisionRequest(
         @NotNull DecisionPayrollEffect payrollEffect,
         @DecimalMin("0.0001") @Digits(integer = 15, fraction = 4) BigDecimal amount,
         LocalDate applyDate,
-        @NotBlank @Size(max = 500) String reason) {
+        @NotBlank @Size(max = 500) String reason,
+        DisciplineForm disciplineForm,
+        LocalDate violationDate,
+        @Min(1) @Max(6) Integer salaryIncreaseDelayMonths) {
 }

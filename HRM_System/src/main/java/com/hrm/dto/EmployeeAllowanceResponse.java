@@ -3,7 +3,9 @@ package com.hrm.dto;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import com.hrm.enums.AllowanceCalculationBasis;
+import com.hrm.enums.AllowanceAmountType;
 
 public record EmployeeAllowanceResponse(Long employeeAllowanceId,Long employeeId,
     Long allowanceTypeId,String typeCode,String typeName,LocalDate effectiveFrom,
-    LocalDate effectiveTo,AllowanceCalculationBasis calculationBasis,BigDecimal amount,String conditionNote) {}
+    LocalDate effectiveTo,AllowanceCalculationBasis calculationBasis,BigDecimal amount,String conditionNote,
+    AllowanceAmountType amountType) {}

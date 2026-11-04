@@ -1,11 +1,13 @@
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
+import { employmentApiError } from '../../shared/employment-api-error';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Observable } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { Pagination } from '../../shared/pagination';
 import { RecordWorkspace } from '../../shared/record-workspace';
+import { SelectedRowScrollDirective } from '../../shared/selected-row-scroll.directive';
 import { DecisionService } from '../../services/decision.service';
 import { AllowanceService } from '../../services/allowance.service';
 import { Employee, EmployeeService, errorMessage } from '../../services/employee.service';
@@ -17,6 +19,7 @@ import {
   DecisionRequest,
   DecisionResponse,
   DecisionType,
+  DisciplineForm,
 } from '../../models/decision.model';
 
 type Tab = 'list' | 'payroll';
@@ -25,9 +28,9 @@ type Action = 'approve' | 'reject';
 @Component({
   selector: 'app-decisions',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, Pagination, RecordWorkspace],
+  imports: [FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './decisions.html',
-  styleUrl: '../work-module.css',
+  styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class DecisionsPage implements OnInit {
   private api = inject(DecisionService);
@@ -45,6 +48,7 @@ export class DecisionsPage implements OnInit {
   readonly typeLabels: Record<DecisionType, string> = {
     KHEN_THUONG: 'Khen thưởng',
     KY_LUAT: 'Kỷ luật',
+    BOI_THUONG: 'Bồi thường',
   };
   readonly statusLabels: Record<DecisionApprovalStatus, string> = {
     CHO_DUYET: 'Chờ duyệt',
@@ -56,6 +60,25 @@ export class DecisionsPage implements OnInit {
     ADD: 'Cộng vào lương',
     DEDUCT: 'Trừ vào lương',
   };
+  readonly disciplineLabels: Record<DisciplineForm, string> = {
+    KHIEN_TRACH: 'Khiển trách', KEO_DAI_NANG_LUONG: 'Kéo dài thời hạn nâng lương',
+    CACH_CHUC: 'Cách chức', SA_THAI: 'Sa thải',
+  };
+  readonly disciplineForms = Object.keys(this.disciplineLabels) as DisciplineForm[];
+  get allowedEffects(): DecisionPayrollEffect[] {
+    return this.form.decisionType === 'KY_LUAT' ? ['NONE']
+      : this.form.decisionType === 'BOI_THUONG' ? ['DEDUCT'] : ['NONE', 'ADD'];
+  }
+  onTypeChange(): void {
+    if (!this.allowedEffects.includes(this.form.payrollEffect)) this.form.payrollEffect = this.allowedEffects[0];
+    if (this.form.decisionType !== 'KY_LUAT') {
+      this.form.disciplineForm = null; this.form.violationDate = null; this.form.salaryIncreaseDelayMonths = null;
+    }
+    this.onEffectChange();
+  }
+  onDisciplineChange(): void {
+    if (this.form.disciplineForm !== 'KEO_DAI_NANG_LUONG') this.form.salaryIncreaseDelayMonths = null;
+  }
   readonly types = Object.keys(this.typeLabels) as DecisionType[];
   readonly statuses = Object.keys(this.statusLabels) as DecisionApprovalStatus[];
   readonly effects = Object.keys(this.effectLabels) as DecisionPayrollEffect[];
@@ -137,18 +160,7 @@ export class DecisionsPage implements OnInit {
   }
 
   private fail(error: HttpErrorResponse, fallback: string): string {
-    if (error.status === 0) return 'Không kết nối được backend. Hãy kiểm tra kết nối.';
-    if (error.status === 401) return 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.';
-    if (error.status === 403) return 'Tài khoản không có quyền thực hiện thao tác này.';
-    const detail = error.error?.loi_chi_tiet ?? error.error?.message;
-    if (typeof detail === 'string' && detail.trim()) return detail;
-    if (detail && typeof detail === 'object') {
-      const messages = Object.values(detail).filter(value => typeof value === 'string' && value.trim());
-      if (messages.length) return messages.join(' · ');
-    }
-    if (error.status === 404) return 'Không tìm thấy dữ liệu yêu cầu.';
-    if (error.status === 409) return 'Dữ liệu đã thay đổi hoặc chưa đủ điều kiện nghiệp vụ.';
-    return fallback;
+    return employmentApiError(error, fallback);
   }
 
   load(page = this.page): void {
@@ -208,6 +220,7 @@ export class DecisionsPage implements OnInit {
       amount: null,
       applyDate: null,
       reason: '',
+      disciplineForm: null, violationDate: null, salaryIncreaseDelayMonths: null,
     };
   }
 
@@ -234,6 +247,7 @@ export class DecisionsPage implements OnInit {
       payrollEffect: row.payrollEffect,
       amount: row.amount,
       applyDate: row.applyDate,
+      disciplineForm: row.disciplineForm, violationDate: row.violationDate, salaryIncreaseDelayMonths: row.salaryIncreaseDelayMonths,
       reason: '',
     };
     this.error = '';
@@ -269,10 +283,21 @@ export class DecisionsPage implements OnInit {
       amount: form.payrollEffect === 'NONE' ? null : (form.amount === null ? null : Number(form.amount)),
       applyDate: form.payrollEffect === 'NONE' ? null : (form.applyDate || null),
       reason: form.reason.trim(),
+      disciplineForm: form.disciplineForm, violationDate: form.violationDate, salaryIncreaseDelayMonths: form.salaryIncreaseDelayMonths,
     };
 
     this.error = '';
     this.message = '';
+    if (!this.allowedEffects.includes(body.payrollEffect)) {
+      this.error = 'Ảnh hưởng lương không phù hợp loại quyết định.'; return;
+    }
+    if (body.decisionType === 'KY_LUAT') {
+      if (!body.disciplineForm || !body.violationDate) { this.error = 'Kỷ luật bắt buộc hình thức và ngày vi phạm.'; return; }
+      if (body.disciplineForm === 'KEO_DAI_NANG_LUONG' &&
+          (!Number.isInteger(body.salaryIncreaseDelayMonths) || body.salaryIncreaseDelayMonths! < 1 || body.salaryIncreaseDelayMonths! > 6)) {
+        this.error = 'Kéo dài nâng lương phải từ 1 đến 6 tháng.'; return;
+      }
+    }
     if (!body.employeeId) {
       this.error = 'Vui lòng chọn nhân viên.';
       return;

@@ -31,23 +31,42 @@ public final class PostmanDemoServer {
         when(employees.existsById(anyLong())).thenAnswer(x->{long n=x.getArgument(0);return n==1||n==2;});
         var contractRepo=mock(ContractRepository.class);var typeRepo=mock(ContractTypeRepository.class);
         var c=contract(3,TODAY.withDayOfMonth(1),TODAY.withDayOfMonth(31));
+        var oneDayContract = contract(30, TODAY, TODAY);
+        oneDayContract.setEmployee(employee(2));
+        when(contractRepo.findById(30L)).thenReturn(Optional.of(oneDayContract));
         when(contractRepo.findById(3L)).thenReturn(Optional.of(c));when(typeRepo.findAll()).thenReturn(List.of(contractType()));
         when(contractRepo.findIntersecting(eq(1L),any(),any())).thenReturn(List.of(c));
         var termRepo=mock(ContractSalaryTermRepository.class);
         when(termRepo.findIntersecting(eq(1L),any(),any())).thenReturn(List.of(term(4,c,TODAY.withDayOfMonth(1),TODAY.withDayOfMonth(24),"10000000"),term(5,c,TODAY.withDayOfMonth(25),null,"12000000")));
-        var contractService=new ContractService(contractRepo,typeRepo,employees,mock(ContractAuditService.class),mock(PayrollHistoryGuard.class));
+        when(termRepo.saveAndFlush(any())).thenAnswer(call -> {
+            com.hrm.model.ContractSalaryTerm row = call.getArgument(0);
+            id(row, "salaryTermId", 6L);
+            return row;
+        });
+        var contractService=new ContractService(contractRepo,typeRepo,employees,mock(ContractAuditService.class),mock(PayrollHistoryGuard.class),new ContractTermPolicy(contractRepo,30,180,60,30,6));
+        var salaryTerms = new ContractSalaryTermService(contractRepo, employees, termRepo,
+                mock(PayrollHistoryGuard.class), mock(BusinessAuditService.class), CLOCK);
+        org.springframework.test.util.ReflectionTestUtils.setField(salaryTerms, "em", mock(jakarta.persistence.EntityManager.class));
         var rates=new SalaryRateService(employees,contractRepo,termRepo);
         var allowanceRepo=mock(EmployeeAllowanceRepository.class);var a=allowance(3,TODAY.withDayOfMonth(1),null,AllowanceCalculationBasis.THEO_NGAY_CONG,"30000");
         when(allowanceRepo.findByEmployee_EmployeeIdOrderByEffectiveFromAsc(1L)).thenReturn(List.of(a));
         when(allowanceRepo.findIntersecting(eq(1L),any(),any())).thenReturn(List.of(a));
-        var allowances=new EmployeeAllowanceService(allowanceRepo,mock(AllowanceTypeRepository.class),employees,mock(BusinessAuditService.class),mock(PayrollHistoryGuard.class),CLOCK);
+        var allowanceTypes = mock(AllowanceTypeRepository.class);
+        when(allowanceTypes.findByIdForUpdate(2L)).thenReturn(Optional.of(a.getAllowanceType()));
+        when(allowanceRepo.saveAndFlush(any())).thenAnswer(call -> {
+            com.hrm.model.EmployeeAllowance row = call.getArgument(0);
+            id(row, "employeeAllowanceId", 4L);
+            return row;
+        });
+        var allowances=new EmployeeAllowanceService(allowanceRepo,allowanceTypes,employees,mock(BusinessAuditService.class),mock(PayrollHistoryGuard.class),CLOCK);
+        org.springframework.test.util.ReflectionTestUtils.setField(allowances, "em", mock(jakarta.persistence.EntityManager.class));
         var periods=mock(AllowancePeriodReader.class);when(periods.get(8L)).thenReturn(new AllowancePeriod(8L,TODAY.withDayOfMonth(1),TODAY.withDayOfMonth(31)));
         AllowanceWorkSource syntheticWork=(employeeId,from,to)->{
             var days=new ArrayList<EligibleAllowanceDay>();
             for(LocalDate d=from;!d.isAfter(to);d=d.plusDays(1))days.add(new EligibleAllowanceDay(d,money("1"),money("8")));
             return new AllowanceWorkData(employeeId,from,to,days,"SYNTHETIC-DEMO-NOT-REAL-ATTENDANCE","TEST-ONLY-v1");
         };
-        var calculator=new AllowanceCalculationService(employees,allowanceRepo,periods,syntheticWork,"UNCONFIRMED","UNCONFIRMED");
+        var calculator=new AllowanceCalculationService(employees,allowanceRepo,periods,syntheticWork,rates,"UNCONFIRMED","UNCONFIRMED");
         var decisions=mock(EmployeeDecisionRepository.class);var state=new HashMap<Long,EmployeeDecision>();var sequence=new AtomicLong(100);
         var approved=decision(9,DecisionPayrollEffect.ADD);approved.setAmount(money("500000"));approved.setApprovalStatus(DecisionApprovalStatus.DA_DUYET);approved.setApprovedBy(20L);approved.setApprovedAt(java.time.LocalDateTime.now(CLOCK));
         var pending=decision(7,DecisionPayrollEffect.ADD);pending.setAmount(money("250000"));
@@ -64,9 +83,9 @@ public final class PostmanDemoServer {
         var decisionService=new EmployeeDecisionService(decisions,employees,actors,mock(DecisionAuditService.class),mock(PayrollHistoryGuard.class),policy,CLOCK);
         var jdbc=mock(JdbcTemplate.class);when(jdbc.queryForObject(anyString(),eq(Long.class),any(),any(),any())).thenReturn(0L);
         var payroll=new DecisionPayrollService(employees,decisions,periods,policy,jdbc);
-        return MockMvcBuilders.standaloneSetup(new ContractTypeController(new ContractTypeService(typeRepo)),
+        return MockMvcBuilders.standaloneSetup(new ContractTypeController(new ContractTypeService(typeRepo,mock(BusinessAuditService.class),CLOCK)),
             new ContractController(contractService,mock(ContractLifecycleService.class)),
-            new ContractSalaryTermController(mock(ContractSalaryTermService.class),rates),
+            new ContractSalaryTermController(salaryTerms,rates),
             new EmployeeAllowanceController(allowances),new AllowanceCalculationController(calculator),
             new EmployeeDecisionController(decisionService),new DecisionPayrollController(payroll,actors))
             .setControllerAdvice(new GlobalExceptionHandler()).build();

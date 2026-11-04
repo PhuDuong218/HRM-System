@@ -14,14 +14,54 @@ import static org.junit.jupiter.api.Assertions.*;
 import static com.hrm.duong.TestData.*;
 
 class EmployeeDecisionServiceTest {
+    DecisionRequest discipline(DisciplineForm form, Integer months, java.time.LocalDate violation, DecisionPayrollEffect effect) {
+        return new DecisionRequest(1L,"QD_NEW",DecisionType.KY_LUAT,"Test",TODAY,effect,null,null,"Test",form,violation,months);
+    }
+    @ParameterizedTest @EnumSource(DisciplineForm.class)
+    void disciplineRequiresNoMoneyAndPersistsDetails(DisciplineForm form) {
+        var r=service.create(discipline(form,form==DisciplineForm.KEO_DAI_NANG_LUONG?6:null,TODAY,DecisionPayrollEffect.NONE));
+        assertEquals(form,r.disciplineForm());assertEquals(TODAY,r.violationDate());assertNull(r.amount());
+    }
+    @Test void disciplineCannotAddOrDeduct() {
+        for(var effect:List.of(DecisionPayrollEffect.ADD,DecisionPayrollEffect.DEDUCT))
+            status(400,()->service.create(discipline(DisciplineForm.KHIEN_TRACH,null,TODAY,effect)));
+        verify(repo,never()).saveAndFlush(any());
+    }
+    @Test void disciplineRequiresFormAndViolationDate() {
+        status(400,()->service.create(discipline(null,null,TODAY,DecisionPayrollEffect.NONE)));
+        status(400,()->service.create(discipline(DisciplineForm.KHIEN_TRACH,null,null,DecisionPayrollEffect.NONE)));
+    }
+    @Test void delayMustBeOneToSixMonthsAndOnlyForDelayForm() {
+        for(Integer months:Arrays.asList(null,0,7)) status(400,()->service.create(discipline(DisciplineForm.KEO_DAI_NANG_LUONG,months,TODAY,DecisionPayrollEffect.NONE)));
+        assertEquals(1,service.create(discipline(DisciplineForm.KEO_DAI_NANG_LUONG,1,TODAY,DecisionPayrollEffect.NONE)).salaryIncreaseDelayMonths());
+        status(400,()->service.create(discipline(DisciplineForm.CACH_CHUC,1,TODAY,DecisionPayrollEffect.NONE)));
+    }
+    @Test void rewardCannotDeductAndCompensationRequiresDeduct() {
+        status(400,()->service.create(new DecisionRequest(1L,"NEW",DecisionType.KHEN_THUONG,"Test",TODAY,DecisionPayrollEffect.DEDUCT,money("10"),TODAY,"Test",null,null,null)));
+        for(var effect:List.of(DecisionPayrollEffect.NONE,DecisionPayrollEffect.ADD))
+            status(400,()->service.create(new DecisionRequest(1L,"NEW",DecisionType.BOI_THUONG,"Test",TODAY,effect,money("10"),TODAY,"Test",null,null,null)));
+        assertEquals(DecisionType.BOI_THUONG,service.create(decisionRequest(DecisionPayrollEffect.DEDUCT)).decisionType());
+    }
+    @Test void updateAndReviewAlsoEnforceNewRules() {
+        var bad=new DecisionRequest(1L,"QD3",DecisionType.KY_LUAT,"Test",TODAY,DecisionPayrollEffect.DEDUCT,money("10"),TODAY,"Test",DisciplineForm.KHIEN_TRACH,TODAY,null);
+        status(400,()->service.update(3L,bad));
+        row.setDecisionType(DecisionType.KY_LUAT);
+        status(400,()->service.approve(3L,new DecisionActionRequest("Test")));
+        verify(repo,never()).saveAndFlush(any());
+    }
+    @Test void compensationRequiresPositiveMoneyAndApplyDate() {
+        for(var amount:Arrays.asList(null,money("0"),money("-1")))
+            status(400,()->service.create(new DecisionRequest(1L,"NEW",DecisionType.BOI_THUONG,"Test",TODAY,DecisionPayrollEffect.DEDUCT,amount,TODAY,"Test",null,null,null)));
+        status(400,()->service.create(new DecisionRequest(1L,"NEW",DecisionType.BOI_THUONG,"Test",TODAY,DecisionPayrollEffect.DEDUCT,money("1"),null,"Test",null,null,null)));
+    }
     EmployeeDecisionRepository repo;EmployeeRepository employees;DecisionActorProvider actors;DecisionAuditService audit;PayrollHistoryGuard history;EmployeeDecisionService service;EmployeeDecision row;
     @BeforeEach void setup(){repo=mock(EmployeeDecisionRepository.class);employees=mock(EmployeeRepository.class);actors=mock(DecisionActorProvider.class);audit=mock(DecisionAuditService.class);history=mock(PayrollHistoryGuard.class);row=decision(3,DecisionPayrollEffect.ADD);when(employees.findByIdForUpdate(1L)).thenReturn(Optional.of(row.getEmployee()));when(actors.requireManager()).thenReturn(new DecisionActor(20L,200L));when(repo.findById(3L)).thenReturn(Optional.of(row));when(repo.findEmployeeIdById(3L)).thenReturn(Optional.of(1L));when(repo.findByIdForUpdate(3L)).thenReturn(Optional.of(row));when(repo.saveAndFlush(any())).thenAnswer(x->{var d=(EmployeeDecision)x.getArgument(0);if(d.getDecisionId()==null)id(d,"decisionId",4);return d;});service=service("TEST-ONLY-v1");}
     EmployeeDecisionService service(String version){return new EmployeeDecisionService(repo,employees,actors,audit,history,new DecisionPayrollPolicy(version),CLOCK);}
     @Test void createIsAlwaysPendingWithServerActor(){var r=service.create(decisionRequest(DecisionPayrollEffect.NONE));assertEquals(DecisionApprovalStatus.CHO_DUYET,r.approvalStatus());assertEquals(20L,r.issuedBy());assertNull(r.approvedBy());assertNull(r.approvedAt());verify(audit).record(eq(20L),eq(4L),eq("DECISION_CREATE"),anyString(),isNull(),any());}
     @Test void duplicateNumberIs409(){when(repo.existsByDecisionNumber("QD_NEW")).thenReturn(true);status(409,()->service.create(decisionRequest(DecisionPayrollEffect.NONE)));verify(repo,never()).saveAndFlush(any());}
-    @Test void noneMustNotHaveMoneyOrApplyDate(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"NONE",r.decisionType(),r.content(),TODAY,DecisionPayrollEffect.NONE,r.amount(),r.applyDate(),"Test")));}
-    @Test void moneyRequiresPositiveAmountAndDate(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),money("0"),TODAY,"Test")));status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),r.amount(),null,"Test")));}
-    @Test void applyDateCannotPrecedeIssue(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),r.amount(),TODAY.minusDays(1),"Test")));}
+    @Test void noneMustNotHaveMoneyOrApplyDate(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"NONE",r.decisionType(),r.content(),TODAY,DecisionPayrollEffect.NONE,r.amount(),r.applyDate(),"Test",null,null,null)));}
+    @Test void moneyRequiresPositiveAmountAndDate(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),money("0"),TODAY,"Test",null,null,null)));status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),r.amount(),null,"Test",null,null,null)));}
+    @Test void applyDateCannotPrecedeIssue(){var r=decisionRequest(DecisionPayrollEffect.ADD);status(400,()->service.create(new DecisionRequest(1L,"BAD",r.decisionType(),r.content(),TODAY,r.payrollEffect(),r.amount(),TODAY.minusDays(1),"Test",null,null,null)));}
     @Test void issuerCannotApproveOwnDecision(){when(actors.requireManager()).thenReturn(new DecisionActor(10L,100L));status(403,()->service.approve(3L,new DecisionActionRequest("Test")));verify(repo,never()).saveAndFlush(any());}
     @Test void recipientCannotReviewOwnDecision(){when(actors.requireManager()).thenReturn(new DecisionActor(20L,1L));status(403,()->service.reject(3L,new DecisionActionRequest("Test")));}
     @Test void unconfirmedMoneyPolicyDoesNotChangeApprovalFields(){status(409,()->service("UNCONFIRMED").approve(3L,new DecisionActionRequest("Test")));assertEquals(DecisionApprovalStatus.CHO_DUYET,row.getApprovalStatus());assertNull(row.getApprovedBy());assertNull(row.getApprovedAt());}

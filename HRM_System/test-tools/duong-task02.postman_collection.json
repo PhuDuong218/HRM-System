@@ -1,0 +1,669 @@
+{
+  "info": {
+    "name": "Dương - Nhiệm vụ 2 - Loại hợp đồng",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Chạy thủ công trên DB test đã nâng cấp 012. Mỗi ca 201 cần nhân viên/khoảng chưa có dữ liệu chồng; không chạy cả collection trên một employeeId. Gia hạn phải thiết lập lịch sử theo tài liệu task02. Không gọi database chính."
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [
+      {
+        "key": "token",
+        "value": "{{token}}",
+        "type": "string"
+      }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:2005"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": "1"
+    },
+    {
+      "key": "fixedTypeId",
+      "value": "1"
+    },
+    {
+      "key": "indefiniteTypeId",
+      "value": "1"
+    },
+    {
+      "key": "probationTypeId",
+      "value": "1"
+    },
+    {
+      "key": "contractId",
+      "value": "1"
+    },
+    {
+      "key": "oldContractId",
+      "value": "1"
+    }
+  ],
+  "item": [
+    {
+      "name": "Loại XAC_DINH max=36",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contract-types",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"typeCode\": \"T_{{$timestamp}}_{{$randomInt}}\",\n  \"typeName\": \"Task02 XAC_DINH\",\n  \"isActive\": true,\n  \"termKind\": \"XAC_DINH\",\n  \"maxMonths\": 36,\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loại KHONG_XAC_DINH max=null",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contract-types",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"typeCode\": \"T_{{$timestamp}}_{{$randomInt}}\",\n  \"typeName\": \"Task02 KHONG_XAC_DINH\",\n  \"isActive\": true,\n  \"termKind\": \"KHONG_XAC_DINH\",\n  \"maxMonths\": null,\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loại THU_VIEC max=null",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contract-types",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"typeCode\": \"T_{{$timestamp}}_{{$randomInt}}\",\n  \"typeName\": \"Task02 THU_VIEC\",\n  \"isActive\": true,\n  \"termKind\": \"THU_VIEC\",\n  \"maxMonths\": null,\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Loại XAC_DINH max=37",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contract-types",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"typeCode\": \"T_{{$timestamp}}_{{$randomInt}}\",\n  \"typeName\": \"Task02 XAC_DINH\",\n  \"isActive\": true,\n  \"termKind\": \"XAC_DINH\",\n  \"maxMonths\": 37,\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Xác định đúng 36 tháng",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{fixedTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2029-12-31\",\n  \"probationGroup\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Xác định vượt 36 tháng một ngày",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{fixedTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2030-01-01\",\n  \"probationGroup\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Xác định thiếu ngày cuối",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{fixedTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": null,\n  \"probationGroup\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Không xác định hợp lệ",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{indefiniteTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": null,\n  \"probationGroup\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Không xác định có ngày cuối",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{indefiniteTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2029-12-31\",\n  \"probationGroup\": null\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc QUAN_LY_DN 180 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-06-29\",\n  \"probationGroup\": \"QUAN_LY_DN\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc QUAN_LY_DN 181 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-06-30\",\n  \"probationGroup\": \"QUAN_LY_DN\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc CAO_DANG_TRO_LEN 60 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-03-01\",\n  \"probationGroup\": \"CAO_DANG_TRO_LEN\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc CAO_DANG_TRO_LEN 61 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-03-02\",\n  \"probationGroup\": \"CAO_DANG_TRO_LEN\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc TRUNG_CAP_NGHIEP_VU 30 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-01-30\",\n  \"probationGroup\": \"TRUNG_CAP_NGHIEP_VU\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc TRUNG_CAP_NGHIEP_VU 31 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-01-31\",\n  \"probationGroup\": \"TRUNG_CAP_NGHIEP_VU\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc CONG_VIEC_KHAC 6 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-01-06\",\n  \"probationGroup\": \"CONG_VIEC_KHAC\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Thử việc CONG_VIEC_KHAC 7 ngày (nhân viên riêng)",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"employeeId\": {{employeeId}},\n  \"contractTypeId\": {{probationTypeId}},\n  \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n  \"signedDate\": \"2026-11-03\",\n  \"startDate\": \"2027-01-01\",\n  \"endDate\": \"2027-01-07\",\n  \"probationGroup\": \"CONG_VIEC_KHAC\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 400\", () => pm.response.to.have.status(400));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Gia hạn - cấu hình lịch sử lần 2/3 trước khi chạy",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts/{{oldContractId}}/renew",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"newContract\": {\n    \"employeeId\": {{employeeId}},\n    \"contractTypeId\": {{fixedTypeId}},\n    \"contractNumber\": \"HD_{{$timestamp}}_{{$randomInt}}\",\n    \"signedDate\": \"2026-11-03\",\n    \"startDate\": \"2027-02-01\",\n    \"endDate\": \"2027-02-28\",\n    \"probationGroup\": null\n  },\n  \"reason\": \"Task02: sửa ngày theo lịch sử thử riêng\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 409\", () => pm.response.to.have.status(409));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Đúng 85%",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts/{{contractId}}/salary-terms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"effectiveFrom\": \"2027-01-01\",\n  \"effectiveTo\": \"2027-01-10\",\n  \"baseSalary\": 8500000,\n  \"payBasis\": \"THANG\",\n  \"officialReferenceSalary\": 10000000,\n  \"officialReferencePayBasis\": \"THANG\",\n  \"documentReference\": \"TASK02\",\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Dưới 85%, warning",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts/{{contractId}}/salary-terms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"effectiveFrom\": \"2027-01-01\",\n  \"effectiveTo\": \"2027-01-10\",\n  \"baseSalary\": 8499999.9999,\n  \"payBasis\": \"THANG\",\n  \"officialReferenceSalary\": 10000000,\n  \"officialReferencePayBasis\": \"THANG\",\n  \"documentReference\": \"TASK02\",\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Trên 85%",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts/{{contractId}}/salary-terms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"effectiveFrom\": \"2027-01-01\",\n  \"effectiveTo\": \"2027-01-10\",\n  \"baseSalary\": 9000000,\n  \"payBasis\": \"THANG\",\n  \"officialReferenceSalary\": 10000000,\n  \"officialReferencePayBasis\": \"THANG\",\n  \"documentReference\": \"TASK02\",\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "Khác đơn vị, warning",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": "{{baseUrl}}/contracts/{{contractId}}/salary-terms",
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"effectiveFrom\": \"2027-01-01\",\n  \"effectiveTo\": \"2027-01-10\",\n  \"baseSalary\": 1,\n  \"payBasis\": \"THANG\",\n  \"officialReferenceSalary\": 10000000,\n  \"officialReferencePayBasis\": \"GIO\",\n  \"documentReference\": \"TASK02\",\n  \"reason\": \"Task02\"\n}"
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test(\"HTTP 201\", () => pm.response.to.have.status(201));"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}
