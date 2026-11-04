@@ -1,3 +1,4 @@
+import {AttendanceActualBreaksComponent} from '../../shared/attendance-actual-breaks';
 import {PersonalCalendarComponent} from '../../shared/personal-calendar';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {OtSupplementPanelComponent} from '../../shared/ot-supplement-panel';
@@ -15,7 +16,7 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports: [PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports: [AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })
@@ -33,9 +34,9 @@ export class AttendancePage implements OnInit {
     mode: 'view' | 'manual' | 'edit' | 'proposal' | 'unconfirm' = 'view';
     actualStart = ''; actualEnd = ''; breakMinutes = 0; result = 'DI_LAM'; reason = '';
     requestRows: AttendanceRequest[] = []; requestDetail: RequestDetail | null = null;
-    requestsMine = false; requestFrom = this.date(-30); requestTo = this.date(); requestType = ''; requestStatus = 'CHO_XU_LY';
+    requestsMine = false; requestFrom = this.date(-30); requestTo = this.date(); requestType = ''; requestStatus = 'ACTIVE';
     requestPage = 0; requestPages = 0; requestTotal = 0; requestLoading = false; requestDetailLoading = false;
-    acceptedEnd = ''; decisionReason = '';
+    acceptedStart = ''; adjustmentReason = ''; acceptedEnd = ''; decisionReason = '';
     private notificationQueue: string[] = [];
     private notificationTimer: Subscription | null = null;
     private notificationStartedAt = 0;
@@ -87,6 +88,7 @@ export class AttendancePage implements OnInit {
     private detailVersion = 0;
     private todayVersion = 0;
     private requestVersion = 0;
+    private requestListVersion = 0;
     get busy(): boolean { return this.saving || this.loading || this.requestLoading; }
 
     ngOnInit(): void {
@@ -104,8 +106,8 @@ export class AttendancePage implements OnInit {
     date(offset = 0): string { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     time(v: string | null | undefined): string { return v ? v.replace('T', ' ').slice(0, 19) : '—'; }
     utc(v: string | null | undefined): string { if (!v) return '—'; const d = new Date(v.endsWith('Z') ? v : v + 'Z'); return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(d); }
-    label(value: string | null | undefined): string { return ({ CHUA_XAC_NHAN: 'Chưa xác nhận', DA_XAC_NHAN: 'Đã xác nhận', DI_LAM: 'Đi làm', VANG: 'Vắng', DI_MUON: 'Đi muộn', VE_SOM: 'Về sớm', THIEU_VAO: 'Thiếu giờ vào', THIEU_RA: 'Thiếu giờ ra', NGOAI_LICH: 'Giờ ngoài lịch', CHONG_LAN: 'Chồng lấn công khác', CHO_XU_LY: 'Chờ xử lý', DANG_XU_LY: 'Đang xử lý', DA_CHAP_NHAN: 'Đã chấp nhận', TU_CHOI: 'Từ chối', MISSING_CHECKOUT: 'Bổ sung check-out', CONFIRMED_CORRECTION: 'Sửa công đã xác nhận' } as Record<string, string>)[value ?? ''] ?? (value || 'Chưa có công'); }
-    actionLabel(action: string): string { return ({ ATTENDANCE_CREATE: 'Nhập công', ATTENDANCE_CORRECT: 'Sửa công', ATTENDANCE_CONFIRM: 'Xác nhận', ATTENDANCE_UNCONFIRM: 'Hủy xác nhận', ATTENDANCE_SELF_CHECK_IN: 'Check-in', ATTENDANCE_SELF_CHECK_OUT: 'Check-out', ATTENDANCE_REQUEST_SUBMITTED: 'Gửi yêu cầu', ATTENDANCE_REQUEST_RECEIVED: 'Tiếp nhận', ATTENDANCE_REQUEST_APPROVED: 'Chấp nhận', ATTENDANCE_REQUEST_REJECTED: 'Từ chối', ATTENDANCE_PORTAL_REQUEST_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_CORRECTION_APPLIED: 'Áp dụng điều chỉnh' } as Record<string, string>)[action] ?? action; }
+    label(value: string | null | undefined): string { return ({ CHUA_XAC_NHAN: 'Chưa xác nhận', DA_XAC_NHAN: 'Đã xác nhận', DI_LAM: 'Đi làm', VANG: 'Vắng', DI_MUON: 'Đi muộn', VE_SOM: 'Về sớm', THIEU_VAO: 'Thiếu giờ vào', THIEU_RA: 'Thiếu giờ ra', NGOAI_LICH: 'Giờ ngoài lịch', CHONG_LAN: 'Chồng lấn công khác', CHO_XU_LY: 'Chờ xử lý', DANG_XU_LY: 'Đã tiếp nhận', DA_CHAP_NHAN: 'Đã chấp nhận', TU_CHOI: 'Từ chối', MISSING_ATTENDANCE: 'Bổ sung giờ vào/ra', MISSING_CHECKOUT: 'Bổ sung check-out', CONFIRMED_CORRECTION: 'Sửa công đã xác nhận' } as Record<string, string>)[value ?? ''] ?? (value || 'Chưa có công'); }
+    actionLabel(action: string): string { return ({ ATTENDANCE_CREATE: 'Nhập công', ATTENDANCE_CORRECT: 'Sửa công', ATTENDANCE_CONFIRM: 'Xác nhận', ATTENDANCE_UNCONFIRM: 'Hủy xác nhận', ATTENDANCE_SELF_CHECK_IN: 'Check-in', ATTENDANCE_SELF_CHECK_OUT: 'Check-out', ATTENDANCE_REQUEST_SUBMITTED: 'Gửi yêu cầu', ATTENDANCE_REQUEST_RECEIVED: 'Tiếp nhận', ATTENDANCE_REQUEST_APPROVED: 'Chấp nhận', ATTENDANCE_REQUEST_REJECTED: 'Từ chối', ATTENDANCE_PORTAL_REQUEST_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_CORRECTION_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_ACTUAL_BREAKS: 'Đối soát khoảng nghỉ thực tế' } as Record<string, string>)[action] ?? action; }
     shiftState(r: AttendanceRow): string { if (r.actualEnd) return 'Đã check-out'; if (r.actualStart) return r.anomalies.includes('THIEU_RA') ? 'Thiếu check-out' : 'Đã check-in'; if (r.canCheckIn) return 'Được check-in'; return this.context && r.plannedStart > this.context.serverNow ? 'Chưa đến giờ' : 'Chưa ghi nhận giờ vào'; }
 
     ownRequestOpen=false;ownRequestLoading=false;ownRequestRows:AttendanceRow[]=[];ownRequestFrom=this.date(-7);ownRequestTo=this.date();ownRequestPage=0;ownRequestPages=0;ownSchedule='';private ownRequestVersion=0;
@@ -193,7 +195,7 @@ export class AttendancePage implements OnInit {
     }
 
     resultChanged(): void { if (this.result === 'VANG') { this.actualStart = ''; this.actualEnd = ''; this.breakMinutes = 0; } }
-    get missingCheckoutProposal(): boolean { return this.mode === 'proposal' && this.detail?.row.verificationStatus !== 'DA_XAC_NHAN'; }
+    get missingCheckoutProposal(): boolean { return this.mode === 'proposal' && this.detail?.row.attendanceId != null && this.detail?.row.verificationStatus !== 'DA_XAC_NHAN'; }
 
     private formData(): Correction | null {
         if (!this.reason.trim() || this.reason.length > 1000) { this.actionError = 'Nhập lý do, tối đa 1000 ký tự.'; return null; }
@@ -221,15 +223,15 @@ export class AttendancePage implements OnInit {
         request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
             next: () => {
                 this.saving = false; this.notify(success); this.mode = 'view';
-                if (this.tab === 'requests') { if(this.ownRequestOpen){this.requestsMine=true;this.requestFrom=this.ownRequestFrom;this.requestTo=this.ownRequestTo;this.requestType='';this.requestStatus='CHO_XU_LY';this.closeOwnRequest();this.requestPage=0;} this.loadRequests(false); if (requestId) this.viewRequestId(requestId); } else { this.loadRecords(); if (this.tab === 'mine') this.loadToday(); if (row) this.view(row); }
+                if (this.tab === 'requests') { if(this.ownRequestOpen){this.requestsMine=true;this.requestFrom=this.ownRequestFrom;this.requestTo=this.ownRequestTo;this.requestType='';this.requestStatus='ACTIVE';this.closeOwnRequest();this.requestPage=0;} this.loadRequests(false); if (requestId) this.viewRequestId(requestId); } else { this.loadRecords(); if (this.tab === 'mine') this.loadToday(); if (row) this.view(row); }
             }, error: e => this.actionError = this.api.message(e)
         });
     }
 
     loadRequests(reset = true): void {
-        if (this.saving || this.requestLoading) return; if (!this.validRange(this.requestFrom, this.requestTo)) { this.error = 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.'; return; }
-        if (reset) this.requestPage = 0; this.requestLoading = true; this.error = '';
-        this.api.requests(this.requestsMine, this.requestFrom, this.requestTo, this.requestType, this.requestStatus, this.requestPage).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.requestLoading = false)).subscribe({ next: r => { this.requestRows = r.items; this.requestTotal = r.totalElements; this.requestPages = r.totalPages; this.requestPage = r.page; }, error: e => { this.requestRows = []; this.requestTotal = 0; this.requestPages = 0; this.error = this.api.message(e); } });
+        if (this.saving) return; if (!this.validRange(this.requestFrom, this.requestTo)) { this.error = 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.'; return; }
+        if (reset) this.requestPage = 0; const version=++this.requestListVersion; this.requestLoading = true; this.error = '';
+        this.api.requests(this.requestsMine, this.requestFrom, this.requestTo, this.requestType, this.requestStatus, this.requestPage).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => {if(version===this.requestListVersion)this.requestLoading = false;})).subscribe({ next: r => { if(version!==this.requestListVersion)return; this.requestRows = r.items; this.requestTotal = r.totalElements; this.requestPages = r.totalPages; this.requestPage = r.page; }, error: e => { if(version!==this.requestListVersion)return; this.requestRows = []; this.requestTotal = 0; this.requestPages = 0; this.error = this.api.message(e); } });
     }
 
     requestScopeChanged(): void { this.requestDetail = null; ++this.requestVersion; this.loadRequests(); }
@@ -238,15 +240,26 @@ export class AttendancePage implements OnInit {
 
     private viewRequestId(id: number): void {
         if (this.saving) return; const version = ++this.requestVersion; this.requestDetailLoading = true; this.actionError = ''; this.requestDetail = null;
-        this.api.request(id, this.requestsMine).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => { if (version !== this.requestVersion) return; this.requestDetail = d; this.requestDetailLoading = false; this.acceptedEnd = d.request.proposedEnd ?? ''; this.decisionReason = ''; }, error: e => { if (version === this.requestVersion) { this.requestDetailLoading = false; this.actionError = this.api.message(e); } } });
+        this.api.request(id, this.requestsMine).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => { if (version !== this.requestVersion) return; this.requestDetail = d; if(this.detail?.row.scheduleId===d.current.row.scheduleId)this.detail=d.current; this.requestDetailLoading = false; this.acceptedStart=d.request.proposedStart ?? ''; this.adjustmentReason=''; this.acceptedEnd = d.request.proposedEnd ?? ''; this.decisionReason = ''; }, error: e => { if (version === this.requestVersion) { this.requestDetailLoading = false; this.actionError = this.api.message(e); } } });
     }
 
-    receive(): void { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if (window.confirm('Tiếp nhận yêu cầu này để xử lý?')) this.mutate(this.api.receive(r.requestId), 'Đã tiếp nhận yêu cầu.', undefined, r.requestId); }
+    receive(): void { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if (window.confirm('Tiếp nhận yêu cầu này để xử lý?')) {if(this.requestStatus==='CHO_XU_LY')this.requestStatus='ACTIVE';this.mutate(this.api.receive(r.requestId), 'Đã tiếp nhận yêu cầu.', undefined, r.requestId);} }
 
     decide(approve: boolean): void {
         const r = this.requestDetail?.request; if (!r?.canDecide || this.saving) return;
         const end = this.acceptedEnd || null;
-        if ((!approve || end !== r.proposedEnd) && !this.decisionReason.trim() || this.decisionReason.length > 1000) { this.actionError = 'Từ chối hoặc duyệt giờ ra khác đề xuất phải nhập lý do, tối đa 1000 ký tự.'; return; }
-        if (window.confirm(approve ? 'Chấp nhận và áp dụng điều chỉnh công?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.')) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
+        if (!approve && !this.decisionReason.trim() || this.decisionReason.length > 1000) { this.actionError = 'Từ chối hoặc duyệt giờ ra khác đề xuất phải nhập lý do, tối đa 1000 ký tự.'; return; }
+        if(approve && ((this.acceptedStart||null)!==r.proposedStart || end!==r.proposedEnd) && !this.adjustmentReason.trim()){this.actionError='Nhập lý do điều chỉnh giờ riêng.';return;}
+        if (window.confirm(approve ? 'Chấp nhận và áp dụng điều chỉnh công?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.')) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim(), this.acceptedStart||null, this.adjustmentReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
+    }
+    markAbsent(row: AttendanceRow): void {
+        if(!row.canMarkAbsent || this.saving)return;
+        const reason=window.prompt('Lý do ghi nhận vắng sau khi đã hết hạn giải trình:');
+        if(!reason?.trim())return;
+        if(window.confirm('Ghi nhận vắng, không sinh giờ công? Bản ghi cần người độc lập xác nhận.')) this.mutate(this.api.markAbsent(row,reason.trim()),'Đã ghi nhận vắng, chờ xác nhận độc lập.');
+    }
+    openEntryRequest(row: AttendanceRow): void {
+        if(!row.entryRequestId || this.saving)return;
+        this.tab='requests';this.requestsMine=false;this.viewRequestId(row.entryRequestId);
     }
 }

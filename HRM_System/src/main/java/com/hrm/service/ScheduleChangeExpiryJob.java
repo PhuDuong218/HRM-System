@@ -10,7 +10,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 /** Expires outstanding change requests after the original shift start. */
 @Service
-@ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true")
 public class ScheduleChangeExpiryJob {
     private final JdbcTemplate db;
 
