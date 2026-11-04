@@ -1,12 +1,25 @@
 <p class="eyebrow">HRM CENTER</p>
-<h1>Quản lý Tiền lương</h1>
-<p class="page-description">Vận hành chu trình tính lương, đối soát số liệu và phát hành phiếu lương kế toán.</p>
+<h1>Quản lý & Thống kê Tiền lương</h1>
+<p class="page-description">Vận hành đợt lương, đối soát số liệu đa chiều, tra cứu lịch sử nhân viên và chi phí phòng ban.</p>
 
-<!-- KHỐI ĐIỀU KHIỂN CHU TRÌNH NGHIỆP VỤ -->
+<!-- THANH CHUYỂN ĐỔI CHẾ ĐỘ XEM -->
+<nav class="d-flex gap-2 mb-4">
+  <button class="btn" [class.btn-primary]="activeTab === 'batch'" [class.btn-outline-secondary]="activeTab !== 'batch'" (click)="activeTab = 'batch'">
+    ⚡ Đợt lương theo kỳ
+  </button>
+  <button class="btn" [class.btn-primary]="activeTab === 'employee-history'" [class.btn-outline-secondary]="activeTab !== 'employee-history'" (click)="activeTab = 'employee-history'">
+    👤 Bộ lọc & Lịch sử nhân viên
+  </button>
+  <button class="btn" [class.btn-primary]="activeTab === 'department-summary'" [class.btn-outline-secondary]="activeTab !== 'department-summary'" (click)="activeTab = 'department-summary'">
+    🏢 Chi phí theo phòng ban
+  </button>
+</nav>
+
+<!-- TAB 1 & 2: KHỐI CHỌN KỲ & VẬN HÀNH -->
 <section class="surface mb-4">
   <div class="row g-3 align-items-center">
     <div class="col-md-5">
-      <label class="form-label fw-bold mb-1">Chọn kỳ tính lương:</label>
+      <label class="form-label fw-bold mb-1">Kỳ tính lương:</label>
       <select class="form-select" [(ngModel)]="selectedPeriodId" (change)="onPeriodChange()">
         @for (period of periods; track period.periodId) {
           <option [value]="period.periodId">
@@ -17,7 +30,7 @@
     </div>
 
     <div class="col-md-3">
-      <label class="form-label fw-bold mb-1">Trạng thái đợt lương:</label>
+      <label class="form-label fw-bold mb-1">Trạng thái đợt:</label>
       <div>
         @if (currentBatch?.status === 'DA_CHOT') {
           <span class="badge status-locked py-2 px-3">ĐÃ CHỐT (v{{ currentBatch?.versionNo }})</span>
@@ -32,30 +45,26 @@
     <div class="col-md-4 text-md-end pt-3">
       <div class="d-flex justify-content-md-end gap-2 flex-wrap">
         <button class="btn btn-outline-primary" [disabled]="loading || (currentBatch && currentBatch.status === 'NHAP')" (click)="createDraft()">
-          + Tạo đợt lương
+          + Tạo đợt
         </button>
         <button class="btn btn-primary" [disabled]="loading || currentBatch?.status === 'DA_CHOT'" (click)="calculate()">
           ⚡ Tính tự động
         </button>
         <button class="btn btn-primary" [disabled]="loading || details.length === 0 || currentBatch?.status === 'DA_CHOT'" (click)="lock()">
-          🔒 Chốt lương
+          🔒 Chốt
         </button>
         <button class="btn btn-outline-primary" [disabled]="loading || currentBatch?.status !== 'DA_CHOT'" (click)="publish()">
           Công bố
         </button>
         <button class="btn btn-outline-secondary" [disabled]="loading || currentBatch?.status !== 'DA_CHOT'" (click)="showAdjustModal = true">
-          Điều chỉnh V2
+          Điều chỉnh
         </button>
       </div>
     </div>
   </div>
 
-  @if (actionMessage) {
-    <div class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div>
-  }
-  @if (errorMessage) {
-    <div class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div>
-  }
+  @if (actionMessage) { <div class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div> }
+  @if (errorMessage) { <div class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div> }
 </section>
 
 <!-- 4 THẺ THỐNG KÊ QUỸ LƯƠNG -->
@@ -80,71 +89,119 @@
   </div>
   <div class="col-md-3">
     <div class="stat-card">
-      <span class="stat-title">QUY MÔ ĐỢT LƯƠNG</span>
+      <span class="stat-title">SỐ LƯỢNG BẢN GHI</span>
       <h3 class="stat-value">{{ details.length }} nhân sự</h3>
     </div>
   </div>
 </div>
 
-<!-- BẢNG ĐỐI SOÁT CHI TIẾT NHÂN VIÊN -->
-<section class="surface">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h2 class="mb-0">Bảng đối soát chi tiết theo nhân viên</h2>
-    <span class="badge text-bg-light">{{ details.length }} bản ghi</span>
-  </div>
-
-  <div class="table-responsive">
-    <table class="table align-middle">
-      <thead>
-        <tr>
-          <th>Mã NV</th>
-          <th>Tổng thu nhập (Gross)</th>
-          <th>Khấu trừ (Bảo hiểm & Thuế)</th>
-          <th>Thực nhận (Net)</th>
-          <th class="text-end">Thao tác</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (item of pagedDetails; track item.payrollDetailId) {
-          <tr>
-            <td class="fw-bold">NV-00{{ item.employeeId }}</td>
-            <td class="text-dark-blue fw-semibold">{{ item.totalGross | number:'1.0-0' }} đ</td>
-            <td class="text-muted">{{ item.totalDeduction | number:'1.0-0' }} đ</td>
-            <td class="text-dark-blue fw-bold">{{ item.netSalary | number:'1.0-0' }} đ</td>
-            <td class="text-end">
-              <button class="btn btn-action me-2" (click)="viewDetail(item)">
-                Chi tiết
-              </button>
-              <button class="btn btn-action" (click)="printPayslip(item)">
-                In phiếu
-              </button>
-            </td>
-          </tr>
-        } @empty {
-          <tr>
-            <td colspan="5" class="text-center py-5">
-              <h3 class="text-muted">Chưa có dữ liệu bảng lương</h3>
-              <p class="muted mb-0">Bấm nút "⚡ Tính tự động" để nạp số liệu từ CSDL.</p>
-            </td>
-          </tr>
-        }
-      </tbody>
-    </table>
-  </div>
-
-  <!-- PHÂN TRANG THEO CHUẨN TRANG HỢP ĐỒNG -->
-  @if (details.length > 0) {
-    <div class="d-flex align-items-center gap-2 pt-3 border-top">
-      <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === 1" (click)="prevPage()">
-        Trước
-      </button>
-      <span class="small text-muted px-2">Trang {{ currentPage }} / {{ totalPages }}</span>
-      <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === totalPages" (click)="nextPage()">
-        Sau
-      </button>
+@if (activeTab === 'department-summary') {
+  <!-- BẢNG THỐNG KÊ CHI PHÍ LƯƠNG THEO PHÒNG BAN -->
+  <section class="surface">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h2 class="mb-0">Thống kê chi phí lương theo phòng ban</h2>
     </div>
-  }
-</section>
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th>Phòng ban</th>
+            <th class="text-center">Số lượng nhân sự</th>
+            <th class="text-end">Tổng quỹ Gross</th>
+            <th class="text-end">Tổng thực chi (Net)</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (d of departmentStats; track d.deptName) {
+            <tr>
+              <td class="fw-bold">{{ d.deptName }}</td>
+              <td class="text-center">{{ d.count }} người</td>
+              <td class="text-end text-dark-blue fw-semibold">{{ d.totalGross | number:'1.0-0' }} đ</td>
+              <td class="text-end text-dark-blue fw-bold">{{ d.totalNet | number:'1.0-0' }} đ</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+} @else {
+  <!-- BẢNG ĐỐI SOÁT & BỘ LỌC TÌM KIẾM ĐA DẠNG -->
+  <section class="surface">
+    <!-- THANH BỘ LỌC ĐA NĂNG -->
+    <div class="p-3 mb-3 bg-light rounded border">
+      <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+          <label class="form-label small fw-bold mb-1">Tìm nhân viên (Mã hoặc Tên):</label>
+          <input type="text" class="form-control form-control-sm" [(ngModel)]="filterKeyword" placeholder="Nhập NV-..., tên nhân viên...">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold mb-1">Mức thực lĩnh tối thiểu:</label>
+          <input type="number" class="form-control form-control-sm" [(ngModel)]="filterMinNet" placeholder="Ví dụ: 10000000">
+        </div>
+        <div class="col-md-3">
+          <label class="form-label small fw-bold mb-1">Sắp xếp theo:</label>
+          <select class="form-select form-select-sm" [(ngModel)]="sortColumn">
+            <option value="netSalary">Thực lĩnh (Net)</option>
+            <option value="totalGross">Tổng thu nhập (Gross)</option>
+            <option value="totalDeduction">Khấu trừ</option>
+            <option value="employeeId">Mã nhân viên</option>
+          </select>
+        </div>
+        <div class="col-md-2">
+          <button class="btn btn-outline-secondary btn-sm w-100" (click)="sortAscending = !sortAscending">
+            {{ sortAscending ? '⬆ Tăng dần' : '⬇ Giảm dần' }}
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="table-responsive">
+      <table class="table align-middle">
+        <thead>
+          <tr>
+            <th (click)="toggleSort('employeeId')" style="cursor:pointer">Mã NV ⬍</th>
+            <th class="text-end" (click)="toggleSort('totalGross')" style="cursor:pointer">Gross (Thu nhập) ⬍</th>
+            <th class="text-end" (click)="toggleSort('totalDeduction')" style="cursor:pointer">Khấu trừ ⬍</th>
+            <th class="text-end" (click)="toggleSort('netSalary')" style="cursor:pointer">Thực lĩnh (Net) ⬍</th>
+            <th class="text-end">Thao tác</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (item of pagedDetails; track item.payrollDetailId) {
+            <tr>
+              <td class="fw-bold">NV-00{{ item.employeeId }}</td>
+              <td class="text-end text-dark-blue fw-semibold">{{ item.totalGross | number:'1.0-0' }} đ</td>
+              <td class="text-end text-muted">{{ item.totalDeduction | number:'1.0-0' }} đ</td>
+              <td class="text-end text-dark-blue fw-bold">{{ item.netSalary | number:'1.0-0' }} đ</td>
+              <td class="text-end">
+                <button class="btn btn-action me-2" (click)="viewDetail(item)">Chi tiết</button>
+                <button class="btn btn-action" (click)="printPayslip(item)">In phiếu</button>
+              </td>
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="5" class="text-center py-5 text-muted">
+                Không tìm thấy bản ghi lương phù hợp với bộ lọc.
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- PHÂN TRANG -->
+    @if (filteredAndSortedDetails.length > 0) {
+      <div class="d-flex align-items-center justify-content-between pt-3 border-top">
+        <span class="small text-muted">Tổng {{ filteredAndSortedDetails.length }} kết quả</span>
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === 1" (click)="prevPage()">Trước</button>
+          <span class="small text-muted px-2 align-self-center">Trang {{ currentPage }} / {{ totalPages }}</span>
+          <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === totalPages" (click)="nextPage()">Sau</button>
+        </div>
+      </div>
+    }
+  </section>
+}
 
 <!-- KHUNG TRƯỢT CHI TIẾT (DRAWER) -->
 @if (isDrawerOpen && selectedDetail) {
@@ -185,36 +242,29 @@
     </ul>
 
     <div class="d-grid gap-2">
-      <button class="btn btn-primary" (click)="printPayslip(selectedDetail)">
-        Mở bản in phiếu lương (PDF)
-      </button>
+      <button class="btn btn-primary" (click)="printPayslip(selectedDetail)">Mở bản in phiếu lương</button>
       <button class="btn btn-outline-secondary" (click)="closeDrawer()">Đóng</button>
     </div>
   </aside>
 }
 
-<!-- HỘP THOẠI ĐIỀU CHỈNH LƯƠNG (MODAL) -->
+<!-- HỘP THOẠI ĐIỀU CHỈNH (MODAL) -->
 @if (showAdjustModal) {
   <div class="modal-backdrop show"></div>
   <div class="modal show d-block" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
         <div class="modal-header">
-          <h5 class="modal-title fw-bold">Tạo phiên bản điều chỉnh bảng lương (V2+)</h5>
+          <h5 class="modal-title fw-bold">Tạo phiên bản điều chỉnh bù trừ (V2+)</h5>
           <button type="button" class="btn-close" (click)="showAdjustModal = false"></button>
         </div>
         <div class="modal-body">
-          <p class="text-muted small">
-            Bảng lương đã chốt được niêm phong lịch sử. Phiên bản điều chỉnh mới cho phép tính toán bù trừ.
-          </p>
-          <div class="mb-3">
-            <label class="form-label fw-bold">Lý do điều chỉnh:</label>
-            <textarea class="form-control" rows="3" [(ngModel)]="adjustmentReasonInput" placeholder="Ví dụ: Bổ sung duyệt giờ làm thêm cho nhân sự..."></textarea>
-          </div>
+          <label class="form-label fw-bold">Lý do điều chỉnh:</label>
+          <textarea class="form-control" rows="3" [(ngModel)]="adjustmentReasonInput" placeholder="Ví dụ: Bổ sung duyệt tăng ca, thưởng hiệu quả..."></textarea>
         </div>
         <div class="modal-footer">
           <button type="button" class="btn btn-outline-secondary" (click)="showAdjustModal = false">Hủy</button>
-          <button type="button" class="btn btn-primary" (click)="submitAdjustment()">Tạo bản điều chỉnh</button>
+          <button type="button" class="btn btn-primary" (click)="submitAdjustment()">Xác nhận</button>
         </div>
       </div>
     </div>
