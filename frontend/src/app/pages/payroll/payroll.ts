@@ -1,3 +1,5 @@
+import {RowViewDirective} from '../../shared/row-view.directive';
+import {Pagination} from '../../shared/pagination';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +9,7 @@ import { PayrollPeriod, PayrollBatch, PayrollDetailView } from '../../models/pay
 @Component({
   selector: 'app-payroll',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports:[RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payroll.html',
   styleUrl: './payroll.css'
 })

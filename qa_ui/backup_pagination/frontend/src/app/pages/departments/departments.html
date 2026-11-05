@@ -1,0 +1,61 @@
+<hrm-feedback [error]="error" [success]="message"/>
+<app-page-header eyebrow="CƠ CẤU NHÂN SỰ" [title]="&quot;Phòng ban và trưởng phòng&quot; | translate" [description]="&quot;Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.&quot; | translate"><a hrmBtn="secondary" hrmSize="md" routerLink="/department-catalog">{{ "Thêm / sửa phòng ban" | translate }}</a></app-page-header>
+
+
+<app-record-workspace [open]="!!selected" [busy]="saving" (dismiss)="clearSelection()"><section recordList class="surface mb-4">
+  <div class="list-toolbar"><h2>{{ "Danh sách phòng ban" | translate }}</h2><button hrmBtn="secondary" hrmSize="md" (click)="load()" [disabled]="loading || saving">{{ "Tải lại" | translate }}</button></div>
+  @if (loading) { <p role="status">{{ "Đang tải…" | translate }}</p> }
+  <div class="table-responsive"><table class="table align-middle"><thead><tr><th>{{ "Mã" | translate }}</th><th>{{ "Phòng ban" | translate }}</th><th>{{ "Trưởng phòng" | translate }}</th><th>{{ "Từ ngày" | translate }}</th><th>{{ "Trạng thái" | translate }}</th><th></th></tr></thead>
+    <tbody>@for (d of rows; track d.departmentId) {
+      <tr [class.selected]="selected?.departmentId===d.departmentId"><td [attr.data-label]="'Mã' | translate">{{d.departmentCode}}</td><td [attr.data-label]="'Phòng ban' | translate">{{d.departmentName}}</td><td [attr.data-label]="'Trưởng phòng' | translate">{{(d.headFullName || 'Chưa bổ nhiệm') | translate}}</td><td [attr.data-label]="'Từ ngày' | translate">{{d.headEffectiveFrom || '—'}}</td><td [attr.data-label]="'Trạng thái' | translate"><span class="status" [class.retired]="!d.isActive">{{(d.isActive ? 'Hoạt động' : 'Ngừng sử dụng') | translate}}</span></td><td [attr.data-label]="'Thao tác' | translate"><button hrmBtn="secondary" hrmSize="sm" (click)="select(d)" [disabled]="saving">{{ "Chi tiết" | translate }}</button></td></tr>
+    } @empty { <tr><td colspan="6">{{ 'Chưa có dữ liệu để hiển thị.' | translate }}</td></tr> }</tbody>
+  </table></div>
+  <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" />
+</section>
+<div recordDetail>@if(selected;as d){
+ <section class="surface">
+  <div class="head-summary"><h2>{{d.departmentName}}</h2><p>{{'Trưởng phòng hiện tại:'|translate}} <strong>{{(d.headFullName||'Chưa bổ nhiệm')|translate}}</strong></p><p class="head-note">{{'Người có nhiệm kỳ tương lai chỉ nhận chức từ ngày bắt đầu.'|translate}}</p></div>
+  <h3>{{'Bạn muốn thực hiện việc gì?'|translate}}</h3>
+  <div class="head-actions" role="group" [attr.aria-label]="'Chọn thao tác trưởng phòng'|translate">
+   @if(d.isActive){<button type="button" class="head-choice" [attr.aria-pressed]="headAction==='appoint'" [disabled]="saving" (click)="chooseAction('appoint')"><strong>{{(d.headEmployeeId?'Bổ nhiệm / thay trưởng phòng':'Bổ nhiệm trưởng phòng')|translate}}</strong><span>{{'Chọn người mới. Nhiệm kỳ người cũ được bàn giao trong cùng thao tác.'|translate}}</span></button>}
+   @if(d.headEmployeeId){<button type="button" class="head-choice" [attr.aria-pressed]="headAction==='end'" [disabled]="saving" (click)="chooseAction('end')"><strong>{{'Kết thúc nhiệm kỳ, chưa bổ nhiệm người thay'|translate}}</strong><span>{{'Người hiện tại thôi giữ chức; phòng tạm thời chưa có trưởng phòng.'|translate}}</span></button>}
+  </div>
+  @if(!headAction){<p class="head-note">{{'Chọn một thao tác phía trên để mở biểu mẫu. Lịch sử nằm bên dưới.'|translate}}</p>}
+  @if(headAction){
+   @if(positionsLoading){<p role="status">{{'Đang tải danh sách chức vụ…'|translate}}</p>}
+   @if(positionsError){<p class="alert alert-warning">{{positionsError|translate}} <button type="button" hrmBtn="secondary" hrmSize="md" (click)="loadPositions()">{{'Thử lại'|translate}}</button></p>}
+   <p class="head-note">{{'Ngày hiệu lực phải sau ngày bắt đầu phân công của những người liên quan. Có thể chọn ngày tương lai.'|translate}}</p>
+  }
+  @if(headAction==='appoint'){
+   <form #appointForm="ngForm" class="head-form" (ngSubmit)="appoint($event,headDraft.employee,headDraft.date,headDraft.position,headDraft.reason)">
+    <fieldset [disabled]="saving"><legend>{{'1. Người sẽ nhận chức trưởng phòng'|translate}}</legend>
+     <label for="new-head">{{'Trưởng phòng mới'|translate}}<select id="new-head" class="form-select" name="employee" [(ngModel)]="headDraft.employee" (ngModelChange)="chooseCandidate($event)" required><option value="">{{'Chọn nhân viên trong phòng'|translate}}</option>@for(e of candidateOptions;track e.employeeId){<option [value]="e.employeeId">{{e.employeeCode}} — {{e.employeeName}}</option>}</select></label>
+      <small>{{'Chỉ liệt kê nhân viên đang làm trong phòng này, có phân công đã bắt đầu, chưa kết thúc và chức vụ đang sử dụng; không gồm trưởng phòng hiện tại.'|translate}}</small>
+      @if(candidateTotal>0){<small>{{'Tổng ứng viên phù hợp'|translate}}: {{candidateTotal}} · {{'Đang hiển thị'|translate}}: {{candidates.length}}</small>}
+      <small>{{'Muốn bổ nhiệm người ở phòng khác, hãy điều chuyển về phòng này và chờ phân công có hiệu lực trước.'|translate}}</small>
+      @if(chosenCandidate){<small>{{'Phân công của người được chọn bắt đầu:'|translate}} {{chosenCandidate.effectiveFrom}}</small>}
+     @if(candidatePages>1){<div class="candidate-navigation"><span>{{'Danh sách ứng viên'|translate}} · {{candidatePage+1}}/{{candidatePages}}</span><div class="d-flex gap-2"><button type="button" hrmBtn="secondary" hrmSize="sm" [disabled]="saving||candidatePage===0" (click)="loadCandidates(candidatePage-1)">{{'Ứng viên trước'|translate}}</button><button type="button" hrmBtn="secondary" hrmSize="sm" [disabled]="saving||candidatePage+1>=candidatePages" (click)="loadCandidates(candidatePage+1)">{{'Ứng viên tiếp'|translate}}</button></div></div>}
+     @if(!candidates.length){<p class="head-note">{{'Chưa có ứng viên phù hợp trong phòng.'|translate}}</p>}
+     <label for="appoint-date">{{'Ngày người mới bắt đầu giữ chức'|translate}}<input id="appoint-date" class="form-control" type="date" name="date" [(ngModel)]="headDraft.date" required></label>
+    </fieldset>
+    @if(d.headEmployeeId){<fieldset [disabled]="saving"><legend>{{'2. Công việc của trưởng phòng cũ'|translate}}</legend><p>{{d.headFullName}}</p><label for="previous-position">{{'Chức vụ sau khi bàn giao của'|translate}} {{d.headFullName}}<select id="previous-position" class="form-select" name="previousPosition" [(ngModel)]="headDraft.position" required [disabled]="!positionsLoaded"><option value="">{{'Chọn chức vụ cho người cũ'|translate}}</option>@for(p of positions;track p.positionId){<option [value]="p.positionId">{{p.positionName}}</option>}</select><small>{{'Ô này dành cho người cũ, không phải người được bổ nhiệm mới.'|translate}}</small></label></fieldset>}
+    <label for="appoint-reason">{{'Lý do bổ nhiệm / thay người'|translate}}<textarea id="appoint-reason" class="form-control" name="reason" [(ngModel)]="headDraft.reason" maxlength="1000" required [disabled]="saving"></textarea></label>
+    @if(chosenCandidate&&headDraft.date){<p class="head-preview">{{'Kết quả dự kiến:'|translate}} <strong>{{chosenCandidate.employeeName}}</strong> — {{'Trưởng phòng mới'|translate}}, {{'từ ngày'|translate}} <strong>{{headDraft.date}}</strong>. {{'Lịch sử người cũ vẫn được giữ.'|translate}}</p>}
+    <div class="form-actions"><button type="button" hrmBtn="secondary" hrmSize="md" [disabled]="saving" (click)="headAction=null">{{'Hủy'|translate}}</button><button type="submit" hrmBtn="primary" hrmSize="md" [disabled]="saving||appointForm.invalid||!headDraft.reason.trim()||!chosenCandidate||(!!d.headEmployeeId&&!positionsLoaded)">{{(saving?'Đang lưu…':'Lưu bổ nhiệm')|translate}}</button></div>
+   </form>
+  }
+  @if(headAction==='end'){
+   <p class="alert alert-warning">{{'Chỉ kết thúc chức vụ trưởng phòng, không cho nhân viên nghỉ việc.'|translate}} <strong>{{d.headFullName}}</strong> {{'tiếp tục làm việc tại phòng với chức vụ mới được chọn.'|translate}}</p>
+   <form #endForm="ngForm" class="head-form" (ngSubmit)="end($event,headDraft.date,headDraft.position,headDraft.reason)">
+    <fieldset [disabled]="saving"><label for="end-date">{{'Ngày bắt đầu thôi giữ chức trưởng phòng'|translate}}<input id="end-date" class="form-control" type="date" name="date" [(ngModel)]="headDraft.date" required><small>{{'Từ ngày này phòng chưa có trưởng phòng, cho đến khi có bổ nhiệm mới.'|translate}}</small></label>
+    <label for="next-position">{{'Chức vụ tiếp theo của'|translate}} {{d.headFullName}}<select id="next-position" class="form-select" name="position" [(ngModel)]="headDraft.position" required [disabled]="!positionsLoaded"><option value="">{{'Chọn chức vụ'|translate}}</option>@for(p of positions;track p.positionId){<option [value]="p.positionId">{{p.positionName}}</option>}</select></label>
+    <label for="end-reason">{{'Lý do kết thúc'|translate}}<textarea id="end-reason" class="form-control" name="reason" [(ngModel)]="headDraft.reason" maxlength="1000" required></textarea></label></fieldset>
+    <div class="form-actions"><button type="button" hrmBtn="secondary" hrmSize="md" [disabled]="saving" (click)="headAction=null">{{'Hủy'|translate}}</button><button type="submit" hrmBtn="danger-outline" hrmSize="md" [disabled]="saving||endForm.invalid||!headDraft.reason.trim()||!positionsLoaded">{{(saving?'Đang lưu…':'Xác nhận kết thúc nhiệm kỳ')|translate}}</button></div>
+   </form>
+  }
+ </section>
+ <section class="surface head-history"><h2>{{'Lịch sử trưởng phòng'|translate}}</h2><p class="head-note">{{'Đến trước ngày là ngày đầu người đó không còn giữ chức. Nhiệm kỳ tương lai chưa phải trưởng phòng hiện tại.'|translate}}</p>
+  <div class="table-responsive"><table class="table"><thead><tr><th>{{'Người đảm nhiệm'|translate}}</th><th>{{'Bắt đầu'|translate}}</th><th>{{'Đến trước ngày'|translate}}</th><th>{{'Trạng thái'|translate}}</th></tr></thead><tbody>@for(h of heads;track h.assignmentId){<tr><td>{{h.fullName}}<small class="d-block text-muted">{{h.employeeCode}}</small></td><td>{{h.effectiveFrom}}</td><td>{{(h.effectiveTo||'Chưa kết thúc')|translate}}</td><td>{{headState(h)|translate}}</td></tr>}@empty{<tr><td colspan="4">{{'Chưa có lịch sử.'|translate}}</td></tr>}</tbody></table></div>
+  <app-pagination [page]="historyPage" [pages]="historyPages" [busy]="saving" label="Phân trang lịch sử trưởng phòng" (pageChange)="loadHistory($event)" />
+ </section>
+}</div></app-record-workspace>

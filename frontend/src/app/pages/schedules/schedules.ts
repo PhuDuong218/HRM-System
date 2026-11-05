@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import {PersonalCalendarComponent} from '../../shared/personal-calendar';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
@@ -25,7 +26,7 @@ interface ShiftLookup { text: string; selected: ShiftOption | null; error: strin
 const employeeLookup = (): EmployeeLookup => ({ text: '', selected: null, options: [], error: '', loading: false });
 const shiftLookup = (): ShiftLookup => ({ text: '', selected: null, error: '' });
 
-@Component({ selector: 'app-schedules', standalone: true, imports: [PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-schedules', standalone: true, imports:[Pagination,PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
 export class SchedulesPage implements OnInit {
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);

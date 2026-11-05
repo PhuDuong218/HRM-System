@@ -1,20 +1,22 @@
 import {personnelPortalGuard} from './services/personnel-portal.guard';
+import {pendingEditorGuard} from './services/pending-editor.service';
 import {adminGuard} from './services/admin.guard';
 import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
 import { ConnectionPage } from "./pages/connection/connection";
 import { PlaceholderPage } from "./pages/placeholder/placeholder";
-import { authGuard } from "./services/auth.guard";
+import { authGuard, guestGuard } from "./services/auth.guard";
 import { PayslipsPage } from './pages/payslips/payslips';
 import { PayrollPage } from './pages/payroll/payroll';
 export const routes: Routes = [
-  { path: "login", loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
+  { path: "login", canActivate: [guestGuard], loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
   {
     path: "",
     component: AdminLayout,
     canActivate: [authGuard],
     canActivateChild:[personnelPortalGuard],
     children: [
+      {path:'ui-kit',canActivate:[adminGuard],loadComponent:()=>import('./pages/ui-kit/ui-kit').then(m=>m.UiKitPage)},
       { path: "", redirectTo: "overview", pathMatch: "full" },
       { path: "overview", loadComponent: () => import("./pages/overview/overview").then(m => m.OverviewPage) },
       { path: "employees", loadComponent: () => import("./pages/employees/employees").then(m => m.EmployeesPage) },
@@ -133,3 +135,4 @@ export const routes: Routes = [
     ],
   },
 ];
+for(const route of routes){for(const child of route.children??[]){if(child.component||child.loadComponent)child.canDeactivate=[...(child.canDeactivate??[]),pendingEditorGuard];}}

@@ -1,3 +1,4 @@
+import {Pagination} from './pagination';
 import {DetailFocusDirective} from './detail-focus.directive';
 import {RowViewDirective} from './row-view.directive';
 import {CommonModule} from '@angular/common';
@@ -9,7 +10,7 @@ import {API_BASE_URL} from '../services/api.config';
 import {OtRow,OtBreak,OvertimeApiService} from '../pages/overtime/overtime-api.service';
 interface Candidate {row:OtRow;eligible:boolean;unavailableReason:string;deadline:string;}
 interface Request {requestId:number;overtimeId:number;employeeId:number;requestCode:string;employeeLabel:string;status:string;start:string;end:string;reason:string;sender:string;submittedAt:string;processor:string|null;processedAt:string|null;decisionReason:string|null;breaks:OtBreak[];canDecide:boolean;}
-@Component({selector:'app-ot-supplement-panel',standalone:true,imports: [DetailFocusDirective,RowViewDirective,CommonModule,FormsModule],templateUrl:'./ot-supplement-panel.html'})
+@Component({selector:'app-ot-supplement-panel',standalone:true,imports: [Pagination,DetailFocusDirective,RowViewDirective,CommonModule,FormsModule],templateUrl:'./ot-supplement-panel.html'})
 export class OtSupplementPanelComponent implements OnChanges {
  @Input() mineAllowed=false;@Input() manage=false;@Input() overtimeId:number|null=null;
  private http=inject(HttpClient);private destroy=inject(DestroyRef);private api=inject(OvertimeApiService);private url=API_BASE_URL+'/overtime/workspace/supplements';private version=0;

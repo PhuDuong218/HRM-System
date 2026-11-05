@@ -87,7 +87,7 @@
 :host-context([data-bs-theme='dark']) .edit-account-owner span, :host-context([data-bs-theme='dark']) .edit-account-owner small { color:#b5c8db; }
 :host-context([data-bs-theme='dark']) .edit-account-owner strong { color:#e4ebf5; }
 @container (max-width: 850px) { .filters { grid-template-columns: repeat(2, minmax(0, 1fr)); } .filter-search { grid-column: span 2; } }
-@container (max-width: 740px) {
+@container (max-width: 640px) {
   .account-list .table { display:block; min-width:0 !important; }
   .account-list .table thead { display:none; }
   .account-list .table tbody { display:grid; gap:12px; }

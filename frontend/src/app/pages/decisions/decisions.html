@@ -96,7 +96,7 @@
             </thead>
             <tbody>
               @for (row of rows; track row.decisionId) {
-                <tr [class.selected-row]="(actionTarget?.decisionId ?? selectedDecision?.decisionId) === row.decisionId" [appSelectedRowScroll]="actionTarget?.decisionId === row.decisionId ? actionMode : editing?.decisionId === row.decisionId && showForm ? 'edit' : null">
+                <tr (appRowView)="openDetail(row)" [rowViewDisabled]="saving||loading" [class.selected-row]="(actionTarget?.decisionId ?? selectedDecision?.decisionId) === row.decisionId" [appSelectedRowScroll]="actionTarget?.decisionId === row.decisionId ? actionMode : editing?.decisionId === row.decisionId && showForm ? 'edit' : null">
                   <td [attr.data-label]="'Số QĐ' | translate">
                     <button type="button" class="btn btn-link p-0 text-start" (click)="openDetail(row)">
                       {{ row.decisionNumber }}

@@ -162,6 +162,8 @@ spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
 
 Thay mật khẩu, tên tài khoản, host/cổng theo SQL Server trên **máy của bạn**. `encrypt=false` chỉ là ví dụ dành cho môi trường phát triển cục bộ; nếu dùng server chung, cần cấu hình kết nối bảo mật theo môi trường thực tế.
 
+Để kiểm thử thời gian phiên web, đặt `app.security.web-idle-seconds=30` trong `application-local.properties`, khởi động lại backend và đăng nhập lại. Giá trị tính bằng giây; bỏ dòng này hoặc đặt `600` để dùng thời gian mặc định 10 phút. Cấu hình này không thay đổi thời hạn phiên di động.
+
 Để thành viên mới biết phải tạo file nào, nhóm nên commit thêm **`src/main/resources/application-local.properties.example`** với nội dung tương tự nhưng mật khẩu là `YOUR_PASSWORD`. Mỗi người copy file mẫu thành `application-local.properties` và sửa thông tin riêng.
 
 ### 6.3. `.gitignore`

@@ -1,0 +1,38 @@
+[
+  {
+    "file": "frontend/src/app/layout/admin-layout.css",
+    "sha256": "29A6F7D74CF8BB135889EACAF1CDC8B58BE690F07D5BBDB9369180614EF6A850"
+  },
+  {
+    "file": "frontend/src/app/layout/admin-layout.html",
+    "sha256": "952C45437CE0F530DFF7AF50DEF3E95BCC2BD0D66F23FBF76393EC6D1CFE2001"
+  },
+  {
+    "file": "frontend/src/app/shared/ui/icon.ts",
+    "sha256": "10AACE431B21FA79A4CE3F10057EDA35C29F98165B6A798095C30885E729A5A2"
+  },
+  {
+    "file": "frontend/src/app/pages/login/login.css",
+    "sha256": "8499BA3E9E55876E2BE6E8B3C996D15A56C343F8DE0184D3DE02498369088873"
+  },
+  {
+    "file": "frontend/src/app/pages/login/login.html",
+    "sha256": "8AB5C3ADFE7BAE376AFCC7C5974CF86A7E20FF87784E55F5237729A00E8DAA8B"
+  },
+  {
+    "file": "frontend/src/app/pages/login/login.ts",
+    "sha256": "4C8F9C9D45DF84698E8EE28F8CF04B9D9E4D4D7FBE4FE8326DA84854A457B911"
+  },
+  {
+    "file": "frontend/src/app/pages/departments/departments.ts",
+    "sha256": "FA5648718E310399E66AD423918BACA5B5DAB01EFAF12FE59D96B426A5EADCF4"
+  },
+  {
+    "file": "frontend/src/app/pages/departments/departments.html",
+    "sha256": "60303EC2FFAF2F8A7E9AB7BA0DDB74B7E2F6C5A829A019A857121668081A51B8"
+  },
+  {
+    "file": "frontend/src/app/services/ui-translations.ts",
+    "sha256": "615FDC3EBF4275D02DF3A31F096B6DF68B96D6E859CB0D8373D2C50C87680EBF"
+  }
+]

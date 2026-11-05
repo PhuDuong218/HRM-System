@@ -83,13 +83,7 @@
         </tbody>
       </table>
     </div>
-    <div class="pagination-row">
-      <span class="small muted">Trang {{ page + 1 }} / {{ pages }}</span>
-      <div class="d-flex gap-2">
-        <button type="button" class="btn btn-outline-secondary" [disabled]="page === 0" (click)="load(page - 1)">{{ 'Trước' | translate }}</button>
-        <button type="button" class="btn btn-outline-secondary" [disabled]="page + 1 >= pages" (click)="load(page + 1)">{{ 'Sau' | translate }}</button>
-      </div>
-    </div>
+    <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)"/>
   }
 </section>
 } @else if (section === 'roles') {
@@ -185,7 +179,7 @@
                   <label class="employee-option"><input type="radio" name="chosenEmployee" [checked]="selectedEmployee?.employeeId === employee.employeeId" (change)="selectEmployee(employee)"><span><strong>{{ employee.fullName }}</strong><small>{{ employee.employeeCode }}</small></span></label>
                 }
               </div>
-              @if (eligiblePages > 1) { <div class="employee-pagination"><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="eligiblePage === 0" (click)="loadEligibleEmployees(eligiblePage - 1)">{{ 'Trước' | translate }}</button><span>Trang {{ eligiblePage + 1 }} / {{ eligiblePages }}</span><button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="eligiblePage + 1 >= eligiblePages" (click)="loadEligibleEmployees(eligiblePage + 1)">{{ 'Sau' | translate }}</button></div> }
+              @if (eligiblePages > 1) { <app-pagination [page]="eligiblePage" [pages]="eligiblePages" [busy]="saving" (pageChange)="loadEligibleEmployees($event)"/> }
             }
           </div>
           <div><label class="form-label" for="create-username">{{ 'Tên đăng nhập' | translate }}</label><input id="create-username" name="username" class="form-control" maxlength="100" [(ngModel)]="createForm.username" autocomplete="off" required></div>

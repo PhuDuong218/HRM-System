@@ -4,8 +4,9 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { filter } from 'rxjs';
 import { SessionExpiredDialog } from './layout/session-expired-dialog';
 import { AuthService } from './services/auth.service';
+import {Confirmation} from './shared/ui/confirmation';
 
-@Component({ selector: 'app-root', standalone: true, imports: [RouterOutlet, SessionExpiredDialog], templateUrl: './app.html' })
+@Component({ selector: 'app-root', standalone: true, imports: [Confirmation,RouterOutlet, SessionExpiredDialog], templateUrl: './app.html' })
 export class App {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);

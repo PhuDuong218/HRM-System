@@ -1,3 +1,5 @@
+import {HrmIcon} from '../shared/ui/icon';
+import {PendingEditorService} from '../services/pending-editor.service';
 import {TranslatePipe} from '../shared/translate.pipe';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,11 +15,12 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports: [HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })
 export class AdminLayout {
+  private pendingEditor=inject(PendingEditorService);
   @ViewChild('profileDialog') private profileDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('passwordDialog') private passwordDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('passwordForm') private passwordForm?: ElementRef<HTMLFormElement>;
@@ -56,7 +59,7 @@ export class AdminLayout {
   closeMobileMenu(): void { this.menuOpen=false;this.menuTrigger?.nativeElement.focus(); }
   @HostListener('document:keydown.escape') closeMenuOnEscape(): void { this.closeFlyout(); if(this.menuOpen)this.closeMobileMenu(); }
   menuKeydown(event: KeyboardEvent): void {
-    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:800px)').matches)return;
+    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:1023px)').matches)return;
     const controls=Array.from(this.mobilePanel?.nativeElement.querySelectorAll<HTMLElement>('a[href],button:not(:disabled)')||[]).filter(x=>x.getClientRects().length>0);
     const first=controls[0],last=controls[controls.length-1];
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
@@ -81,7 +84,7 @@ export class AdminLayout {
   }
 
   previewGroup(item: NavigationItem, event?: Event): void {
-    if (!this.sidebarCollapsed || !window.matchMedia('(min-width:801px)').matches) return;
+    if (!this.sidebarCollapsed || !window.matchMedia('(min-width:1024px)').matches) return;
     const rect = (event?.currentTarget as HTMLElement | null)?.getBoundingClientRect();
     this.flyoutTop = Math.max(12, Math.min(rect?.top ?? 100, window.innerHeight - 360));
     this.flyout = item;
@@ -190,7 +193,7 @@ export class AdminLayout {
   }
 
   toggleGroup(id: string, event?: Event): void {
-    if (this.sidebarCollapsed && window.matchMedia('(min-width:801px)').matches) {
+    if (this.sidebarCollapsed && window.matchMedia('(min-width:1024px)').matches) {
       const group = this.menu.find(item => item.id === id);
       if (group) this.previewGroup(group, event);
       return;

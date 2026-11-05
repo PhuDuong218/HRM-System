@@ -1,3 +1,8 @@
+import {RowViewDirective} from '../../shared/row-view.directive';
+import {StatusBadge} from '../../shared/ui/status-badge';
+import {Feedback} from '../../shared/ui/feedback';
+import {HrmButton} from '../../shared/ui/button';
+import {LeaveWorkflowGuide} from '../../shared/leave-workflow-guide';
 import {ManagementPageBase} from '../../shared/management-page.base';
 import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
@@ -17,7 +22,7 @@ const catalogs={
  qualifications:{path:'qualification-levels',title:'Danh mục trình độ',id:'qualificationLevelId',code:'levelCode',name:'levelName',paid:false},
  leaveTypes:{path:'leave-types',title:'Loại nghỉ phép',id:'leaveTypeId',code:'typeCode',name:'typeName',paid:true}
 };
-@Component({standalone:true,imports:[PageHeader,Pagination,FormsModule,RecordWorkspace,TranslatePipe],templateUrl:'./catalog.html'})
+@Component({standalone:true,imports:[RowViewDirective,StatusBadge,Feedback,HrmButton,LeaveWorkflowGuide,PageHeader,Pagination,FormsModule,RecordWorkspace,TranslatePipe],templateUrl:'./catalog.html'})
 export class CatalogPage extends ManagementPageBase {
  private readonly auth=inject(AuthService);
  get admin(){return this.auth.profile()?.role==='ADMIN';}
@@ -46,7 +51,7 @@ export class CatalogPage extends ManagementPageBase {
  close(){if(!this.saving){this.mode='';this.selected=null;}}
  save(form:NgForm){if(this.selected&&!this.changeReason.trim()){this.error="Nhập lý do thay đổi.";return;}if(this.saving||form.invalid)return;this.saving=true;this.error='';const body:CatalogRow={[this.config.code]:String(this.body[this.config.code]).trim(),[this.config.name]:String(this.body[this.config.name]).trim(),isActive:this.body['isActive']};if(this.config.paid)body['isPaid']=this.body['isPaid'];else body['description']=this.body['description']||null;if(this.config.path==='qualification-levels')body['rankOrder']=this.body['rankOrder']??null;
  this.api.save(this.config.path,this.selected?Number(this.selected[this.config.id]):null,body,this.changeReason).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving=false)).subscribe({next:row=>{this.saving=false;this.open(row);this.message='Đã lưu danh mục.';this.load(this.page);},error:e=>this.error=errorMessage(e)});}
- savePolicy(){if(!this.changeReason.trim()){this.policyError="Nhập lý do thay đổi.";return;}if(this.saving||!this.selected||this.consumes===null)return;this.saving=true;this.policyError='';this.api.savePolicy(Number(this.selected[this.config.id]),this.consumes,this.changeReason).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving=false)).subscribe({next:()=>this.message='Đã cập nhật chính sách trừ quỹ phép.',error:e=>this.policyError=errorMessage(e)});}
+ savePolicy(){if(!this.changeReason.trim()){this.policyError="Nhập lý do thay đổi.";return;}if(!this.admin||this.saving||!this.selected||this.consumes===null)return;this.saving=true;this.policyError='';this.api.savePolicy(Number(this.selected[this.config.id]),this.consumes,this.changeReason).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.saving=false)).subscribe({next:()=>this.message='Đã cập nhật chính sách trừ quỹ phép.',error:e=>this.policyError=errorMessage(e)});}
  deactivate(){if(!this.changeReason.trim()){this.error="Nhập lý do thay đổi.";return;}if(this.saving||!this.selected||!this.confirmAction('Ngừng sử dụng danh mục này? Lịch sử vẫn được giữ.'))return;this.runCommand(this.api.deactivate(this.config.path,Number(this.selected[this.config.id]),this.changeReason),()=>{this.close();this.load(this.page);},'Đã ngừng sử dụng.');}
 
 }

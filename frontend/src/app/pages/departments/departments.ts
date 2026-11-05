@@ -1,3 +1,6 @@
+import {RowViewDirective} from '../../shared/row-view.directive';
+import {Feedback} from '../../shared/ui/feedback';
+import {HrmButton} from '../../shared/ui/button';
 import {ManagementPageBase} from '../../shared/management-page.base';
 import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
@@ -10,7 +13,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, expand, reduce, takeUntil } from 'rxjs';
 import { DepartmentService, Department, Head, Assignment, Position } from '../../services/department.service';
 
-@Component({ selector: 'app-departments', standalone: true, imports: [PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe,FormsModule], templateUrl: './departments.html',styleUrl:'./departments.css' })
+@Component({ selector: 'app-departments', standalone: true, imports:[RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe,FormsModule], templateUrl: './departments.html',styleUrl:'./departments.css' })
 export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDestroy {
   private api = inject(DepartmentService);
   private destroyed = new Subject<void>();
@@ -18,6 +21,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   rows: Department[] = []; selected: Department | null = null;
   heads: Head[] = []; candidates: Assignment[] = []; positions: Position[] = [];
   page = 0; pages = 0; historyPage = 0; historyPages = 0; candidatePage = 0; candidatePages = 0;
+  candidateTotal = 0;
 
   positionsLoading = false; positionsError = '';
   positionsLoaded = false;
@@ -81,7 +85,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   loadCandidates(page: number) {
     if (!this.selected) return;
     this.api.candidates(this.selected.departmentId, page).pipe(takeUntil(this.selectionChanged), takeUntil(this.destroyed)).subscribe({
-      next: r => { this.candidates = r.items; this.candidatePages = r.totalPages; this.candidatePage = page; }, error: e => this.fail(e)
+      next: r => { this.candidates = r.items; this.candidatePages = r.totalPages; this.candidateTotal = r.totalElements; this.candidatePage = page; }, error: e => this.fail(e)
     });
   }
   appoint(event: Event, employee: string, date: string, position: string, reason: string) {

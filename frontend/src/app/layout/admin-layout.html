@@ -73,7 +73,7 @@
           <span class="language-option" [class.is-active]="language.current() === 'en'" aria-hidden="true">EN</span>
         </button>
         <button type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.title]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.aria-pressed]="darkMode">
-          @if (darkMode) { <span aria-hidden="true">☀</span> } @else { <span aria-hidden="true">☾</span> }
+          <hrm-icon [name]="darkMode?'sun':'moon'"/>
         </button>
         <div class="profile-anchor">
           <button type="button" class="profile-trigger" (click)="openProfile()" aria-haspopup="dialog" aria-controls="profile-dialog" [attr.aria-label]="language.t('Hồ sơ cá nhân') + ': ' + auth.displayName()" [attr.title]="auth.displayName()">
@@ -87,7 +87,7 @@
               <span class="login-success-icon" aria-hidden="true">✓</span>
               <div role="status">
                 <p class="login-success-eyebrow">{{ language.t('Đăng nhập thành công!') }}</p>
-                <p class="login-success-message">{{ language.t('Chào mừng bạn trở lại!') }} <strong>{{ auth.displayName() }}</strong></p>
+                <p class="login-success-message">@if (language.current() === 'vi') { Chào mừng <strong>{{ auth.displayName() }}</strong> trở lại! } @else { Welcome back, <strong>{{ auth.displayName() }}</strong>! }</p>
               </div>
             </div>
           }
@@ -134,8 +134,8 @@
     </dl>
   }
   <div class="profile-dialog-footer">
-    <button type="button" class="btn btn-primary" (click)="openPasswordDialog()">{{language.t("Đổi mật khẩu")}}</button>
     <button type="button" class="btn btn-outline-primary" (click)="closeProfile()">{{language.t("Đóng")}}</button>
+    <button type="button" class="btn btn-primary" (click)="openPasswordDialog()">{{language.t("Đổi mật khẩu")}}</button>
   </div>
 </dialog>
 

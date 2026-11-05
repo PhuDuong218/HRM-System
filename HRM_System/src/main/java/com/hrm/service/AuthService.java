@@ -51,6 +51,14 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        return login(request, false);
+    }
+
+    public LoginResponse loginWeb(LoginRequest request) {
+        return login(request, true);
+    }
+
+    private LoginResponse login(LoginRequest request, boolean webSession) {
         Account account = accountRepository.findByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException(
                         "Tên đăng nhập hoặc mật khẩu không đúng"));
@@ -67,7 +75,9 @@ public class AuthService {
                     "Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
-        String token = jwtService.issue(
+        String token = webSession ? jwtService.issueWeb(
+                account.getAccountId(), account.getEmployeeId(), account.getUsername(),
+                account.getRole().getRoleCode(), account.getTokenVersion()) : jwtService.issue(
                 account.getAccountId(),
                 account.getEmployeeId(),
                 account.getUsername(),
@@ -77,7 +87,25 @@ public class AuthService {
         return new LoginResponse(
                 token,
                 "Bearer",
-                jwtService.getExpirationSeconds());
+                webSession ? jwtService.getWebIdleSeconds() : jwtService.getExpirationSeconds());
+    }
+
+    public LoginResponse refreshWeb(AuthenticatedAccount account, String token) {
+        io.jsonwebtoken.Claims claims;
+        try {
+            claims = jwtService.parse(token);
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {
+            throw new BadCredentialsException("Phiên đăng nhập không hợp lệ", ex);
+        }
+        Integer version = claims.get("token_version", Integer.class);
+        Long accountId = claims.get("account_id", Long.class);
+        if (!Boolean.TRUE.equals(claims.get("web_session", Boolean.class)) || version == null
+                || !account.accountId().equals(accountId)) {
+            throw new BadCredentialsException("Phiên đăng nhập không hợp lệ");
+        }
+        String refreshed = jwtService.issueWeb(account.accountId(), account.employeeId(),
+                account.username(), account.roleCode(), version);
+        return new LoginResponse(refreshed, "Bearer", jwtService.getWebIdleSeconds());
     }
 
     public CurrentUserResponse currentUser(AuthenticatedAccount account) {

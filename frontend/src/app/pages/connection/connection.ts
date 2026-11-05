@@ -1,8 +1,9 @@
+import {HrmButton} from '../../shared/ui/button';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HealthService } from '../../services/health.service';
-@Component({imports:[TranslatePipe], selector: 'app-connection', standalone: true, templateUrl: './connection.html' })
+@Component({imports:[HrmButton,TranslatePipe], selector: 'app-connection', standalone: true, templateUrl: './connection.html' })
 export class ConnectionPage {
   private healthService = inject(HealthService);
   loading = false;

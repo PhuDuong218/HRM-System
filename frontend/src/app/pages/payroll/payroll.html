@@ -106,7 +106,7 @@
       </thead>
       <tbody>
         @for (item of pagedDetails; track item.payrollDetailId) {
-          <tr>
+          <tr (appRowView)="viewDetail(item)" [rowViewDisabled]="loading">
             <td class="fw-bold">NV-00{{ item.employeeId }}</td>
             <td class="text-dark-blue fw-semibold">{{ item.totalGross | number:'1.0-0' }} đ</td>
             <td class="text-muted">{{ item.totalDeduction | number:'1.0-0' }} đ</td>
@@ -134,15 +134,7 @@
 
   <!-- PHÂN TRANG THEO CHUẨN TRANG HỢP ĐỒNG -->
   @if (details.length > 0) {
-    <div class="d-flex align-items-center gap-2 pt-3 border-top">
-      <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === 1" (click)="prevPage()">
-        Trước
-      </button>
-      <span class="small text-muted px-2">Trang {{ currentPage }} / {{ totalPages }}</span>
-      <button class="btn btn-outline-secondary btn-sm" [disabled]="currentPage === totalPages" (click)="nextPage()">
-        Sau
-      </button>
-    </div>
+    <app-pagination [page]="currentPage-1" [pages]="totalPages" [busy]="loading" (pageChange)="currentPage=$event+1"/>
   }
 </section>
 

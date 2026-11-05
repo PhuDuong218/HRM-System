@@ -120,7 +120,7 @@
           <tr
             class="contract-row"
             [class.is-selected]="selectedId === c.contractId"
-            (click)="viewDetail(c.contractId)"
+            (appRowView)="viewDetail(c.contractId)" [rowViewDisabled]="loading"
           >
             <td [attr.data-label]="language.t('Số hợp đồng')">
               {{c.contractNumber}}
@@ -967,3 +967,4 @@
     } }
   </div>
 </app-record-workspace>
+

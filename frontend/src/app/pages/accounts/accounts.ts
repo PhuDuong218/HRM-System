@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import {HrScopes} from './hr-scopes';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -18,7 +19,7 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports: [FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
+  imports:[Pagination,FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css'
 })

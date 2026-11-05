@@ -1,3 +1,4 @@
+import {HrmButton} from '../../shared/ui/button';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -11,7 +12,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
 
 @Component({
-  selector: 'app-overview', standalone: true, imports: [RouterLink],
+  selector: 'app-overview', standalone: true, imports: [HrmButton,RouterLink],
   templateUrl: './overview.html', styleUrl: './overview.css'
 })
 export class OverviewPage implements OnInit {

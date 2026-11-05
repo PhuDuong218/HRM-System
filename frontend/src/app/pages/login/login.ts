@@ -1,3 +1,5 @@
+import {HrmButton} from '../../shared/ui/button';
+import {HrmIcon} from '../../shared/ui/icon';
 import { Component, ElementRef, ViewChild, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Router } from '@angular/router';
@@ -10,11 +12,18 @@ import { navigation } from '../../navigation';
 @Component({
   selector: 'app-login',
   standalone: true,
+  imports:[HrmButton,HrmIcon],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })
 export class LoginPage {
-  readonly navigation = navigation;
+  private readonly featuredPaths = new Set([
+    'employees', 'contracts', 'schedules', 'attendance',
+    'overtime', 'requests', 'payroll', 'reports'
+  ]);
+  readonly featuredLinks = navigation.flatMap(item =>
+    item.children ?? (item.path ? [{ path: item.path, label: item.label }] : [])
+  ).filter(link => this.featuredPaths.has(link.path));
   @ViewChild('username') private usernameInput?: ElementRef<HTMLInputElement>;
   selectedPath = '';
   selectedLabel = '';
@@ -141,7 +150,7 @@ export class LoginPage {
     this.loading = true;
     this.error = '';
     this.auth.login(username, password).pipe(finalize(() => this.loading = false)).subscribe({
-      next: () => void this.router.navigateByUrl((['ADMIN','HR'].includes(this.auth.profile()?.role||'') ? '/' + (this.selectedPath || 'overview') : '/requests/head'), { info: { showLoginSuccess: true } }),
+      next: () => void this.router.navigateByUrl((['ADMIN','HR'].includes(this.auth.profile()?.role||'') ? '/' + (this.selectedPath || 'overview') : '/requests/head'), { replaceUrl: true, info: { showLoginSuccess: true } }),
       error: (error: unknown) => {
         if (error instanceof ManagementAccessDeniedError) {
           this.error = error.message;

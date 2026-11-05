@@ -3,7 +3,7 @@ import {UI_EN} from './ui-translations';
 import { Injectable, signal } from '@angular/core';
 
 const EN: Record<string, string> = {
-  "Có thể tìm không dấu, ví dụ: han": "Accent-insensitive search, e.g. han",
+  "Nhập từ khóa": "Accent-insensitive search, e.g. han",
   "Năm tốt nghiệp đến": "Graduation year to",
   "Năm tốt nghiệp từ": "Graduation year from",
   "Có hiệu lực tại ngày": "Effective on",
@@ -117,6 +117,7 @@ const EN: Record<string, string> = {
   "Phiên đăng nhập đã hết hạn.": "Your session has expired.",
   "Phiên đăng nhập": "Your session",
   "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.": "Your session has expired. Please sign in again.",
+  "Phiên đăng nhập đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.": "Your session has expired due to inactivity. Please sign in again.",
   "Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.": "Your session is no longer valid. Please sign in again.",
   "Đóng thông báo": "Close notification",
   "Không tải được dữ liệu. Vui lòng thử lại.": "Could not load data. Please try again.",

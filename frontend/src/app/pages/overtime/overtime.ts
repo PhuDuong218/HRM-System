@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {OtSupplementPanelComponent} from '../../shared/ot-supplement-panel';
@@ -10,7 +11,7 @@ import { Observable, finalize } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDetail, OtFilter, OtBreak, OtWorkflow, OtRegistration, OtActual, OtWindow } from './overtime-api.service';
 
-@Component({selector:'app-overtime',standalone:true,imports: [DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
+@Component({selector:'app-overtime',standalone:true,imports:[Pagination,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
 export class OvertimePage implements OnInit {
     readonly clockTiming = clockTiming;
   private readonly api=inject(OvertimeApiService);private readonly destroyRef=inject(DestroyRef);

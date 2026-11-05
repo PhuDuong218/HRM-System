@@ -277,26 +277,7 @@
                 </table>
             </div>
 
-            @if (pages>1) { <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang công">
-
-                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page===0"
-                    (click)="goPage(0)" aria-label="Trang đầu">&lt;&lt;</button>
-
-                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page===0"
-                    (click)="goPage(page-1)" aria-label="Trang trước">&lt;</button>
-
-                @for (p of pagination(pages,page); track $index) { @if (p==='...') { <span class="px-1">…</span> } @else
-                { <button type="button" class="btn btn-sm" [class.btn-primary]="p===page"
-                    [class.btn-outline-secondary]="p!==page" [attr.aria-current]="p===page?'page':null"
-                    [disabled]="busy" (click)="goPage(p)">{{ p+1 }}</button> } }
-
-                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page+1>=pages"
-                    (click)="goPage(page+1)" aria-label="Trang sau">&gt;</button>
-
-                <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||page+1>=pages"
-                    (click)="goPage(pages-1)" aria-label="Trang cuối">&gt;&gt;</button>
-
-            </nav> }
+            @if (pages>1) { <app-pagination [page]="page" [pages]="pages" [busy]="busy" (pageChange)="goPage($event)"/> }
 
         </section>
     </div>
@@ -509,7 +490,7 @@
   <label for="ownRequestSchedule" class="form-label">Bản ghi công cần điều chỉnh *</label><select id="ownRequestSchedule" class="form-select mb-2" [(ngModel)]="ownSchedule" (ngModelChange)="selectOwnRequest()" [disabled]="saving||ownRequestLoading"><option value="">{{ownRequestLoading?'Đang tải công cá nhân…':'Chọn ngày / ca / bản ghi công'}}</option>@for(r of ownRequestRows;track r.scheduleId){<option [value]="r.scheduleId" [disabled]="!r.canRequest">{{r.workDate}} — {{r.shift}} — {{r.attendanceId?'Công #'+r.attendanceId:'Chưa có bản ghi công'}}{{r.canRequest?'':' (Chưa đủ điều kiện gửi yêu cầu)'}}</option>}</select>
   <p class="small text-muted">Có thể gửi điều chỉnh công đã xác nhận hoặc bổ sung giờ ra còn thiếu theo chính sách máy chủ. Bản ghi hết hạn, kỳ khóa hoặc đang có yêu cầu mở không được chọn.</p>
   @if(!ownRequestLoading&&!ownRequestRows.length){<div class="alert alert-info">Không có lịch/công cá nhân trong khoảng ngày đã chọn. Hãy kiểm tra ngày ca.</div>}
-  @if(ownRequestPages>1){<div class="d-flex gap-2 align-items-center mb-3"><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage===0" (click)="loadOwnRequestRows(ownRequestPage-1)">Trang trước</button><span>{{ownRequestPage+1}} / {{ownRequestPages}}</span><button class="btn btn-sm btn-outline-primary" [disabled]="saving||ownRequestLoading||ownRequestPage+1>=ownRequestPages" (click)="loadOwnRequestRows(ownRequestPage+1)">Trang sau</button></div>}
+  @if(ownRequestPages>1){<app-pagination [page]="ownRequestPage" [pages]="ownRequestPages" [busy]="saving||ownRequestLoading" (pageChange)="loadOwnRequestRows($event)"/>}
   @if(detailLoading){<p role="status">Đang kiểm tra bản ghi công…</p>}
   @if(detail&&mode==='proposal'){<div class="alert alert-info small">{{detail.row.attendanceId==null?'Yêu cầu bổ sung giờ vào/ra':missingCheckoutProposal?'Yêu cầu bổ sung check-out':'Yêu cầu điều chỉnh công đã xác nhận'}} — {{detail.row.employeeLabel}}<br>Đang lưu: {{time(detail.row.actualStart)}} → {{time(detail.row.actualEnd)}}; nghỉ {{detail.row.actualBreakMinutes}} phút.</div><form (ngSubmit)="save()"><fieldset [disabled]="saving"><div class="row g-3"><div class="col-md-4"><label for="ownProposedResult" class="form-label">Kết quả đề nghị</label><select id="ownProposedResult" name="result" class="form-select" [(ngModel)]="result" (ngModelChange)="resultChanged()" [disabled]="missingCheckoutProposal"><option value="DI_LAM">Đi làm</option><option value="VANG">Vắng</option></select></div><div class="col-md-4"><label for="ownProposedStart" class="form-label">Giờ vào đề nghị</label><input id="ownProposedStart" name="start" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualStart" [disabled]="missingCheckoutProposal||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedEnd" class="form-label">Giờ ra đề nghị</label><input id="ownProposedEnd" name="end" type="datetime-local" step="1" class="form-control" [(ngModel)]="actualEnd" [disabled]="mode!=='proposal'||result==='VANG'"></div><div class="col-md-4"><label for="ownProposedBreaks" class="form-label">Phút nghỉ thực tế đề nghị</label><input id="ownProposedBreaks" name="breaks" type="number" min="0" step="1" class="form-control" [(ngModel)]="breakMinutes" [disabled]="result==='VANG'"></div><div class="col-12"><label for="ownProposedReason" class="form-label">Lý do *</label><textarea id="ownProposedReason" name="reason" class="form-control" rows="3" maxlength="1000" [(ngModel)]="reason" required></textarea></div></div><div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{saving?'Đang gửi…':'Gửi yêu cầu điều chỉnh'}}</button><button type="button" class="btn btn-outline-secondary" (click)="closeOwnRequest()">Hủy</button></div></fieldset></form>}
 </section>}
@@ -616,23 +597,7 @@
                 </table>
             </div>
 
-            @if (requestPages>1) { <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang yêu cầu"><button
-                    type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage===0"
-                    (click)="requestGoPage(0)">&lt;&lt;</button><button type="button"
-                    class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage===0"
-                    (click)="requestGoPage(requestPage-1)">&lt;</button>
-
-                @for (p of pagination(requestPages,requestPage); track $index) { @if (p==='...') { <span
-                    class="px-1">…</span> } @else { <button type="button" class="btn btn-sm"
-                    [class.btn-primary]="p===requestPage" [class.btn-outline-secondary]="p!==requestPage"
-                    [disabled]="busy" (click)="requestGoPage(p)">{{ p+1 }}</button> } }
-
-                <button type="button" class="btn btn-sm btn-outline-secondary"
-                    [disabled]="busy||requestPage+1>=requestPages"
-                    (click)="requestGoPage(requestPage+1)">&gt;</button><button type="button"
-                    class="btn btn-sm btn-outline-secondary" [disabled]="busy||requestPage+1>=requestPages"
-                    (click)="requestGoPage(requestPages-1)">&gt;&gt;</button>
-            </nav> }
+            @if (requestPages>1) { <app-pagination [page]="requestPage" [pages]="requestPages" [busy]="busy" (pageChange)="requestGoPage($event)"/> }
 
         </section>
     </div>

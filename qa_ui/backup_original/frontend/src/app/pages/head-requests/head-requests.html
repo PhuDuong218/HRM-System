@@ -1,0 +1,21 @@
+<app-page-header [title]="'Duyệt cấp 1'|translate" [description]="'Trưởng phòng duyệt cấp 1; HR/ADMIN duyệt cuối. Không tự duyệt đơn của mình.'|translate" />
+<app-leave-workflow-guide stage="head"/>
+@if(error){<div class="alert alert-danger" role="alert">{{error|translate}}</div>}
+@if(message){<div class="alert alert-success" role="status">{{message|translate}}</div>}
+<app-record-workspace [open]="!!selected" [busy]="saving||detailLoading" (dismiss)="close()">
+ <section recordList class="surface">
+  <div class="list-toolbar"><h2>{{'Đơn chờ duyệt cấp 1'|translate}}</h2><button class="btn btn-outline-primary" [disabled]="loading||saving||checkingAccess||!canReview" (click)="load()">{{'Tải lại'|translate}}</button></div>
+  @if(checkingAccess){<p role="status">{{'Đang kiểm tra quyền trưởng phòng…'|translate}}</p>}
+  @if(loading){<p role="status">{{'Đang tải dữ liệu…'|translate}}</p>}
+  <div class="table-responsive"><table class="table"><thead><tr><th>{{'Mã đơn'|translate}}</th><th>{{'Nhân viên'|translate}}</th><th>{{'Loại đơn'|translate}}</th><th>{{'Ngày nộp'|translate}}</th><th>{{'Thao tác'|translate}}</th></tr></thead><tbody>
+   @for(row of rows;track row.requestId){<tr><td [attr.data-label]="'Mã đơn'|translate">{{row.requestCode}}</td><td [attr.data-label]="'Nhân viên'|translate">{{row.employeeCode}} — {{row.employeeName}}</td><td [attr.data-label]="'Loại đơn'|translate">{{(row.requestType==='NGHI_PHEP'?'Nghỉ phép':'Nghỉ việc')|translate}}</td><td [attr.data-label]="'Ngày nộp'|translate">{{row.submittedAt|date:'dd/MM/yyyy HH:mm':'+0700'}}</td><td><button class="btn btn-outline-primary" [disabled]="saving||detailLoading" (click)="open(row)">{{'Chi tiết'|translate}}</button></td></tr>}@empty{<tr><td colspan="5">{{'Không có đơn chờ duyệt trong phạm vi phụ trách.'|translate}}</td></tr>}
+  </tbody></table></div>
+  <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)"/>
+ </section>
+ <section recordDetail class="surface"><h2>{{selected?.requestCode}}</h2>
+  @if(detailLoading){<p role="status">{{'Đang tải dữ liệu…'|translate}}</p>}
+  @if(detail){<dl><dt>{{'Lý do'|translate}}</dt><dd>{{detail['reason']}}</dd>@if(selected?.requestType==='NGHI_PHEP'){<dt>{{'Bắt đầu nghỉ'|translate}}</dt><dd>{{detail['leaveStart']|date:'dd/MM/yyyy HH:mm'}}</dd><dt>{{'Kết thúc nghỉ'|translate}}</dt><dd>{{detail['leaveEnd']|date:'dd/MM/yyyy HH:mm'}}</dd>}@else{<dt>{{'Ngày làm cuối đề nghị'|translate}}</dt><dd>{{detail['requestedLastWorkingDate']|date:'dd/MM/yyyy'}}</dd>}</dl>
+  <label>{{'Ghi chú / Lý do từ chối'|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label>
+  <div class="form-actions"><button class="btn btn-outline-danger" [disabled]="saving||!note.trim()" (click)="decide(false)">{{'Từ chối'|translate}}</button><button class="btn btn-primary" [disabled]="saving" (click)="decide(true)">{{(saving?'Đang xử lý…':'Duyệt cấp 1')|translate}}</button></div>}
+ </section>
+</app-record-workspace>

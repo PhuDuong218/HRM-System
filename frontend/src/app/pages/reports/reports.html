@@ -23,10 +23,10 @@
         <div><label for="report-expiring" class="form-label">Sắp hết hạn trong (ngày)</label><input #expiring id="report-expiring" name="expiringWithinDays" type="number" min="0" max="2147483647" step="1" class="form-control" [value]="filters.expiringWithinDays" (input)="filters.expiringWithinDays = expiring.valueAsNumber" required></div>
         <div><label for="report-department" class="form-label">ID phòng ban <span>(không bắt buộc)</span></label><input #department id="report-department" name="departmentId" type="text" inputmode="numeric" class="form-control" [value]="filters.departmentId" (input)="filters.departmentId = department.value" placeholder="Tất cả trong phạm vi"></div>
       }
-      <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">Xem báo cáo</button></div>
+      <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">{{ selected === 'payroll' ? 'Lọc' : 'Xem báo cáo' }}</button></div>
     </form>
   } @else {
-    <div class="employee-info"><span>Phân công được tính theo ngày hiện tại.</span><button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading">Tải lại</button></div>
+    <div class="employee-info"><span>Phân công được tính theo ngày <strong>{{ employeeReportDate }}</strong>.</span><button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading">Tải lại</button></div>
   }
 
   @if (exportError) { <div class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError }}</div> }
@@ -36,15 +36,24 @@
   } @else if (error) {
     <div class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
   } @else if (employeeReport) {
+    <div class="employee-summary" aria-label="Tổng quan nhân sự">
+      <div class="summary-main"><span class="summary-icon" aria-hidden="true">◉</span><div><span class="summary-label">Tổng nhân sự</span><strong>{{ number(employeeTotal) }}</strong><small>Nhân viên trong phạm vi báo cáo</small></div></div>
+      <div class="summary-stat"><span class="status-dot active-dot" aria-hidden="true"></span><div><span>Đang làm việc</span><strong>{{ number(employeeStatus('DANG_LAM')) }}</strong></div></div>
+      <div class="summary-stat"><span class="status-dot retired-dot" aria-hidden="true"></span><div><span>Đã nghỉ việc</span><strong>{{ number(employeeStatus('DA_NGHI')) }}</strong></div></div>
+    </div>
+    <div class="employee-section-heading"><div><h3>Cơ cấu nhân sự</h3><p>So sánh số nhân viên trong từng nhóm</p></div><span>Thanh biểu thị so với nhóm lớn nhất</span></div>
     <div class="group-grid">
-      @for (group of employeeGroups; track group.label) {
-        <article class="group-card">
-          <h3>{{ group.label }}</h3>
+      @for (group of employeeGroups; track group.label; let i = $index) {
+        <article class="group-card" [class.group-teal]="i === 1" [class.group-violet]="i === 2" [class.group-amber]="i === 3">
+          <div class="group-heading"><div><h3>{{ group.label }}</h3><p>{{ group.description }}</p></div><span class="group-badge">{{ number(group.rows.length) }} nhóm</span></div>
           @if (!group.rows.length) { <p class="muted small mb-0">Chưa có dữ liệu.</p> }
           @else {
-            <div class="table-responsive group-table" role="region" [attr.aria-label]="group.label" tabindex="0"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ group.label }}</caption><thead><tr><th scope="col">Nhóm</th><th scope="col" class="text-end">Nhân viên</th></tr></thead><tbody>
-              @for (row of group.rows; track $index) { <tr><td>{{ row.groupName || row.groupCode || '—' }}</td><td class="text-end">{{ number(row.employeeCount) }}</td></tr> }
-            </tbody></table></div>
+            <ul class="group-list" [attr.aria-label]="group.label">
+              @for (row of group.rows; track $index) {
+                <li><div class="group-row"><span>{{ employeeGroupName(row) }}</span><strong>{{ number(row.employeeCount) }} <small>nhân viên</small></strong></div><div class="bar-track" aria-hidden="true"><span [style.width.%]="group.max ? row.employeeCount / group.max * 100 : 0"></span></div></li>
+              }
+            </ul>
+            <div class="group-total"><span>Tổng cộng @if (i === 3) { <small>(có trình độ chính)</small> }</span><strong>{{ number(group.total) }} <small>nhân viên</small></strong></div>
           }
         </article>
       }

@@ -3,6 +3,8 @@ export interface NavigationLink {
   path: string;
   label: string;
   roles?: string[];
+  permissions?: string[];
+  badge?: number;
 }
 
 export interface NavigationItem {
@@ -16,24 +18,24 @@ export interface NavigationItem {
 export const navigation: NavigationItem[] = [
   { id: 'overview', path: 'overview', label: 'Tổng quan' },
   {
-    id: 'personnel', label: 'Quản lý Nhân sự', children: [
+    id: 'personnel', label: 'Nhân sự', children: [
       { path: 'employees', label: 'Nhân viên' },
       {path:'assignments',label:'Phân công / Điều chuyển'},
       {path:'certificates',label:'Bằng cấp / Chứng chỉ'},
       { path: 'contracts', label: 'Hợp đồng' },
-      { path: 'contract-types', label: 'Loại hợp đồng' },
+      
       { path: 'decisions', label: 'Khen thưởng / Kỷ luật' }
     ]
   },
   {
-    id: 'time', label: 'Thời gian & Chấm công', children: [
-      { path: 'work-shifts', label: 'Danh mục ca' },
+    id: 'time', label: 'Thời gian & Nghỉ phép', children: [
+      
       { path: 'schedules', label: 'Lịch làm việc' },
       { path: 'attendance', label: 'Chấm công' },
       { path: 'attendance/summary', label: 'Tổng hợp công theo kỳ' },
       { path: 'overtime', label: 'Tăng ca' },
       { path: 'requests', label: 'Quản lý đơn từ' },
-      { path: 'leave-types', label: 'Loại nghỉ phép' },
+      
       {path:'leave-entitlements',label:'Quỹ phép'}
     ]
   },
@@ -45,10 +47,14 @@ export const navigation: NavigationItem[] = [
     ]
   },
   {
-    id: 'organization', label: 'Cơ cấu tổ chức', children: [
+    id: 'organization', label: 'Danh mục dùng chung', children: [
       { path: 'departments', label: 'Phòng ban' },
       { path: 'positions', label: 'Chức vụ' },
-      { path: 'qualifications', label: 'Trình độ' }
+      { path: 'qualifications', label: 'Trình độ' },
+      { path: 'department-catalog', label: 'Danh mục phòng ban' },
+      { path: 'contract-types', label: 'Loại hợp đồng' },
+      { path: 'leave-types', label: 'Loại nghỉ phép' },
+      { path: 'work-shifts', label: 'Danh mục ca' }
     ]
   },
   { id: 'reports', path: 'reports', label: 'Báo cáo', roles: ['ADMIN'] },

@@ -112,25 +112,7 @@
         </table>
       </div>
       @if (totalPages>1) {
-      <nav class="d-flex justify-content-between align-items-center flex-wrap gap-2" aria-label="Phân trang lịch">
-        <span class="small text-muted">Trang {{ page+1 }}/{{ totalPages }}</span>
-        <div class="d-flex gap-1 flex-wrap">
-          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang đầu"
-            [disabled]="busy || page===0" (click)="goPage(0)">&lt;&lt;</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang trước"
-            [disabled]="busy || page===0" (click)="goPage(page-1)">&lt;</button>
-          @for (p of paginationPages(totalPages,page); track $index) {
-          @if (p==='...') { <span class="px-2 align-self-center">…</span> }
-          @else { <button type="button" class="btn btn-sm" [class.btn-primary]="p===page"
-            [class.btn-outline-secondary]="p!==page" [attr.aria-current]="p===page?'page':null" [disabled]="busy"
-            (click)="goPage(p)">{{ p+1 }}</button> }
-          }
-          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang sau"
-            [disabled]="busy || page+1>=totalPages" (click)="goPage(page+1)">&gt;</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang cuối"
-            [disabled]="busy || page+1>=totalPages" (click)="goPage(totalPages-1)">&gt;&gt;</button>
-        </div>
-      </nav>
+      <app-pagination [page]="page" [pages]="totalPages" [busy]="busy" (pageChange)="goPage($event)"/>
       }
     </section>
   </div>
@@ -333,25 +315,7 @@
         </table>
       </div>
       @if (requestPages>1) {
-      <nav class="d-flex gap-1 flex-wrap" aria-label="Phân trang yêu cầu">
-        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang đầu"
-          [disabled]="requestLoading || requestBusy || requestPage===0" (click)="requestGoPage(0)">&lt;&lt;</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang trước"
-          [disabled]="requestLoading || requestBusy || requestPage===0"
-          (click)="requestGoPage(requestPage-1)">&lt;</button>
-        @for (p of paginationPages(requestPages,requestPage); track $index) {
-        @if (p==='...') { <span class="px-2 align-self-center">…</span> }
-        @else { <button type="button" class="btn btn-sm" [class.btn-primary]="p===requestPage"
-          [class.btn-outline-secondary]="p!==requestPage" [attr.aria-current]="p===requestPage?'page':null"
-          [disabled]="requestLoading || requestBusy" (click)="requestGoPage(p)">{{ p+1 }}</button> }
-        }
-        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang sau"
-          [disabled]="requestLoading || requestBusy || requestPage+1>=requestPages"
-          (click)="requestGoPage(requestPage+1)">&gt;</button>
-        <button type="button" class="btn btn-outline-secondary btn-sm" aria-label="Trang cuối"
-          [disabled]="requestLoading || requestBusy || requestPage+1>=requestPages"
-          (click)="requestGoPage(requestPages-1)">&gt;&gt;</button>
-      </nav>
+      <app-pagination [page]="requestPage" [pages]="requestPages" [busy]="requestLoading||requestBusy" (pageChange)="requestGoPage($event)"/>
       }
     </div>
     @if (requestDetail; as d) {

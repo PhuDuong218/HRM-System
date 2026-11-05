@@ -1,3 +1,4 @@
+import {RowViewDirective} from '../../shared/row-view.directive';
 import { ContractWarnings } from "./contract-warnings";
 import { TranslatePipe } from "../../shared/translate.pipe";
 import { LanguageService } from "../../services/language.service";
@@ -43,7 +44,7 @@ type SalaryTermDraft = {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
+  imports: [RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
@@ -1078,3 +1079,4 @@ export class ContractsPage implements OnInit {
       });
   }
 }
+

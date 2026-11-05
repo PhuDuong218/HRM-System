@@ -13,6 +13,7 @@ import com.hrm.exception.GlobalExceptionHandler;
 import com.hrm.service.AuthService;
 import com.hrm.service.DetailedWorkTimeService;
 import com.hrm.service.ScheduleQueryService;
+import com.hrm.service.ScheduleStateService;
 import com.hrm.service.WorkScheduleService;
 import jakarta.servlet.Filter;
 import org.junit.jupiter.api.AfterEach;
@@ -103,6 +104,11 @@ class SharedApiSecurityRegressionTest {
         }
 
         @Bean
+        ScheduleStateService scheduleStateService() {
+            return mock(ScheduleStateService.class);
+        }
+
+        @Bean
         DetailedWorkTimeService detailedWorkTimeService() {
             return mock(DetailedWorkTimeService.class);
         }
@@ -189,6 +195,20 @@ class SharedApiSecurityRegressionTest {
                 .content("{\"username\":\"test-user\",\"password\":\"test-password\"}"))
                 .andExpect(status().isOk());
         verify(auth).login(any());
+    }
+
+    @Test
+    void webLoginIsPublicAndRefreshRequiresAValidSession() throws Exception {
+        when(auth.loginWeb(any())).thenReturn(new LoginResponse("web-token", "Bearer", 600));
+        mvc.perform(post("/api/auth/web/login").contentType("application/json")
+                .content("{\"username\":\"test-user\",\"password\":\"test-password\"}"))
+                .andExpect(status().isOk());
+        mvc.perform(post("/api/auth/web/refresh")).andExpect(status().isUnauthorized());
+        validAccount(4L);
+        String webToken = jwt.issueWeb(4L, 12L, "it-shared-user", "HR", 1);
+        when(auth.refreshWeb(any(), eq(webToken))).thenReturn(new LoginResponse("renewed", "Bearer", 600));
+        mvc.perform(post("/api/auth/web/refresh").header("Authorization", "Bearer " + webToken))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.accessToken").value("renewed"));
     }
 
     @Test

@@ -7,6 +7,7 @@ export interface HeadRequestDetail {reason?:string;leaveStart?:string;leaveEnd?:
 @Injectable({providedIn:'root'})
 export class HeadRequestsService {
  private http=inject(HttpClient);
+ capabilities(){return this.http.get<{departmentHead:boolean}>(`${API_BASE_URL}/employee-requests/capabilities`).pipe(timeout(15000));}
  list(page=0){return this.http.get<import('../models/page.model').SpringPage<HeadRequest>>(`${API_BASE_URL}/employee-requests/head-queue`,{params:{page,size:10}}).pipe(timeout(15000));}
  detail(id:number){return this.http.get<HeadRequestDetail>(`${API_BASE_URL}/employee-requests/${id}`).pipe(timeout(15000));}
  decide(id:number,approve:boolean,note:string){return this.http.post(`${API_BASE_URL}/employee-requests/${id}/head-decision`,{approve,note}).pipe(timeout(20000));}

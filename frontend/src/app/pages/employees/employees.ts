@@ -1,3 +1,6 @@
+import {RowViewDirective} from '../../shared/row-view.directive';
+import {Feedback} from '../../shared/ui/feedback';
+import {HrmButton} from '../../shared/ui/button';
 import {ManagementPageBase} from '../../shared/management-page.base';
 import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
@@ -12,7 +15,7 @@ import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { employeeFormErrors } from './employee-form.validation';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
-@Component({ selector: 'app-employees', standalone: true, imports: [PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
+@Component({ selector: 'app-employees', standalone: true, imports:[RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage extends ManagementPageBase implements OnInit {
     private api = inject(EmployeeService);
     private auth = inject(AuthService);
@@ -59,7 +62,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     attemptedSave = false;
     serverFieldErrors: Record<string,string> = {};
     get today() { return new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit',day:'2-digit'}).format(new Date()); }
-    get formErrors() { return employeeFormErrors(this.form,this.mode || '',this.today); }
+    get formErrors() { return employeeFormErrors(this.form,this.mode || '',this.today,!this.ownProfile); }
     get formErrorsCount() { return Object.keys(this.formErrors).length; }
     fieldError(field:string,f:NgForm) {
         const control=f.controls[field];

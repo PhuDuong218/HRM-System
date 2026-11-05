@@ -1,3 +1,4 @@
+import {Pagination} from '../../shared/pagination';
 import {AttendanceCalendarComponent} from '../../shared/attendance-calendar';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
@@ -9,7 +10,7 @@ import {WorkModuleApiService} from '../../services/work-module-api.service';
 import {AttendanceApiService} from '../attendance/attendance-api.service';
 interface Day {employeeId:number;employeeCode:string;employeeName:string;department:string|null;workDate:string;presentRecords:number;absentRecords:number;netMinutes:number;unresolvedRecords:number;}
 interface Employee {id:number;code:string;name:string;departments:string[];days:Day[];present:number;absent:number;minutes:number;unresolved:number;}
-@Component({selector:'app-attendance-summary',standalone:true,imports: [AttendanceCalendarComponent,DetailFocusDirective,RowViewDirective,CommonModule,FormsModule],templateUrl:'./attendance-summary.html',styleUrls:['../work-module.css','./attendance-summary.css']})
+@Component({selector:'app-attendance-summary',standalone:true,imports:[Pagination,AttendanceCalendarComponent,DetailFocusDirective,RowViewDirective,CommonModule,FormsModule],templateUrl:'./attendance-summary.html',styleUrls:['../work-module.css','./attendance-summary.css']})
 export class AttendanceSummaryPage implements OnInit {
  showCalendar=false;
  detailFocusVersion=0;

@@ -10,7 +10,7 @@
 .module-list .table td { overflow-wrap:anywhere; vertical-align:middle; }
 .module-list .table .action-cell { white-space:normal !important; }
 .module-list .action-cell .btn { margin:3px 3px 3px 0; }
-@container module-list (max-width: 1000px) {
+@container module-list (max-width: 640px) {
  .module-list .table { display:block; width:100%; min-width:0 !important; }
  .module-list .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
  .module-list .table tbody { display:grid; gap:12px; }

@@ -5,7 +5,7 @@
     </div>
     <div class="heading-actions">
       <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}</span>
-      <button type="button" class="overview-refresh" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
+      <button type="button" hrmBtn="secondary" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
     </div>
   </header>
 

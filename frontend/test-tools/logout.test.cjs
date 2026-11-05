@@ -17,7 +17,7 @@ test('logout clears local session on success, offline, and timeout without clear
     const jwt = sequence => `header.${Buffer.from(JSON.stringify({ role: 'ADMIN', sequence })).toString('base64url')}.signature`;
     function login(sequence) {
       auth.login('admin', 'password').subscribe();
-      http.expectOne('/api/auth/login').flush({ accessToken: jwt(sequence), tokenType: 'Bearer', expiresInSeconds: 300 });
+      http.expectOne('/api/auth/web/login').flush({ accessToken: jwt(sequence), tokenType: 'Bearer', expiresInSeconds: 300 });
       http.expectOne('/api/auth/me').flush({role:'ADMIN',fullName:'Admin'});
       http.expectOne('/api/employee-requests/capabilities').flush({departmentHead:false});
     }
