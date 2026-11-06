@@ -24,7 +24,7 @@ export function employeeFormErrors(form: EmployeeForm, mode: string, today: stri
       if(!text(form.address))errors['address']='Vui lòng nhập địa chỉ nhà.';
     }
     if (text(form.phone) && !/^0[35789][0-9]{8}$/.test(text(form.phone))) errors['phone'] = 'Điện thoại gồm 10 chữ số, bắt đầu bằng 03, 05, 07, 08 hoặc 09.';
-    if (text(form.identityNumber).length > 50) errors['identityNumber'] = 'CCCD không vượt quá 50 ký tự.';
+    if (text(form.identityNumber) && !/^(?:[0-9]{9}|[0-9]{12})$/.test(text(form.identityNumber))) errors['identityNumber'] = 'CCCD/CMND phải gồm 9 hoặc 12 chữ số';
     if (text(form.address).length > 500) errors['address'] = 'Địa chỉ không vượt quá 500 ký tự.';
     if (mode !== 'create' && (!text(form.reason) || text(form.reason).length > 1000)) errors['changeReason'] = 'Nhập lý do thay đổi, tối đa 1000 ký tự.';
     return errors;

@@ -1,4 +1,6 @@
 export const UI_EN: Record<string,string> = {
+ "Đường dẫn trang":"Breadcrumb",
+ "Một ADMIN quản trị hệ thống; nhiều HR có thể quản lý nhiều phòng ban theo phạm vi được cấp.":"One ADMIN manages the system; multiple HR accounts may manage multiple departments within their assigned scopes.",
  "Đang xử lý dữ liệu":"Processing data",
  "Bạn có thay đổi chưa lưu":"You have unsaved changes",
  "Vui lòng chờ thao tác hoàn tất. Dữ liệu đang được gửi đến máy chủ.":"Please wait for the operation to finish. Data is being sent to the server.",

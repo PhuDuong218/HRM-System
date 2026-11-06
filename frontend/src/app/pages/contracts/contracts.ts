@@ -1,3 +1,4 @@
+import {PageHeader} from '../../shared/page-header';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { ContractWarnings } from "./contract-warnings";
 import { TranslatePipe } from "../../shared/translate.pipe";
@@ -44,7 +45,7 @@ type SalaryTermDraft = {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports: [RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
+  imports:[PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })

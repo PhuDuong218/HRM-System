@@ -1,6 +1,4 @@
-<p class="eyebrow">HRM CENTER</p>
-<div class="contracts-heading d-flex justify-content-between align-items-center mb-3">
-  <h1 class="mb-0">{{language.t("Hợp đồng")}}</h1>
+<app-page-header title="Hợp đồng">
 
   <button
     type="button"
@@ -9,8 +7,7 @@
     (click)="openCreate()"
   >
     {{language.t("Tạo hợp đồng")}}
-  </button>
-</div>
+  </button></app-page-header>
 
 @if (message) {
 <div class="alert alert-success" role="status">{{(message) | translate}}</div>

@@ -10,12 +10,19 @@ public class EmployeeSupplement {
  private boolean exists(){return db.queryForObject("SELECT CASE WHEN COL_LENGTH('dbo.employees','gender') IS NULL THEN 0 ELSE 1 END",Integer.class)==1;}
  public String get(long employee){return exists()?db.queryForObject("SELECT gender FROM dbo.employees WHERE employee_id=?",String.class,employee):null;}
  public void save(long employee,String gender,long actor,String reason){
+  save(employee,gender,actor,reason,true);
+ }
+ /** Profile writer includes this change in its single before/after audit event. */
+ public void saveProfile(long employee,String gender,long actor,String reason){
+  save(employee,gender,actor,reason,false);
+ }
+ private void save(long employee,String gender,long actor,String reason,boolean recordAudit){
   if(gender==null)return;
   if(!Set.of("MALE","FEMALE","OTHER","UNDISCLOSED").contains(gender))throw PersonnelWorkflowSupport.bad("Giới tính chưa hợp lệ");
   if(!exists())throw PersonnelWorkflowSupport.conflict("Cần migration 011 để lưu thông tin giới tính");
   String before=get(employee);if(Objects.equals(before,gender))return;
   db.update("UPDATE dbo.employees SET gender=? WHERE employee_id=?",gender,employee);
   var entity=em.find(com.hrm.model.Employee.class,employee);if(entity!=null)em.refresh(entity);
-  support.audit(actor,"EMPLOYEE_SUPPLEMENT_UPDATE","employees",employee,reason,Collections.singletonMap("gender",before),Map.of("gender",gender));
+  if(recordAudit)support.audit(actor,"EMPLOYEE_SUPPLEMENT_UPDATE","employees",employee,reason,Collections.singletonMap("gender",before),Map.of("gender",gender));
  }
 }

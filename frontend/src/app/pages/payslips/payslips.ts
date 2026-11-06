@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +7,7 @@ import { PayrollService } from '../../services/payroll.service';
 @Component({
   selector: 'app-payslips',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports:[Breadcrumb,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payslips.html',
   styleUrl: './payslips.css'
 })

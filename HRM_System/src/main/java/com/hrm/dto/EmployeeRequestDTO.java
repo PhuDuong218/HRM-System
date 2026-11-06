@@ -25,6 +25,7 @@ public class EmployeeRequestDTO {
     @Past(message = "Ngày sinh phải là một ngày trong quá khứ")
     private LocalDate birthDate;
 
+    @NotBlank(message = "Email không được để trống")
     @Email(message = "Định dạng email không hợp lệ")
     @Size(max = 254)
     private String email;
@@ -39,6 +40,8 @@ public class EmployeeRequestDTO {
     private LocalDate hireDate;
 
     @Size(max = 50)
+    @NotBlank(message = "CCCD/CMND không được để trống")
+    @Pattern(regexp = "[0-9]{9}|[0-9]{12}", message = "CCCD/CMND phải gồm 9 hoặc 12 chữ số")
     private String identityNumber; // Căn cước công dân
 
     // --- CÁC TRƯỜNG BẮT BUỘC ĐỂ TẠO PHÂN CÔNG CÔNG TÁC ---
@@ -50,6 +53,7 @@ public class EmployeeRequestDTO {
     @NotNull(message = "Bắt buộc phải chọn Chức vụ khi thêm nhân viên")
     @jakarta.validation.constraints.Positive(message = "ID chức vụ phải lớn hơn 0")
     private Long positionId;
+@NotBlank(message = "Địa chỉ không được để trống")
 @Size(max = 500, message = "Địa chỉ không vượt quá 500 ký tự")
 private String address;
     // TODO: Sử dụng Generate Getters and Setters cho toàn bộ các biến trên
@@ -105,7 +109,7 @@ private String address;
     }
 
     public void setIdentityNumber(String identityNumber) {
-        this.identityNumber = identityNumber;
+        this.identityNumber = identityNumber == null ? null : identityNumber.trim();
     }
 
     public Long getDepartmentId() {

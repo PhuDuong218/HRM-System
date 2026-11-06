@@ -1,3 +1,4 @@
+import {PageHeader} from '../../shared/page-header';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -29,7 +30,7 @@ type Action = 'approve' | 'reject';
 @Component({
   selector: 'app-decisions',
   standalone: true,
-  imports:[RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './decisions.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })

@@ -1,0 +1,66 @@
+[
+  {
+    "path": "HRM_System/src/main/java/com/hrm/dto/EmployeeDTO.java",
+    "sha256": "9CD050E3FB144ED20E3E8C9AA7C6E368DFC2DD206A0ECFF307BCDC834FB8091D"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java",
+    "sha256": "0D75D46B3C5C4C91E01964AB427E418D07F99FB6AEA494EF3B3D09B760444D13"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/dto/EmployeeUpdateRequestDTO.java",
+    "sha256": "E35868E17168A0D7DDA19F9888F4FBA535A49FE03B36A54EEF41F4F627CA02F5"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/dto/EmployeeContactPatchDTO.java",
+    "sha256": "E89521BF60FA8619DF6105485400C93259CB04E666EAE5924F9D9E6184DC4C3A"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/service/EmployeeCreationAuditService.java",
+    "sha256": "76C3C320606FA52C0AD3DD4B4C58DF97A6F97EFA44D0D113A5562CA2F629063D"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/service/EmployeeContactService.java",
+    "sha256": "E53A3657AADE5CB59ECD84D441175D345848749CE3A76CFA3E127F3B2C7A60F7"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/service/EmployeeService.java",
+    "sha256": "1085462A5EDE11144BFB3F629430CF609905085155CB4F6E66840776C7FDE182"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/service/EmployeeQualificationService.java",
+    "sha256": "6EAD73DC88B6D18A12CA6DDADE805BCC42E2586954D836D62DC6B8D52CD42297"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/service/EmployeeSupplement.java",
+    "sha256": "481850976B9551BA263E32B76C9CD4359E7818A18B6E837015BEBBC00A7EB3ED"
+  },
+  {
+    "path": "frontend/src/app/services/employee.service.ts",
+    "sha256": "19197EA2FD98F5807360472668E2FCBA9EF41C6D93E7BC6F225FE9CB6801717D"
+  },
+  {
+    "path": "frontend/src/app/pages/employees/employees.ts",
+    "sha256": "0E62B1A69E13467F532ADB32F419971F8C8216ECF9A1C947B3D4AB8953DFB244"
+  },
+  {
+    "path": "frontend/src/app/pages/employees/employees.html",
+    "sha256": "2907B7200EA47E99B27A4143068F88A546F210B9A8953FB561C85BEF6F00889D"
+  },
+  {
+    "path": "frontend/src/app/pages/employees/employee-form.validation.ts",
+    "sha256": "1FCDD6923977E72127124EA606419C9B78917B2AA721E33F8CC3A5C0838C7E87"
+  },
+  {
+    "path": "HRM_System/src/main/java/com/hrm/config/PersonnelPrivacyAdvice.java",
+    "sha256": "FB25018A1515F7BAC8928E5B5815DE233A30B70F0C57B8AB65E02F3879D4D935"
+  },
+  {
+    "path": "frontend/src/app/pages/employees/employees.css",
+    "sha256": "EA2FE6C3FFC2FDD71DC7A78A6786B71E09923ED03CC726909C0F61D7FEC1D14C"
+  },
+  {
+    "path": "frontend/src/app/services/language.service.ts",
+    "sha256": "CEAC6758A099752F79B52457DDD86B941B13643E0207678DA3FA1FB79C856D17"
+  }
+]

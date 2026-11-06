@@ -1,5 +1,5 @@
 <header class="ot-header">
-  <div><p class="ot-eyebrow">{{ 'THỜI GIAN & CHẤM CÔNG' | translate }}</p><h1>{{ 'Quản lý tăng ca và xác nhận OT' | translate }}</h1><p>{{ 'Theo dõi đăng ký, phê duyệt và giờ tăng ca thực tế trong cùng một không gian.' | translate }}</p></div>
+  <div><app-breadcrumb variant="group"/><h1>{{ 'Quản lý tăng ca và xác nhận OT' | translate }}</h1><p>{{ 'Theo dõi đăng ký, phê duyệt và giờ tăng ca thực tế trong cùng một không gian.' | translate }}</p></div>
   @if (context) { <span class="ot-scope">{{ (context.role==='ADMIN'?'Toàn trung tâm':context.manage?'Theo phạm vi được giao':'OT cá nhân') | translate }}</span> }
 </header>
 @if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }

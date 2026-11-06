@@ -1,0 +1,403 @@
+{
+  "executedAt": "2026-11-06T06:37:38.945Z",
+  "results": [
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 200,
+      "pass": true,
+      "rows": 14
+    },
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees?page=0&size=100",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 14,
+      "rows": 14
+    },
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees/search?keyword=DEMO008",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/contracts?employeeId=8",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employee-assignments/search?employeeId=8",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-scope-list",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employee-qualifications/search?employeeId=8",
+      "expected": [
+        200,
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-scope-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees/8/allowances",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-scope-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees/8/allowance-calculations?periodId=1",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-scope-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/api/payslips/preview/employee/8/html",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "HR-positive-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees/9/allowances",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "rows": 1
+    },
+    {
+      "id": "HR-positive-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/employees/9/allowance-calculations?periodId=1",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "HR-positive-financial",
+      "actor": "hr",
+      "method": "GET",
+      "path": "/api/payslips/preview/employee/9/html",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "employee-payslip-other-id",
+      "actor": "employee",
+      "method": "GET",
+      "path": "/api/payslips/my-payslips?employeeId=9",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "employee-own-payslips",
+      "actor": "employee",
+      "method": "GET",
+      "path": "/api/payslips/my-payslips",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "rows": 0
+    },
+    {
+      "id": "employee-denied-payroll",
+      "actor": "employee",
+      "method": "GET",
+      "path": "/api/payroll-batches/1/details",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "employee-denied-payroll",
+      "actor": "employee",
+      "method": "GET",
+      "path": "/api/payroll-batches/period/1",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "employee-denied-payroll",
+      "actor": "employee",
+      "method": "GET",
+      "path": "/api/payroll-periods/1",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword=%25",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword=_",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword='",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword=%22",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 0,
+      "rows": 0
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword=han",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 28,
+      "rows": 10
+    },
+    {
+      "id": "search-special-and-unicode",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/search?keyword=Ha%CC%82n",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 28,
+      "rows": 10
+    },
+    {
+      "id": "export-employees",
+      "actor": "admin",
+      "path": "/api/reports/employees/export",
+      "actual": 200,
+      "pass": true,
+      "bytes": 7299,
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "id": "export-employees",
+      "actor": "hr",
+      "path": "/api/reports/employees/export",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-employees",
+      "actor": "employee",
+      "path": "/api/reports/employees/export",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-contracts",
+      "actor": "admin",
+      "path": "/api/reports/contracts/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 200,
+      "pass": true,
+      "bytes": 4927,
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "id": "export-contracts",
+      "actor": "hr",
+      "path": "/api/reports/contracts/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-contracts",
+      "actor": "employee",
+      "path": "/api/reports/contracts/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-work",
+      "actor": "admin",
+      "path": "/api/reports/work/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 200,
+      "pass": true,
+      "bytes": 5096,
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "id": "export-work",
+      "actor": "hr",
+      "path": "/api/reports/work/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-work",
+      "actor": "employee",
+      "path": "/api/reports/work/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-payroll",
+      "actor": "admin",
+      "path": "/api/reports/payroll/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 200,
+      "pass": true,
+      "bytes": 5855,
+      "contentType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    },
+    {
+      "id": "export-payroll",
+      "actor": "hr",
+      "path": "/api/reports/payroll/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "export-payroll",
+      "actor": "employee",
+      "path": "/api/reports/payroll/export?fromDate=2026-11-01&toDate=2026-11-30",
+      "actual": 403,
+      "pass": true,
+      "bytes": 132,
+      "contentType": "application/json"
+    },
+    {
+      "id": "anonymous-no-db-diagnostics",
+      "actor": "",
+      "method": "GET",
+      "path": "/api/health",
+      "expected": [
+        200,
+        401
+      ],
+      "actual": 200,
+      "pass": true
+    }
+  ]
+}

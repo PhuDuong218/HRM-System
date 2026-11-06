@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../shared/breadcrumb';
 import {HrmIcon} from '../shared/ui/icon';
 import {PendingEditorService} from '../services/pending-editor.service';
 import {TranslatePipe} from '../shared/translate.pipe';
@@ -15,7 +16,7 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports: [Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })

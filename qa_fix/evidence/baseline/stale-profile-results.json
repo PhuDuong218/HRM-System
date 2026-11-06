@@ -1,0 +1,47 @@
+{
+  "executedAt": "2026-11-06T06:43:23.820Z",
+  "results": [
+    {
+      "id": "D11-admin-saves-new-name",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/employees/36",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "D11-stale-profile-must-not-silently-overwrite",
+      "actual": 200,
+      "pass": false,
+      "evidence": {
+        "newNameRetained": false,
+        "oldNameOverwrote": true
+      }
+    },
+    {
+      "id": "D5-invalid-ID-letters",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/employees/36",
+      "expected": [
+        400
+      ],
+      "actual": 200,
+      "pass": false
+    },
+    {
+      "id": "restore-QA-profile",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/employees/36",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    }
+  ]
+}

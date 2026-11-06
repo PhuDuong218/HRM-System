@@ -98,7 +98,9 @@ public class AdminAccessService {
             throw new IllegalArgumentException("Mật khẩu không được vượt quá 72 byte UTF-8");
         Account account = new Account();
         account.setEmployeeId(request.employeeId());
-        account.setRole(roleEntity(request.roleId()));
+        Role role = roleEntity(request.roleId());
+        validateAdminRoleAssignment(null, role.getRoleCode());
+        account.setRole(role);
         account.setUsername(request.username());
         account.setPasswordHash(encoder.encode(request.password()));
         account.setActive(request.active());
@@ -145,6 +147,7 @@ public class AdminAccessService {
             conflict("Thông tin tài khoản đã thay đổi. Vui lòng tải lại.");
         Role role = roleEntity(request.roleId());
         if (!SYSTEM_ROLES.contains(role.getRoleCode())) conflict("Vai trò không được hỗ trợ.");
+        validateAdminRoleAssignment(account.getRole().getRoleCode(), role.getRoleCode());
         if (actor.accountId().equals(id) && !account.getRole().getRoleId().equals(request.roleId()))
             conflict("Không được thay đổi vai trò tài khoản đang sử dụng.");
         uniqueUsername(request.username(), id);
@@ -174,6 +177,7 @@ public class AdminAccessService {
         adminWrite(actor);
         Account account = accountEntity(id);
         Role role = roleEntity(request.roleId());
+        validateAdminRoleAssignment(account.getRole().getRoleCode(), role.getRoleCode());
         if (actor.accountId().equals(id)
                 && (!request.active() || !account.getRole().getRoleId().equals(request.roleId())))
             conflict("Không được tự khóa hoặc thay đổi vai trò tài khoản đang sử dụng");
@@ -214,6 +218,12 @@ public class AdminAccessService {
 
     public List<RoleView> roles() {
         return roles.findAll(Sort.by("roleId")).stream().map(this::roleView).toList();
+    }
+    /** ADMIN is provisioned initially; account management must never grant a second one. */
+    static void validateAdminRoleAssignment(String existingRole, String requestedRole) {
+        if ("ADMIN".equals(requestedRole) && !"ADMIN".equals(existingRole))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Hệ thống chỉ sử dụng một ADMIN. Không thể tạo thêm hoặc cấp ADMIN cho tài khoản khác. HR có thể quản lý nhiều phòng ban.");
     }
     public RoleView role(long id) { return roleView(roleEntity(id)); }
 

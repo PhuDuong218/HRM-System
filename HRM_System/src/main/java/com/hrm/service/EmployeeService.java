@@ -288,9 +288,9 @@ public class EmployeeService {
         validateEmployeeDates(requestDTO.getBirthDate(), employee.getHireDate());
         employee.setFullName(requestDTO.getFullName().trim());
         employee.setBirthDate(requestDTO.getBirthDate());
-        employee.setEmail(normalizeContactText(requestDTO.getEmail()));
-        employee.setPhone(normalizeContactText(requestDTO.getPhone()));
-        employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
+        if (requestDTO.getEmail()!=null) employee.setEmail(normalizeContactText(requestDTO.getEmail()));
+        if (requestDTO.hasPhone()) employee.setPhone(normalizeContactText(requestDTO.getPhone()));
+        if (requestDTO.getIdentityNumber()!=null) employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
         // Omission preserves the address for older PUT clients; an empty string clears it.
         if (requestDTO.getAddress() != null) employee.setAddress(normalizeContactText(requestDTO.getAddress()));
         employee.setUpdatedAt(auditNow());
@@ -354,6 +354,7 @@ public class EmployeeService {
 
     private EmployeeDTO convertToSearchDTO(Employee employee, EmployeeAssignment assignment) {
         EmployeeDTO dto = new EmployeeDTO();
+        dto.setVersion(EmployeeWriteRules.version(employee));
         dto.setEmployeeId(employee.getEmployeeId());
         if(supplement!=null)dto.setGender(supplement.get(employee.getEmployeeId()));
         dto.setEmployeeCode(employee.getEmployeeCode());

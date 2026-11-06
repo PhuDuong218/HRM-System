@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
 import {AttendanceActualBreaksComponent} from '../../shared/attendance-actual-breaks';
@@ -18,7 +19,7 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports:[Pagination,AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports:[Breadcrumb,Pagination,AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })

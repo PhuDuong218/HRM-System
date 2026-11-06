@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { employmentApiError } from '../../shared/employment-api-error';
@@ -25,7 +26,7 @@ type AssignMode = 'create' | 'edit' | 'change' | 'end';
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[Breadcrumb,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })

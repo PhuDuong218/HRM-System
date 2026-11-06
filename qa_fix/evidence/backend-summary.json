@@ -1,0 +1,80 @@
+[
+  {
+    "suite": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.hrm.service.ResignationExecutionServiceTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.security.PayrollManagementAuthorizationTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.security.PayslipScopeTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.AuthLogoutRegressionTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.EmployeePrivacyWriteFixTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.EmployeeProfileVersionFixTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.EmployeeWriteFixRegressionTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "tests": 17,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.LeaveBalanceScopeRegressionTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.PersonnelLeavePolicyTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.QualificationDuplicateFixTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  },
+  {
+    "suite": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0
+  }
+]

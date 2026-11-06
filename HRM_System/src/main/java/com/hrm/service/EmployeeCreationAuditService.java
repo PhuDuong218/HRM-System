@@ -73,6 +73,7 @@ public class EmployeeCreationAuditService {
                 after);
 
         if(supplement!=null){supplement.save(result.getEmployeeId(),request.getGender(),actorAccountId,"Tạo/cập nhật thông tin hồ sơ");result.setGender(supplement.get(result.getEmployeeId()));}
+        result.setVersion(EmployeeWriteRules.version(employee));
         return result;
     }
 
@@ -84,13 +85,19 @@ public class EmployeeCreationAuditService {
         }
         Employee employee = employeeRepository.findByIdForUpdate(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên: " + id));
+        EmployeeWriteRules.requireVersion(employee,request.getVersion());
+        request.setReason(EmployeeWriteRules.reason(request.getReason()));
+        EmployeeWriteRules.requiredIfPresent(request.hasEmail(),request.getEmail(),"Email");
+        EmployeeWriteRules.requiredIfPresent(request.hasAddress(),request.getAddress(),"Địa chỉ");
+        EmployeeWriteRules.requiredIfPresent(request.hasIdentityNumber(),request.getIdentityNumber(),"CCCD/CMND");
+        EmployeeWriteRules.identity(request.getIdentityNumber());
         Map<String, String> before = snapshot(employee);
         employee.setUpdatedBy(actorAccountId);
         EmployeeDTO result = employeeService.updateEmployee(id, request);
         employeeRepository.flush();
-        if(request.getReason()==null) auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee));
-        else auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee),request.getReason());
-        if(supplement!=null){supplement.save(id,request.getGender(),actorAccountId,request.getReason());result.setGender(supplement.get(id));}
+        if(supplement!=null){supplement.saveProfile(id,request.getGender(),actorAccountId,request.getReason());result.setGender(supplement.get(id));}
+        auditService.recordProfileUpdate(actorAccountId, id, before, snapshot(employee),request.getReason());
+        result.setVersion(EmployeeWriteRules.version(employee));
         return result;
     }
 
@@ -110,6 +117,7 @@ public class EmployeeCreationAuditService {
         data.put("phone", employee.getPhone());
         data.put("address", employee.getAddress());
         data.put("identityNumber", employee.getIdentityNumber());
+        if(supplement!=null)data.put("gender",supplement.get(employee.getEmployeeId()));
 
         return data;
     }

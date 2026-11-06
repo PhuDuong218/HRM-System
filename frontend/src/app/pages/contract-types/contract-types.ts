@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,7 +16,7 @@ import { employmentApiError } from '../../shared/employment-api-error';
 @Component({
   selector: 'app-contract-types',
   standalone: true,
-  imports: [FormsModule,TranslatePipe],
+  imports:[Breadcrumb,FormsModule,TranslatePipe],
   templateUrl: './contract-types.html'
 })
 export class ContractTypesPage implements OnInit {

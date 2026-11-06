@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import {Pagination} from '../../shared/pagination';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import {HrScopes} from './hr-scopes';
@@ -19,7 +20,7 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports:[Pagination,FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
+  imports:[Breadcrumb,Pagination,FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css'
 })

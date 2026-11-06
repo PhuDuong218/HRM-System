@@ -4,6 +4,7 @@ import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 export interface Employee {
+    version?: string;
     gender?:string|null;
     employeeId: number;
     employeeCode: string;
@@ -24,6 +25,7 @@ export interface Employee {
 export interface Page extends SpringPage<Employee> { number: number; }
 
 export interface EmployeeForm {
+    version?: string;
     gender?:string|null;
     reason?:string;
     privateFieldsEditable?: boolean;
@@ -62,12 +64,15 @@ export class EmployeeService {
     save(mode: string, id: number | undefined, f: EmployeeForm) {
         const privateFields = mode === 'create' || f.privateFieldsEditable
             ? { identityNumber:f.identityNumber.trim(), address:f.address.trim() } : {};
+        const contact = {email:f.privateFieldsEditable===false?undefined:f.email.trim()||null,
+            phone:f.privateFieldsEditable===false?undefined:f.phone.trim()||null,reason:f.reason?.trim()||null,
+            version:mode==='create'?undefined:f.version,...privateFields};
         const common = { gender:f.gender||null, fullName:f.fullName.trim(), birthDate:f.birthDate||null,
-            email:f.email.trim()||null, phone:f.phone.trim()||null, reason:f.reason?.trim()||null, ...privateFields };
+            ...contact };
         return mode === 'create'
             ? this.http.post<Employee>(API_BASE_URL+'/employees',{employeeCode:f.employeeCode,hireDate:f.hireDate,departmentId:f.departmentId,positionId:f.positionId,...common})
             : mode === 'contact'
-                ? this.http.patch<Employee>(API_BASE_URL+`/employees/${id}/contact`,{email:f.email.trim(),phone:f.phone.trim(),reason:f.reason?.trim()||null,...privateFields})
+                ? this.http.patch<Employee>(API_BASE_URL+`/employees/${id}/contact`,contact)
                 : this.http.put<Employee>(API_BASE_URL+`/employees/${id}`,common);
     }
     rehire(id:number,request:{effectiveDate:string;departmentId:number;positionId:number;reason:string}) { return this.http.post<void>(API_BASE_URL+`/employees/${id}/rehire`,request).pipe(timeout(20000)); }

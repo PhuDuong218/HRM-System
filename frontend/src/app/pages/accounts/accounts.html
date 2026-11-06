@@ -1,5 +1,5 @@
-<p class="eyebrow">{{ 'HỆ THỐNG' | translate }}</p>
-<h1>{{ 'Tài khoản và phân quyền' | translate }}</h1>
+<app-breadcrumb variant="group"/>
+<h1>{{ 'Tài khoản và phân quyền' | translate }}</h1><p class="page-description">{{'Một ADMIN quản trị hệ thống; nhiều HR có thể quản lý nhiều phòng ban theo phạm vi được cấp.'|translate}}</p>
 <p class="page-description">{{ 'Quản lý tài khoản, vai trò và quyền truy cập của nhân viên.' | translate }}</p>
 @if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
 
@@ -183,7 +183,7 @@
             }
           </div>
           <div><label class="form-label" for="create-username">{{ 'Tên đăng nhập' | translate }}</label><input id="create-username" name="username" class="form-control" maxlength="100" [(ngModel)]="createForm.username" autocomplete="off" required></div>
-          <div><label class="form-label" for="create-role">{{ 'Vai trò' | translate }}</label><select id="create-role" name="roleId" class="form-select" [(ngModel)]="createForm.roleId" required><option [ngValue]="0">{{ 'Chọn vai trò' | translate }}</option>@for (role of roles; track role.roleId) { <option [ngValue]="role.roleId">{{ role.roleName }} ({{ role.roleCode }})</option> }</select>@if (rolesLoading) { <small>{{ 'Đang tải vai trò…' | translate }}</small> } @else if (rolesError) { <small class="text-danger">{{ rolesError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadRoles()">{{ 'Thử lại' | translate }}</button></small> }</div>
+          <div><label class="form-label" for="create-role">{{ 'Vai trò' | translate }}</label><select id="create-role" name="roleId" class="form-select" [(ngModel)]="createForm.roleId" required><option [ngValue]="0">{{ 'Chọn vai trò' | translate }}</option>@for (role of roles; track role.roleId) { <option [ngValue]="role.roleId" [disabled]="role.roleCode === 'ADMIN'">{{ role.roleName }} ({{ role.roleCode }})</option> }</select>@if (rolesLoading) { <small>{{ 'Đang tải vai trò…' | translate }}</small> } @else if (rolesError) { <small class="text-danger">{{ rolesError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadRoles()">{{ 'Thử lại' | translate }}</button></small> }</div>
           <div><label class="form-label" for="create-status">{{ 'Trạng thái' | translate }}</label><select id="create-status" name="active" class="form-select" [(ngModel)]="createForm.active"><option [ngValue]="true">{{ 'Đang hoạt động' | translate }}</option><option [ngValue]="false">{{ 'Đã khóa' | translate }}</option></select></div>
           <div><label class="form-label" for="create-password">{{ 'Mật khẩu ban đầu' | translate }}</label><input id="create-password" name="password" class="form-control" type="password" autocomplete="new-password" maxlength="72" [(ngModel)]="createForm.password" required></div>
           <div><label class="form-label" for="confirm-create-password">{{ 'Xác nhận mật khẩu' | translate }}</label><input id="confirm-create-password" name="confirmPassword" class="form-control" type="password" autocomplete="new-password" maxlength="72" [(ngModel)]="createForm.confirmPassword" required></div>
@@ -196,7 +196,7 @@
         <fieldset class="dialog-grid" [disabled]="saving">
           <div class="detail-wide edit-account-owner"><span>{{ 'Nhân viên sở hữu tài khoản' | translate }}</span><strong>{{ (selectedAccount?.fullName || 'Chưa có thông tin') | translate }}</strong><small>{{ (selectedAccount?.employeeCode || 'Chưa có mã nhân viên') | translate }}</small></div>
           <div><label class="form-label" for="edit-username">{{ 'Tên đăng nhập' | translate }}</label><input id="edit-username" name="username" class="form-control" maxlength="100" [(ngModel)]="editUsername" required></div>
-          <div><label class="form-label" for="edit-role">{{ 'Vai trò' | translate }}</label><select id="edit-role" name="roleId" class="form-select" [(ngModel)]="editRoleId" (ngModelChange)="onEditRoleChange()" [disabled]="!!selectedAccount && isOwnAccount(selectedAccount)">@for (item of roles; track item.roleId) { @if (isSystemRole(item)) { <option [ngValue]="item.roleId">{{ item.roleName }} ({{ item.roleCode }})</option> } }</select></div>
+          <div><label class="form-label" for="edit-role">{{ 'Vai trò' | translate }}</label><select id="edit-role" name="roleId" class="form-select" [(ngModel)]="editRoleId" (ngModelChange)="onEditRoleChange()" [disabled]="!!selectedAccount && isOwnAccount(selectedAccount)">@for (item of roles; track item.roleId) { @if (isSystemRole(item)) { <option [ngValue]="item.roleId" [disabled]="item.roleCode === 'ADMIN' && selectedAccount?.roleCode !== 'ADMIN'">{{ item.roleName }} ({{ item.roleCode }})</option> } }</select></div>
           @if (editRoleIsHr) {
             <div class="detail-wide">
               <p class="detail-label">{{ 'Phòng ban quản lý' | translate }}</p>
@@ -281,3 +281,4 @@
   </div>
 </section>
 </app-record-workspace>
+

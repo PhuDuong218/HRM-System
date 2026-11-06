@@ -1,0 +1,20 @@
+diff --git a/HRM_System/src/main/java/com/hrm/service/PayrollPeriodService.java b/HRM_System/src/main/java/com/hrm/service/PayrollPeriodService.java
+index 3c1fb88..f5361f1 100644
+--- a/HRM_System/src/main/java/com/hrm/service/PayrollPeriodService.java
++++ b/HRM_System/src/main/java/com/hrm/service/PayrollPeriodService.java
+@@ -36,13 +36,13 @@ public class PayrollPeriodService {
+     public PayrollPeriodDTO createPeriod(PayrollPeriodRequestDTO request) {
+         // Kiểm tra hợp lệ: start_date < end_date
+         if (!request.getPeriodStart().isBefore(request.getPeriodEnd())) {
+-            throw new RuntimeException("Ngày bắt đầu kỳ (" + request.getPeriodStart() 
++            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST,"Ngày bắt đầu kỳ (" + request.getPeriodStart() 
+                     + ") phải trước ngày kết thúc (" + request.getPeriodEnd() + ")!");
+         }
+ 
+         String code = request.getPeriodCode().trim().toUpperCase();
+         if (repository.existsByPeriodCode(code)) {
+-            throw new RuntimeException("Mã kỳ lương đã tồn tại: " + code);
++            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,"Mã kỳ lương đã tồn tại: " + code);
+         }
+ 
+         PayrollPeriod entity = new PayrollPeriod();

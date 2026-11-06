@@ -5,7 +5,7 @@ import {ManagementPageBase} from '../../shared/management-page.base';
 import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import {Pagination} from '../../shared/pagination';
-import { Component, DestroyRef, inject, OnInit } from '@angular/core';
+import { Component, DestroyRef, ElementRef, ViewChild, inject, OnInit } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { FormsModule, NgForm } from '@angular/forms';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -17,6 +17,34 @@ import { employeeFormErrors } from './employee-form.validation';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
 @Component({ selector: 'app-employees', standalone: true, imports:[RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage extends ManagementPageBase implements OnInit {
+    profileText(text:string){return this.i18n.current?.()==='en'?({
+        'Hồ sơ đã thay đổi':'Employee profile has changed',
+        'Hồ sơ đã được người khác thay đổi. Bản đang nhập của bạn vẫn được giữ nguyên.':'Someone else changed this profile. Your current draft has been preserved.',
+        'Giữ bản đang nhập để so sánh':'Keep draft for comparison',
+        'Tải lại bản mới':'Reload latest version',
+        'Hồ sơ đã được người khác thay đổi. Hãy tải lại để xem bản mới nhất.':'Someone else changed this profile. Reload it to see the latest version.',
+        'Phải gửi phiên bản hồ sơ đã đọc':'The previously read profile version is required',
+        'Phải gửi phiên bản hồ sơ đã đọc hợp lệ':'A valid previously read profile version is required',
+        'Phiên bản hồ sơ không hợp lệ':'Invalid profile version',
+        'CCCD/CMND phải gồm 9 hoặc 12 chữ số':'National ID must contain 9 or 12 digits'
+    } as Record<string,string>)[text]||this.i18n.t(text):text;}
+    @ViewChild('profileConflict') private conflictDialog?:ElementRef<HTMLDialogElement>;
+    conflictOpen=false;
+    keepDraft(){this.conflictOpen=false;this.conflictDialog?.nativeElement.close();}
+    reloadConflict(){
+        if(!this.selected||this.detailLoading)return;
+        const id=this.selected.employeeId;this.detailLoading=true;
+        this.detailRequest?.unsubscribe();
+        this.detailRequest=this.api.detail(id).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.detailLoading=false)).subscribe({
+            next:p=>{if(this.selected?.employeeId!==id||!['edit','contact'].includes(this.mode||''))return;this.hydrateProfile(p);this.serverFieldErrors={};this.attemptedSave=false;this.detailError='';this.keepDraft();},
+            error:e=>this.detailError=errorMessage(e)
+        });
+    }
+    private hydrateProfile(p:Employee){
+        this.selected=p;this.form={...blank(),version:p.version,gender:p.gender,employeeCode:p.employeeCode,fullName:p.fullName,
+            birthDate:p.birthDate?.slice(0,10)||'',email:p.email||'',phone:p.phone||'',identityNumber:p.identityNumber||'',
+            hireDate:p.hireDate?.slice(0,10)||'',address:p.address||'',privateFieldsEditable:!this.ownProfile};
+    }
     private api = inject(EmployeeService);
     private auth = inject(AuthService);
     private destroy = inject(DestroyRef);
@@ -67,7 +95,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     fieldError(field:string,f:NgForm) {
         const control=f.controls[field];
         if(!(this.attemptedSave || control?.touched))return '';
-        return this.serverFieldErrors[field] || this.formErrors[field] || (control?.invalid ? 'Giá trị chưa hợp lệ.' : '');
+        return this.profileText(this.serverFieldErrors[field] || this.formErrors[field] || (control?.invalid ? 'Giá trị chưa hợp lệ.' : ''));
     }
     clearFieldError(field:string) { delete this.serverFieldErrors[field]; }
     confirmTermination = false;
@@ -119,9 +147,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
         this.detailLoading=true;
         this.detailRequest?.unsubscribe();
         this.detailRequest=this.api.detail(id).pipe(takeUntilDestroyed(this.destroy)).subscribe({
-            next:p=>{this.selected=p;this.form={...blank(),gender:p.gender,employeeCode:p.employeeCode,fullName:p.fullName,
-                birthDate:p.birthDate?.slice(0,10)||'',email:p.email||'',phone:p.phone||'',identityNumber:p.identityNumber||'',
-                hireDate:p.hireDate?.slice(0,10)||'',address:p.address||'',privateFieldsEditable:!this.ownProfile};
+            next:p=>{this.hydrateProfile(p);
                 this.detailLoading=false;this.mode=mode;},
             error:e=>{this.detailLoading=false;this.detailError=errorMessage(e);}
         });
@@ -132,6 +158,9 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
         return;
     } this.saving = true; this.message = ''; this.detailError = ''; this.serverFieldErrors={}; this.api.save(this.mode!, this.selected?.employeeId, this.form).pipe(timeout(20000), takeUntilDestroyed(this.destroy), finalize(() => this.saving = false)).subscribe({ next: r => { this.saving = false; this.message = 'Đã lưu hồ sơ thành công.'; this.load(this.page); this.select(r); }, error: e => {
         this.detailError=errorMessage(e);
+        if(e.status===409&&/Hồ sơ.*người khác|phiên bản/i.test(this.detailError)){
+            this.conflictOpen=true;queueMicrotask(()=>this.conflictDialog?.nativeElement.showModal());
+        }
         const fields=e.error?.fieldErrors ?? e.error?.errors ?? e.error?.loi_chi_tiet;
         if(fields && typeof fields==='object' && !Array.isArray(fields))for(const [key,value] of Object.entries(fields))this.serverFieldErrors[key==='reason'?'changeReason':key]=String(value);
         else if(e.status===409 && /mã nhân viên/i.test(this.detailError))this.serverFieldErrors['employeeCode']=this.detailError;

@@ -1,0 +1,322 @@
+{
+  "executedAt": "2026-11-06T06:28:27.585Z",
+  "fixture": {
+    "tag": "QA6-mw4lfj2n",
+    "positionId": 11,
+    "employeeId": 36,
+    "missingFieldsEmployeeId": 37,
+    "degreeA": 33,
+    "degreeB": 34,
+    "duplicateDegree": 36
+  },
+  "results": [
+    {
+      "id": "C2-position-race",
+      "pass": true,
+      "evidence": [
+        {
+          "status": 409
+        },
+        {
+          "status": 201
+        }
+      ]
+    },
+    {
+      "id": "C10-employee-catalog-write",
+      "actor": "employee",
+      "method": "POST",
+      "path": "/positions",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "C1-position-case-duplicate",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/positions",
+      "expected": [
+        409
+      ],
+      "actual": 409,
+      "pass": true
+    },
+    {
+      "id": "D1-create-valid-employee",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "D7-initial-assignment",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/36/assignments",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 1,
+      "rows": 1
+    },
+    {
+      "id": "A5-leading-zero-ID",
+      "pass": true,
+      "evidence": {
+        "matches": true
+      }
+    },
+    {
+      "id": "D1-duplicate-employee",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        409
+      ],
+      "actual": 409,
+      "pass": true
+    },
+    {
+      "id": "D3-future-birth",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        400
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D5-invalid-email",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        400
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D5-invalid-phone",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        400
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D5-required-private-contact-fields",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        400
+      ],
+      "actual": 201,
+      "pass": false
+    },
+    {
+      "id": "D1-blank-name",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        400
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D6-missing-department",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees",
+      "expected": [
+        404,
+        409,
+        400
+      ],
+      "actual": 404,
+      "pass": true
+    },
+    {
+      "id": "D11-update-requires-reason",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/employees/36",
+      "expected": [
+        400
+      ],
+      "actual": 200,
+      "pass": false
+    },
+    {
+      "id": "D11-profile-update",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/employees/36",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "D11-profile-contact-retention",
+      "pass": true,
+      "evidence": {
+        "identityRetained": true,
+        "addressRetained": true,
+        "emailRetained": true
+      }
+    },
+    {
+      "id": "D16-first-degree-auto-primary",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "D16-add-degree-preserves-old",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "D16-primary-delete-requires-replacement",
+      "actor": "admin",
+      "method": "DELETE",
+      "path": "/employee-qualifications/33",
+      "expected": [
+        409
+      ],
+      "actual": 409,
+      "pass": true
+    },
+    {
+      "id": "D16-primary-race-no-500",
+      "pass": true,
+      "evidence": [
+        200,
+        200
+      ]
+    },
+    {
+      "id": "D16-exactly-one-primary",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true,
+      "total": 2,
+      "rows": 2
+    },
+    {
+      "id": "D15-future-graduation",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        400,
+        409
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D15-expiry-before-issue",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        400,
+        409
+      ],
+      "actual": 400,
+      "pass": true
+    },
+    {
+      "id": "D15-identical-degree",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/qualifications",
+      "expected": [
+        409
+      ],
+      "actual": 201,
+      "pass": false
+    },
+    {
+      "id": "C4-stop-unused-position",
+      "actor": "admin",
+      "method": "PUT",
+      "path": "/positions/11",
+      "expected": [
+        409
+      ],
+      "actual": 409,
+      "pass": true
+    },
+    {
+      "id": "K-future-termination-create",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/termination-decisions",
+      "expected": [
+        204
+      ],
+      "actual": 204,
+      "pass": true
+    },
+    {
+      "id": "K-future-termination-still-active",
+      "actor": "admin",
+      "method": "GET",
+      "path": "/employees/36/detail",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "K-duplicate-termination-decision",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/employees/36/termination-decisions",
+      "expected": [
+        409
+      ],
+      "actual": 409,
+      "pass": true
+    }
+  ]
+}

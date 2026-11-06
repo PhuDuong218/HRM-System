@@ -1,3 +1,4 @@
+<app-breadcrumb variant="group"/>
 <header class="d-flex justify-content-between gap-3 mb-4"><div><h1>Tổng hợp công theo kỳ</h1><p class="text-muted">Theo dõi công đã xác nhận trong phạm vi quản lý.</p></div><button class="btn btn-outline-primary align-self-start" (click)="load()" [disabled]="loading">Tải lại</button></header>
 <section class="surface mb-3"><h2 class="h5">Tìm kiếm và lọc công</h2><form (ngSubmit)="load()" class="row g-3">
 <div class="col-md-4"><label for="month" class="form-label">Chọn nhanh tháng</label><input id="month" name="month" type="month" class="form-control" [(ngModel)]="month" (change)="setMonth()" [disabled]="loading"></div>

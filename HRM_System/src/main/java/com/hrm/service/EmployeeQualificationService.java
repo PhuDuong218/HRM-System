@@ -54,6 +54,7 @@ public class EmployeeQualificationService {
     public EmployeeQualificationDTO addEmployeeQualification(Long employeeId, EmployeeQualificationRequestDTO request) {
         // Khoa dong Employee tranh 2 request dong thoi doi is_primary.
         Employee employee = requiredLockedEmployee(employeeId);
+        rejectDuplicate(employeeId,null,request);
         boolean firstQualification = repository.findAllByEmployeeWithLevel(employeeId).isEmpty();
         QualificationLevel level = requiredActiveLevel(request.getQualificationLevelId());
         validateGraduationYear(request.getGraduationYear());
@@ -79,6 +80,7 @@ public class EmployeeQualificationService {
         Long employeeId = q.getEmployee().getEmployeeId();
         requiredLockedEmployee(employeeId);
 
+        rejectDuplicate(employeeId,id,request);
         QualificationLevel level = requiredActiveLevel(request.getQualificationLevelId());
         validateGraduationYear(request.getGraduationYear());
         q.setQualificationLevel(level);
@@ -160,6 +162,20 @@ public class EmployeeQualificationService {
 
     private String blankToNull(String value) {
         return value == null || value.isBlank() ? null : value.trim();
+    }
+
+    private static String normalized(String value) {
+        return value==null?"":java.text.Normalizer.normalize(value.strip(),java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+    }
+    private void rejectDuplicate(Long employeeId,Long excludedId,EmployeeQualificationRequestDTO request) {
+        boolean duplicate=repository.findAllByEmployeeWithLevel(employeeId).stream().anyMatch(q->
+            (excludedId==null||!excludedId.equals(q.getEmployeeQualificationId()))
+            &&java.util.Objects.equals(q.getQualificationLevel().getQualificationLevelId(),request.getQualificationLevelId())
+            &&normalized(q.getMajor()).equals(normalized(request.getMajor()))
+            &&normalized(q.getInstitution()).equals(normalized(request.getInstitution()))
+            &&java.util.Objects.equals(q.getGraduationYear(),request.getGraduationYear())
+            &&normalized(q.getCertificateNumber()).equals(normalized(request.getCertificateNumber())));
+        if(duplicate)throw new ResponseStatusException(HttpStatus.CONFLICT,"Bằng cấp này đã tồn tại trong hồ sơ");
     }
 
     private void validateGraduationYear(Integer year) {

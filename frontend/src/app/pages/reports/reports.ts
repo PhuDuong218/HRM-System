@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -10,7 +11,7 @@ interface EmployeeGroup { label: string; description: string; rows: GroupRow[]; 
 
 @Component({
   selector: 'app-reports',
-  standalone: true,
+  standalone: true,imports:[Breadcrumb],
   templateUrl: './reports.html',
   styleUrl: './reports.css'
 })

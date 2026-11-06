@@ -1,3 +1,4 @@
+import {Breadcrumb} from '../../shared/breadcrumb';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { TranslatePipe } from '../../shared/translate.pipe';
@@ -43,7 +44,7 @@ const shiftValidator: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-work-shifts', standalone: true,
-  imports: [DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports:[Breadcrumb,DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-shifts.html', styleUrl: '../work-module.css',
 })
 export class WorkShiftsPage implements OnInit {

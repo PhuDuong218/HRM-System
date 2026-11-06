@@ -1,0 +1,54 @@
+
+> hrm-frontend@0.1.0 build
+> ng build
+
+> Building...
+√ Building...
+Initial chunk files   | Names               |  Raw size | Estimated transfer size
+styles-2KNPOAXB.css   | styles              | 252.88 kB |                26.49 kB
+chunk-N4QS6ZJG.js     | -                   | 156.78 kB |                46.40 kB
+chunk-YW7V3Y7N.js     | -                   |  91.69 kB |                19.53 kB
+main-Q3TMG6AN.js      | main                |  88.91 kB |                18.81 kB
+chunk-5JYSLSYR.js     | -                   |  84.64 kB |                21.51 kB
+chunk-BSGS4N6X.js     | -                   |  50.47 kB |                 9.59 kB
+polyfills-5CFQRCPP.js | polyfills           |  34.59 kB |                11.33 kB
+chunk-RN3DIHOA.js     | -                   |  20.01 kB |                 6.43 kB
+chunk-ZUKMXXS3.js     | -                   |  19.44 kB |                 5.67 kB
+chunk-2WGKNXN7.js     | -                   |   7.58 kB |                 2.17 kB
+chunk-YBDBVVTT.js     | -                   |   6.43 kB |                 2.33 kB
+chunk-6JCTDX5N.js     | -                   |   3.80 kB |                 1.37 kB
+chunk-3H4VJUDB.js     | -                   |   2.37 kB |               918 bytes
+chunk-ENSTZPTU.js     | -                   |   2.25 kB |                 1.09 kB
+chunk-MIEVNUHE.js     | -                   |   1.16 kB |               521 bytes
+chunk-63IYPPH6.js     | -                   | 916 bytes |               916 bytes
+chunk-IFUHNF25.js     | -                   | 620 bytes |               620 bytes
+chunk-EDUGFECW.js     | -                   | 311 bytes |               311 bytes
+chunk-TWPUIOUG.js     | -                   | 212 bytes |               212 bytes
+
+                      | Initial total       | 825.06 kB |               176.22 kB
+
+Lazy chunk files      | Names               |  Raw size | Estimated transfer size
+chunk-U7JYNFZI.js     | accounts            |  95.18 kB |                17.18 kB
+chunk-WISK4SDS.js     | overtime            |  87.55 kB |                17.50 kB
+chunk-HONIQEGA.js     | attendance          |  83.50 kB |                16.90 kB
+chunk-ZQHOULUI.js     | contracts           |  78.97 kB |                15.41 kB
+chunk-XQ7RQZX3.js     | schedules           |  68.89 kB |                15.11 kB
+chunk-C227P2EZ.js     | attendance-summary  |  54.74 kB |                13.52 kB
+chunk-2CFUE4F7.js     | allowances          |  53.70 kB |                10.81 kB
+chunk-YRRQOMBQ.js     | -                   |  52.97 kB |                11.28 kB
+chunk-FZA65NY6.js     | personnel-workspace |  52.19 kB |                11.64 kB
+chunk-NEJ34SY7.js     | decisions           |  50.86 kB |                10.69 kB
+chunk-UFRD7PIG.js     | employees           |  48.87 kB |                10.43 kB
+chunk-A22PMNUT.js     | login               |  48.05 kB |                 9.03 kB
+chunk-VU55MNY7.js     | work-shifts         |  39.75 kB |                10.12 kB
+chunk-7XJKOLSX.js     | reports             |  35.46 kB |                 8.03 kB
+chunk-MMO53IYI.js     | catalog             |  31.46 kB |                 7.15 kB
+...and 20 more lazy chunks files. Use "--verbose" to show all the files.
+
+Application bundle generation complete. [27.263 seconds] - 2026-11-05T12:55:54.737Z
+
+▲ [WARNING] bundle initial exceeded maximum budget. Budget 750.00 kB was not met by 75.06 kB with a total of 825.06 kB.
+
+
+Output location: C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\dist\hrm-frontend
+

@@ -37,18 +37,29 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
   if(!matcher.matches())return body;long id=PersonnelPolicyWebConfiguration.recordId(matcher.group(1));
   if(body instanceof EmployeeUpdateRequestDTO r){
    if(!Objects.equals(actor.employeeId(),id))scope.managedEmployee(id);
+   if(!scope.canReadPrivate(id))r.ignorePrivateChanges();
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasEmail(),r.getEmail(),"Email");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasIdentityNumber(),r.getIdentityNumber(),"CCCD/CMND");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasAddress(),r.getAddress(),"Địa chỉ");
+   com.hrm.service.EmployeeWriteRules.identity(r.getIdentityNumber());
    var existing=jdbc.queryForList("SELECT email,phone,identity_number,address FROM dbo.employees WHERE employee_id=?",id);
    if(!existing.isEmpty()){
     var old=existing.get(0);
-    if(Objects.equals(actor.employeeId(),id)&&(!Objects.equals(clean(r.getEmail()),clean((String)old.get("email")))||!Objects.equals(clean(r.getPhone()),clean((String)old.get("phone")))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
+    if(Objects.equals(actor.employeeId(),id)&&((r.hasEmail()&&!Objects.equals(clean(r.getEmail()),clean((String)old.get("email"))))||(r.hasPhone()&&!Objects.equals(clean(r.getPhone()),clean((String)old.get("phone"))))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
     if(Objects.equals(actor.employeeId(),id)) {
      if(r.getIdentityNumber()!=null&&!Objects.equals(clean(r.getIdentityNumber()),clean((String)old.get("identity_number"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
      if(r.getAddress()!=null&&!Objects.equals(clean(r.getAddress()),clean((String)old.get("address"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
     }
-    if(r.getIdentityNumber()==null)r.setIdentityNumber((String)old.get("identity_number"));
    }
   }
-  if(body instanceof EmployeeContactPatchDTO r&&!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))scope.managedEmployee(id);
+  if(body instanceof EmployeeContactPatchDTO r){
+   if(!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))scope.managedEmployee(id);
+   if(!scope.canReadPrivate(id))r.ignorePrivateChanges();
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasEmail(),r.getEmail(),"Email");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasIdentityNumber(),r.getIdentityNumber(),"CCCD/CMND");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasAddress(),r.getAddress(),"Địa chỉ");
+   com.hrm.service.EmployeeWriteRules.identity(r.getIdentityNumber());
+  }
   return body;
  }
  private static String clean(String v){return v==null||v.isBlank()?null:v.trim();}
