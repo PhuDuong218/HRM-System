@@ -1,4 +1,0 @@
-EN=true; dark=true; validation observed:
-					291 text National ID number 
-					292 text field (settable) National ID number, Value: CCCDabc
-					335 text National ID must contain 9 or 12 digits

@@ -1,7 +1,0 @@
-{
-  "verifyOnly": "PASS",
-  "restore": "RESTORE DATABASE hrm_test FROM DISK=<backupPath> WITH REPLACE only after stopping all test clients; restore not executed.",
-  "copyOnly": true,
-  "database": "hrm_test",
-  "backupPath": "C:\\NguyenXuanAnh\\MSSQL16.MSSQLSERVER\\MSSQL\\Backup\\QA_TESTER_hrm_test_20261101_204423.bak"
-}
