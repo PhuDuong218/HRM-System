@@ -1,7 +1,7 @@
 <app-breadcrumb variant="group"/>
 <h1>{{ 'Tài khoản và phân quyền' | translate }}</h1><p class="page-description">{{'Một ADMIN quản trị hệ thống; nhiều HR có thể quản lý nhiều phòng ban theo phạm vi được cấp.'|translate}}</p>
 <p class="page-description">{{ 'Quản lý tài khoản, vai trò và quyền truy cập của nhân viên.' | translate }}</p>
-@if (message) { <div class="alert alert-success" role="status">{{ message }}</div> }
+@if (message) { <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message }}</div> }
 
 <nav class="section-nav" [attr.aria-label]="'Nhóm quản lý' | translate">
   <button type="button" [class.current]="section === 'accounts'" [attr.aria-pressed]="section === 'accounts'" (click)="selectSection('accounts')">{{ 'Tài khoản' | translate }}</button>
@@ -59,7 +59,7 @@
   @if (loading) {
     <p class="list-state muted" role="status">{{ 'Đang tải danh sách tài khoản…' | translate }}</p>
   } @else if (error) {
-    <div class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'Thử lại' | translate }}</button></div>
+    <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">{{ 'Thử lại' | translate }}</button></div>
   } @else if (rows.length === 0) {
     <div class="list-state text-center"><h3>{{ 'Không tìm thấy tài khoản' | translate }}</h3><p class="muted mb-0">{{ 'Hãy thay đổi điều kiện tìm kiếm hoặc kiểm tra dữ liệu tài khoản.' | translate }}</p></div>
   } @else {
@@ -93,7 +93,7 @@
     <div class="heading-actions"><button type="button" class="btn btn-outline-primary" (click)="loadRoles()" [disabled]="rolesLoading">{{ 'Làm mới' | translate }}</button></div>
   </div>
   @if (rolesLoading) { <p class="list-state muted" role="status">{{ 'Đang tải vai trò…' | translate }}</p> }
-  @else if (rolesError) { <div class="alert alert-danger mt-4 mb-0" role="alert">{{ rolesError }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadRoles()">{{ 'Thử lại' | translate }}</button></div> }
+  @else if (rolesError) { <div [hrmNotice]="rolesError" noticeKind="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ rolesError }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadRoles()">{{ 'Thử lại' | translate }}</button></div> }
   @else if (roles.length === 0) { <p class="list-state muted text-center">{{ 'Chưa có vai trò.' | translate }}</p> }
   @else {
     <div class="table-responsive mt-4"><table class="table align-middle mb-0">
@@ -115,7 +115,7 @@
     <div class="heading-actions"><button type="button" class="btn btn-outline-primary" (click)="loadPermissions()" [disabled]="permissionsLoading">{{ 'Làm mới' | translate }}</button></div>
   </div>
   @if (permissionsLoading) { <p class="list-state muted" role="status">{{ 'Đang tải danh mục quyền…' | translate }}</p> }
-  @else if (permissionsError) { <div class="alert alert-danger mt-4 mb-0" role="alert">{{ permissionsError }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadPermissions()">{{ 'Thử lại' | translate }}</button></div> }
+  @else if (permissionsError) { <div [hrmNotice]="permissionsError" noticeKind="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ permissionsError }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadPermissions()">{{ 'Thử lại' | translate }}</button></div> }
   @else if (permissions.length === 0) { <p class="list-state muted text-center">{{ 'Chưa có quyền trong danh mục.' | translate }}</p> }
   @else {
     <div class="table-responsive mt-4"><table class="table align-middle mb-0">
@@ -137,7 +137,7 @@
   <div class="dialog-header"><div><p class="eyebrow mb-2">{{ 'TÀI KHOẢN VÀ PHÂN QUYỀN' | translate }}</p><h2 id="action-dialog-title" class="mb-0">{{ (dialogTitle) | translate }}</h2></div></div>
   <div class="dialog-body">
     @if (dialogMode === 'account-view' && selectedAccount; as account) {
-      @if (actionMessage) { <p class="alert alert-success" role="status">{{ actionMessage }}</p> }
+      @if (actionMessage) { <p [hrmNotice]="actionMessage" noticeKind="success" class="alert alert-success" role="status">{{ actionMessage }}</p> }
       <section class="detail-section" aria-labelledby="account-info-title">
         <h3 id="account-info-title">{{ 'Thông tin tài khoản' | translate }}</h3>
         <dl class="detail-grid"><div><dt>{{ 'Tên đăng nhập' | translate }}</dt><dd>{{ account.username }}</dd></div><div><dt>{{ 'ID tài khoản' | translate }}</dt><dd>{{ account.accountId }}</dd></div><div><dt>{{ 'Trạng thái tài khoản' | translate }}</dt><dd><span class="account-status" [class.active]="account.active" [class.inactive]="!account.active">{{ (account.active ? 'Đang hoạt động' : 'Đã khóa') | translate }}</span></dd></div><div><dt>{{ 'Ngày tạo' | translate }}</dt><dd>{{ dateOnly(account.createdAt) }}</dd></div><div><dt>{{ 'Cập nhật gần nhất' | translate }}</dt><dd>{{ dateOnly(account.updatedAt) }}</dd></div></dl>
@@ -148,7 +148,7 @@
         @if (account.roleCode === 'HR') {
           <p class="detail-label detail-subheading">{{ 'Phòng ban được giao quản lý' | translate }}</p>
           @if (hrDepartmentsLoading) { <p class="muted small" role="status">{{ 'Đang tải phạm vi phòng ban…' | translate }}</p> }
-          @else if (hrDepartmentsError) { <p class="small text-danger" role="alert">{{ hrDepartmentsError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadHrDepartments(account.accountId)">{{ 'Thử lại' | translate }}</button></p> }
+          @else if (hrDepartmentsError) { <p [hrmNotice]="hrDepartmentsError" noticeKind="error" class="small text-danger" role="alert">{{ hrDepartmentsError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadHrDepartments(account.accountId)">{{ 'Thử lại' | translate }}</button></p> }
           @else if (hrDepartments.length) { <ul class="permission-summary">@for (department of hrDepartments; track department.departmentId) { <li>{{ department.departmentName }}</li> }</ul> }
           @else { <p class="muted small mb-0">{{ 'Chưa có phòng ban được giao còn hiệu lực.' | translate }}</p> }
         }
@@ -156,7 +156,7 @@
       <section class="detail-section" aria-labelledby="contact-info-title">
         <h3 id="contact-info-title">{{ 'Thông tin liên hệ' | translate }}</h3>
         @if (contactLoading) { <p class="muted small mb-0" role="status">{{ 'Đang tải thông tin liên hệ…' | translate }}</p> }
-        @else if (contactError) { <p class="small text-danger mb-0" role="alert">{{ contactError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadAccountContact(account.accountId)">{{ 'Thử lại' | translate }}</button></p> }
+        @else if (contactError) { <p [hrmNotice]="contactError" noticeKind="error" class="small text-danger mb-0" role="alert">{{ contactError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadAccountContact(account.accountId)">{{ 'Thử lại' | translate }}</button></p> }
         @else if (contact; as details) {
           <dl class="detail-grid"><div><dt>{{ 'Email' | translate }}</dt><dd>{{ (details.email || 'Chưa cập nhật') | translate }}</dd></div><div><dt>{{ 'Số điện thoại' | translate }}</dt><dd>{{ (details.phone || 'Chưa cập nhật') | translate }}</dd></div></dl>
           <p class="small muted mt-3 mb-0">{{ 'Thông tin lấy từ hồ sơ nhân viên.' | translate }}</p>
@@ -164,14 +164,14 @@
       </section>
     @if(account.roleCode==='HR'){<app-hr-scopes [accountId]="account.accountId" [active]="account.active" (busyChange)="saving=$event; !$event && loadHrDepartments(account.accountId)" />} 
     } @else if (dialogMode === 'account-create') {
-      <form id="create-account-form" (ngSubmit)="createAccount()" novalidate>
+      <form [hrmEditForm]="false" id="create-account-form" (ngSubmit)="createAccount()" novalidate>
         <fieldset [disabled]="saving" class="dialog-grid">
           <div class="detail-wide employee-picker">
             <label class="form-label" for="employee-search">{{ 'Chọn nhân viên chưa có tài khoản' | translate }}</label>
             <div class="employee-search"><input id="employee-search" name="employeeSearch" class="form-control" type="search" maxlength="100" [(ngModel)]="employeeKeyword" [attr.placeholder]="'Tìm theo mã hoặc tên nhân viên' | translate" (keydown.enter)="$event.preventDefault(); searchEmployees()"><button type="button" class="btn btn-outline-primary" (click)="searchEmployees()">{{ 'Tìm' | translate }}</button></div>
             @if (selectedEmployee; as employee) { <p class="employee-selected" role="status">{{ 'Đã chọn:' | translate }}<strong>{{ employee.employeeCode }} — {{ employee.fullName }}</strong></p> }
             @if (eligibleLoading) { <p class="small muted mt-2" role="status">{{ 'Đang tải nhân viên…' | translate }}</p> }
-            @else if (eligibleError) { <p class="small text-danger mt-2" role="alert">{{ eligibleError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadEligibleEmployees(eligiblePage)">{{ 'Thử lại' | translate }}</button></p> }
+            @else if (eligibleError) { <p [hrmNotice]="eligibleError" noticeKind="error" class="small text-danger mt-2" role="alert">{{ eligibleError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadEligibleEmployees(eligiblePage)">{{ 'Thử lại' | translate }}</button></p> }
             @else if (!eligibleEmployees.length) { <p class="small muted mt-2">{{ 'Không tìm thấy nhân viên đang làm việc chưa có tài khoản.' | translate }}</p> }
             @else {
               <div class="employee-options" role="group" [attr.aria-label]="'Nhân viên chưa có tài khoản' | translate">
@@ -189,10 +189,10 @@
           <div><label class="form-label" for="confirm-create-password">{{ 'Xác nhận mật khẩu' | translate }}</label><input id="confirm-create-password" name="confirmPassword" class="form-control" type="password" autocomplete="new-password" maxlength="72" [(ngModel)]="createForm.confirmPassword" required></div>
         </fieldset>
         <p class="small muted mt-3 mb-0">{{ 'Mật khẩu từ 8 đến 72 ký tự và không quá 72 byte UTF-8.' | translate }}</p>
-        @if (createError) { <p class="alert alert-danger mt-3 mb-0" role="alert">{{ createError }}</p> }
+        @if (createError) { <p [hrmNotice]="createError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ createError }}</p> }
       </form>
     } @else if (dialogMode === 'account-edit') {
-      <form id="edit-account-form" (ngSubmit)="saveAccountIdentity()" novalidate>
+      <form [hrmEditForm]="true" [hrmEditReady]="!hrDepartmentsLoading" id="edit-account-form" (ngSubmit)="saveAccountIdentity()" novalidate>
         <fieldset class="dialog-grid" [disabled]="saving">
           <div class="detail-wide edit-account-owner"><span>{{ 'Nhân viên sở hữu tài khoản' | translate }}</span><strong>{{ (selectedAccount?.fullName || 'Chưa có thông tin') | translate }}</strong><small>{{ (selectedAccount?.employeeCode || 'Chưa có mã nhân viên') | translate }}</small></div>
           <div><label class="form-label" for="edit-username">{{ 'Tên đăng nhập' | translate }}</label><input id="edit-username" name="username" class="form-control" maxlength="100" [(ngModel)]="editUsername" required></div>
@@ -206,11 +206,11 @@
                 <div class="scope-confirm">
                   <p>{{ 'Chọn ít nhất một phòng ban để phân công, hoặc hủy để phân công sau. Thay đổi được lưu cùng tài khoản.' | translate }}</p>
                   @if (hrDepartmentsLoading) { <p class="muted small" role="status">{{ 'Đang tải phòng ban…' | translate }}</p> }
-                  @else if (hrDepartmentsError) { <p class="small text-danger" role="alert">{{ hrDepartmentsError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="editHrDepartments()">{{ 'Thử lại' | translate }}</button></p> }
+                  @else if (hrDepartmentsError) { <p [hrmNotice]="hrDepartmentsError" noticeKind="error" class="small text-danger" role="alert">{{ hrDepartmentsError }} <button type="button" class="btn btn-sm btn-outline-primary" (click)="editHrDepartments()">{{ 'Thử lại' | translate }}</button></p> }
                   @else {
-                    @for (department of scopeOptions; track department.departmentId) {
-                      <label class="permission-option"><input #scopeChoice type="checkbox" [checked]="scopeSelected.has(department.departmentId)" [disabled]="!department.active && !department.assigned" (change)="toggleScopeDepartment(department.departmentId, scopeChoice.checked)"><span>{{ department.departmentName }} @if (!department.active) { <small>{{ '(Ngừng sử dụng)' | translate }}</small> }</span></label>
-                    } @empty { <p class="muted small">{{ 'Không có phòng ban để phân công.' | translate }}</p> }
+                    <div class="scope-options">@for (department of scopeOptions; track department.departmentId) {
+                      <label class="permission-option" [class.is-selected]="scopeSelected.has(department.departmentId)"><input #scopeChoice type="checkbox" [checked]="scopeSelected.has(department.departmentId)" [disabled]="!department.active && !department.assigned" (change)="toggleScopeDepartment(department.departmentId, scopeChoice.checked)"><span>{{ department.departmentName }} @if (!department.active) { <small>{{ '(Ngừng sử dụng)' | translate }}</small> }</span></label>
+                    } @empty { <p class="muted small">{{ 'Không có phòng ban để phân công.' | translate }}</p> }</div>
                   }
                   <button type="button" class="btn btn-sm btn-outline-secondary mt-2" (click)="cancelScopeEdit()">{{ 'Hủy phân công' | translate }}</button>
                 </div>
@@ -220,34 +220,34 @@
         </fieldset>
         @if (selectedAccount && isOwnAccount(selectedAccount)) { <p class="small muted mt-3 mb-0">{{ 'Không thể đổi vai trò của tài khoản đang sử dụng.' | translate }}</p> }
         <p class="small muted mt-3 mb-0">{{ 'Thay đổi tên đăng nhập hoặc vai trò sẽ thu hồi các phiên đăng nhập cũ.' | translate }}</p>
-        @if (actionError) { <p class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
+        @if (actionError) { <p [hrmNotice]="actionError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
       </form>
     } @else if (dialogMode === 'account-reset' && selectedAccount; as account) {
       <p>{{ 'Đặt lại mật khẩu cho' | translate }}<strong>{{ account.username }}</strong>{{ '. Các phiên đăng nhập hiện tại của tài khoản này sẽ bị thu hồi.' | translate }}</p>
-      <form id="reset-account-password" (ngSubmit)="submitPasswordReset()" novalidate>
+      <form [hrmEditForm]="false" id="reset-account-password" (ngSubmit)="submitPasswordReset()" novalidate>
         <fieldset class="dialog-grid" [disabled]="saving"><div><label class="form-label" for="reset-password">{{ 'Mật khẩu mới' | translate }}</label><input id="reset-password" name="newPassword" type="password" autocomplete="new-password" class="form-control" maxlength="72" [(ngModel)]="resetPassword"></div><div><label class="form-label" for="reset-confirm">{{ 'Xác nhận mật khẩu' | translate }}</label><input id="reset-confirm" name="confirmPassword" type="password" autocomplete="new-password" class="form-control" maxlength="72" [(ngModel)]="resetConfirm"></div></fieldset>
         <p class="small muted mt-3 mb-0">{{ 'Mật khẩu từ 8 đến 72 ký tự và không quá 72 byte UTF-8.' | translate }}</p>
       </form>
-      @if (actionError) { <p class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
+      @if (actionError) { <p [hrmNotice]="actionError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
     } @else if (dialogMode === 'account-lock' && selectedAccount; as account) {
       <p>{{ (account.active ? 'Khóa' : 'Mở khóa') | translate }} tài khoản <strong>{{ account.username }}</strong> của {{ (account.fullName || account.employeeCode || 'nhân viên') | translate }}?</p>
       <p class="muted small mb-0">{{ (account.active ? 'Các phiên đăng nhập hiện tại sẽ bị thu hồi. Tài khoản và lịch sử vẫn được giữ lại.' : 'Nhân viên cần đang làm việc để tài khoản được mở khóa.') | translate }}</p>
-      @if (actionError) { <p class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
+      @if (actionError) { <p [hrmNotice]="actionError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
     } @else if (dialogMode === 'role-view' && selectedRole; as role) {
       <dl class="detail-grid"><div><dt>{{ 'Mã vai trò' | translate }}</dt><dd>{{ role.roleCode }}</dd></div><div><dt>{{ 'Tên vai trò' | translate }}</dt><dd>{{ role.roleName }}</dd></div></dl>
       <p class="detail-label">{{ 'Quyền đã gán' | translate }}</p>@if (role.permissions.length) { <ul class="permission-summary">@for (item of role.permissions; track item.permissionId) { <li>{{ item.permissionName }} <span>({{ item.permissionCode }})</span></li> }</ul> } @else { <p class="muted small mb-0">{{ 'Chưa có quyền được gán.' | translate }}</p> }
     } @else if (dialogMode === 'permission-view' && selectedPermission; as permission) {
-      @if (actionMessage) { <p class="alert alert-success" role="status">{{ actionMessage }}</p> }
+      @if (actionMessage) { <p [hrmNotice]="actionMessage" noticeKind="success" class="alert alert-success" role="status">{{ actionMessage }}</p> }
       <dl class="detail-grid"><div><dt>{{ 'Mã quyền' | translate }}</dt><dd>{{ permission.permissionCode }}</dd></div><div><dt>{{ 'Tên quyền' | translate }}</dt><dd>{{ permission.permissionName }}</dd></div><div class="detail-wide"><dt>{{ 'Mô tả' | translate }}</dt><dd>{{ (permission.description || '—') | translate }}</dd></div></dl>
     } @else if (dialogMode === 'permission-edit' && selectedPermission; as permission) {
-      <form id="edit-permission-form" (ngSubmit)="savePermissionDetails()" novalidate>
+      <form [hrmEditForm]="true" id="edit-permission-form" (ngSubmit)="savePermissionDetails()" novalidate>
         <fieldset class="dialog-grid" [disabled]="saving">
           <div class="detail-wide edit-account-owner"><span>{{ 'Mã quyền' | translate }}</span><strong>{{ permission.permissionCode }}</strong></div>
           <div class="detail-wide"><label class="form-label" for="permission-name">{{ 'Tên quyền' | translate }}</label><input id="permission-name" name="permissionName" class="form-control" maxlength="200" [(ngModel)]="editPermissionName" required></div>
           <div class="detail-wide"><label class="form-label" for="permission-description">{{ 'Mô tả' | translate }}</label><textarea id="permission-description" name="description" class="form-control" rows="3" maxlength="1000" [(ngModel)]="editPermissionDescription" [attr.placeholder]="'Mô tả quyền truy cập' | translate"></textarea></div>
         </fieldset>
         <p class="small muted mt-3 mb-0">{{ 'Tên và mô tả cần phản ánh đúng chức năng của quyền.' | translate }}</p>
-        @if (actionError) { <p class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
+        @if (actionError) { <p [hrmNotice]="actionError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
       </form>
     }
   </div>

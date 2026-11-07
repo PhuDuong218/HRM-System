@@ -3,8 +3,8 @@
   <h1 class="mb-0">{{ "Phụ cấp" | translate }}</h1>
 </div>
 
-@if (message) { <div class="alert alert-success" role="status">{{ message | translate }}</div> }
-@if (error) { <div class="alert alert-danger" role="alert">{{ error | translate }}</div> }
+@if (message) { <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message | translate }}</div> }
+@if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">{{ error | translate }}</div> }
 
 <ul class="module-tabs">
   <li class="nav-item"><button type="button"  [class.active]="tab==='types'" (click)="setTab('types')">{{ "Loại phụ cấp" | translate }}</button></li>
@@ -59,7 +59,7 @@
       @if (showTypeForm) {
         <section class="surface allowance-form-card">
       <h2>{{ (editingType ? 'Sửa loại phụ cấp' : 'Thêm loại phụ cấp') | translate }}</h2>
-      <form #typeFormRef="ngForm" class="row g-3" (ngSubmit)="saveType()">
+      <form [hrmEditForm]="!!editingType" #typeFormRef="ngForm" class="row g-3" (ngSubmit)="saveType()">
         <div class="col-md-4">
           <label class="form-label" for="at-code">{{ "Mã loại" | translate }}</label>
           <input id="at-code" name="typeCode" class="form-control" maxlength="50" required
@@ -98,7 +98,7 @@
         }
         <div class="col-12">
           <label class="form-label" for="at-reason">{{ "Lý do" | translate }}</label>
-          <input id="at-reason" name="reason" class="form-control" maxlength="500" required
+          <input data-hrm-audit id="at-reason" name="reason" class="form-control" maxlength="500" required
                  [(ngModel)]="typeForm.reason" [disabled]="saving">
         </div>
         <div class="col-12 d-flex gap-2">
@@ -121,7 +121,7 @@
     @if (employeesLoading) {
       <p role="status">{{ "Đang tải danh sách nhân viên…" | translate }}</p>
     } @else if (employeesError) {
-      <div class="alert alert-danger" role="alert">{{ employeesError | translate }}</div>
+      <div [hrmNotice]="employeesError" noticeKind="error" class="alert alert-danger" role="alert">{{ employeesError | translate }}</div>
     } @else if (employees.length === 0) {
       <p class="muted">{{ "Chưa có nhân viên để chọn." | translate }}</p>
     }
@@ -215,7 +215,7 @@
           </div>
         </div>
       } @else {
-        <form #assignRef="ngForm" class="row g-3" (ngSubmit)="saveAssign()">
+        <form [hrmEditForm]="assignMode==='edit'" #assignRef="ngForm" class="row g-3" (ngSubmit)="saveAssign()">
           <div class="col-md-6">
             <label class="form-label" for="al-type">{{ "Loại phụ cấp" | translate }}</label>
             <select id="al-type" name="allowanceTypeId" class="form-select" required
@@ -291,7 +291,7 @@
     @if (employeesLoading) {
       <p role="status">{{ "Đang tải danh sách nhân viên…" | translate }}</p>
     } @else if (employeesError) {
-      <div class="alert alert-danger" role="alert">{{ employeesError | translate }}</div>
+      <div [hrmNotice]="employeesError" noticeKind="error" class="alert alert-danger" role="alert">{{ employeesError | translate }}</div>
     } @else if (employees.length === 0) {
       <p class="muted">{{ "Chưa có nhân viên để chọn." | translate }}</p>
     }
@@ -325,7 +325,7 @@
     @if (periodsLoading) {
       <p role="status" class="mt-3">{{ "Đang tải kỳ lương…" | translate }}</p>
     } @else if (periodsError) {
-      <div class="alert alert-danger mt-3" role="alert">
+      <div [hrmNotice]="periodsError" noticeKind="error" class="alert alert-danger mt-3" role="alert">
         {{ periodsError | translate }}
         <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="loadPeriods()">{{ "Thử lại" | translate }}</button>
       </div>
@@ -333,7 +333,7 @@
       <p class="muted mt-3">{{ "Chưa có kỳ lương để chọn." | translate }}</p>
     }
 
-    @if (previewError) { <div class="alert alert-danger mt-3" role="alert">{{ previewError | translate }}</div> }
+    @if (previewError) { <div [hrmNotice]="previewError" noticeKind="error" class="alert alert-danger mt-3" role="alert">{{ previewError | translate }}</div> }
 
     @if (preview) {
       <div class="table-responsive mt-3">

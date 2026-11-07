@@ -1,10 +1,11 @@
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import {HrmButton} from '../../shared/ui/button';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HealthService } from '../../services/health.service';
-@Component({imports:[Breadcrumb,HrmButton,TranslatePipe], selector: 'app-connection', standalone: true, templateUrl: './connection.html' })
+@Component({imports:[HrmNotice,Breadcrumb,HrmButton,TranslatePipe], selector: 'app-connection', standalone: true, templateUrl: './connection.html' })
 export class ConnectionPage {
   private healthService = inject(HealthService);
   loading = false;

@@ -1,4 +1,8 @@
+import {SearchAssistDirective} from '../shared/search-assist.directive';
+import {ExitWorkflowBanner} from '../shared/exit-workflow-banner';
+import {HrmNotice} from '../shared/ui/notice';
 import {Breadcrumb} from '../shared/breadcrumb';
+import {ToastOutlet} from '../shared/ui/toast-outlet';
 import {HrmIcon} from '../shared/ui/icon';
 import {PendingEditorService} from '../services/pending-editor.service';
 import {TranslatePipe} from '../shared/translate.pipe';
@@ -16,7 +20,7 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports:[SearchAssistDirective,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })

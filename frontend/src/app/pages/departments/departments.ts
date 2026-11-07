@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import {Feedback} from '../../shared/ui/feedback';
 import {HrmButton} from '../../shared/ui/button';
@@ -13,7 +16,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { EMPTY, Subject, expand, reduce, takeUntil } from 'rxjs';
 import { DepartmentService, Department, Head, Assignment, Position } from '../../services/department.service';
 
-@Component({ selector: 'app-departments', standalone: true, imports:[RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe,FormsModule], templateUrl: './departments.html',styleUrl:'./departments.css' })
+@Component({ selector: 'app-departments', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,RecordWorkspace,RouterLink,TranslatePipe,FormsModule], templateUrl: './departments.html',styleUrl:'./departments.css' })
 export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDestroy {
   private api = inject(DepartmentService);
   private destroyed = new Subject<void>();

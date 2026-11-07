@@ -1,0 +1,476 @@
+{
+  "bootstrapUser": "admin.sample",
+  "prefix": "QA_20261101_205827",
+  "roles": [
+    {
+      "roleId": 1,
+      "roleCode": "ADMIN",
+      "roleName": "Quản trị",
+      "permissions": [
+        {
+          "permissionId": 1,
+          "permissionCode": "ACCOUNT_MANAGE",
+          "permissionName": "Quản lý tài khoản",
+          "description": null
+        },
+        {
+          "permissionId": 2,
+          "permissionCode": "EMPLOYEE_MANAGE",
+          "permissionName": "Quản lý nhân viên",
+          "description": null
+        },
+        {
+          "permissionId": 3,
+          "permissionCode": "SELF_READ",
+          "permissionName": "Xem dữ liệu cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 4,
+          "permissionCode": "REQUEST_APPROVE",
+          "permissionName": "Duyệt đơn",
+          "description": null
+        },
+        {
+          "permissionId": 5,
+          "permissionCode": "PAYROLL_MANAGE",
+          "permissionName": "Quản lý bảng lương",
+          "description": null
+        },
+        {
+          "permissionId": 6,
+          "permissionCode": "PAYSLIP_SELF_READ",
+          "permissionName": "Xem phiếu lương cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 7,
+          "permissionCode": "DEPARTMENT_MANAGE",
+          "permissionName": "Quản lý phòng ban",
+          "description": null
+        },
+        {
+          "permissionId": 8,
+          "permissionCode": "POSITION_MANAGE",
+          "permissionName": "Quản lý chức vụ",
+          "description": null
+        },
+        {
+          "permissionId": 9,
+          "permissionCode": "CONTRACT_MANAGE",
+          "permissionName": "Quản lý hợp đồng",
+          "description": null
+        },
+        {
+          "permissionId": 10,
+          "permissionCode": "WORK_SCHEDULE_MANAGE",
+          "permissionName": "Quản lý lịch làm việc",
+          "description": null
+        },
+        {
+          "permissionId": 11,
+          "permissionCode": "ATTENDANCE_MANAGE",
+          "permissionName": "Xác nhận chấm công",
+          "description": null
+        },
+        {
+          "permissionId": 12,
+          "permissionCode": "LEAVE_REQUEST_CREATE",
+          "permissionName": "Tạo đơn nghỉ phép",
+          "description": null
+        },
+        {
+          "permissionId": 13,
+          "permissionCode": "OVERTIME_REQUEST_CREATE",
+          "permissionName": "Đăng ký tăng ca",
+          "description": null
+        },
+        {
+          "permissionId": 14,
+          "permissionCode": "OVERTIME_APPROVE",
+          "permissionName": "Duyệt tăng ca",
+          "description": null
+        },
+        {
+          "permissionId": 15,
+          "permissionCode": "ALLOWANCE_MANAGE",
+          "permissionName": "Quản lý phụ cấp",
+          "description": null
+        },
+        {
+          "permissionId": 16,
+          "permissionCode": "DECISION_MANAGE",
+          "permissionName": "Quản lý khen thưởng, kỷ luật",
+          "description": null
+        },
+        {
+          "permissionId": 17,
+          "permissionCode": "REPORT_VIEW",
+          "permissionName": "Xem báo cáo",
+          "description": null
+        },
+        {
+          "permissionId": 18,
+          "permissionCode": "PAYROLL_VIEW",
+          "permissionName": "Xem bảng lương",
+          "description": null
+        },
+        {
+          "permissionId": 19,
+          "permissionCode": "ATTENDANCE_CONFIRM",
+          "permissionName": "Xác nhận công",
+          "description": null
+        },
+        {
+          "permissionId": 20,
+          "permissionCode": "ATTENDANCE_UNCONFIRM",
+          "permissionName": "Mở xác nhận công có kiểm soát",
+          "description": null
+        },
+        {
+          "permissionId": 21,
+          "permissionCode": "REPORT_EXPORT",
+          "permissionName": "Xuất báo cáo",
+          "description": null
+        }
+      ]
+    },
+    {
+      "roleId": 2,
+      "roleCode": "HR",
+      "roleName": "Nhân sự",
+      "permissions": [
+        {
+          "permissionId": 2,
+          "permissionCode": "EMPLOYEE_MANAGE",
+          "permissionName": "Quản lý nhân viên",
+          "description": null
+        },
+        {
+          "permissionId": 3,
+          "permissionCode": "SELF_READ",
+          "permissionName": "Xem dữ liệu cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 4,
+          "permissionCode": "REQUEST_APPROVE",
+          "permissionName": "Duyệt đơn",
+          "description": null
+        },
+        {
+          "permissionId": 5,
+          "permissionCode": "PAYROLL_MANAGE",
+          "permissionName": "Quản lý bảng lương",
+          "description": null
+        },
+        {
+          "permissionId": 6,
+          "permissionCode": "PAYSLIP_SELF_READ",
+          "permissionName": "Xem phiếu lương cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 7,
+          "permissionCode": "DEPARTMENT_MANAGE",
+          "permissionName": "Quản lý phòng ban",
+          "description": null
+        },
+        {
+          "permissionId": 8,
+          "permissionCode": "POSITION_MANAGE",
+          "permissionName": "Quản lý chức vụ",
+          "description": null
+        },
+        {
+          "permissionId": 9,
+          "permissionCode": "CONTRACT_MANAGE",
+          "permissionName": "Quản lý hợp đồng",
+          "description": null
+        },
+        {
+          "permissionId": 10,
+          "permissionCode": "WORK_SCHEDULE_MANAGE",
+          "permissionName": "Quản lý lịch làm việc",
+          "description": null
+        },
+        {
+          "permissionId": 11,
+          "permissionCode": "ATTENDANCE_MANAGE",
+          "permissionName": "Xác nhận chấm công",
+          "description": null
+        },
+        {
+          "permissionId": 13,
+          "permissionCode": "OVERTIME_REQUEST_CREATE",
+          "permissionName": "Đăng ký tăng ca",
+          "description": null
+        },
+        {
+          "permissionId": 14,
+          "permissionCode": "OVERTIME_APPROVE",
+          "permissionName": "Duyệt tăng ca",
+          "description": null
+        },
+        {
+          "permissionId": 15,
+          "permissionCode": "ALLOWANCE_MANAGE",
+          "permissionName": "Quản lý phụ cấp",
+          "description": null
+        },
+        {
+          "permissionId": 16,
+          "permissionCode": "DECISION_MANAGE",
+          "permissionName": "Quản lý khen thưởng, kỷ luật",
+          "description": null
+        },
+        {
+          "permissionId": 17,
+          "permissionCode": "REPORT_VIEW",
+          "permissionName": "Xem báo cáo",
+          "description": null
+        },
+        {
+          "permissionId": 18,
+          "permissionCode": "PAYROLL_VIEW",
+          "permissionName": "Xem bảng lương",
+          "description": null
+        },
+        {
+          "permissionId": 19,
+          "permissionCode": "ATTENDANCE_CONFIRM",
+          "permissionName": "Xác nhận công",
+          "description": null
+        },
+        {
+          "permissionId": 20,
+          "permissionCode": "ATTENDANCE_UNCONFIRM",
+          "permissionName": "Mở xác nhận công có kiểm soát",
+          "description": null
+        },
+        {
+          "permissionId": 21,
+          "permissionCode": "REPORT_EXPORT",
+          "permissionName": "Xuất báo cáo",
+          "description": null
+        }
+      ]
+    },
+    {
+      "roleId": 3,
+      "roleCode": "EMPLOYEE",
+      "roleName": "Nhân viên",
+      "permissions": [
+        {
+          "permissionId": 3,
+          "permissionCode": "SELF_READ",
+          "permissionName": "Xem dữ liệu cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 6,
+          "permissionCode": "PAYSLIP_SELF_READ",
+          "permissionName": "Xem phiếu lương cá nhân",
+          "description": null
+        },
+        {
+          "permissionId": 12,
+          "permissionCode": "LEAVE_REQUEST_CREATE",
+          "permissionName": "Tạo đơn nghỉ phép",
+          "description": null
+        },
+        {
+          "permissionId": 13,
+          "permissionCode": "OVERTIME_REQUEST_CREATE",
+          "permissionName": "Đăng ký tăng ca",
+          "description": null
+        }
+      ]
+    }
+  ],
+  "/departments": [
+    {
+      "departmentCode": "QA_20261101_205827_A",
+      "departmentId": 2561142,
+      "departmentName": "QA_20261101_205827 Phòng A",
+      "description": "QA only",
+      "headEffectiveFrom": null,
+      "headEmployeeCode": null,
+      "headEmployeeId": null,
+      "headFullName": null,
+      "isActive": true
+    },
+    {
+      "departmentCode": "QA_20261101_205827_B",
+      "departmentId": 2561143,
+      "departmentName": "QA_20261101_205827 Phòng B",
+      "description": null,
+      "headEffectiveFrom": null,
+      "headEmployeeCode": null,
+      "headEmployeeId": null,
+      "headFullName": null,
+      "isActive": true
+    }
+  ],
+  "/positions": [
+    {
+      "description": null,
+      "isActive": true,
+      "positionCode": "QA_20261101_205827_POS",
+      "positionId": 2561074,
+      "positionName": "QA_20261101_205827 Chuyên viên"
+    }
+  ],
+  "/qualification-levels": [
+    {
+      "qualificationLevelId": 46,
+      "levelCode": "QA_20261101_205827_LV",
+      "levelName": "QA_20261101_205827 Đại học",
+      "description": null,
+      "isActive": true
+    }
+  ],
+  "employees": [
+    {
+      "birthDate": "1995-02-28",
+      "currentDepartmentId": 2561142,
+      "currentDepartmentName": "QA_20261101_205827 Phòng A",
+      "currentPositionId": 2561074,
+      "currentPositionName": "QA_20261101_205827 Chuyên viên",
+      "email": "qa_20261101_205827_0@example.test",
+      "employeeCode": "QA_20261101_205827_NV0",
+      "employeeId": 2562748,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261101_205827 Lê Ngọc Hân",
+      "hireDate": "2026-10-29",
+      "phone": null
+    },
+    {
+      "birthDate": "1995-02-28",
+      "currentDepartmentId": 2561142,
+      "currentDepartmentName": "QA_20261101_205827 Phòng A",
+      "currentPositionId": 2561074,
+      "currentPositionName": "QA_20261101_205827 Chuyên viên",
+      "email": "qa_20261101_205827_1@example.test",
+      "employeeCode": "QA_20261101_205827_NV1",
+      "employeeId": 2562749,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261101_205827 Nguyễn Văn An",
+      "hireDate": "2026-10-29",
+      "phone": null
+    },
+    {
+      "birthDate": "1995-02-28",
+      "currentDepartmentId": 2561142,
+      "currentDepartmentName": "QA_20261101_205827 Phòng A",
+      "currentPositionId": 2561074,
+      "currentPositionName": "QA_20261101_205827 Chuyên viên",
+      "email": "qa_20261101_205827_2@example.test",
+      "employeeCode": "QA_20261101_205827_NV2",
+      "employeeId": 2562750,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261101_205827 HR phòng A",
+      "hireDate": "2026-10-29",
+      "phone": null
+    },
+    {
+      "birthDate": "1995-02-28",
+      "currentDepartmentId": 2561143,
+      "currentDepartmentName": "QA_20261101_205827 Phòng B",
+      "currentPositionId": 2561074,
+      "currentPositionName": "QA_20261101_205827 Chuyên viên",
+      "email": "qa_20261101_205827_3@example.test",
+      "employeeCode": "QA_20261101_205827_NV3",
+      "employeeId": 2562751,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261101_205827 HR phòng B",
+      "hireDate": "2026-10-29",
+      "phone": null
+    },
+    {
+      "birthDate": "1995-02-28",
+      "currentDepartmentId": 2561142,
+      "currentDepartmentName": "QA_20261101_205827 Phòng A",
+      "currentPositionId": 2561074,
+      "currentPositionName": "QA_20261101_205827 Chuyên viên",
+      "email": "qa_20261101_205827_4@example.test",
+      "employeeCode": "QA_20261101_205827_NV4",
+      "employeeId": 2562752,
+      "employmentStatus": "DANG_LAM",
+      "fullName": "QA_20261101_205827 QA quản trị",
+      "hireDate": "2026-10-29",
+      "phone": null
+    }
+  ],
+  "accounts": {
+    "employee": {
+      "accountId": 12593,
+      "employeeId": 2562748,
+      "employeeCode": "QA_20261101_205827_NV0",
+      "fullName": "QA_20261101_205827 Lê Ngọc Hân",
+      "roleId": 3,
+      "roleCode": "EMPLOYEE",
+      "roleName": "Nhân viên",
+      "username": "QA_20261101_205827_employee",
+      "active": true,
+      "createdAt": "2026-11-01T14:00:18.9696301",
+      "updatedAt": "2026-11-01T14:00:18.9696301"
+    },
+    "other": {
+      "accountId": 12594,
+      "employeeId": 2562749,
+      "employeeCode": "QA_20261101_205827_NV1",
+      "fullName": "QA_20261101_205827 Nguyễn Văn An",
+      "roleId": 3,
+      "roleCode": "EMPLOYEE",
+      "roleName": "Nhân viên",
+      "username": "QA_20261101_205827_other",
+      "active": true,
+      "createdAt": "2026-11-01T14:00:19.435419",
+      "updatedAt": "2026-11-01T14:00:19.435419"
+    },
+    "hrA": {
+      "accountId": 12595,
+      "employeeId": 2562750,
+      "employeeCode": "QA_20261101_205827_NV2",
+      "fullName": "QA_20261101_205827 HR phòng A",
+      "roleId": 2,
+      "roleCode": "HR",
+      "roleName": "Nhân sự",
+      "username": "QA_20261101_205827_hrA",
+      "active": true,
+      "createdAt": "2026-11-01T14:00:19.9082787",
+      "updatedAt": "2026-11-01T14:00:19.9082787"
+    },
+    "hrB": {
+      "accountId": 12596,
+      "employeeId": 2562751,
+      "employeeCode": "QA_20261101_205827_NV3",
+      "fullName": "QA_20261101_205827 HR phòng B",
+      "roleId": 2,
+      "roleCode": "HR",
+      "roleName": "Nhân sự",
+      "username": "QA_20261101_205827_hrB",
+      "active": true,
+      "createdAt": "2026-11-01T14:00:20.3364387",
+      "updatedAt": "2026-11-01T14:00:20.3364387"
+    },
+    "qaAdmin": {
+      "accountId": 12597,
+      "employeeId": 2562752,
+      "employeeCode": "QA_20261101_205827_NV4",
+      "fullName": "QA_20261101_205827 QA quản trị",
+      "roleId": 1,
+      "roleCode": "ADMIN",
+      "roleName": "Quản trị",
+      "username": "QA_20261101_205827_qaAdmin",
+      "active": true,
+      "createdAt": "2026-11-01T14:00:20.7589782",
+      "updatedAt": "2026-11-01T14:00:20.7589782"
+    }
+  },
+  "resignationId": 620,
+  "raceSuccessCount": 1,
+  "leaveTypeId": 573,
+  "entitlementId": 542
+}

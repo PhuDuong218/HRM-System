@@ -29,12 +29,12 @@
     <div class="employee-info"><span>Phân công được tính theo ngày <strong>{{ employeeReportDate }}</strong>.</span><button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading">Tải lại</button></div>
   }
 
-  @if (exportError) { <div class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError }}</div> }
+  @if (exportError) { <div [hrmNotice]="exportError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError }}</div> }
   <div #reportResults class="report-results" [style.min-height.px]="loading && loadingHeight ? loadingHeight : null" [attr.aria-busy]="loading">
   @if (loading) {
     <div class="report-state muted" role="status">Đang tải báo cáo…</div>
   } @else if (error) {
-    <div class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
+    <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
   } @else if (employeeReport) {
     <div class="employee-summary" aria-label="Tổng quan nhân sự">
       <div class="summary-main"><span class="summary-icon" aria-hidden="true">◉</span><div><span class="summary-label">Tổng nhân sự</span><strong>{{ number(employeeTotal) }}</strong><small>Nhân viên trong phạm vi báo cáo</small></div></div>

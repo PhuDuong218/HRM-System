@@ -1,3 +1,4 @@
+<hrm-toast-outlet />
 <main class="login-page">
   <section class="intro" aria-labelledby="intro-title">
     <div class="intro-decoration" aria-hidden="true"></div>
@@ -30,12 +31,12 @@
 
   <section class="login-side" [class.recovering]="showRecoveryHelp" aria-labelledby="login-title">
     <div class="preferences" role="group" [attr.aria-label]="language.t('Tùy chọn hiển thị')">
-      <button class="language-switch" type="button" role="switch" (click)="language.toggle()"
+      <button data-hrm-preference class="language-switch" type="button" role="switch" (click)="language.toggle()"
               [attr.aria-checked]="language.current() === 'en'"
               [attr.aria-label]="language.current() === 'vi' ? 'Ngôn ngữ: Tiếng Việt. Chuyển sang tiếng Anh' : 'Language: English. Switch to Vietnamese'">
         <span [class.active]="language.current() === 'vi'">VI</span><span [class.active]="language.current() === 'en'">EN</span>
       </button>
-      <button class="theme-switch" type="button" (click)="theme.toggle()" [attr.aria-pressed]="theme.darkMode()"
+      <button data-hrm-preference class="theme-switch" type="button" (click)="theme.toggle()" [attr.aria-pressed]="theme.darkMode()"
               [attr.aria-label]="language.t(theme.darkMode() ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối')"
               [attr.title]="language.t(theme.darkMode() ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối')">
         <hrm-icon [name]="theme.darkMode()?'sun':'moon'"/>
@@ -77,7 +78,7 @@
           @if (capsLock) { <p id="caps-lock-hint" class="caps-hint" role="status">{{ language.t('Caps Lock đang bật') }}</p> }
         </div>
         <div class="forgot-password-row"><button type="button" class="forgot-password-link" [disabled]="loading" (click)="openRecovery()">{{ language.t('Quên mật khẩu?') }}</button></div>
-        @if (error) { <p class="login-error" role="alert">{{ language.t(error) }}</p> }
+        @if (error) { <p [hrmNotice]="error" noticeKind="error" class="login-error" role="alert">{{ language.t(error) }}</p> }
         <button class="submit-button" hrmBtn="primary" hrmSize="lg" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang đăng nhập…' : 'Đăng nhập') }} <span aria-hidden="true">→</span></button>
       </form>
 
@@ -111,7 +112,7 @@
               <label for="recovery-username">{{ language.t('Tên đăng nhập') }}</label>
               <input #recoveryAccount id="recovery-username" name="recoveryUsername" type="text" autocomplete="username" [value]="recoveryUsername" [placeholder]="language.t('Nhập tên đăng nhập')" required>
             </div>
-            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            @if (recoveryError) { <p [hrmNotice]="recoveryError" noticeKind="error" class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
             <button class="submit-button" hrmBtn="primary" hrmSize="lg" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Gửi mã xác nhận') }} <span aria-hidden="true">→</span></button>
           </form>
           </div>
@@ -123,7 +124,7 @@
               <label for="recovery-code">{{ language.t('Mã xác nhận') }}</label>
               <input #recoveryCode id="recovery-code" name="recoveryCode" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" maxlength="8" [placeholder]="language.t('Nhập mã xác nhận')" required>
             </div>
-            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            @if (recoveryError) { <p [hrmNotice]="recoveryError" noticeKind="error" class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
             <button class="submit-button" hrmBtn="primary" hrmSize="lg" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Xác nhận mã') }} <span aria-hidden="true">→</span></button>
           </form>
           <button type="button" class="recovery-secondary" [disabled]="loading" (click)="recoveryStep = 'account'; recoveryError = ''">{{ language.t('Quay lại bước trước') }}</button>
@@ -147,7 +148,7 @@
               </div>
             </div>
             <p class="recovery-hint">{{ language.t('Mật khẩu từ 8 đến 72 ký tự và không quá 72 byte UTF-8.') }}</p>
-            @if (recoveryError) { <p class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
+            @if (recoveryError) { <p [hrmNotice]="recoveryError" noticeKind="error" class="login-error" role="alert">{{ language.t(recoveryError) }}</p> }
             <button class="submit-button" hrmBtn="primary" hrmSize="lg" type="submit" [disabled]="loading">{{ language.t(loading ? 'Đang xử lý…' : 'Đổi mật khẩu') }} <span aria-hidden="true">→</span></button>
           </form>
           <button type="button" class="recovery-secondary" [disabled]="loading" (click)="recoveryStep = 'code'; recoveryError = ''">{{ language.t('Quay lại bước trước') }}</button>

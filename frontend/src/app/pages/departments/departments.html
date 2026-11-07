@@ -23,11 +23,11 @@
   @if(!headAction){<p class="head-note">{{'Chọn một thao tác phía trên để mở biểu mẫu. Lịch sử nằm bên dưới.'|translate}}</p>}
   @if(headAction){
    @if(positionsLoading){<p role="status">{{'Đang tải danh sách chức vụ…'|translate}}</p>}
-   @if(positionsError){<p class="alert alert-warning">{{positionsError|translate}} <button type="button" hrmBtn="secondary" hrmSize="md" (click)="loadPositions()">{{'Thử lại'|translate}}</button></p>}
+   @if(positionsError){<p [hrmNotice]="positionsError" noticeKind="error" class="alert alert-warning">{{positionsError|translate}} <button type="button" hrmBtn="secondary" hrmSize="md" (click)="loadPositions()">{{'Thử lại'|translate}}</button></p>}
    <p class="head-note">{{'Ngày hiệu lực phải sau ngày bắt đầu phân công của những người liên quan. Có thể chọn ngày tương lai.'|translate}}</p>
   }
   @if(headAction==='appoint'){
-   <form #appointForm="ngForm" class="head-form" (ngSubmit)="appoint($event,headDraft.employee,headDraft.date,headDraft.position,headDraft.reason)">
+   <form [hrmEditForm]="false" #appointForm="ngForm" class="head-form" (ngSubmit)="appoint($event,headDraft.employee,headDraft.date,headDraft.position,headDraft.reason)">
     <fieldset [disabled]="saving"><legend>{{'1. Người sẽ nhận chức trưởng phòng'|translate}}</legend>
      <label for="new-head">{{'Trưởng phòng mới'|translate}}<select id="new-head" class="form-select" name="employee" [(ngModel)]="headDraft.employee" (ngModelChange)="chooseCandidate($event)" required><option value="">{{'Chọn nhân viên trong phòng'|translate}}</option>@for(e of candidateOptions;track e.employeeId){<option [value]="e.employeeId">{{e.employeeCode}} — {{e.employeeName}}</option>}</select></label>
       <small>{{'Chỉ liệt kê nhân viên đang làm trong phòng này, có phân công đã bắt đầu, chưa kết thúc và chức vụ đang sử dụng; không gồm trưởng phòng hiện tại.'|translate}}</small>
@@ -46,7 +46,7 @@
   }
   @if(headAction==='end'){
    <p class="alert alert-warning">{{'Chỉ kết thúc chức vụ trưởng phòng, không cho nhân viên nghỉ việc.'|translate}} <strong>{{d.headFullName}}</strong> {{'tiếp tục làm việc tại phòng với chức vụ mới được chọn.'|translate}}</p>
-   <form #endForm="ngForm" class="head-form" (ngSubmit)="end($event,headDraft.date,headDraft.position,headDraft.reason)">
+   <form [hrmEditForm]="false" #endForm="ngForm" class="head-form" (ngSubmit)="end($event,headDraft.date,headDraft.position,headDraft.reason)">
     <fieldset [disabled]="saving"><label for="end-date">{{'Ngày bắt đầu thôi giữ chức trưởng phòng'|translate}}<input id="end-date" class="form-control" type="date" name="date" [(ngModel)]="headDraft.date" required><small>{{'Từ ngày này phòng chưa có trưởng phòng, cho đến khi có bổ nhiệm mới.'|translate}}</small></label>
     <label for="next-position">{{'Chức vụ tiếp theo của'|translate}} {{d.headFullName}}<select id="next-position" class="form-select" name="position" [(ngModel)]="headDraft.position" required [disabled]="!positionsLoaded"><option value="">{{'Chọn chức vụ'|translate}}</option>@for(p of positions;track p.positionId){<option [value]="p.positionId">{{p.positionName}}</option>}</select></label>
     <label for="end-reason">{{'Lý do kết thúc'|translate}}<textarea id="end-reason" class="form-control" name="reason" [(ngModel)]="headDraft.reason" maxlength="1000" required></textarea></label></fieldset>

@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from './search-assist.directive';
+import {ActionDialogService} from './ui/action-dialog';
+import {HrmNotice} from './ui/notice';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,Input,OnInit,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -14,9 +17,11 @@ interface Leave {requestId:number;employeeId:number;leaveTypeId:number;leaveStar
 interface LeaveType {leaveTypeId:number;typeCode:string;typeName:string;}
 interface OtSlot {row:OtRow;canCheckIn:boolean;canCheckOut:boolean;}
 interface Day {date:string;rows:AttendanceRow[];leaves:Leave[];ot:OtSlot[];outside:boolean;}
-type State='normal'|'late'|'absent'|'missing'|'maternity'|'leave'|'holiday'|'ot'|'empty';
-@Component({selector:'app-attendance-calendar',standalone:true,imports:[CommonModule,FormsModule,DetailFocusDirective],templateUrl:'./attendance-calendar.html',styleUrl:'./attendance-calendar.css'})
+type State='normal'|'late'|'absent'|'missing'|'maternity'|'sick'|'leave'|'holiday'|'ot'|'empty';
+@Component({selector:'app-attendance-calendar',standalone:true,imports:[SearchAssistDirective,HrmNotice,CommonModule,FormsModule,DetailFocusDirective],templateUrl:'./attendance-calendar.html',styleUrl:'./attendance-calendar.css'})
 export class AttendanceCalendarComponent implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
  @Input() initialMonth='';
  private api=inject(AttendanceApiService);private http=inject(HttpClient);private destroy=inject(DestroyRef);
  private version=0;private detailVersion=0;private timer?:ReturnType<typeof setTimeout>;
@@ -29,8 +34,8 @@ export class AttendanceCalendarComponent implements OnInit {
  loading=false;error='';selected:Day|null=null;detail:AttendanceDetail|null=null;detailLoading=false;
  proposal=false;start='';end='';rest=0;reason='';saving=false;notice='';
  readonly weekdays=['T2','T3','T4','T5','T6','T7','CN'];
- readonly filters=[['all','Tất cả'],['normal','Đi làm'],['late','Muộn / về sớm'],['missing','Thiếu chấm công'],['absent','Vắng'],['maternity','Nghỉ thai sản'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)']];
- readonly legend=[['normal','Đi làm bình thường'],['late','Muộn / về sớm'],['absent','Nghỉ không phép'],['missing','Chưa / thiếu chấm công'],['maternity','Nghỉ thai sản'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)'],['empty','Không có lịch']];
+ readonly filters=[['all','Tất cả'],['normal','Đi làm'],['late','Muộn / về sớm'],['missing','Thiếu chấm công'],['absent','Vắng'],['maternity','Nghỉ thai sản'],['sick','Nghỉ ốm'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)']];
+ readonly legend=[['normal','Đi làm bình thường'],['late','Muộn / về sớm'],['absent','Nghỉ không phép'],['missing','Chưa / thiếu chấm công'],['maternity','Nghỉ thai sản'],['sick','Nghỉ ốm'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)'],['empty','Không có lịch']];
  constructor(){this.destroy.onDestroy(()=>{++this.version;++this.detailVersion;clearTimeout(this.timer);});}
  ngOnInit(){if(/^\d{4}-\d{2}$/.test(this.initialMonth))this.month=this.initialMonth;this.anchor=this.month+'-01';this.api.context().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:c=>this.canMine=c.mine,error:e=>this.error=this.api.message(e)});this.load();}
  add(d:string,n:number){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10);}
@@ -50,18 +55,20 @@ export class AttendanceCalendarComponent implements OnInit {
  get suggestions(){const q=this.normalize(this.q.trim());return this.employees.filter(e=>this.normalize(e[1]).includes(q));}
  searchEmployee(value:string){this.q=value;this.employee='';this.suggesting=!!value.trim();this.rebuild();}
  chooseEmployee(value:string){this.employee=value;this.suggesting=false;this.q=this.employees.find(e=>e[0]===+value)?.[1]||'';this.rebuild();}
- get scopedRows(){return this.mine?this.rows:this.employee?this.rows.filter(r=>r.employeeId===+this.employee):[];}
- leaveState(l:Leave):'maternity'|'leave'|null{const t=this.types.find(t=>t.leaveTypeId===l.leaveTypeId);const text=this.normalize((t?.typeCode||'')+' '+(t?.typeName||'')).replace(/[_-]/g,' ');if(/\b(thai san|maternity)\b/.test(text))return 'maternity';if(/\b(om|sick)\b/.test(text))return null;return t?'leave':null;}
+ applyEmployeeSearch(){this.employee='';this.suggesting=false;this.rebuild();}
+ matchesEmployee(id:number,label:string){return this.mine|| (this.employee? id===+this.employee : this.normalize(label).includes(this.normalize(this.q.trim())));}
+ get scopedRows(){return this.rows.filter(r=>this.matchesEmployee(r.employeeId,r.employeeLabel));}
+ leaveState(l:Leave):'maternity'|'sick'|'leave'|null{const t=this.types.find(t=>t.leaveTypeId===l.leaveTypeId);const text=this.normalize((t?.typeCode||'')+' '+(t?.typeName||'')).replace(/[_-]/g,' ');if(/\b(thai san|maternity)\b/.test(text))return 'maternity';if(/\b(om|sick)\b/.test(text))return 'sick';return t?'leave':null;}
  leaveName(l:Leave){return this.types.find(t=>t.leaveTypeId===l.leaveTypeId)?.typeName||'';}
  leaveEmployee(l:Leave){return this.rows.find(r=>r.employeeId===l.employeeId)?.employeeLabel||'Nhân viên #'+l.employeeId;}
- get scopedOt(){return this.mine?this.overtime:this.employee?this.overtime.filter(o=>o.row.ot.employeeId===+this.employee):[];}
- get scopedLeaves(){return this.mine?this.leaves:this.employee?this.leaves.filter(l=>l.employeeId===+this.employee):[];}
- rebuild(){this.selected=null;this.detail=null;this.detailLoading=false;this.proposal=false;++this.detailVersion;this.days=[];if(!this.mine&&!this.employee)return;const first=this.first,last=this.last;const start=this.mode==='month'?this.add(first,-((new Date(first+'T12:00:00Z').getUTCDay()+6)%7)):first;const finish=this.mode==='month'?this.add(last,6-((new Date(last+'T12:00:00Z').getUTCDay()+6)%7)):last;
+ get scopedOt(){return this.overtime.filter(o=>this.matchesEmployee(o.row.ot.employeeId,o.row.employeeCode+' '+o.row.fullName));}
+ get scopedLeaves(){const ids=new Set(this.employees.filter(e=>this.matchesEmployee(e[0],e[1])).map(e=>e[0]));return this.leaves.filter(l=>this.mine||(this.employee?l.employeeId===+this.employee:!this.q.trim()||ids.has(l.employeeId)));}
+ rebuild(){this.selected=null;this.detail=null;this.detailLoading=false;this.proposal=false;++this.detailVersion;this.days=[];const first=this.first,last=this.last;const start=this.mode==='month'?this.add(first,-((new Date(first+'T12:00:00Z').getUTCDay()+6)%7)):first;const finish=this.mode==='month'?this.add(last,6-((new Date(last+'T12:00:00Z').getUTCDay()+6)%7)):last;
   for(let date=start;date<=finish;date=this.add(date,1))this.days.push({date,outside:date<first||date>last,rows:this.scopedRows.filter(r=>r.plannedStart<this.add(date,1)+'T00:00:00'&&r.plannedEnd>date+'T00:00:00'),ot:this.scopedOt.filter(o=>o.row.ot.requestedStart<this.add(date,1)+'T00:00:00'&&o.row.ot.requestedEnd>date+'T00:00:00'),leaves:this.scopedLeaves.filter(l=>l.leaveStart<this.add(date,1)+'T00:00:00'&&l.leaveEnd>date+'T00:00:00')});
  }
  rowState(r:AttendanceRow):State{if(r.attendanceResult==='VANG')return 'absent';if(r.anomalies.includes('DI_MUON')||r.anomalies.includes('VE_SOM'))return 'late';if(!r.actualStart||!r.actualEnd)return 'missing';return 'normal';}
- indicators(d:Day):State[]{return [...new Set<State>([...d.rows.map(r=>this.rowState(r)),...d.leaves.map(l=>this.leaveState(l)).filter((s):s is 'maternity'|'leave'=>s!==null),...(d.ot.length?['ot' as const]:[])])];}
- state(d:Day):State{if(d.rows.some(r=>this.rowState(r)==='normal'))return 'normal';if(d.leaves.some(l=>this.leaveState(l)==='maternity'))return 'maternity';if(d.leaves.some(l=>this.leaveState(l)==='leave'))return 'leave';if(!d.rows.length&&!d.ot.length&&this.holidays.includes(d.date))return 'holiday';if(d.rows.some(r=>this.rowState(r)==='absent'))return 'absent';if(d.rows.some(r=>this.rowState(r)==='late'))return 'late';if(d.rows.some(r=>this.rowState(r)==='missing'))return 'missing';return d.rows.length?'normal':d.ot.length?'ot':'empty';}
+ indicators(d:Day):State[]{return [...new Set<State>([...d.rows.map(r=>this.rowState(r)),...d.leaves.map(l=>this.leaveState(l)).filter((s):s is 'maternity'|'sick'|'leave'=>s!==null),...(d.ot.length?['ot' as const]:[])])];}
+ state(d:Day):State{if(d.rows.some(r=>this.rowState(r)==='normal'))return 'normal';if(d.leaves.some(l=>this.leaveState(l)==='maternity'))return 'maternity';if(d.leaves.some(l=>this.leaveState(l)==='sick'))return 'sick';if(d.leaves.some(l=>this.leaveState(l)==='leave'))return 'leave';if(!d.rows.length&&!d.ot.length&&this.holidays.includes(d.date))return 'holiday';if(d.rows.some(r=>this.rowState(r)==='absent'))return 'absent';if(d.rows.some(r=>this.rowState(r)==='late'))return 'late';if(d.rows.some(r=>this.rowState(r)==='missing'))return 'missing';return d.rows.length?'normal':d.ot.length?'ot':'empty';}
  label(state:string){return this.legend.find(l=>l[0]===state)?.[1]||state;}
  matches(d:Day){return this.filter==='all'||(this.filter==='ot'&&d.ot.length>0)||(this.filter==='holiday'&&this.holidays.includes(d.date))||d.leaves.some(l=>this.leaveState(l)===this.filter)||d.rows.some(r=>this.rowState(r)===this.filter);}
  get stats(){const rows=this.scopedRows.filter(r=>r.workDate>=this.first&&r.workDate<=this.last);const countLeave=(state:string)=>new Set(this.days.filter(d=>!d.outside).flatMap(d=>d.leaves.filter(l=>this.leaveState(l)===state).map(l=>l.employeeId+':'+d.date))).size;const unique=(rs:AttendanceRow[])=>new Set(rs.map(r=>r.employeeId+':'+r.workDate)).size;return {planned:unique(rows),present:unique(rows.filter(r=>!!r.actualStart&&r.attendanceResult!=='VANG')),late:rows.filter(r=>r.anomalies.includes('DI_MUON')).length,absent:unique(rows.filter(r=>r.attendanceResult==='VANG')),maternity:countLeave('maternity')};}
@@ -70,5 +77,5 @@ export class AttendanceCalendarComponent implements OnInit {
  close(){this.selected=null;this.detail=null;++this.detailVersion;this.detailLoading=false;this.proposal=false;}
  flash(message:string){this.notice=message;clearTimeout(this.timer);this.timer=setTimeout(()=>this.notice='',10000);}
  startProposal(){const r=this.detail?.row;if(!this.mine||!r?.canRequest||r.verificationStatus==='DA_XAC_NHAN')return;this.proposal=true;this.start=r.actualStart?.slice(0,16)||'';this.end=r.actualEnd?.slice(0,16)||'';this.rest=r.actualBreakMinutes;this.reason='';}
- async submit(){const r=this.detail?.row;if(!r?.canRequest||this.saving||!this.mine||r.verificationStatus==='DA_XAC_NHAN')return;if(!this.start||!this.end||this.end<=this.start||!Number.isInteger(this.rest)||this.rest<0||!this.reason.trim()){this.flash('Nhập giờ vào/ra hợp lệ, phút nghỉ và lý do.');return;}if(!window.confirm('Gửi yêu cầu bổ sung / giải trình công?'))return;this.saving=true;try{await firstValueFrom(this.api.submitRequest(r,{actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.rest,attendanceResult:'DI_LAM',correctionReason:this.reason.trim()}).pipe(takeUntilDestroyed(this.destroy)));this.saving=false;await this.load();this.flash('Đã gửi yêu cầu.');}catch(e){this.flash(this.api.message(e));}finally{this.saving=false;}}
+ async submit(){const r=this.detail?.row;if(!r?.canRequest||this.saving||!this.mine||r.verificationStatus==='DA_XAC_NHAN')return;if(!this.start||!this.end||this.end<=this.start||!Number.isInteger(this.rest)||this.rest<0||!this.reason.trim()){this.flash('Nhập giờ vào/ra hợp lệ, phút nghỉ và lý do.');return;}if(!(await this.actionDialogInPage.confirm('Gửi yêu cầu bổ sung / giải trình công?')))return;this.saving=true;try{await firstValueFrom(this.api.submitRequest(r,{actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.rest,attendanceResult:'DI_LAM',correctionReason:this.reason.trim()}).pipe(takeUntilDestroyed(this.destroy)));this.saving=false;await this.load();this.flash('Đã gửi yêu cầu.');}catch(e){this.flash(this.api.message(e));}finally{this.saving=false;}}
 }

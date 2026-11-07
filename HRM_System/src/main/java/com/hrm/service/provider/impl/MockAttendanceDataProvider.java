@@ -9,6 +9,7 @@ import java.time.LocalDate;
 
 @Service
 public class MockAttendanceDataProvider implements AttendanceDataProvider {
+    @Override public boolean isSynthetic() { return true; }
 
     @Override
     public AttendanceSummaryDTO getAttendanceSummary(Long employeeId, LocalDate periodStart, LocalDate periodEnd) {

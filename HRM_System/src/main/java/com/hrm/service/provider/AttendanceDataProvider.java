@@ -7,6 +7,7 @@ import java.time.LocalDate;
  * P-07: Interface cung cấp số liệu chấm công, tăng ca và nghỉ phép
  */
 public interface AttendanceDataProvider {
+    default boolean isSynthetic() { return false; }
 
     /**
      * Lấy tổng hợp ngày công, giờ OT và ngày nghỉ của một nhân viên trong kỳ

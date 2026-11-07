@@ -1,0 +1,128 @@
+[
+  [
+    {
+      "is_active": false,
+      "n": 22,
+      "role_code": "ADMIN"
+    },
+    {
+      "is_active": true,
+      "n": 5,
+      "role_code": "ADMIN"
+    },
+    {
+      "is_active": false,
+      "n": 25,
+      "role_code": "HR"
+    },
+    {
+      "is_active": true,
+      "n": 5,
+      "role_code": "HR"
+    },
+    {
+      "is_active": false,
+      "n": 108,
+      "role_code": "EMPLOYEE"
+    },
+    {
+      "is_active": true,
+      "n": 13,
+      "role_code": "EMPLOYEE"
+    }
+  ],
+  [
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.employee.20e800ce-00b"
+    },
+    {
+      "role_code": "ADMIN",
+      "username": "xa.postman.manager.20e800ce-00b"
+    },
+    {
+      "role_code": "HR",
+      "username": "xa.postman.hr.20e800ce-00b"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.other.20e800ce-00b"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.employee.fe2a00e4-d15"
+    },
+    {
+      "role_code": "ADMIN",
+      "username": "xa.postman.manager.fe2a00e4-d15"
+    },
+    {
+      "role_code": "HR",
+      "username": "xa.postman.hr.fe2a00e4-d15"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.other.fe2a00e4-d15"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "system.postman.payroll1.fe2a00e4-d15"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "system.postman.payroll2.fe2a00e4-d15"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.employee.4bc4d87a-47c"
+    },
+    {
+      "role_code": "ADMIN",
+      "username": "xa.postman.manager.4bc4d87a-47c"
+    },
+    {
+      "role_code": "HR",
+      "username": "xa.postman.hr.4bc4d87a-47c"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.other.4bc4d87a-47c"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "system.postman.payroll1.4bc4d87a-47c"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "system.postman.payroll2.4bc4d87a-47c"
+    },
+    {
+      "role_code": "ADMIN",
+      "username": "xa.postman.manager.8345ef28-f79"
+    },
+    {
+      "role_code": "HR",
+      "username": "xa.postman.hr.8345ef28-f79"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.other.8345ef28-f79"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.employee.37f19a96-dd5"
+    },
+    {
+      "role_code": "ADMIN",
+      "username": "xa.postman.manager.37f19a96-dd5"
+    },
+    {
+      "role_code": "HR",
+      "username": "xa.postman.hr.37f19a96-dd5"
+    },
+    {
+      "role_code": "EMPLOYEE",
+      "username": "xa.postman.other.37f19a96-dd5"
+    }
+  ]
+]

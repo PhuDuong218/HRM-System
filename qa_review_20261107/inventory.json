@@ -1,0 +1,2972 @@
+{
+  "counts": {
+    "backendJava": 419,
+    "controllers": 80,
+    "frontendSourceFiles": 158,
+    "mappingPaths": 344,
+    "controllerHandlerAnnotations": 319,
+    "literalHttpCalls": 149
+  },
+  "endpoints": [
+    {
+      "method": "POST",
+      "url": "/api/admin/accounts/{accountId}/reset-password",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountController.java",
+      "line": 27
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/accounts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 22
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/accounts/eligible-employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/accounts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 33
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/accounts/{id}/contact",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 36
+    },
+    {
+      "method": "POST",
+      "url": "/api/admin/accounts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 41
+    },
+    {
+      "method": "PUT",
+      "url": "/api/admin/accounts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 47
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/admin/accounts/{id}/status",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 51
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/admin/accounts/{id}/identity",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 55
+    },
+    {
+      "method": "DELETE",
+      "url": "/api/admin/accounts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminAccountManagementController.java",
+      "line": 59
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/permissions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminPermissionController.java",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/permissions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminPermissionController.java",
+      "line": 20
+    },
+    {
+      "method": "PUT",
+      "url": "/api/admin/permissions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminPermissionController.java",
+      "line": 22
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/admin/permissions/{id}/details",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminPermissionController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/roles",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminRoleController.java",
+      "line": 15
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/roles/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AdminRoleController.java",
+      "line": 17
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/allowance-calculations",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceCalculationController.java",
+      "line": 13
+    },
+    {
+      "method": "GET",
+      "url": "/allowance-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceTypeController.java",
+      "line": 17
+    },
+    {
+      "method": "GET",
+      "url": "/allowance-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceTypeController.java",
+      "line": 18
+    },
+    {
+      "method": "POST",
+      "url": "/allowance-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceTypeController.java",
+      "line": 19
+    },
+    {
+      "method": "PUT",
+      "url": "/allowance-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceTypeController.java",
+      "line": 21
+    },
+    {
+      "method": "DELETE",
+      "url": "/allowance-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AllowanceTypeController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/schedules/{id}/actual-breaks",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceActualBreakController.java",
+      "line": 11
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/records/{id}/actual-breaks",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceActualBreakController.java",
+      "line": 13
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance/anomalies",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceAnomalyController.java",
+      "line": 27
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance/manual",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceController.java",
+      "line": 46
+    },
+    {
+      "method": "PUT",
+      "url": "/api/attendance/{id}/correct",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceController.java",
+      "line": 53
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance/{id}/confirm",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceController.java",
+      "line": 61
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance/{id}/unconfirm",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceController.java",
+      "line": 75
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/attendance-correction-requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceCorrectionRequestController.java",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/attendance-correction-requests/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceCorrectionRequestController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/attendance",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceManagementReadOnlyController.java",
+      "line": 27
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/records/{id}/review-check-in",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 18
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/records/{id}/review-check-out",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/context",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/calendar-policy",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 22
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/records",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 26
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/schedules/{id}/absence",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 27
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/manual",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 28
+    },
+    {
+      "method": "PUT",
+      "url": "/api/attendance-workspace/records/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 29
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/records/{id}/confirm",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/records/{id}/unconfirm",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 33
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/schedules/{id}/check-in",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 34
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/schedules/{id}/check-out",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance-workspace/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 38
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 39
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/requests/{id}/receive",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 40
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance-workspace/requests/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendancePortalController.java",
+      "line": 41
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance/self/{scheduleId}/check-in",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceSelfClockController.java",
+      "line": 28
+    },
+    {
+      "method": "POST",
+      "url": "/api/attendance/self/{scheduleId}/check-out",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceSelfClockController.java",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "/api/attendance/self/history",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AttendanceSelfHistoryController.java",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "/audit-logs",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuditLogController.java",
+      "line": 17
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/login",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 29
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/web/login",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 34
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/web/refresh",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "/api/auth/me",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 45
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/logout",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 50
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/change-password",
+      "file": "HRM_System/src/main/java/com/hrm/controller/AuthController.java",
+      "line": 56
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/attendance/confirmed-summary",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ConfirmedAttendancePeriodController.java",
+      "line": 19
+    },
+    {
+      "method": "POST",
+      "url": "/contracts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractController.java",
+      "line": 24
+    },
+    {
+      "method": "GET",
+      "url": "/contracts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractController.java",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "/contracts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractController.java",
+      "line": 35
+    },
+    {
+      "method": "POST",
+      "url": "/contracts/{id}/renew",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractController.java",
+      "line": 45
+    },
+    {
+      "method": "POST",
+      "url": "/contracts/{id}/terminate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractController.java",
+      "line": 52
+    },
+    {
+      "method": "GET",
+      "url": "/contracts/{contractId}/salary-terms",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/contracts/{contractId}/salary-terms/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 28
+    },
+    {
+      "method": "POST",
+      "url": "/contracts/{contractId}/salary-terms",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 31
+    },
+    {
+      "method": "PUT",
+      "url": "/contracts/{contractId}/salary-terms/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 37
+    },
+    {
+      "method": "DELETE",
+      "url": "/contracts/{contractId}/salary-terms/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 41
+    },
+    {
+      "method": "POST",
+      "url": "/contracts/{contractId}/salary-terms/{id}/change-rate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 46
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/salary-rates",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractSalaryTermController.java",
+      "line": 51
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/contracts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractStatisticsController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/contract-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractTypeController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/contract-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractTypeController.java",
+      "line": 22
+    },
+    {
+      "method": "POST",
+      "url": "/contract-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractTypeController.java",
+      "line": 25
+    },
+    {
+      "method": "PUT",
+      "url": "/contract-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractTypeController.java",
+      "line": 31
+    },
+    {
+      "method": "DELETE",
+      "url": "/contract-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractTypeController.java",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "/contracts/expiring",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractWarningController.java",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "/employees/without-active-contract",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ContractWarningController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/decision-payroll-items",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DecisionPayrollController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 50
+    },
+    {
+      "method": "GET",
+      "url": "/departments/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 58
+    },
+    {
+      "method": "GET",
+      "url": "/departments/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 72
+    },
+    {
+      "method": "POST",
+      "url": "/departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 83
+    },
+    {
+      "method": "PUT",
+      "url": "/departments/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 96
+    },
+    {
+      "method": "DELETE",
+      "url": "/departments/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentController.java",
+      "line": 110
+    },
+    {
+      "method": "GET",
+      "url": "/departments/{departmentId}/head",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentHeadController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/departments/{departmentId}/head/history",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentHeadController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/departments/{departmentId}/head/candidates",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentHeadController.java",
+      "line": 30
+    },
+    {
+      "method": "PUT",
+      "url": "/departments/{departmentId}/head",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentHeadController.java",
+      "line": 35
+    },
+    {
+      "method": "POST",
+      "url": "/departments/{departmentId}/head/end",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DepartmentHeadController.java",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/work-time-details/shifts/{id}/breaks",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedBreakQueryController.java",
+      "line": 51
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/work-time-details/schedules/{id}/breaks",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedBreakQueryController.java",
+      "line": 60
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/work-time-details/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedWorkTimeController.java",
+      "line": 24
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/work-time-details/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedWorkTimeController.java",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/work-time-details/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedWorkTimeController.java",
+      "line": 36
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/work-time-details/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/DetailedWorkTimeController.java",
+      "line": 42
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/allowances",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/allowances/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 26
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{employeeId}/allowances",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 31
+    },
+    {
+      "method": "PUT",
+      "url": "/employees/{employeeId}/allowances/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 38
+    },
+    {
+      "method": "DELETE",
+      "url": "/employees/{employeeId}/allowances/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 44
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{employeeId}/allowances/{id}/change-from",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 50
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{employeeId}/allowances/{id}/end-from",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAllowanceController.java",
+      "line": 57
+    },
+    {
+      "method": "GET",
+      "url": "/employee-assignments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAssignmentController.java",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{id}/assignments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAssignmentController.java",
+      "line": 46
+    },
+    {
+      "method": "PUT",
+      "url": "/employees/{id}/transfer",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeAssignmentController.java",
+      "line": 57
+    },
+    {
+      "method": "GET",
+      "url": "/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 58
+    },
+    {
+      "method": "GET",
+      "url": "/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 74
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 87
+    },
+    {
+      "method": "POST",
+      "url": "/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 105
+    },
+    {
+      "method": "PUT",
+      "url": "/employees/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 118
+    },
+    {
+      "method": "DELETE",
+      "url": "/employees/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 132
+    },
+    {
+      "method": "GET",
+      "url": "/employees/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeController.java",
+      "line": 147
+    },
+    {
+      "method": "POST",
+      "url": "/employee-decisions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/employee-decisions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 27
+    },
+    {
+      "method": "GET",
+      "url": "/employee-decisions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 32
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-decisions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 39
+    },
+    {
+      "method": "DELETE",
+      "url": "/employee-decisions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 44
+    },
+    {
+      "method": "POST",
+      "url": "/employee-decisions/{id}/approve",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 50
+    },
+    {
+      "method": "POST",
+      "url": "/employee-decisions/{id}/reject",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDecisionController.java",
+      "line": 55
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{id}/detail",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDetailController.java",
+      "line": 34
+    },
+    {
+      "method": "PATCH",
+      "url": "/employees/{id}/contact",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeDetailController.java",
+      "line": 45
+    },
+    {
+      "method": "GET",
+      "url": "/employees/{employeeId}/qualifications",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 17
+    },
+    {
+      "method": "GET",
+      "url": "/employee-qualifications/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 19
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{employeeId}/qualifications",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 20
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-qualifications/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 22
+    },
+    {
+      "method": "DELETE",
+      "url": "/employee-qualifications/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 23
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-qualifications/{id}/primary",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeQualificationController.java",
+      "line": 25
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{id}/rehire",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRehireController.java",
+      "line": 14
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/capabilities",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/head-queue",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 21
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/{id}/head-decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 23
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/leave",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 24
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/resignation",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/mine",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/{id}/resignation-readiness",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 35
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/{id}/approve",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 37
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/{id}/reject",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 38
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/{id}/withdraw",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/balances/{employeeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 40
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-requests/leave-policies/{leaveTypeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 41
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/leave-policies/{leaveTypeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 43
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/leave-rules/{type}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 45
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-requests/leave-rules/{type}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 46
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/{id}/cancel-approved",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 47
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/resignations/execute-due",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeRequestController.java",
+      "line": 48
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeStatisticsController.java",
+      "line": 21
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{id}/terminate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeTerminationController.java",
+      "line": 28
+    },
+    {
+      "method": "POST",
+      "url": "/employees/{id}/termination-decisions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/EmployeeTerminationController.java",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "/g1/audit",
+      "file": "HRM_System/src/main/java/com/hrm/controller/G1AuditController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/health",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HealthController.java",
+      "line": 8
+    },
+    {
+      "method": "GET",
+      "url": "/api/health",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HealthController.java",
+      "line": 8
+    },
+    {
+      "method": "GET",
+      "url": "/hello",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HelloController.java",
+      "line": 9
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/hr-scopes",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 22
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/hr-scopes/account/{accountId}/active-departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 27
+    },
+    {
+      "method": "POST",
+      "url": "/api/admin/hr-scopes",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "/api/admin/hr-scopes/account/{accountId}/department-options",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 40
+    },
+    {
+      "method": "PUT",
+      "url": "/api/admin/hr-scopes/account/{accountId}/departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 47
+    },
+    {
+      "method": "PUT",
+      "url": "/api/admin/hr-scopes/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 54
+    },
+    {
+      "method": "POST",
+      "url": "/api/admin/hr-scopes/{id}/revoke",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrDepartmentScopeController.java",
+      "line": 60
+    },
+    {
+      "method": "GET",
+      "url": "/api/overview/hr",
+      "file": "HRM_System/src/main/java/com/hrm/controller/HrOverviewController.java",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "/employee-requests/leave-accrual/{type}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveAccrualController.java",
+      "line": 10
+    },
+    {
+      "method": "PUT",
+      "url": "/employee-requests/leave-accrual/{type}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveAccrualController.java",
+      "line": 11
+    },
+    {
+      "method": "POST",
+      "url": "/employee-requests/leave-accrual/{type}/generate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveAccrualController.java",
+      "line": 12
+    },
+    {
+      "method": "GET",
+      "url": "/leave-entitlements",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveEntitlementController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/leave-entitlements/employee/{employeeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveEntitlementController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/leave-entitlements/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveEntitlementController.java",
+      "line": 26
+    },
+    {
+      "method": "POST",
+      "url": "/leave-entitlements",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveEntitlementController.java",
+      "line": 27
+    },
+    {
+      "method": "PUT",
+      "url": "/leave-entitlements/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveEntitlementController.java",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "url": "/leave-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "/leave-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 46
+    },
+    {
+      "method": "POST",
+      "url": "/leave-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 52
+    },
+    {
+      "method": "PUT",
+      "url": "/leave-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 59
+    },
+    {
+      "method": "DELETE",
+      "url": "/leave-types/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 66
+    },
+    {
+      "method": "GET",
+      "url": "/leave-types",
+      "file": "HRM_System/src/main/java/com/hrm/controller/LeaveTypeController.java",
+      "line": 75
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/attendance-summary",
+      "file": "HRM_System/src/main/java/com/hrm/controller/MyAttendanceSummaryController.java",
+      "line": 12
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/contracts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/MyEmploymentController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/contracts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/MyEmploymentController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/allowances",
+      "file": "HRM_System/src/main/java/com/hrm/controller/MyEmploymentController.java",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/decisions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/MyEmploymentController.java",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/calendar",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeCalendarController.java",
+      "line": 12
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/calendar/{id}/{action:check-in|check-out}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeCalendarController.java",
+      "line": 13
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 32
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 38
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 48
+    },
+    {
+      "method": "PUT",
+      "url": "/api/overtime/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 54
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/cancel",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 60
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/approve",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 66
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/reject",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 72
+    },
+    {
+      "method": "PUT",
+      "url": "/api/overtime/requests/{id}/actual",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 78
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/confirm",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 86
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/reopen-confirmation",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 92
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/overflow-review",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeController.java",
+      "line": 99
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/payroll-inputs",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimePayrollInputController.java",
+      "line": 24
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/requests/{id}/preview",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimePreviewController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/supplements/candidates",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeSupplementController.java",
+      "line": 13
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/supplements",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeSupplementController.java",
+      "line": 14
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/supplements/overtime/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeSupplementController.java",
+      "line": 15
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/supplements/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeSupplementController.java",
+      "line": 17
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workflows/ot/{id}/cancel-request",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkflowController.java",
+      "line": 35
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workflows/ot/{id}/overflow-request",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkflowController.java",
+      "line": 41
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workflows/requests/{requestId}/intervals",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkflowController.java",
+      "line": 47
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workflows/requests/{requestId}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkflowController.java",
+      "line": 53
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/context",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 19
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 28
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 29
+    },
+    {
+      "method": "PUT",
+      "url": "/api/overtime/workspace/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 31
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/requests/{id}/{action:approve|reject|cancel|actual|amend-actual|confirm|reopen}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 32
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/requests/{id}/cancel-request",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 34
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/requests/{id}/overflow-request",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/api/overtime/workspace/inbox",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 36
+    },
+    {
+      "method": "POST",
+      "url": "/api/overtime/workspace/inbox/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/OvertimeWorkspaceController.java",
+      "line": 39
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/forgot-password",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PasswordRecoveryController.java",
+      "line": 21
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/verify-recovery-code",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PasswordRecoveryController.java",
+      "line": 25
+    },
+    {
+      "method": "POST",
+      "url": "/api/auth/reset-forgotten-password",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PasswordRecoveryController.java",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-batches",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 52
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-batches",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 52
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-batches/period/{periodId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 58
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-batches/period/{periodId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 58
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-batches/period/{periodId}/current",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 65
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-batches/period/{periodId}/current",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 65
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-batches/draft",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 77
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-batches/draft",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 77
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-batches/{batchId}/calculate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 83
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-batches/{batchId}/calculate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 83
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-batches/{batchId}/lock",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 90
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-batches/{batchId}/lock",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 90
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-batches/{batchId}/publish",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 98
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-batches/{batchId}/publish",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 98
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-batches/{batchId}/adjust",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 106
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-batches/{batchId}/adjust",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 106
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-batches/{batchId}/details",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 113
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-batches/{batchId}/details",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollBatchController.java",
+      "line": 113
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/salary",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/payslips",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-integration-test/salary-profile/{employeeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollIntegrationTestController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-integration-test/attendance/{employeeId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollIntegrationTestController.java",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-periods",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-periods",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "/payroll-periods/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "url": "/api/payroll-periods/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 31
+    },
+    {
+      "method": "POST",
+      "url": "/payroll-periods",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 37
+    },
+    {
+      "method": "POST",
+      "url": "/api/payroll-periods",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 37
+    },
+    {
+      "method": "PUT",
+      "url": "/payroll-periods/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 43
+    },
+    {
+      "method": "PUT",
+      "url": "/api/payroll-periods/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollPeriodController.java",
+      "line": 43
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/payroll",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayrollStatisticsController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/payslips/my-payslips",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "url": "/api/payslips/my-payslips",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "url": "/payslips/{payslipId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "/api/payslips/{payslipId}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "/payslips/{payslipId}/html",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 45
+    },
+    {
+      "method": "GET",
+      "url": "/api/payslips/{payslipId}/html",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 45
+    },
+    {
+      "method": "GET",
+      "url": "/payslips/preview/employee/{employeeId}/html",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 69
+    },
+    {
+      "method": "GET",
+      "url": "/api/payslips/preview/employee/{employeeId}/html",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PayslipController.java",
+      "line": 69
+    },
+    {
+      "method": "GET",
+      "url": "/personnel/audit",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PersonnelAuditController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/g2/audit",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PersonnelAuditController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/employee-assignments/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PersonnelSearchController.java",
+      "line": 14
+    },
+    {
+      "method": "GET",
+      "url": "/employee-qualifications/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PersonnelSearchController.java",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "/positions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 52
+    },
+    {
+      "method": "GET",
+      "url": "/positions/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 61
+    },
+    {
+      "method": "GET",
+      "url": "/positions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 77
+    },
+    {
+      "method": "POST",
+      "url": "/positions",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 86
+    },
+    {
+      "method": "PUT",
+      "url": "/positions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 98
+    },
+    {
+      "method": "DELETE",
+      "url": "/positions/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/PositionController.java",
+      "line": 111
+    },
+    {
+      "method": "GET",
+      "url": "/qualification-levels",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "/qualification-levels/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 19
+    },
+    {
+      "method": "POST",
+      "url": "/qualification-levels",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 20
+    },
+    {
+      "method": "PUT",
+      "url": "/qualification-levels/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 22
+    },
+    {
+      "method": "DELETE",
+      "url": "/qualification-levels/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/qualification-levels",
+      "file": "HRM_System/src/main/java/com/hrm/controller/QualificationLevelController.java",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/employees/export",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ReportExportController.java",
+      "line": 33
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/contracts/export",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ReportExportController.java",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/work/export",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ReportExportController.java",
+      "line": 51
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/payroll/export",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ReportExportController.java",
+      "line": 59
+    },
+    {
+      "method": "GET",
+      "url": "/salary-components",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/api/salary-components",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/api/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 28
+    },
+    {
+      "method": "POST",
+      "url": "/salary-components",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 33
+    },
+    {
+      "method": "POST",
+      "url": "/api/salary-components",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 33
+    },
+    {
+      "method": "PUT",
+      "url": "/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 39
+    },
+    {
+      "method": "PUT",
+      "url": "/api/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 39
+    },
+    {
+      "method": "DELETE",
+      "url": "/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 44
+    },
+    {
+      "method": "DELETE",
+      "url": "/api/salary-components/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/SalaryComponentController.java",
+      "line": 44
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedule-change-requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleChangeRequestController.java",
+      "line": 29
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedule-change-requests/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleChangeRequestController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/filter-departments",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleFilterLookupController.java",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/resolve-employee",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleFilterLookupController.java",
+      "line": 54
+    },
+    {
+      "method": "GET",
+      "url": "/api/me/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleQueryController.java",
+      "line": 16
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleQueryController.java",
+      "line": 23
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/{id}/state",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleStateController.java",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedules/{id}/lock-edit",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleStateController.java",
+      "line": 36
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedules/{id}/unlock-edit",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleStateController.java",
+      "line": 42
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedules/{id}/cancel",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleStateController.java",
+      "line": 48
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/context",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/employees",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 33
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/schedules/{id}/history",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 40
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/my-search",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 42
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedule-workspace/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 44
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/schedule-workspace/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 46
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 48
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedule-workspace/requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 56
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedule-workspace/requests/{id}/decision",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 73
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedule-workspace/requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleWorkspaceController.java",
+      "line": 78
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/capabilities",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleZeroBreakWriteController.java",
+      "line": 23
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleZeroBreakWriteController.java",
+      "line": 28
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/ScheduleZeroBreakWriteController.java",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/workflow-requests",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkflowRequestQueryController.java",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/workflow-requests/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkflowRequestQueryController.java",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkScheduleController.java",
+      "line": 32
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkScheduleController.java",
+      "line": 45
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/schedules",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkScheduleController.java",
+      "line": 50
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/schedules/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkScheduleController.java",
+      "line": 56
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 43
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 49
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 55
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/{id}/details",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 63
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/management/shifts/{id}/deactivate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 71
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/management/shifts/{id}/activate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 77
+    },
+    {
+      "method": "DELETE",
+      "url": "/api/management/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 83
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/capabilities",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftController.java",
+      "line": 90
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/{id}/history",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftHistoryController.java",
+      "line": 22
+    },
+    {
+      "method": "POST",
+      "url": "/api/management/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftManagementWriteController.java",
+      "line": 30
+    },
+    {
+      "method": "PUT",
+      "url": "/api/management/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftManagementWriteController.java",
+      "line": 36
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/management/shifts/{id}/basic-info",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftManagementWriteController.java",
+      "line": 45
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/management/shifts/{id}/deactivate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftManagementWriteController.java",
+      "line": 51
+    },
+    {
+      "method": "PATCH",
+      "url": "/api/management/shifts/{id}/activate",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftManagementWriteController.java",
+      "line": 57
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftReadOnlyController.java",
+      "line": 47
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/{id}/details",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftReadOnlyController.java",
+      "line": 76
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/{id}",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftReadOnlyController.java",
+      "line": 82
+    },
+    {
+      "method": "GET",
+      "url": "/api/management/shifts/capabilities",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkShiftReadOnlyController.java",
+      "line": 88
+    },
+    {
+      "method": "GET",
+      "url": "/api/reports/work",
+      "file": "HRM_System/src/main/java/com/hrm/controller/WorkStatisticsController.java",
+      "line": 25
+    }
+  ],
+  "calls": [
+    {
+      "method": "GET",
+      "url": "${this.url}/context",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 37
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/records",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 39
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/schedules/${id}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 40
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/manual",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 41
+    },
+    {
+      "method": "PUT",
+      "url": "${this.url}/records/${id}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 42
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/records/${id}/${confirm ? 'confirm' : 'unconfirm'}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 43
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/schedules/${id}/${checkIn ? 'check-in' : 'check-out'}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 44
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 45
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests/${id}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 46
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 47
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests/${id}/receive",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 48
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/records/${row.attendanceId}/review-check-${side}",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 49
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/schedules/${row.scheduleId}/absence",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 50
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests/${id}/decision",
+      "file": "frontend/src/app/pages/attendance/attendance-api.service.ts",
+      "line": 51
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/context",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 28
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/employees",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 29
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests/${id}",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 31
+    },
+    {
+      "method": "PUT",
+      "url": "${this.url}/requests/${row.ot.overtimeId}",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 32
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests/${row.ot.overtimeId}/${action}",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 33
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests/${row.ot.overtimeId}/${type}-request",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/inbox",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 35
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/inbox/${request.requestId}/decision",
+      "file": "frontend/src/app/pages/overtime/overtime-api.service.ts",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/shifts",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 190
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/employees",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 209
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/${this.personal?'my-search':'search'}",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 251
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/schedules",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 303
+    },
+    {
+      "method": "PUT",
+      "url": "${this.url}/schedules/${this.selected!.schedule.scheduleId}",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 303
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/schedules/${id}/${endpoint}",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 339
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 356
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests/${row.requestId}",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 364
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests/${id}/decision",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 372
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/requests/${id}",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 373
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/me/schedules",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 383
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/requests",
+      "file": "frontend/src/app/pages/schedules/schedules.ts",
+      "line": 398
+    },
+    {
+      "method": "GET",
+      "url": "${this.url}/${row.shiftId}",
+      "file": "frontend/src/app/pages/work-shifts/work-shifts.ts",
+      "line": 187
+    },
+    {
+      "method": "POST",
+      "url": "${this.url}/${target!.shiftId}",
+      "file": "frontend/src/app/pages/work-shifts/work-shifts.ts",
+      "line": 251
+    },
+    {
+      "method": "PATCH",
+      "url": "${this.url}/${id}/${activating?'activate':'deactivate'}",
+      "file": "frontend/src/app/pages/work-shifts/work-shifts.ts",
+      "line": 285
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/admin/accounts",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 67
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/admin/accounts/${accountId}/reset-password",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 71
+    },
+    {
+      "method": "PATCH",
+      "url": "${API_BASE_URL}/admin/accounts/${accountId}/status",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 75
+    },
+    {
+      "method": "PATCH",
+      "url": "${API_BASE_URL}/admin/accounts/${accountId}/identity",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 79
+    },
+    {
+      "method": "PATCH",
+      "url": "${API_BASE_URL}/admin/permissions/${permissionId}/details",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 83
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/accounts/${accountId}",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 87
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/accounts/${accountId}/contact",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 91
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/hr-scopes/account/${accountId}/active-departments",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 95
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/hr-scopes/account/${accountId}/department-options",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 99
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/accounts/eligible-employees",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 104
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/accounts",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 112
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/roles",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 116
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/admin/permissions",
+      "file": "frontend/src/app/services/account.service.ts",
+      "line": 120
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/allowance-types",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 21
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/allowance-types",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 24
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/allowance-types/${id}",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 27
+    },
+    {
+      "method": "DELETE",
+      "url": "${API_BASE_URL}/allowance-types/${id}",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 37
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 40
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances/${id}",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 43
+    },
+    {
+      "method": "DELETE",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances/${id}",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 46
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances/${id}/change-from",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 51
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowances/${id}/end-from",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 55
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employees/${employeeId}/allowance-calculations",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 61
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payroll-periods",
+      "file": "frontend/src/app/services/allowance.service.ts",
+      "line": 68
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/web/login",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 97
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/logout",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 134
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/change-password",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 148
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/forgot-password",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 154
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/verify-recovery-code",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 158
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/reset-forgotten-password",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 162
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/auth/me",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 184
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/capabilities",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 185
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/auth/web/refresh",
+      "file": "frontend/src/app/services/auth.service.ts",
+      "line": 262
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/departments",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 10
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/leave-accrual/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 11
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/employee-requests/leave-accrual/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 12
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/employee-requests/leave-rules/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 16
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/leave-policies/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 17
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/employee-requests/leave-policies/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 18
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/${path}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 19
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/${path}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 20
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/${path}/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 20
+    },
+    {
+      "method": "DELETE",
+      "url": "${API_BASE_URL}/${path}/${id}",
+      "file": "frontend/src/app/services/catalog.service.ts",
+      "line": 21
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/contracts",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 31
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/contracts/${id}",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 38
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/contracts/expiring",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 42
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employees/without-active-contract",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 48
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/contract-types",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 54
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contracts",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 60
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contracts/${id}/renew",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 67
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contracts/${id}/terminate",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 74
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contract-types",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 81
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/contract-types/${id}",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 88
+    },
+    {
+      "method": "DELETE",
+      "url": "${API_BASE_URL}/contract-types/${id}",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 95
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/contracts/${contractId}/salary-terms",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 99
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contracts/${contractId}/salary-terms",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 105
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employees/${employeeId}/salary-rates",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 112
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 123
+    },
+    {
+      "method": "DELETE",
+      "url": "${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 130
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}/change-rate",
+      "file": "frontend/src/app/services/contract.service.ts",
+      "line": 141
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/departments",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 25
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/positions",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 26
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/departments/${id}/head/history",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 27
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/departments/${id}/head/candidates",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 28
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/departments/${id}/head",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/departments/${id}/head/end",
+      "file": "frontend/src/app/services/department.service.ts",
+      "line": 33
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/capabilities",
+      "file": "frontend/src/app/services/head-requests.service.ts",
+      "line": 10
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/head-queue",
+      "file": "frontend/src/app/services/head-requests.service.ts",
+      "line": 11
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/${id}",
+      "file": "frontend/src/app/services/head-requests.service.ts",
+      "line": 12
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/employee-requests/${id}/head-decision",
+      "file": "frontend/src/app/services/head-requests.service.ts",
+      "line": 13
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/health",
+      "file": "frontend/src/app/services/health.service.ts",
+      "line": 10
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payroll-periods",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 20
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payroll-batches/period/${periodId}/current",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 25
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/payroll-batches/draft",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 30
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/payroll-batches/${batchId}/calculate",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 35
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payroll-batches/${batchId}/details",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 40
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/payroll-batches/${batchId}/lock",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 45
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/payroll-batches/${batchId}/publish",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 50
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/payroll-batches/${batchId}/adjust",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 56
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payslips/my-payslips",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 62
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payslips/${payslipId}",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 67
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payslips/${payslipId}/html",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 72
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/payslips/preview/employee/${employeeId}/html",
+      "file": "frontend/src/app/services/payroll.service.ts",
+      "line": 77
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/employee-requests/${id}/resignation-readiness",
+      "file": "frontend/src/app/services/personnel-workspace.service.ts",
+      "line": 17
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/overview/hr",
+      "file": "frontend/src/app/services/report.service.ts",
+      "line": 34
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/reports/${type}/export",
+      "file": "frontend/src/app/services/report.service.ts",
+      "line": 59
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/shifts",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 11
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/shifts/capabilities",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 19
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/shifts",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 21
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/management/shifts/${id}",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 24
+    },
+    {
+      "method": "PATCH",
+      "url": "${API_BASE_URL}/management/shifts/${id}/basic-info",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 27
+    },
+    {
+      "method": "PATCH",
+      "url": "${API_BASE_URL}/management/shifts/${id}/${active ? 'activate' : 'deactivate'}",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 30
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/schedules/resolve-employee",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 36
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/schedules/capabilities",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 48
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/schedules",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 51
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/management/schedules/${id}",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 54
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/schedules/search",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 60
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/overtime/requests",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 65
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/overtime/requests/${id}",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 68
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/attendance/confirmed-summary",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 73
+    },
+    {
+      "method": "GET",
+      "url": "${API_BASE_URL}/management/attendance",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 79
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/schedule-change-requests",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 82
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/schedule-change-requests/${id}/decision",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 85
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/attendance-correction-requests",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 88
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/management/attendance-correction-requests/${id}/decision",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 91
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/overtime/requests",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 94
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/overtime/requests/${id}/${action}",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 97
+    },
+    {
+      "method": "PUT",
+      "url": "${API_BASE_URL}/overtime/requests/${id}/actual",
+      "file": "frontend/src/app/services/work-module-api.service.ts",
+      "line": 100
+    },
+    {
+      "method": "POST",
+      "url": "${API_BASE_URL}/overtime/workspace/calendar/${slot.row.ot.overtimeId}/${checkIn?'check-in':'check-out'}",
+      "file": "frontend/src/app/shared/overtime-calendar.ts",
+      "line": 36
+    }
+  ]
+}

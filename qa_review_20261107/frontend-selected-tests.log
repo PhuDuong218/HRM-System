@@ -1,0 +1,85 @@
+X [ERROR] Cannot read directory "../../..": Access is denied.
+
+X [ERROR] Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\overview-harness.ts"
+
+✖ HR overview uses its scoped endpoint while admin retains report access (65.924ms)
+X [ERROR] Cannot read directory "../../..": Access is denied.
+
+X [ERROR] Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\preferences-harness.ts"
+
+✖ theme and language choices survive navigation and reload; storage failure remains usable (52.258ms)
+✔ preserves exact payroll decimals, including values beyond JavaScript integer precision (2.2269ms)
+✔ does not alter JSON strings or accidentally treat matching values as keys (1.6656ms)
+✔ formats decimal exponents without rounding (0.2222ms)
+X [ERROR] Cannot read directory "../../..": Access is denied.
+
+X [ERROR] Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\report-service-harness.ts"
+
+✖ report requests carry authentication, filters and matching Excel parameters (65.0909ms)
+ℹ tests 6
+ℹ suites 0
+ℹ pass 3
+ℹ fail 3
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 517.4077
+
+✖ failing tests:
+
+test at test-tools\overview.test.cjs:8:1
+✖ HR overview uses its scoped endpoint while admin retains report access (65.924ms)
+  Error: Build failed with 2 errors:
+  error: Cannot read directory "../../..": Access is denied.
+  error: Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\overview-harness.ts"
+      at failureErrorWithLog (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1748:15)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1207:25
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1159:52
+      at buildResponseToResult (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1205:7)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1232:16
+      at responseCallbacks.<computed> (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:884:9)
+      at handleIncomingPacket (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:939:12)
+      at Socket.readFromStdout (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:862:7)
+      at Socket.emit (node:events:514:28)
+      at addChunk (node:internal/streams/readable:569:12) {
+    errors: [ { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Cannot read directory "../../..": Access is denied.' }, { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Could not resolve "C:\\\\NguyenXuanAnh\\\\Git-Nhom-HRM\\\\qa_review_20261107\\\\frontend\\\\test-tools\\\\overview-harness.ts"' } ],
+    warnings: []
+  }
+
+test at test-tools\preferences.test.cjs:8:1
+✖ theme and language choices survive navigation and reload; storage failure remains usable (52.258ms)
+  Error: Build failed with 2 errors:
+  error: Cannot read directory "../../..": Access is denied.
+  error: Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\preferences-harness.ts"
+      at failureErrorWithLog (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1748:15)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1207:25
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1159:52
+      at buildResponseToResult (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1205:7)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1232:16
+      at responseCallbacks.<computed> (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:884:9)
+      at handleIncomingPacket (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:939:12)
+      at Socket.readFromStdout (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:862:7)
+      at Socket.emit (node:events:514:28)
+      at addChunk (node:internal/streams/readable:569:12) {
+    errors: [ { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Cannot read directory "../../..": Access is denied.' }, { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Could not resolve "C:\\\\NguyenXuanAnh\\\\Git-Nhom-HRM\\\\qa_review_20261107\\\\frontend\\\\test-tools\\\\preferences-harness.ts"' } ],
+    warnings: []
+  }
+
+test at test-tools\report-service.test.cjs:8:1
+✖ report requests carry authentication, filters and matching Excel parameters (65.0909ms)
+  Error: Build failed with 2 errors:
+  error: Cannot read directory "../../..": Access is denied.
+  error: Could not resolve "C:\\NguyenXuanAnh\\Git-Nhom-HRM\\qa_review_20261107\\frontend\\test-tools\\report-service-harness.ts"
+      at failureErrorWithLog (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1748:15)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1207:25
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1159:52
+      at buildResponseToResult (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1205:7)
+      at C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:1232:16
+      at responseCallbacks.<computed> (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:884:9)
+      at handleIncomingPacket (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:939:12)
+      at Socket.readFromStdout (C:\NguyenXuanAnh\Git-Nhom-HRM\frontend\node_modules\esbuild\lib\main.js:862:7)
+      at Socket.emit (node:events:514:28)
+      at addChunk (node:internal/streams/readable:569:12) {
+    errors: [ { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Cannot read directory "../../..": Access is denied.' }, { detail: undefined, id: '', location: null, notes: [], pluginName: '', text: 'Could not resolve "C:\\\\NguyenXuanAnh\\\\Git-Nhom-HRM\\\\qa_review_20261107\\\\frontend\\\\test-tools\\\\report-service-harness.ts"' } ],
+    warnings: []
+  }

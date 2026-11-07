@@ -155,6 +155,22 @@ public class EmployeeRequestService {
         process(id,"DA_DUYET",actor.accountId(),null);
         var after=required(id);support.audit(actor.accountId(),"REQUEST_APPROVE","employee_requests",id,input.note(),before,after);return after;
     }
+    public com.hrm.dto.ResignationReadinessDTO resignationReadiness(long id,LocalDate proposed,Principal p){
+        var actor=access.approver(p);var row=required(id);long employee=number(row,"employeeId");
+        personnelScope.managedEmployee(employee);
+        if(actor.employeeId()==employee)throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự duyệt đơn nghỉ việc");
+        if(!"NGHI_VIEC".equals(row.get("requestType")))throw PersonnelWorkflowSupport.bad("Chỉ kiểm tra bàn giao cho đơn nghỉ việc");
+        LocalDate last=proposed!=null?proposed:LocalDate.parse(Objects.toString(row.get("approvedLastWorkingDate"),row.get("requestedLastWorkingDate").toString()));
+        if(last.isBefore(support.today()))throw PersonnelWorkflowSupport.bad("Ngày làm cuối được duyệt không được ở quá khứ");
+        var person=jdbc.queryForMap("SELECT employee_code,full_name,employment_status FROM dbo.employees WHERE employee_id=?",employee);
+        String blocker=approvalStages==null?null:approvalStages.finalApprovalBlocker(id,employee);
+        if(!"CHO_DUYET".equals(row.get("status"))||row.get("withdrawnAt")!=null)blocker="Đơn không còn ở trạng thái chờ duyệt cuối";
+        if(!"DANG_LAM".equals(person.get("employment_status")))blocker="Nhân viên đã nghỉ việc";
+        var issues=exitGuard.inspect(employee,last);
+        boolean ready=blocker==null&&issues.isEmpty();
+        return new com.hrm.dto.ResignationReadinessDTO(id,employee,person.get("employee_code").toString(),person.get("full_name").toString(),last,ready,
+            blocker!=null?blocker:ready?"Đã đủ điều kiện kiểm tra để HR duyệt cuối":"Cần xử lý các dữ liệu bên dưới trước khi duyệt cuối",issues);
+    }
     @Transactional
     public Map<String,Object> cancelApproved(long id,Rejection input,Principal p){
         var actor=access.approver(p);support.lock();timeline.lockTimeline();var before=required(id);
@@ -198,7 +214,7 @@ public class EmployeeRequestService {
         if(overlap>0) throw PersonnelWorkflowSupport.conflict("Trùng thời gian với đơn đang chờ hoặc đã duyệt");
         var resigned=jdbc.queryForList("""
             SELECT d.approved_last_working_date FROM dbo.employee_requests r JOIN dbo.resignation_request_details d ON d.request_id=r.request_id
-            WHERE r.employee_id=? AND r.status='DA_DUYET' AND NOT EXISTS(SELECT 1 FROM dbo.employee_request_withdrawals cw WHERE cw.request_id=r.request_id) AND d.approved_last_working_date<?
+            WHERE r.employee_id=? AND r.status='DA_DUYET' AND NOT EXISTS(SELECT 1 FROM dbo.g2_resignation_executions done WHERE done.request_id=r.request_id) AND NOT EXISTS(SELECT 1 FROM dbo.employee_request_withdrawals cw WHERE cw.request_id=r.request_id) AND d.approved_last_working_date<?
             """,LocalDate.class,employee,end.minusNanos(1).toLocalDate());
         if(!resigned.isEmpty()) throw PersonnelWorkflowSupport.conflict("Thời gian nghỉ vượt ngày làm cuối đã duyệt");
         var schedules=jdbc.queryForList("""

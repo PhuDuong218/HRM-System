@@ -1,0 +1,3361 @@
+[
+  {
+    "name": "com.hrm.AttendanceAuthorizationTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "missingPermissionServiceCannotCreateAttendanceService",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "correctRejectedDoesNotWriteOrAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "confirmRejectedDoesNotWriteOrAudit",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.AttendancePermissionServiceTest",
+    "tests": 15,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "hrCannotAccessIneligibleEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotManageWithoutScope",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingGrantDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCanManageScopedEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotManageOwnAttendance",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotUnconfirmOwnAttendance",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCanManageEligibleEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCannotConfirmOwnAttendance",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveAccountDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeCannotManage",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidInputDoesNotReachDb",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCannotManageOwnAttendance",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminNullEmployeeCanManage",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotManageWithoutActiveEmployeeAccount",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrNullEmployeeDenied",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.AttendanceRbacScopeAndSeparationTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "hrCannotConfirmLastOwnCorrection",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotConfirmLegacyWithoutCreator",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "deniedPermissionStopsBeforeApprovalQuery",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotConfirmOwnCreation",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.AttendanceServiceTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "khongChoPhepNhapCongNgoaiLich",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.AttendanceUnconfirmExtendedIntegrationTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "springProxyRequestsRollbackWhenRbacDeniesAccess",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "springProxyRequestsRollbackWhenAuditInsertFails",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.AttendanceUnconfirmTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "nullReasonIsRejectedBeforeRead",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "anotherHrCanUnconfirm",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCanUnconfirmAndAuditWithTrimmedReason",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotUnconfirmOwnApproval",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unconfirmedRecordReturnsConflict",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "blankReasonIsRejectedBeforeRead",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "permissionDenialStopsBeforeUpdate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "zeroUpdatedRowsReturnConflictWithoutAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingAttendanceReturnsNotFound",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "auditFailureIsPropagatedForTransactionalRollback",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.controller.AttendanceControllerJwtSecurityIntegrationTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "staleTokenVersionCannotReachController",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "validJwtPassesRealFilterAndUsesStoredActorId",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "expiredJwtMustReturn401ByApiContract",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "wrongSignatureMustReturn401ByApiContract",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unconfirmIgnoresSpoofedActorIdFromClient",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveAccountCannotReachController",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "noBearerTokenMustReturn401ByApiContract",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingPermissionDeniedByServiceAndPropagatedAs403",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.controller.AttendanceControllerSecurityMockMvcTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "confirmDelegatesAuthenticatedActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "malformedJsonReturns400WithoutServiceCall",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "blankReasonReturns400WithoutServiceCall",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidManualPayloadReturns400WithoutServiceCall",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "manualUsesTrustedPrincipalNotClientActorId",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeForbiddenIsPropagatedFromService",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrSeparationOfDutiesForbiddenIsPropagated",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingAuthenticatedPrincipalReturns401BeforeService",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "correctDelegatesPathIdAndAuthenticatedActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrSelfUnconfirmForbiddenIsPropagated",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unconfirmDelegatesReasonAndAuthenticatedActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "alreadyUnconfirmedConflictIsPropagated",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.AllowanceCalculationTest",
+    "tests": 13,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "dailyCalculationCountsHalfDaysExactlyAndDoesNotRound",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hourlyCalculationUsesHoursInsteadOfDays",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unconfirmedPeriodPolicyFailsExplicitly",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "wrongEmployeeWorkDataIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingWorkAdapterIs503",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "confirmedFullCoverageUsesOneUnitWithSyntheticPolicyOnly",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unimplementedTextConditionIsNotIgnored",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlappingSameTypeCannotBePaidTwice",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "partialPeriodCoverageIsNotSilentlyProrated",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingOrDuplicateDaysAreRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "noAssignmentsReturnsZeroWithoutCallingWorkSource",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidUnitsAreRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "countsOnlyIntersectionOfAssignmentAndPeriod",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.CatalogServicesTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "contractTypeCodeIsUnique",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "contractTypeCodeCannotChange",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "allowanceTypeCodeIsUnique",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "allowanceTypeDeleteIsSoftAndAudited",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "deactivationRequiresReason",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "contractTypeDeleteDeactivatesAndPreservesRow",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.ContractLifecycleTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "futureRenewalPreservesOldDatesAndStatus",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "expiryChangesStatusOnlyAfterLastDay",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "indefiniteContractCannotRenew",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "renewalCannotStartOnOldLastDay",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "retroactiveTerminationRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "futureTerminationRetainsLastDayAndProtectsOnlyRemovedDays",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotTerminateParentWithRenewal",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "repeatedTerminationRejected",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.ContractServiceTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "missingTypeIs404",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlappingDatesDoNotSave",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveTypeIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "createsSignedDtoAndGuardsHistory",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateNumberDoesNotSave",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "closedPayrollBlocksCreation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "searchEscapesSqlServerWildcardsAndReturnsPaging",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingEmployeeIs404",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidPagingIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "formerEmployeeIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "reversedDatesAre400",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.DecisionPayrollServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "repeatedReadIsStableAndDoesNotSaveOrConsume",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateDecisionIdCannotBeCountedTwice",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "noEligibleItemsReturnsZeroEvenWhenMoneyPolicyUnconfirmed",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "outOfPeriodDecisionIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "bothPeriodBoundaryDatesAreIncluded",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "monetaryItemsRequireConfirmedPolicy",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlappingPayrollPeriodsAreNotGuessed",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unapprovedOrNoneSourceIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "totalsAreExactAndDirectionIsNotInferredFromDecisionType",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "wrongEmployeeIsRejectedEvenIfRepositoryReturnsIt",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.EmployeeAllowanceServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "inactiveTypeCannotBeAssigned",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "stopFromDayIsNotPaid",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotEndRetroactively",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "formerEmployeeCannotGetNewAllowance",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "changePreservesOldAmountAndClosesAtPreviousDay",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "effectiveRowCannotBeRewrittenOrDeleted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeScopePreventsReadingOtherEmployeesRecord",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateEffectiveIntervalIs409AndDoesNotSave",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "singleDayAssignmentRejectedBySchemaRule",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "futureAssignmentCanBeUpdatedAndDeleted",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.EmployeeDecisionServiceTest",
+    "tests": 16,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "pendingDeleteHasAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectStillRecordsReviewerAndDoesNotRequireMoneyPolicy",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "applyDateCannotPrecedeIssue",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "issuerCannotApproveOwnDecision",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotChangeNumberOrEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateNumberIs409",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "noneMustNotHaveMoneyOrApplyDate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "approveSetsStatusActorAndTimestampTogether",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recipientCannotReviewOwnDecision",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "moneyRequiresPositiveAmountAndDate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingActorDoesNotReadRepositories",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "reviewedRecordCannotBeChangedOrReviewedAgain(DecisionApprovalStatus)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "reviewedRecordCannotBeChangedOrReviewedAgain(DecisionApprovalStatus)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "closedPayrollPreventsApproval",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "createIsAlwaysPendingWithServerActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unconfirmedMoneyPolicyDoesNotChangeApprovalFields",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.LocalDecisionActorProviderTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "disabledSimulationDoesNotTouchJdbc",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unknownInactiveOrNonManagerAccountIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotEnableDevActorOutsideLocal(String)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotEnableDevActorOutsideLocal(String)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotEnableDevActorOutsideLocal(String)[3]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "configuredAccountIdIsUsedAndQueryChecksActiveRole",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "localAlongWithProductionStillBlocked",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.ModuleHttpIntegrationTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "forgedHeaderDoesNotAllowIssuerToApprove",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "reviewHttpFlowSetsServerReviewerAndBlocksSecondReview",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "createContractRunsRealServiceAndSerializesDto",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateContractUsesGlobal409Envelope",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidEnumAndQueryNumberAre400",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "malformedJsonIs400",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "deleteDraftReturns204WithoutBody",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidDtoRejectedBeforeRepository",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "createDecisionIgnoresClientApprovalBecauseDtoHasNoSuchFields",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "forbiddenMethodIs405",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "futureDecisionDateIsRejectedByDtoValidation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingIdentityProduces503WithoutFetchingDecision",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.SalaryRateServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "dateAtContractEndStillApplies",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateSalaryTermsAreRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "duplicateContractsAreRejectedRatherThanChoosingFirst",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingSalaryIsExplicitConflict",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidDatesAndOversizedPeriodAre400",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "termsFromOtherContractsCannotBeUsed",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "splitsExactlyAtNewRateAndPreservesDecimals",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "openRateDoesNotExtendPastContractEnd",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingContractIsExplicitConflict",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "salaryGapIsRejected",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.duong.SalaryTermServiceTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "effectiveRowCannotBeUpdatedOrDeleted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "closedPayrollStopsChangeBeforeMutatingOldRow",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotReadTermThroughWrongContract",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "changeCannotRewritePast",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "salaryOutsideContractAndSingleDayAreRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlappingSalaryIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "futureRowCanBeUpdatedAndDeleted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "changeCreatesNewRowAndPreservesOldAmount",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.exception.GlobalExceptionHandlerMergeTest",
+    "tests": 19,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "handlesMainMethodParameterValidationWithoutLosingTheErrorFormat",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[3]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[4]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[5]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[6]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[7]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[8]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[9]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[10]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[11]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[12]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[13]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[14]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "dispatchesSpecificHandlersFromBothBranches(RuntimeException, int)[15]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "retainsPersonalJsonParseMessage",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "preservesInternalServerErrorForInvalidControllerReturnValues",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "retainsMainFallbackWithoutExposingInternalFailure",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.export.ReportExcelWriterTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "exportsGroupsInNumericIdOrderWithUnassignedLastAndKeepsRowsTogether",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "preservesLargeIdsExactlyAndKeepsIdLessGroupsInTheirOriginalOrder",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.ExternalDatabaseSmokeTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 1,
+    "cases": [
+      {
+        "name": "contextLoads",
+        "status": "SKIP",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.HrmApplicationTests",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "mergedEmployeeQueriesAndContractMappingUseTheTestSchema",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "contextLoads",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.AssignmentLockConcurrencyTest",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "competingAssignmentTransactionsAreSerialized",
+        "status": "FAIL",
+        "reason": "expected: <true> but was: <false>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.AuditLogIntegrationTest",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "storedSnapshotRedactsNestedSecretsAndRollbackKeepsNoRecord",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "refusesNonTransactionalAudit",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.AuditLogServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsInvalidActionBeforeDatabaseWrite",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recordsUtcActorTargetSnapshotsAndCorrelation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recursivelyRedactsCredentialsAndPreservesOrdinarySnapshots",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.ControllerMergeCompatibilityTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "bareCollectionsRemainArraysAndExplicitPaginationReturnsPages",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "jwtEmployeeReadsRetainActorScopeIncludingPersonalProfile",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "catalogAuditUsesAuthenticatedAccountIdWithoutRequiringEmployeeManage",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "searchRoutesAlwaysReturnPagesWithDefaultPagination",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "catalogFiltersSelectPagedHandlersWithoutExplicitPagination",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.DepartmentHeadIntegrationTest",
+    "tests": 18,
+    "failures": 18,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "replacementDemotesPreviousHeadAndPreservesBoundary",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "databaseRejectsHeadOverlapEvenForDirectSql",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "candidatesAndHistoryArePagedAndExcludeCurrentHead",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "refusesFutureAndZeroLengthAndDuplicateAppointments",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "endLeavesVacancyAndKeepsHistoricalHead",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "httpExposesVacancyAndValidatedAppointment",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "migrationCanRunTwice",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "genericTransferCannotBypassHeadWorkflow",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "replacementRequiresExplicitNextPositionAndLeavesOldHeadUnchanged",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "httpRejectsAnonymousAndClientClaimedRoles",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "retirementOnAssignmentStartKeepsTheLastWorkingDay",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "refusesEmployeeFromAnotherDepartment",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "refusesInactiveDepartmentAndRetiredEmployee",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "employeeRoleCannotAppointHead",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "appointmentKeepsContiguousHistoryAndAudit",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "accessUsesAuthenticatedPrincipalAndAccountState",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "departmentAndRetirementCannotSilentlyRemoveAnOpenHead",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      },
+      {
+        "name": "ordinaryTransferKeepsHalfOpenBoundary",
+        "status": "FAIL",
+        "reason": "Chỉ chạy integration test trên database có tên chứa test ==> expected: <true> but was: <false>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeAccessControllerTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "authorizedManagerCanUseAllFiveEndpoints",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "anonymousUserCannotAccessAnyOfTheFiveEndpoints",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "forbiddenUserCannotAccessAnyOfTheFiveEndpoints",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeAssignmentValidityIntegrationTest",
+    "tests": 5,
+    "failures": 5,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "includesAssignmentEndingTomorrow",
+        "status": "FAIL",
+        "reason": "Chỉ chạy bộ test này trên database hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "excludesAssignmentEndingToday",
+        "status": "FAIL",
+        "reason": "Chỉ chạy bộ test này trên database hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "excludesAssignmentStartingTomorrow",
+        "status": "FAIL",
+        "reason": "Chỉ chạy bộ test này trên database hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "terminationPreservesEmployeeAndClosesAssignmentInDatabase",
+        "status": "FAIL",
+        "reason": "Chỉ chạy bộ test này trên database hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "includesAssignmentStartingToday",
+        "status": "FAIL",
+        "reason": "Chỉ chạy bộ test này trên database hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeAuditServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsMissingActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "doesNotRecordUnchangedContact",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recordsActorEmployeeAndContactSnapshot",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeContactAuditIntegrationTest",
+    "tests": 4,
+    "failures": 4,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "auditFailureRollsBackEntireTransaction",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "auditWriterRequiresAnExistingTransaction",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "writesContactAndCorrectAuditInSameTransaction",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "unchangedContactDoesNotWriteOrCreateAudit",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeContactServiceTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "auditFailureIsPropagatedInsteadOfBeingIgnored",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unchangedContactDoesNotWriteOrCreateAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "updatesContactAndRecordsBeforeAfterWithAuthenticatedActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unauthorizedRequestCannotReadOrUpdateEmployee",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeCreationAuditServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsMissingActorBeforeCreatingEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "propagatesAuditFailure",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recordsCreatorAndCreationSnapshot",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeDetailServiceTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "returnsBasicAndDetailedInformation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "createsEmployeeWithAddressAndReturnsItInDetail",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "updatesAddressWithoutErasingOtherContactFields",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsEmployeeThatDoesNotExist",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "clearsAddressWhenExplicitlyGivenEmptyString",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "selectsAssignmentUsingVietnamDateAtUtcDayBoundary",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "searchUsesSameVietnamDateForFilteringAndAssignments",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeRequestWorkflowIntegrationTest",
+    "tests": 32,
+    "failures": 32,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "adjacentPartialIntervalsWithoutBreakDoNotOverlap",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "approvalsFreezeSchedules",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "ownQueueAndManagerQueueHaveValidatedPaging",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotReduceEntitlementBelowApprovedUsage",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "overnightLeaveUsesScheduleWorkDateAndDeductsNetHours",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "unauthenticatedAndInactiveAccountsDenied",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "rejectsPastAndReversedDates",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "employeeCannotApproveOrReadOtherEmployeesRequest",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "insufficientEntitlementRejected",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "missingPolicyAndInactiveTypeDenied",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "ownerWithdrawsPendingRequestWithoutInventingAnotherStatus",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "preventsOverlapButAllowsRejectedIntervalAgain",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "preventsSelfApprovalAndSelfRejection",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "policyCannotChangeAfterRequestsExist",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "createsHeaderSubtypeAndAuditAtomically",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "resignationStaysWorkingUntilDayAfterLastDateAndRunsOnce",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "rejectionDoesNotConsumeAndCannotProcessAgain",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "resignationRejectsPastDateAndScheduleBeyondLastDay",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "approvesAndCountsNetScheduledHoursOnce",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "withdrawalDatabaseGuardRejectsImpersonatingTheOwner",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "leaveAuditFailureRollsBackHeaderAndSubtype",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "withdrawnRequestStaysInOwnerHistoryAndLeavesManagerQueue",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "policyMustBeExplicitAndNotInferredFromPaidFlag",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "resignationCannotBeApprovedWhileEmployeeIsHead",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "startedLeaveCannotBeApprovedThroughOrdinaryWorkflow",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "approvalRevalidatesBalanceAfterOtherApproval",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "nobodyWithdrawsAnothersRequestOrAnApprovedRequest",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "qualificationCatalogAndSoftDeleteKeepMetadataAndSinglePrimary",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "scheduleChangesWhilePendingAreRecomputedAtApproval",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "missingScheduleAndPartialBreakAreNotGuessed",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "withdrawnResignationDoesNotBlockNewSubmission",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "rejectedResignationAllowsNewSubmission",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeServiceMergeTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "ownProfileUsesBusinessDateAndDeterministicCurrentAssignment",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "newProfileUpdateCanReplaceIdentityWithoutErasingContactAddress",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "legacyProfileUpdateRetainsIdentityAndAssignments",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeCannotReadDirectoryOrAnotherEmployeesProfile",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "searchChoosesSameLatestAssignmentAsProfileWhenLegacyAssignmentsOverlap",
+        "status": "ERROR",
+        "reason": "\nStrict stubbing argument mismatch. Please check:\n - this invocation of 'searchEmployees' method:\n    employees.searchEmployees(\n    \"%\",\n    null,\n    null,\n    null,\n    2026-10-24,\n    org.springframework.data.domain.Unpaged@849225d4\n);\n    -> at com.hrm.service.EmployeeService.searchEmployees(EmployeeService.java:128)\n - has following stubbing(s) with different arguments:\n    1. employees.searchEmployees(\n    \"%test%\",\n    isNull(),\n    isNull(),\n    isNull(),\n    2026-10-24,\n    <any org.sp"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeTerminationAuditIntegrationTest",
+    "tests": 3,
+    "failures": 3,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "auditFailureRollsBackEmployeeAssignmentAndAudit",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "repeatedTerminationDoesNotCreateAnotherAudit",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "writesTerminationAssignmentAndCorrectAudit",
+        "status": "FAIL",
+        "reason": "Chỉ chạy test này trên hrm_test ==> expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeTerminationAuditServiceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "propagatesAuditFailure",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingActorBeforeAccessingEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "recordsActorAndBeforeAfterState",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeTerminationControllerTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "authorizedPostTerminatesAndReturnsNoContent",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "forbiddenPostCannotTerminate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "legacyDeleteAlsoRequiresLogin",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "anonymousPostCannotTerminate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "authorizedLegacyDeleteRemainsAvailable",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.EmployeeTerminationServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsEmployeeWithoutCurrentAssignment",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsDepartmentHeadUntilHeadWorkflowIsCompleted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "repeatedTerminationStillRevokesAccountWithoutChangingEmploymentHistory",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "preservesEmployeeAndEndsAssignmentAfterLastWorkingDay",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.G1EndpointAccessTest",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "forbiddenEmployeeCannotReadOrWriteAnyG1CatalogOrAssignment",
+        "status": "FAIL",
+        "reason": "Status expected:<403> but was:<200>"
+      },
+      {
+        "name": "anonymousCannotReadOrWriteAnyG1CatalogOrAssignment",
+        "status": "FAIL",
+        "reason": "Status expected:<401> but was:<200>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.G1WorkflowIntegrationTest",
+    "tests": 18,
+    "failures": 18,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "cannotCreateWithFutureHireDate",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "creationAuditFailureRollsBackEmployeeAndAssignment",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotTransferRetiredEmployee",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "searchFiltersAndPagingWorkForCatalogs",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "departmentCodeIsImmutable",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "transferKeepsContiguousHistoryAndCatalogCanThenBeDeactivated",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "duplicatePositionCodeIsConflict",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "positionCodeIsImmutable",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "putPreservesIdentityAndCanBeUpdatedTwiceWithDatabaseRowVersion",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotDeactivateDepartmentWithCurrentAssignments",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotDeactivatePositionWithCurrentAssignments",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "transferAuditFailureRollsBackBothHistoryRows",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "creationPersistsActorAssignmentAndJson",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "profileAuditFailureRollsBackFlushedUpdate",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotCreateInInactiveDepartment",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotCreateWithInactivePosition",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "duplicateDepartmentCodeIsConflict",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "cannotCreateWithBirthDateAfterHireDate",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.PersonnelWorkflowLockConcurrencyTest",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "competingApprovalTransactionsWaitForEachOther",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.QualificationLevelServiceTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "kiemTraJUnitHoatDong",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.hrm.service.ResignationExecutionServiceTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "blockedFirstPageDoesNotStarveLaterRequests",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.OvertimeAdminPolicyTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "adminMayHandleEmployeeAndHr",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCannotApproveAdminOt",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminDoesNotRegisterOt",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrCannotSelfApprove",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeAndHrMayRegister",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.OvertimeAuthorizationRulesTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "employeeCannotApprove",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminCannotApproveOrConfirmOwnOvertime",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "confirmationRequiresDifferentApproverAndApplicantUnlessAdmin",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrOnlyForEmployeesInScope",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.OvertimePolicyTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "netBreakAndLimit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlapHalfOpen",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "validateInputs",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "deadlineThreeCalendarDays",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.AdminAccessApiIntegrationTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "validatesDuplicatesReferencesPaginationAndPassword",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "deletingUnusedRoleRemovesGrantsAndKeepsPermissionCatalog",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "administrationRequiresBothAdminRoleAndAccountManageForEveryRoute",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "failedAuditRollsBackAccountCreationAndRejectsOversizedUtf8Password",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "accountLifecycleHashesPasswordFiltersAndRevokesSessions",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "protectsSelfSystemRolesAndRoleAuthorities",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "replacingAdminGrantsPreservesManagementAndInvalidatesCurrentSession",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "roleAndPermissionCrudMaintainsReferencesAndRevokesAffectedTokens",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.AuthenticatedAccountNameTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "springAuthenticationExposesLoginNameInsteadOfRecordToString",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.ChangePasswordServiceTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "successfulChangeStoresHashAndRevokesOldTokens",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "incorrectCurrentPasswordIsAValidationErrorAndChangesNothing",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.JwtAuthenticationFilterTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "employeeNoLongerWorkingDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveAccountDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "malformedTokenDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingClaimsDoNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "tokenVersionMismatchDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "wrongAuthorizationSchemeDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingAuthorizationHeaderDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "activeAccountWithMatchingVersionAuthenticatesAndLoadsAuthorities",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unknownAccountDoesNotAuthenticate",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.JwtDatabaseTransactionIntegrationTest",
+    "tests": 1,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "validAdminTokenUsesRealJpaRepositories",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.JwtServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsTokenSignedWithDifferentKey",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsTooShortSecret",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "issueAndParseRoundTrip",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMalformedToken",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsExpiredToken",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.PayrollManagementAuthorizationTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "managersWithPermissionCanReadAndWrite(String)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "managersWithPermissionCanReadAndWrite(String)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "roleAloneDoesNotGrantPayrollAccess(String)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "roleAloneDoesNotGrantPayrollAccess(String)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "lockAndPublishIgnoreForgedActorQueryParameter",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeCannotEscalateEvenWithPayrollAuthorities",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "viewPermissionDoesNotAllowPayrollMutation",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.PermissionAuthorizationTests",
+    "tests": 1,
+    "failures": 0,
+    "errors": 1,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "",
+        "status": "ERROR",
+        "reason": "Error creating bean with name 'employeeService': Unsatisfied dependency expressed through field 'personnelScope': No qualifying bean of type 'com.hrm.service.PersonnelScopeService' available: expected at least 1 bean which qualifies as autowire candidate. Dependency annotations: {@org.springframework.beans.factory.annotation.Autowired(required=true)}"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.PersonnelScopePrivacyIntegrationTest",
+    "tests": 20,
+    "failures": 20,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "adminAndHrCannotEditOwnContacts",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "profileUpdateDoesNotEraseHiddenIdentity",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "adminAndScopedHrCanSelectPrimaryAndKeepOnlyOnePrimary",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "oversizedRecordIdReturnsBadRequest",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "adminCanCreateUpdateAndTerminateWithoutDeletingHistory",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "auditCannotLeakPrivateFields",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "adminCanTransferAcrossDepartmentsAndPreserveHistory",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "ownProfileUpdateCannotChangeContactOrEraseHiddenIdentity",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "scopedHrCanTransferButInvalidReasonAndFutureDateAreRejected",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "publicContactPatchPreservesPrivateFields",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "hrCannotReadOrUpdateOutsideScope",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "managerCannotWriteAnotherEmployeesPrivateFields",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "hrCannotMoveEmployeeToUnassignedDepartment",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "adminCatalogCrudUsesSoftDeactivation",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "hrCannotReadOutsideDepartmentOrAudit",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "entitlementCrudRejectsOverlapZeroHoursAndEmptyPeriods",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "adminCannotReadOthersPrivateFields",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "hrSearchIsScopedBeforeCountingAndPaging",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "employeeCanReadOwnPrivateFieldsButNotAnotherEmployee",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      },
+      {
+        "name": "anonymousCannotReadPersonnel",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.SharedApiSecurityRegressionTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "invalidLoginBodyGets400WithoutJwt",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "validJwtReachesScheduleController",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "authenticatedButForbiddenScheduleGets403",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "logoutWithoutJwtGets401",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "wrongCurrentPasswordGets400WithoutInvalidatingAuthentication",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "healthPublicRouteIsNotBlockedBySecurity",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "changePasswordWithoutJwtGets401",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "protectedScheduleWithoutJwtGets401",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "loginWithoutJwtIsAllowedThroughSecurity",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.security.WorkScheduleSecurityMvcTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "missingEmployeeIdReturns400WithoutInvokingService",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrPostDelegatesCorrectPrincipal",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminPutDelegatesCorrectPrincipalAndScheduleId",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeePostPropagatesServiceForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrPutDelegatesCorrectPrincipalAndScheduleId",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "malformedJsonReturns400WithoutInvokingService",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminPostDelegatesAuthenticatedPrincipalAndValidatedBody",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeePutPropagatesServiceForbidden",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.DepartmentHeadAccessServiceMergeTest",
+    "tests": 11,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "preservesPlainServerPrincipalSupport",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingOrAmbiguousDatabaseAuthorization(List)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingOrAmbiguousDatabaseAuthorization(List)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "preservesAuthenticatedStringPrincipalSupport",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "usesJwtAccountUsernameAndReturnsDatabaseAuthorizedAccountId",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[1]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[2]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[3]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[4]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[5]",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectsMissingUnauthenticatedAnonymousOrNamelessPrincipalsBeforeDatabaseLookup(Principal)[6]",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.EmployeeRehireServiceTest",
+    "tests": 12,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "headAppointmentMustBeSeparate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotRehireAnActiveEmployee",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "actorRequired",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingTerminationHistoryNeedsReconciliation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "preservesOriginalHireDateAndRecordsNewAssignmentAndAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotRehireInFuture",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "reasonRequired",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "pendingResignationMustBeResolved",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "openOldAssignmentBlocksRehire",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overlappingOldAssignmentBlocksRehire",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveDepartmentBlocksRehire",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotRehireOnTerminationDay",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.EmployeeRehireSqlServerIntegrationTest",
+    "tests": 1,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rehirePersistsANewPeriodWithoutReopeningTheOldPeriodOrAccount",
+        "status": "FAIL",
+        "reason": "expected: <hrm_test> but was: <hrm_db>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.EmployeeTerminationAuditMergeTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "idempotentTerminationAuditsFirstChangeAndOnlyRevokesOnRepeat",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "idempotentTerminationStillRevokesAlreadyRetiredEmployeesWithoutChangingAuditActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "strictTerminationRejectsRepeatWithoutMutationOrDelegation",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "idempotentTerminationRequiresActorBeforeLocksOrChanges",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.EmployeeTransferReasonTest",
+    "tests": 2,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "oldCallerRemainsCompatible",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "newReasonReachesSharedAuditWriter",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.engine.PayrollMealExemptionTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "mealAtOrBelowCapRemainsExempt",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "excessMealAllowanceIsTaxableUnderProjectSpecification",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "exemptionCapAppliesToSumOfMealLines",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.HrDepartmentScopeServiceTest",
+    "tests": 10,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectGrantToNonHr",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "canChangeFutureStartWithAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "cannotChangeStartAfterEffective",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "revokeWritesAudit",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "denyInactiveAdmin",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "denyMissingActor",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "denyHrEvenIfAuthenticated",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectOverlappingGrant",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "rejectGrantWithInvalidEnd",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "doNotReactivateRevokedScope",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.PersonnelSearchControllerTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "explicitOutOfScopeEmployeeCannotReadSearch",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrScopeIsAppliedToTotalsBeforePagination",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "assignmentEffectiveEndIsExclusiveAndNamesAreAccentInsensitive",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "allQualificationsCanBeListedWithoutEmployeeAndFilteredBeforePaging",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unauthorizedAndInvertedYearsAreRejected",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.PersonnelSearchTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "invalidPagingIsRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "symbolsAreLiteralAndMissingValuesAreSafe",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "filteringMustPrecedePaginationAndCountsRemainCorrect",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "vietnameseSearchHandlesMarksCaseAndMultipleWords",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.PositionPermissionCompatibilityTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "detailedReadPermissionStillWorks",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "existingManagePermissionCanRead",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "roleAloneDoesNotBypassPermission",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.ScheduleQueryAdminNoEmployeeTest",
+    "tests": 7,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "anonymousActorIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithoutEmployeeIdCanSearchAllSchedules",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingAccountIdIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrWithoutEmployeeIdIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeWithoutEmployeeIdIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unsupportedRoleIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithoutEmployeeIdCanReadScheduleDetail",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.ScheduleQueryHrScopesTest",
+    "tests": 4,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "hrSearchUsesAssignedScopeAndAccountIdOnly",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "personalQueryDoesNotUseHrDepartmentScopes",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "departmentUsesExclusiveEndDateAndShiftStartDate",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrDetailChecksSameScopeUsingAccountId",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.ScheduleQueryServiceTest",
+    "tests": 5,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "invalidDateRangeRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "invalidPageRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "anonymousCannotQuery",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeCannotUseManagementQuery",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "paginationAlwaysUsesTenRows",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.ScheduleWritePermissionIdentityTest",
+    "tests": 9,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "hrPrincipalEmployeeIdButDatabaseNullIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrPrincipalMissingEmployeeIdButDatabaseHasOneIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithDifferentEmployeeIdsIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminPrincipalEmployeeButDatabaseNullIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "changedRoleInDatabaseIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveOrMissingAccountIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminPrincipalNullButDatabaseEmployeeNotNullIsForbidden",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithMatchingEmployeeIdIsAccepted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithoutEmployeeIdInPrincipalAndDatabaseIsAccepted",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.ScheduleWritePermissionServiceTest",
+    "tests": 6,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "adminMayWriteForAnyRoleIfEmployeeIsWorking",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "actorWithUnknownAccountIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "employeeRoleCannotManageSchedules",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrOutsideAssignedScopeIsDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "anonymousIsDeniedWithoutDatabaseAccess",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrWithAssignedScopeMayWrite",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkScheduleShiftReferenceTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "activeAccepted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "missingRejected",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "inactiveRejected",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkShiftDurationTest",
+    "tests": 2,
+    "failures": 2,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "exactly24HoursPassesValidation",
+        "status": "FAIL",
+        "reason": "\nWanted but not invoked:\njdbcTemplate.queryForObject(\n    startsWith(\"INSERT INTO dbo.work_shifts\"),\n    class java.lang.Long,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>,\n    <any>\n);\n-> at org.springframework.jdbc.core.JdbcTemplate.queryForObject(JdbcTemplate.java:912)\nActually, there were zero interactions with this mock.\n"
+      },
+      {
+        "name": "longerThan24HoursRejected",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkShiftLifecycleTest",
+    "tests": 3,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "changingReferencedTimeDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "unreferencedShiftDeactivatedInsteadOfDeleted",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "referencedShiftDeactivated",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkShiftPermissionTest",
+    "tests": 6,
+    "failures": 1,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "differentEmployeeDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "roleMismatchDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "hrAllowed",
+        "status": "FAIL",
+        "reason": "Unexpected exception thrown: org.springframework.web.server.ResponseStatusException: 403 FORBIDDEN \"Không có quyền quản lý danh mục ca\""
+      },
+      {
+        "name": "employeeDenied",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adminWithoutEmployeeAllowed",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "noAccountDenied",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkShiftValidationTest",
+    "tests": 10,
+    "failures": 10,
+    "errors": 0,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "rejectsMoreThanOneDayOffset",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsBackwardSameDayShift",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsBreakLongerThanShift",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsBlankShiftCode",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsNegativeDayOffset",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsBreakLongerThanOvernightShift",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsMissingStartTime",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsNegativeBreakMinutes",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsMissingEndTime",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      },
+      {
+        "name": "rejectsZeroLengthSameDayShift",
+        "status": "FAIL",
+        "reason": "Unexpected exception type thrown, expected: <java.lang.IllegalArgumentException> but was: <org.springframework.web.server.ResponseStatusException>"
+      }
+    ]
+  },
+  {
+    "name": "com.hrm.service.WorkShiftValidCasesTest",
+    "tests": 8,
+    "failures": 0,
+    "errors": 4,
+    "skipped": 0,
+    "cases": [
+      {
+        "name": "overnightIntervalOverlapsNextMorning",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "normalShiftIsAccepted",
+        "status": "ERROR",
+        "reason": "409 CONFLICT \"Use detailed break-aware work time API\""
+      },
+      {
+        "name": "updateOfExistingShiftPreservesRequestedFields",
+        "status": "ERROR",
+        "reason": "409 CONFLICT \"Use detailed break-aware work time API\""
+      },
+      {
+        "name": "shiftWithNoBreakIsAccepted",
+        "status": "ERROR",
+        "reason": "409 CONFLICT \"Use detailed break-aware work time API\""
+      },
+      {
+        "name": "netMinutesOfOvernightShift",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "overnightShiftIsAccepted",
+        "status": "ERROR",
+        "reason": "409 CONFLICT \"Use detailed break-aware work time API\""
+      },
+      {
+        "name": "netMinutesOfNormalShift",
+        "status": "PASS",
+        "reason": ""
+      },
+      {
+        "name": "adjacentIntervalsDoNotOverlapAtBoundary",
+        "status": "PASS",
+        "reason": ""
+      }
+    ]
+  }
+]

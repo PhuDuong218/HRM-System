@@ -3,10 +3,10 @@
 @if(canSubmitOwn){<nav class="d-flex gap-2 mb-3" aria-label="Phạm vi lịch làm việc"><button class="btn" [class.btn-primary]="!personal" [class.btn-outline-primary]="personal" [disabled]="busy" (click)="switchScheduleScope(false)">Lịch nhân viên</button><button class="btn" [class.btn-primary]="personal" [class.btn-outline-primary]="!personal" [disabled]="busy" (click)="switchScheduleScope(true)">Lịch làm việc của tôi</button></nav>}
 @if(personal){<div class="alert alert-info small">Lịch làm việc cá nhân của bạn. Xem ca và lịch OT tại đây; vào Chấm công → Công của tôi để check-in/check-out công thường.</div>}
 @if (lookupError) {
-<div class="alert alert-warning">{{ lookupError }} <button type="button" class="btn btn-sm btn-outline-primary"
+<div [hrmNotice]="lookupError" noticeKind="error" class="alert alert-warning">{{ lookupError }} <button type="button" class="btn btn-sm btn-outline-primary"
     [disabled]="lookupLoading" (click)="loadLookups()">{{ "Tải lại danh mục" | translate }}</button></div>
 }
-@if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+@if (success) { <div [hrmNotice]="success" noticeKind="success" class="alert alert-success" role="status">{{ success }}</div> }
 
 @if(personal&&!requestsOpen){<button class="btn btn-outline-primary mb-3" [disabled]="busy" (click)="openRequests()">Yêu cầu đổi lịch của tôi</button><app-personal-calendar /> }
 @if (!requestsOpen&&!personal) {
@@ -47,7 +47,7 @@
     <button type="button" class="btn btn-outline-secondary" [disabled]="busy" (click)="clearFilters()">{{ "Xóa lọc" | translate }}</button>
   </div>
 </section>
-@if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }
+@if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning" role="alert">{{ error }}</div> }
 <div class="row g-3 align-items-start">
   <div [ngClass]="selected || mode !== 'view' ? 'col-12 col-lg-6' : 'col-12'" style="min-width:0">
     <section class="surface">
@@ -126,8 +126,8 @@
           chi tiết' }}</h2><button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="saving"
           (click)="closeDetails()">{{ "Đóng" | translate }}</button>
       </div>
-      @if (formError) { <div class="alert alert-warning" role="alert">{{ formError }}</div> }
-      @if (stateError) { <div class="alert alert-warning">{{ stateError }}</div> }
+      @if (formError) { <div [hrmNotice]="formError" noticeKind="error" class="alert alert-warning" role="alert">{{ formError }}</div> }
+      @if (stateError) { <div [hrmNotice]="stateError" noticeKind="error" class="alert alert-warning">{{ stateError }}</div> }
       @if (stateLoading) { <p class="text-muted">{{ "Đang tải trạng thái..." | translate }}</p> }
       @if (mode==='view' && selected) {
       <dl class="row">
@@ -162,7 +162,7 @@
       <section [hidden]="personal" class="mt-4 border-top pt-3" aria-label="Lịch sử thao tác lịch">
         <div class="d-flex justify-content-between align-items-center mb-3"><h3 class="h6 mb-0">Lịch sử chỉnh sửa và khóa lịch</h3><button class="btn btn-sm btn-outline-primary" type="button" (click)="loadHistory()" [disabled]="historyLoading">Tải lại lịch sử</button></div>
         @if(historyLoading){<p class="text-muted" role="status">Đang tải lịch sử…</p>}
-        @else if(historyError){<div class="alert alert-warning" role="alert">{{historyError}}</div>}
+        @else if(historyError){<div [hrmNotice]="historyError" noticeKind="error" class="alert alert-warning" role="alert">{{historyError}}</div>}
         @else { @for(h of history;track h.id){<article class="border rounded p-3 mb-2">
           <div class="d-flex justify-content-between flex-wrap gap-2"><strong>{{historyLabel(h.action)}}</strong><time class="small text-muted">{{h.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}} (UTC+7)</time></div>
           <p class="small mb-1">Người thực hiện: <strong>{{h.actor}}</strong></p>
@@ -181,7 +181,7 @@
           (click)="submitStateAction()">{{ "Xác nhận" | translate }}</button><button type="button" class="btn btn-outline-secondary"
           [disabled]="saving" (click)="cancelForm()">{{ "Hủy" | translate }}</button></div>
       } @else if (mode==='create' || mode==='edit') {
-      <form (ngSubmit)="submitForm()">
+      <form [hrmEditForm]="mode==='edit'" (ngSubmit)="submitForm()">
         <fieldset [disabled]="saving">
           <div class="mb-3"><label for="workDate" class="form-label">{{ "Ngày làm *" | translate }}</label><input id="workDate" type="date"
               name="workDate" class="form-control" [(ngModel)]="formDate" (ngModelChange)="formDateChanged()" required>
@@ -214,7 +214,7 @@
           </div>
           <div class="mb-3"><label for="breakMinutes" class="form-label">{{ "Tổng phút nghỉ (tự động theo ca)" | translate }}</label><input
               id="breakMinutes" class="form-control" [value]="formBreakMinutes" readonly></div>
-          @if(formShift.selected&&!formShift.selected.breaksVerified){<section class="alert alert-warning"><h3 class="h6">Ca thiếu giờ nghỉ chi tiết — chưa thể phân công</h3><p class="small">Bổ sung giờ nghỉ cho mẫu ca ngay tại đây (tổng {{formShift.selected.shift.breakMinutes}} phút). Hệ thống không tự suy đoán giờ nghỉ.</p>@for(b of templateBreaks;track $index;let i=$index){<div class="row g-2 mb-2"><div class="col-5"><label [for]="'templateStart'+i">Bắt đầu nghỉ</label><input [id]="'templateStart'+i" [name]="'templateStart'+i" class="form-control" type="time" step="60" [(ngModel)]="b.start" [disabled]="saving"></div><div class="col-5"><label [for]="'templateEnd'+i">Kết thúc nghỉ</label><input [id]="'templateEnd'+i" [name]="'templateEnd'+i" class="form-control" type="time" step="60" [(ngModel)]="b.end" [disabled]="saving"></div><div class="col-2 align-self-end"><button class="btn btn-outline-danger" type="button" [disabled]="saving" (click)="templateBreaks.splice(i,1)">Xóa</button></div></div>}@if(templateBreakError){<p class="text-danger small" role="alert">{{templateBreakError}}</p>}<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary btn-sm" type="button" [disabled]="saving" (click)="templateBreaks.push({start:'',end:''})">Thêm khoảng nghỉ</button><button class="btn btn-primary btn-sm" type="button" [disabled]="saving||!templateBreaks.length" (click)="saveTemplateBreaks()">Lưu giờ nghỉ của ca</button></div></section>}
+          @if(formShift.selected&&!formShift.selected.breaksVerified){<section class="alert alert-warning"><h3 class="h6">Ca thiếu giờ nghỉ chi tiết — chưa thể phân công</h3><p class="small">Bổ sung giờ nghỉ cho mẫu ca ngay tại đây (tổng {{formShift.selected.shift.breakMinutes}} phút). Hệ thống không tự suy đoán giờ nghỉ.</p>@for(b of templateBreaks;track $index;let i=$index){<div class="row g-2 mb-2"><div class="col-5"><label [for]="'templateStart'+i">Bắt đầu nghỉ</label><input [id]="'templateStart'+i" [name]="'templateStart'+i" class="form-control" type="time" step="60" [(ngModel)]="b.start" [disabled]="saving"></div><div class="col-5"><label [for]="'templateEnd'+i">Kết thúc nghỉ</label><input [id]="'templateEnd'+i" [name]="'templateEnd'+i" class="form-control" type="time" step="60" [(ngModel)]="b.end" [disabled]="saving"></div><div class="col-2 align-self-end"><button class="btn btn-outline-danger" type="button" [disabled]="saving" (click)="templateBreaks.splice(i,1)">Xóa</button></div></div>}@if(templateBreakError){<p [hrmNotice]="templateBreakError" noticeKind="error" class="text-danger small" role="alert">{{templateBreakError}}</p>}<div class="d-flex gap-2 flex-wrap"><button class="btn btn-outline-primary btn-sm" type="button" [disabled]="saving" (click)="templateBreaks.push({start:'',end:''})">Thêm khoảng nghỉ</button><button class="btn btn-primary btn-sm" type="button" [disabled]="saving||!templateBreaks.length" (click)="saveTemplateBreaks()">Lưu giờ nghỉ của ca</button></div></section>}
           <div class="mb-3"><label for="scheduleNote" class="form-label">{{ "Ghi chú" | translate }}</label><textarea id="scheduleNote"
               name="note" class="form-control" rows="3" maxlength="1000" [(ngModel)]="formNote"></textarea></div>
           <div class="d-flex gap-2 flex-wrap">
@@ -244,7 +244,7 @@
         [disabled]="requestBusy" (click)="newRequest()">{{ "Gửi yêu cầu đổi lịch" | translate }}</button> }<button type="button"
         class="btn btn-outline-secondary btn-sm" [disabled]="requestBusy" (click)="closeRequests()">{{ "Quay lại lịch" | translate }}</button></div>
   </div>
-  @if (requestError) { <div class="alert alert-warning" role="alert">{{ requestError }}</div> }
+  @if (requestError) { <div [hrmNotice]="requestError" noticeKind="error" class="alert alert-warning" role="alert">{{ requestError }}</div> }
   @if (requestFeedback) { <div class="alert alert-info" role="status">{{ requestFeedback }}</div> }
   @if (requestMode==='new') {
   <h3 class="h6">{{ "Đề nghị đổi lịch của tôi" | translate }}</h3>

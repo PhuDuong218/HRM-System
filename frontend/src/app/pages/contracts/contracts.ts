@@ -1,3 +1,8 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActivatedRoute} from '@angular/router';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { ContractWarnings } from "./contract-warnings";
@@ -45,11 +50,13 @@ type SalaryTermDraft = {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports:[PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
 export class ContractsPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   @ViewChild("createFormPanel") private createFormPanel?: ElementRef<HTMLElement>;
   @ViewChild("salaryFormPanel") private salaryFormPanel?: ElementRef<HTMLElement>;
   @ViewChild("lifecycleFormPanel") private lifecycleFormPanel?: ElementRef<HTMLElement>;
@@ -139,7 +146,9 @@ export class ContractsPage implements OnInit {
   renewTypes: ContractTypeResponse[] = [];
   renewTypesLoading = false;
 
+  private workflowRoute=inject(ActivatedRoute);
   ngOnInit(): void {
+    const linkedEmployee=Number(this.workflowRoute.snapshot.queryParamMap.get('employeeId'));if(Number.isSafeInteger(linkedEmployee)&&linkedEmployee>0)this.employeeId=linkedEmployee;
     this.load(0);
     this.loadEmployees();
   }
@@ -840,14 +849,14 @@ export class ContractsPage implements OnInit {
     this.focusPanel(() => this.salaryFormPanel);
   }
 
-  deleteSalaryTerm(term: SalaryTermResponse): void {
+  async deleteSalaryTerm(term: SalaryTermResponse): Promise<void> {
     if (this.saving || !this.selected) return;
     if (!this.canEditSalaryTerm(term)) {
       this.salaryFormError = "Chỉ xóa được điều khoản lương chưa có hiệu lực của hợp đồng đã ký.";
       return;
     }
     const contract = this.selected;
-    const reason = window.prompt("Nhập lý do xóa điều khoản lương chưa có hiệu lực (tối đa 500 ký tự):");
+    const reason = (await this.actionDialogInPage.prompt("Nhập lý do xóa điều khoản lương chưa có hiệu lực (tối đa 500 ký tự):"));
     if (reason === null) return;
     if (!reason.trim()) {
       this.salaryFormError = "Vui lòng nhập lý do xóa điều khoản.";
@@ -857,7 +866,7 @@ export class ContractsPage implements OnInit {
       this.salaryFormError = "Lý do không được vượt quá 500 ký tự.";
       return;
     }
-    if (!window.confirm("Xóa điều khoản lương từ ngày " + term.effectiveFrom + "?")) return;
+    if (!(await this.actionDialogInPage.confirm("Xóa điều khoản lương từ ngày " + term.effectiveFrom + "?"))) return;
 
     this.saving = true;
     this.salaryFormError = "";

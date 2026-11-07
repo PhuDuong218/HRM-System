@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import {Pagination} from '../../shared/pagination';
 import {TranslatePipe} from '../../shared/translate.pipe';
@@ -20,7 +23,7 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 @Component({
   selector: 'app-accounts',
   standalone: true,
-  imports:[Breadcrumb,Pagination,FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,FormsModule, RecordWorkspace, TranslatePipe, HrScopes],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css'
 })

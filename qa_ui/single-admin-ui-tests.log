@@ -1,0 +1,14 @@
+
+> hrm-frontend@0.1.0 test:accounts
+> node --test test-tools/accounts-workflow.test.cjs test-tools/accounts-i18n.test.cjs
+
+✔ accounts UI labels translate and the selected language survives reload (1963.5459ms)
+✔ account identity edits retain failed forms, prevent double submits and use expected version fields (3311.2363ms)
+ℹ tests 2
+ℹ suites 0
+ℹ pass 2
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 3906.417

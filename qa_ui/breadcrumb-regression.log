@@ -1,0 +1,20 @@
+
+> hrm-frontend@0.1.0 test
+> node --test test-tools/report-format.test.cjs test-tools/report-service.test.cjs test-tools/preferences.test.cjs test-tools/overview.test.cjs test-tools/employment-api-error.test.cjs
+
+✔ employment pages distinguish validation, access, missing data, conflict and unavailable services (8.7873ms)
+✔ employment pages preserve actionable details from the backend (0.9139ms)
+✔ HR overview uses its scoped endpoint while admin retains report access (2107.907ms)
+✔ theme and language choices survive navigation and reload; storage failure remains usable (1316.4306ms)
+✔ preserves exact payroll decimals, including values beyond JavaScript integer precision (5.0771ms)
+✔ does not alter JSON strings or accidentally treat matching values as keys (1.601ms)
+✔ formats decimal exponents without rounding (0.5663ms)
+✔ report requests carry authentication, filters and matching Excel parameters (2058.1097ms)
+ℹ tests 8
+ℹ suites 0
+ℹ pass 8
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2763.0787

@@ -1,3 +1,5 @@
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import {Pagination} from '../../shared/pagination';
@@ -10,11 +12,13 @@ import { PayrollPeriod, PayrollBatch, PayrollDetailView } from '../../models/pay
 @Component({
   selector: 'app-payroll',
   standalone: true,
-  imports:[Breadcrumb,RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,Breadcrumb,RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payroll.html',
   styleUrl: './payroll.css'
 })
 export class PayrollPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private payrollService = inject(PayrollService);
 
   periods: PayrollPeriod[] = [];
@@ -136,12 +140,12 @@ export class PayrollPage implements OnInit {
     });
   }
 
-  lock(): void {
+  async lock(): Promise<void> {
     if (!this.currentBatch?.batchId) {
       this.errorMessage = 'Không xác định được đợt lương cần chốt.';
       return;
     }
-    if (!confirm('Bạn có chắc chắn muốn CHỐT bảng lương? Số liệu sau khi chốt sẽ trở thành bất biến theo quy định kế toán.')) return;
+    if (!(await this.actionDialogInPage.confirm('Bạn có chắc chắn muốn CHỐT bảng lương? Số liệu sau khi chốt sẽ trở thành bất biến theo quy định kế toán.'))) return;
     this.loading = true;
     this.resetState();
     this.payrollService.lockBatch(this.currentBatch.batchId).subscribe({
@@ -176,7 +180,7 @@ export class PayrollPage implements OnInit {
 
   submitAdjustment(): void {
     if (!this.adjustmentReasonInput.trim()) {
-      alert('Vui lòng điền lý do điều chỉnh.');
+      this.errorMessage = 'Vui lòng điền lý do điều chỉnh.';
       return;
     }
     if (!this.currentBatch?.batchId) return;
@@ -217,7 +221,7 @@ export class PayrollPage implements OnInit {
           printWin.document.close();
         }
       },
-      error: () => alert('Chưa tìm thấy phiếu lương hợp lệ để in.')
+      error: () => this.errorMessage = 'Chưa tìm thấy phiếu lương hợp lệ để in.'
     });
   }
 

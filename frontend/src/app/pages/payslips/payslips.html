@@ -25,7 +25,7 @@
   </div>
 
   @if (errorMessage) {
-    <div class="alert alert-warning mt-3 mb-0 py-2">{{ errorMessage }}</div>
+    <div [hrmNotice]="errorMessage" noticeKind="error" class="alert alert-warning mt-3 mb-0 py-2">{{ errorMessage }}</div>
   }
 </section>
 

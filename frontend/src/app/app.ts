@@ -5,8 +5,9 @@ import { filter } from 'rxjs';
 import { SessionExpiredDialog } from './layout/session-expired-dialog';
 import { AuthService } from './services/auth.service';
 import {Confirmation} from './shared/ui/confirmation';
+import {ActionDialog} from './shared/ui/action-dialog';
 
-@Component({ selector: 'app-root', standalone: true, imports: [Confirmation,RouterOutlet, SessionExpiredDialog], templateUrl: './app.html' })
+@Component({ selector: 'app-root', standalone: true, imports: [ActionDialog,Confirmation,RouterOutlet, SessionExpiredDialog], templateUrl: './app.html' })
 export class App {
   readonly auth = inject(AuthService);
   private readonly router = inject(Router);

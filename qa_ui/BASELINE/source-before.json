@@ -1,0 +1,662 @@
+[
+  {
+    "file": "frontend\\src\\app\\app.config.ts",
+    "sha256": "364f5a34ec156fc1623cd9a74d2d32d567845af72993a2e423916538677da008",
+    "bytes": 511
+  },
+  {
+    "file": "frontend\\src\\app\\app.html",
+    "sha256": "fa6e2b6751d4619475ae110e467af1387fbcf5a6a71ee9efc14a7bedd4a4bbdd",
+    "bytes": 300
+  },
+  {
+    "file": "frontend\\src\\app\\app.routes.ts",
+    "sha256": "1c584296a7e0383742230fba85ea205b7abc9eb33370a60ad7dfcb5cc982cad8",
+    "bytes": 5710
+  },
+  {
+    "file": "frontend\\src\\app\\app.ts",
+    "sha256": "13923d29c44abc1b5c8e24f0eda811dd47cbad0503a3d668efa70a340de2de88",
+    "bytes": 948
+  },
+  {
+    "file": "frontend\\src\\app\\layout\\admin-layout.css",
+    "sha256": "66292ab93ebec5ad901d67ffc68d22770d1ea2c3b3e7786454319b54833576de",
+    "bytes": 22698
+  },
+  {
+    "file": "frontend\\src\\app\\layout\\admin-layout.html",
+    "sha256": "c4892b96bfc73d78eb98e8a96275dd36ed20804119accf2ab921529bb2afa852",
+    "bytes": 17277
+  },
+  {
+    "file": "frontend\\src\\app\\layout\\admin-layout.ts",
+    "sha256": "ac1d73f4994bda951f9597a1f3ca698dad751f11565690417bd53406a7f4e595",
+    "bytes": 10335
+  },
+  {
+    "file": "frontend\\src\\app\\layout\\session-expired-dialog.ts",
+    "sha256": "4c427ee9bb79af61f7c25546d915426b13d775fee3328c9df461896be76d458f",
+    "bytes": 2834
+  },
+  {
+    "file": "frontend\\src\\app\\models\\allowance.model.ts",
+    "sha256": "c3a92f6b66adce89e082695a310d42c12ed4e1c0fdfefa582cdc7eb802ac920e",
+    "bytes": 2558
+  },
+  {
+    "file": "frontend\\src\\app\\models\\contract.model.ts",
+    "sha256": "3cdd7e97843432d2d122cefe69a36307441c962638d287eb3ef25fe4dbefc151",
+    "bytes": 3451
+  },
+  {
+    "file": "frontend\\src\\app\\models\\decision.model.ts",
+    "sha256": "651c8cd11468fd718a478c7c0681d883734c72443ac2941c6f5605664f0dafdc",
+    "bytes": 2090
+  },
+  {
+    "file": "frontend\\src\\app\\models\\page.model.ts",
+    "sha256": "b9f67c63ada0ac71d92be516d71eae5f231dc614665fb87c9d13d9aca5f4078f",
+    "bytes": 765
+  },
+  {
+    "file": "frontend\\src\\app\\models\\payroll.model.ts",
+    "sha256": "7b2299886818e3d40812397273d587cec81e06c47d66f060953ec32cf9362e7d",
+    "bytes": 1117
+  },
+  {
+    "file": "frontend\\src\\app\\models\\personnel.model.ts",
+    "sha256": "94f8c7e263ae393b3196a99ef41340a17b7cc7e42bbeeec2cfea62321841717f",
+    "bytes": 1854
+  },
+  {
+    "file": "frontend\\src\\app\\navigation.ts",
+    "sha256": "7437e174d6ad27b2aac91792fbe079dc429f2f29d617df1e1ee94c93f00649d2",
+    "bytes": 2309
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\accounts\\accounts.css",
+    "sha256": "67851905f7edbff813e46ab1013084f6ffbcf885c253d947b9d4872327f0041b",
+    "bytes": 10141
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\accounts\\accounts.html",
+    "sha256": "18af49451ecaffdced5b66d3ceb19ed1c8f92e89b6f794bb79bfe6684fb8a3ad",
+    "bytes": 32487
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\accounts\\accounts.ts",
+    "sha256": "504989e270bc960511bfc5e6bf5e113672b2ff901a97fe6072025147c033ab74",
+    "bytes": 24334
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\accounts\\hr-scopes.html",
+    "sha256": "a33482cbffce5ed4cc65844d1231050eb6d11ebb1f5bfb77a69cd90951dc7814",
+    "bytes": 4232
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\accounts\\hr-scopes.ts",
+    "sha256": "218cac52df64a8b630bb3eac751b71917e1e210e676814326830a148685732c5",
+    "bytes": 5308
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\allowances\\allowances.html",
+    "sha256": "5fcc062900b8e1e4d3cb57ede179bbabdac816648442b59ce185adad15505acf",
+    "bytes": 24561
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\allowances\\allowances.ts",
+    "sha256": "f259d0aedee4a7882c7f07f29c3ebe4db369a8ba8cc60f4cc76da52a2c6c4095",
+    "bytes": 23509
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance\\attendance-api.service.ts",
+    "sha256": "e47463fc244e7fc9c752a4f3d33727cb1c1a65f90d9d9badd6df44478eaa3eb9",
+    "bytes": 7631
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance\\attendance.css",
+    "sha256": "3251b102bdbaab1d421e2ee777c842fdef751722a1f65dc4a55220a2ea8b4477",
+    "bytes": 1412
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance\\attendance.html",
+    "sha256": "6b7167b679f79dcbcf1ed7898ae9be9a4064291a20dc759ec8465c7c504335d8",
+    "bytes": 51807
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance\\attendance.ts",
+    "sha256": "8a5e21fec59a1c9d86f4e38e6e189f3116a27619ff9f520f5c84e1891d4bff39",
+    "bytes": 25929
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance-summary\\attendance-summary.css",
+    "sha256": "566b330f672bc5bdc1a33bf6f033386649c1a944198a7a068d7d272fee34741b",
+    "bytes": 1209
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance-summary\\attendance-summary.html",
+    "sha256": "b89e3bb7baa19b806ecac2302e8a5d7ee6f9627e48239a920074f3ec10cfc790",
+    "bytes": 7549
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\attendance-summary\\attendance-summary.ts",
+    "sha256": "67c30282c62a2e63bb7aca38c7120ec8454e4e251473009b3ddd3c42515fa5c7",
+    "bytes": 5176
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\catalog\\catalog.html",
+    "sha256": "e57f2ac4fde48a0c482bcef45369197ae2540cc217a155fbef4f1107170c15dd",
+    "bytes": 11624
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\catalog\\catalog.ts",
+    "sha256": "2fb810cb523ca19090f252da22b06425d1160ad5e6e564fc2cc53248558264dc",
+    "bytes": 8922
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\connection\\connection.html",
+    "sha256": "0d162a1db1b8ad576d4cd5ada89e15860b6c067a909515a2a317fe8a84acbfa3",
+    "bytes": 1062
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\connection\\connection.ts",
+    "sha256": "32581ec1d094eb1b1441e298878aa5bd82399e1b0c023d8dd398ae112c1c01f2",
+    "bytes": 1494
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contract-types\\contract-types.html",
+    "sha256": "f3b7b4a758f4be51bbb22ca743eccb507b6e60ca67a9184d0d896c0a1bdf694a",
+    "bytes": 6576
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contract-types\\contract-types.ts",
+    "sha256": "3355c4c79fd09589a58bc368ed4e5a5b95a3cbfd18156d09255db1073e13d85a",
+    "bytes": 5792
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contract-warnings.css",
+    "sha256": "8f6bc518cc2f44f4096be066a92f54b205749a32c8076f7f53634a1a55badccf",
+    "bytes": 1524
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contract-warnings.html",
+    "sha256": "c3658c3ca98832bcb806b2a7367f99110352216a22933599c4995688b6bacbea",
+    "bytes": 5988
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contract-warnings.ts",
+    "sha256": "59f405a75ded92639194fd2afe2dc471e90be5e2af7aacdd11147d5b6d3cb508",
+    "bytes": 3150
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contracts.css",
+    "sha256": "cf15a4ae1546638d272671f9a8685659d24f7e25ff08e120db122d06ff815d03",
+    "bytes": 6464
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contracts.html",
+    "sha256": "f2cea4d6f2f1572d04e93072010780b5dad61a7a26db6d8bdef61d7b40ab52c9",
+    "bytes": 37803
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\contracts\\contracts.ts",
+    "sha256": "5caf5e00ef86378e18f52c673946dc6cadb13afd12f8d88346286cbf32c6940f",
+    "bytes": 36777
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\decisions\\decisions.html",
+    "sha256": "8364dcb041fa763e728a8acf7a2d812088afba051b6322c29d41c30d14d233b0",
+    "bytes": 25438
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\decisions\\decisions.ts",
+    "sha256": "a01fbc387ec5fd2e2fe98ae2cc241816f2f4ebdf6a979991b5015cd7188fade0",
+    "bytes": 19291
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\departments\\departments.css",
+    "sha256": "d81e24aae39618ceb0068e5fd2b81af13d6621b0549ad30d2d001551da7ead6e",
+    "bytes": 1538
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\departments\\departments.html",
+    "sha256": "53111d77fb601107edf1b6a24f094b2ca57d7c703bc377619355e9a56a80ee0e",
+    "bytes": 10862
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\departments\\departments.ts",
+    "sha256": "6457bb70f1849e162291fc3c2c9eaf9875008c8acadd4583336712c3e81702eb",
+    "bytes": 7547
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\employees\\employee-form.validation.ts",
+    "sha256": "e71f85d7fa06f512ef72d7678171d5bf35112f3974f0216cb8fbda2e66d0216f",
+    "bytes": 2478
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\employees\\employees.css",
+    "sha256": "2a0a64747dd62bec48e2a5a14c8f33c02f38e6a5022090a5ea43a308fbb05330",
+    "bytes": 1721
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\employees\\employees.html",
+    "sha256": "904c45d09c8e49ada0f5b9ec8c545cbb416439cb001f7cd62f1847ae398e173f",
+    "bytes": 20796
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\employees\\employees.ts",
+    "sha256": "82ca901370e758f2fa76852d01db03cd2f83bebe8d5ae352c650fb552aef072c",
+    "bytes": 11440
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\head-requests\\head-requests.html",
+    "sha256": "2e89578b80e6e49e18d4dd7ee0a310db59d5b5a94639a398d2c5d3e2bccecd87",
+    "bytes": 3201
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\head-requests\\head-requests.ts",
+    "sha256": "7ec429f5d8da1873a91eb8d54f912d484413eca10a46713edeb5784bf77ac3d7",
+    "bytes": 2974
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\login\\login.css",
+    "sha256": "8499ba3e9e55876e2be6e8b3c996d15a56c343f8de0184d3de02498369088873",
+    "bytes": 18220
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\login\\login.html",
+    "sha256": "7dfb0f99d943ce91844f0544dbd53286df76e6e6de74f36066f795e88a0c5e89",
+    "bytes": 13720
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\login\\login.ts",
+    "sha256": "578d31c55d0c5fc68484538660092008cf99f09d86da674816395d9aba2f2bcd",
+    "bytes": 6799
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\module-list.css",
+    "sha256": "3635160f2b8da5c27cca258c32c118db0fb77118226f402e7b0234e48264c20c",
+    "bytes": 2793
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overtime\\overtime-api.service.ts",
+    "sha256": "8f5804bb455795ef0c53dfdcc09045d2d2dc3157f5df4c361e5358a880f3e48d",
+    "bytes": 6465
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overtime\\overtime.css",
+    "sha256": "97b8c194250f852c522c798c5525184c98c33d174e1dc3ee560aa9cba232a52c",
+    "bytes": 7981
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overtime\\overtime.html",
+    "sha256": "d41dc998db18e0f859b50be3ed8e4ab7d6475288033d736e45e91b9c26333193",
+    "bytes": 37536
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overtime\\overtime.ts",
+    "sha256": "14d47104c9b9d9f6cda71a0707323844681d304203a60c9662c56c416196c5ab",
+    "bytes": 20774
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overview\\overview.css",
+    "sha256": "342754aec0a6d39da4bc143d95825dc04cc1e9b2ee847b766982bd496ba3696b",
+    "bytes": 7788
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overview\\overview.html",
+    "sha256": "62a5abd0c3c0bd80d86d2a310741be86a896b4058dbef17f8386af9ec516c1ce",
+    "bytes": 10364
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\overview\\overview.ts",
+    "sha256": "0218b9e09d8286f51617741e7abcb6a97e87c3e3055803dfa1db487bbb6b54f7",
+    "bytes": 9098
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payroll\\payroll.css",
+    "sha256": "2781743fbef7c2960c472c41aae916b5e9e684cfbd8e41697fb3cd7f27eeedc8",
+    "bytes": 1384
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payroll\\payroll.html",
+    "sha256": "878ffaffb575d89086876f395e3be2ed371fc5a7be492514fa196b4a1b71340c",
+    "bytes": 9426
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payroll\\payroll.ts",
+    "sha256": "aa3e3d3a59cd9a6ffe57e11b7618bb2402ea1bc5419472f0e1b3b16c9936cb6b",
+    "bytes": 8007
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payslips\\payslips.css",
+    "sha256": "fcfeddb241992a9b8107ee8e0917c7cb3b5f760028b20b33e699eec587921dd8",
+    "bytes": 383
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payslips\\payslips.html",
+    "sha256": "55eb4c5add3e8145ca0127db587d7a40f782dd98ec3d7305c6b2279d6bcfbdaa",
+    "bytes": 3925
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\payslips\\payslips.ts",
+    "sha256": "ebc9947b1963ce1cf737150e3c21f334b0364944dbbb03c65f647e35e4756292",
+    "bytes": 2313
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\personnel-workspace\\personnel-workspace.html",
+    "sha256": "a3814f00bc57f19dd5ddd50ba3aa69f414c115c22fde433c65764a514e947c9c",
+    "bytes": 16319
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\personnel-workspace\\personnel-workspace.ts",
+    "sha256": "da27ec1875dbfb82e6274312a0d418f4f1862e28cbe6df96a1e7e4af6966aedf",
+    "bytes": 22595
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\placeholder\\placeholder.html",
+    "sha256": "144803ca74880ede1cb8343a5f3c7a87d41505d7132e5c440e82bcbfb555b739",
+    "bytes": 536
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\placeholder\\placeholder.ts",
+    "sha256": "28afb7ce7c25bb127d1468ba8af2544e84c93f0e23e03454df45739a9a8413e8",
+    "bytes": 553
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\reports\\reports.css",
+    "sha256": "7e7320f26aa356b3394a0ed4f493987eaedcb18841523ea0082f202e1a654ab4",
+    "bytes": 8647
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\reports\\reports.html",
+    "sha256": "c1f50671ddcdd0080710adad94182eda06e2db3a6915d70a551c55f0bcbbc782",
+    "bytes": 11129
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\reports\\reports.ts",
+    "sha256": "acf0b562967eec7892fb34f18ef48c345cd7d29e7b335c04a4f0efbaa1ff8bf2",
+    "bytes": 9640
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\schedules\\schedules.html",
+    "sha256": "313dc1e7e04c6d0370b86d5f129237030ea19cbf1392d8c0417b6d4744f3e612",
+    "bytes": 33763
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\schedules\\schedules.ts",
+    "sha256": "e8abbabf4eb517b5492ec0da326c2ba90602cbaf4c9b8650596de7c349063367",
+    "bytes": 35766
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\work-module.css",
+    "sha256": "ca696367b832f17d1fedf9b51ef1abbe86df59bb43d7a9d3f142102eb1a74daa",
+    "bytes": 865
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\work-shifts\\work-shifts.html",
+    "sha256": "4452e609b9e00cb2753fc1669ebcfd992d012cdd153027f5a63a01d617047c82",
+    "bytes": 19430
+  },
+  {
+    "file": "frontend\\src\\app\\pages\\work-shifts\\work-shifts.ts",
+    "sha256": "047ac76d744a1579a53ba04e7cb1a5415a0de29c07da50b9360b20056313678e",
+    "bytes": 20409
+  },
+  {
+    "file": "frontend\\src\\app\\services\\account-translations.ts",
+    "sha256": "229283f83a7ecfc075897f255514f6cfa82240aa817bc0403c02a371602eba27",
+    "bytes": 6592
+  },
+  {
+    "file": "frontend\\src\\app\\services\\account.service.ts",
+    "sha256": "7e79cdad5adea2d4e6b3033b91b35d516875cc22e7c9b7a785f3aeb85e6e49bd",
+    "bytes": 4664
+  },
+  {
+    "file": "frontend\\src\\app\\services\\admin.guard.ts",
+    "sha256": "310e27fe076a2f91bba4cde9aa6ce2f5c53decda9fd2750edf57c97bcda7af9e",
+    "bytes": 648
+  },
+  {
+    "file": "frontend\\src\\app\\services\\allowance.service.ts",
+    "sha256": "638635e4cf10799c97b8f8fbeb8dc6aa167bc34a78597c7781530539b843574d",
+    "bytes": 2893
+  },
+  {
+    "file": "frontend\\src\\app\\services\\api.config.ts",
+    "sha256": "cec712dd725ff9b68087bbe76c53ab8ddee748d203cf2b5caff35bd58169b9b5",
+    "bytes": 149
+  },
+  {
+    "file": "frontend\\src\\app\\services\\auth.guard.ts",
+    "sha256": "42bb96e24f25038e7dc76eb34f2c7602b740c1f5dc2083fada14729554360851",
+    "bytes": 650
+  },
+  {
+    "file": "frontend\\src\\app\\services\\auth.interceptor.ts",
+    "sha256": "abaaf8ee35a2d9e0335e928588d65118712fa59d4cb95bfca24bbaa349200c15",
+    "bytes": 1933
+  },
+  {
+    "file": "frontend\\src\\app\\services\\auth.service.ts",
+    "sha256": "0189754995ca634fdfe112f9f572488d966e47b6b1d6b92fd35a4f3187660fae",
+    "bytes": 13309
+  },
+  {
+    "file": "frontend\\src\\app\\services\\catalog.service.ts",
+    "sha256": "2f844fb261c7f4fc9c6e4fd6b4076ebc3649fb1b7e50d29b399bb28a953f8fa1",
+    "bytes": 2891
+  },
+  {
+    "file": "frontend\\src\\app\\services\\contract.service.ts",
+    "sha256": "449ca1675fb32a848b0b12f1a9d40f87001c8954279ca4c4e845a5e11a50070f",
+    "bytes": 4193
+  },
+  {
+    "file": "frontend\\src\\app\\services\\decision.service.ts",
+    "sha256": "5e86d5e2cc04e2baa4165260794c676fbcff22bbc954883de0c598dd61fb1b6a",
+    "bytes": 2124
+  },
+  {
+    "file": "frontend\\src\\app\\services\\department.service.ts",
+    "sha256": "a3fd915f212ba62e6f66a59b0e380ba7df056ef8ee91012fc4db3d8af3d5bc3b",
+    "bytes": 2179
+  },
+  {
+    "file": "frontend\\src\\app\\services\\employee.service.ts",
+    "sha256": "19197ea2fd98f5807360472668e2fcba9ef41c6d93e7bc6f225fe9cb6801717d",
+    "bytes": 4561
+  },
+  {
+    "file": "frontend\\src\\app\\services\\head-requests.service.ts",
+    "sha256": "035893fda6c4a34f8156b0540a6f0ca443012b202f8edd1bfcc62fe726a4fee2",
+    "bytes": 1232
+  },
+  {
+    "file": "frontend\\src\\app\\services\\health.service.ts",
+    "sha256": "f23e748215bd68920dfaf11d9f034a29ad2c4627be5d0a2a58d48c3ebd532fe0",
+    "bytes": 499
+  },
+  {
+    "file": "frontend\\src\\app\\services\\hr-scope.service.ts",
+    "sha256": "dbb5061372cfe50166dce9dcd9bb48cc2bbe30cfd73a53b0efb02e8bfebe3c4a",
+    "bytes": 1945
+  },
+  {
+    "file": "frontend\\src\\app\\services\\language.service.ts",
+    "sha256": "0068c9ba040b13160a5d4aa881c42017ed5e312e3747f2e0c0505ae0abd9cc56",
+    "bytes": 20876
+  },
+  {
+    "file": "frontend\\src\\app\\services\\payroll.service.ts",
+    "sha256": "d33dbd6dbb8b04778581ca46f71b818aea5ac3e82d66a7c1b0565dc02b99e6bb",
+    "bytes": 3239
+  },
+  {
+    "file": "frontend\\src\\app\\services\\personnel-portal.guard.ts",
+    "sha256": "e7c21f85786aa1ddfcd2003d3e1099de5bbb7d9bd491e32e2846b7aba5633de2",
+    "bytes": 672
+  },
+  {
+    "file": "frontend\\src\\app\\services\\personnel-workspace.service.ts",
+    "sha256": "de8aa5d8eaf44d9cd1efcd5a79ec2c4e99a6e51cb0b67734959cd8723f303193",
+    "bytes": 1609
+  },
+  {
+    "file": "frontend\\src\\app\\services\\report-format.ts",
+    "sha256": "7195f9f465cbc213fcb0e5f7aaa0794a76dbe148e4e0b1a3c13ee56bf3592e7a",
+    "bytes": 2009
+  },
+  {
+    "file": "frontend\\src\\app\\services\\report.service.ts",
+    "sha256": "50465577f34e9b945c093e45c25aaa8b7780618acb9c9074b4a1891e16551b66",
+    "bytes": 3330
+  },
+  {
+    "file": "frontend\\src\\app\\services\\theme.service.ts",
+    "sha256": "2d46ce5fd6af254b724cea203b3418ce93a9cf3ace8c42f3d3f2ef7bb8e6dab9",
+    "bytes": 673
+  },
+  {
+    "file": "frontend\\src\\app\\services\\ui-translations.ts",
+    "sha256": "615fdc3ebf4275d02df3a31f096b6df68b96d6e859cb0d8373d2c50c87680ebf",
+    "bytes": 49325
+  },
+  {
+    "file": "frontend\\src\\app\\services\\work-module-api.service.ts",
+    "sha256": "ef71f89fa067cec696de195a28dfe0f7f5fe02c7d13d3e5daec7925c384c4792",
+    "bytes": 6330
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\attendance-actual-breaks.ts",
+    "sha256": "2f8969684803c3c6a587f1fbf91d75d704c53b3ef6df29e179958cf66305fecf",
+    "bytes": 4516
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\attendance-calendar.css",
+    "sha256": "4828fa0bd6fd6f37b3ce39bcfd1b7289a45329424d20e40f16de52b584b91387",
+    "bytes": 5016
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\attendance-calendar.html",
+    "sha256": "e6d00f1277ebc3ee0549b9912bda1ce17a5df461e242e42bd353fbfca4251786",
+    "bytes": 9120
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\attendance-calendar.ts",
+    "sha256": "30971ea90cd58afbd46be17c9867202d460b7207428762531481f15fd4147760",
+    "bytes": 12695
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\clock-timing.ts",
+    "sha256": "a24f603f2a60f2d16134ea31ceb7460b59e3fc75e5512f62ee1f4a30bc4ff38e",
+    "bytes": 1066
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\detail-focus.directive.ts",
+    "sha256": "23c1433b1fe28a0ac1cab33e60f89f7de3b963bfbd165cf760c309057ba5fb5f",
+    "bytes": 1071
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\employment-api-error.ts",
+    "sha256": "43d0867f1569a03d7aa08dcfca648e95e6f73a13fd7318045e151223603b385d",
+    "bytes": 1216
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\leave-workflow-guide.ts",
+    "sha256": "956aea6cc97aedfa8f5b28b88a1754c9e95951a1cd3a6b2349ebd3936d658ccd",
+    "bytes": 4792
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\management-page.base.ts",
+    "sha256": "3474be244d24ac7cc822649399215bcf53490179c22380c840689b060277c7f5",
+    "bytes": 1168
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\management-page.css",
+    "sha256": "48fa618eee15f5b0e4651efc1a91e97a5e247210ee645c79382b855f79f9ae65",
+    "bytes": 8155
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\ot-supplement-panel.html",
+    "sha256": "11ab140719de90c16f2fbbd74ab83a7ba59a2adbe83643c8909844857d30851b",
+    "bytes": 8261
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\ot-supplement-panel.ts",
+    "sha256": "8026a14d060ef94af739571bf798aa78f2d91e76506e7f7f3d33953b4c626cf9",
+    "bytes": 5907
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\overtime-calendar.html",
+    "sha256": "cd30d390e07619ecf584b0912210f468bd8d24125ac47811dc9aedda28be8666",
+    "bytes": 7286
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\overtime-calendar.ts",
+    "sha256": "f3e23aa0aa2671739d6182f726c84b215e626deb6decea6ddf140193f2894f2d",
+    "bytes": 4451
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\page-header.ts",
+    "sha256": "f541eb594dfd3777e15f8f26af5f5eae377065c5b5103b9c3a8cee399ddb949e",
+    "bytes": 803
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\pagination.ts",
+    "sha256": "a878a4b229227974c5d1dda51f38003004e6a28620d19d8edcad65eaafa66fa0",
+    "bytes": 1317
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\personal-calendar.css",
+    "sha256": "e8e552e3eab4cb17499c4241e7e222657b434261205c6b5fc308921ab9c665e1",
+    "bytes": 4323
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\personal-calendar.html",
+    "sha256": "6d2f9468984ad4ee993e0c58b32b204074f0fee049a4179b9e7c08292a2789bc",
+    "bytes": 11265
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\personal-calendar.ts",
+    "sha256": "e35dcbf2882627e5761168b75691dc1e94c1b0439b1273533c96673248df742a",
+    "bytes": 8131
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\record-workspace.ts",
+    "sha256": "3b517a5d09e909bf5252e78a216dec645b4a3fc36d37ccf5af5a8794dd7e8f75",
+    "bytes": 4381
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\row-view.directive.ts",
+    "sha256": "78bbdaa4c93d6824dae58495366d9193297bf263a1be5e50647dbaf139c52a14",
+    "bytes": 1383
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\selected-row-scroll.directive.ts",
+    "sha256": "b8c0ae5449dcea87f9b421094e924575f99cd9db23ed1bae4345d006993d543c",
+    "bytes": 1070
+  },
+  {
+    "file": "frontend\\src\\app\\shared\\translate.pipe.ts",
+    "sha256": "2a03b20552adcc45cfa9315b43be5d122858cba9a29fa45127a41c20a5f5f081",
+    "bytes": 472
+  },
+  {
+    "file": "frontend\\src\\index.html",
+    "sha256": "83b9a39fde34dd85d8cc32d5bfa888d841f94ce9e3f9fba47ab14b949c0c010a",
+    "bytes": 533
+  },
+  {
+    "file": "frontend\\src\\main.ts",
+    "sha256": "d4e2e59b00856bb9f8c15e39c1da3cc63c0f0025f61b5a64930b32cce04124c8",
+    "bytes": 293
+  },
+  {
+    "file": "frontend\\src\\styles.css",
+    "sha256": "6a9a5548c9b8fd79acfdaba41001a5c1b132291ab05dcdc6dd71c917edfb0b2b",
+    "bytes": 9846
+  }
+]

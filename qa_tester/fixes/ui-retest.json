@@ -1,0 +1,138 @@
+{
+  "catalogs": [
+    {
+      "route": "/leave-types",
+      "beforeTyping": 36,
+      "afterTypingAndSelectingStatusBeforeSearch": 36,
+      "afterSearch": 1,
+      "statuses": [
+        "Inactive"
+      ],
+      "afterF5": {
+        "keyword": "QA_FIX_",
+        "active": "false",
+        "count": 1
+      },
+      "viewAll": {
+        "keyword": "",
+        "active": "",
+        "query": "",
+        "count": 36
+      }
+    },
+    {
+      "route": "/qualifications",
+      "beforeTyping": 27,
+      "afterTypingAndSelectingStatusBeforeSearch": 27,
+      "afterSearch": 2,
+      "statuses": [
+        "Inactive",
+        "Inactive"
+      ],
+      "afterF5": {
+        "keyword": "QA_FIX_",
+        "active": "false",
+        "count": 2
+      },
+      "viewAll": {
+        "keyword": "",
+        "active": "",
+        "query": "",
+        "count": 27
+      }
+    }
+  ],
+  "accounts": {
+    "enHeading": "Accounts and permissions",
+    "enFilters": [
+      "Search",
+      "Status",
+      "Role"
+    ],
+    "viHeading": "Tài khoản và phân quyền",
+    "viFilters": [
+      "Tìm kiếm",
+      "Trạng thái",
+      "Vai trò"
+    ],
+    "F5Language": "en",
+    "usernameAndFullNameUnchanged": true,
+    "detailLabels": [
+      "Username",
+      "Employee code",
+      "Full name",
+      "Role",
+      "Status",
+      "Account ID"
+    ],
+    "roleHeaders": [
+      "Role code",
+      "Role name",
+      "Permissions count",
+      "Actions"
+    ],
+    "permissionHeaders": [
+      "Permission code",
+      "Permission name",
+      "Description",
+      "Actions"
+    ]
+  },
+  "schedules": {
+    "missingFromMessage": "Thiếu tham số bắt buộc: from",
+    "routeAfterError": "/schedules",
+    "stillSignedIn": true
+  },
+  "logout": {
+    "confirmedInUI": true,
+    "redirect": "/login",
+    "consoleErrors": []
+  },
+  "responsive": [
+    {
+      "route": "/accounts",
+      "cssWidth": 1440,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/qualifications",
+      "cssWidth": 1440,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/leave-types",
+      "cssWidth": 1440,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/accounts",
+      "cssWidth": 390,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/qualifications",
+      "cssWidth": 390,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/leave-types",
+      "cssWidth": 390,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/accounts",
+      "cssWidth": 320,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/qualifications",
+      "cssWidth": 320,
+      "horizontalOverflow": false
+    },
+    {
+      "route": "/leave-types",
+      "cssWidth": 320,
+      "horizontalOverflow": false
+    }
+  ]
+}

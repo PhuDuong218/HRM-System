@@ -1,3 +1,5 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
@@ -11,7 +13,7 @@ interface EmployeeGroup { label: string; description: string; rows: GroupRow[]; 
 
 @Component({
   selector: 'app-reports',
-  standalone: true,imports:[Breadcrumb],
+  standalone: true,imports:[SearchAssistDirective,HrmNotice,Breadcrumb],
   templateUrl: './reports.html',
   styleUrl: './reports.css'
 })

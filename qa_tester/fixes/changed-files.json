@@ -1,0 +1,27 @@
+{
+  "modifiedThisFix": [
+    "HRM_System\\src\\main\\java\\com\\hrm\\controller\\LeaveTypeController.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\controller\\QualificationLevelController.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\exception\\GlobalExceptionHandler.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\repository\\AccountRepository.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\service\\AuthService.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\service\\EmployeeRequestService.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\service\\LeaveTypeService.java",
+    "HRM_System\\src\\main\\java\\com\\hrm\\service\\QualificationLevelService.java",
+    "frontend\\src\\app\\services\\language.service.ts",
+    "frontend\\src\\app\\pages\\accounts\\accounts.html",
+    "frontend\\src\\app\\pages\\accounts\\accounts.ts",
+    "frontend\\src\\app\\pages\\catalog\\catalog.html",
+    "frontend\\src\\app\\pages\\catalog\\catalog.ts",
+    "frontend\\src\\app\\pages\\schedules\\schedules.ts"
+  ],
+  "addedThisFix": [
+    "HRM_System\\src\\test\\java\\com\\hrm\\security\\VerifiedBugsSqlServerIntegrationTest.java",
+    "HRM_System\\src\\test\\java\\com\\hrm\\service\\AuthLogoutRegressionTest.java",
+    "HRM_System\\src\\test\\java\\com\\hrm\\service\\LeaveBalanceScopeRegressionTest.java",
+    "frontend\\src\\app\\services\\account-translations.ts",
+    "frontend\\test-tools\\accounts-i18n.test.cjs"
+  ],
+  "priorWorkingTreeChangesPreserved": true,
+  "stagedOrPushed": false
+}

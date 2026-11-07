@@ -50,7 +50,7 @@ public class PayrollCalculationEngine {
         BigDecimal dailyRate = baseSalary.divide(standardDays, 4, RoundingMode.HALF_UP);
         BigDecimal workSalary = dailyRate.multiply(paidDays).setScale(PayrollConstants.MONEY_DECIMAL_SCALE, PayrollConstants.DEFAULT_ROUNDING_MODE);
 
-        SalaryComponent cLuongCong = componentMap.getOrDefault("LUONG_CONG", new SalaryComponent("LUONG_CONG", "Lương ngày công", null, true));
+        SalaryComponent cLuongCong = requireComponent(componentMap,"LUONG_CONG");
         lines.add(createLine(payrollDetailId, cLuongCong, lineCounter.getAndIncrement(),
                 paidDays, dailyRate, BigDecimal.ONE, workSalary,
                 "Lương theo công: " + paidDays + "/" + standardDays + " ngày"));
@@ -64,7 +64,7 @@ public class PayrollCalculationEngine {
             otSalary = hourlyRate.multiply(otHours).multiply(otMultiplier)
                     .setScale(PayrollConstants.MONEY_DECIMAL_SCALE, PayrollConstants.DEFAULT_ROUNDING_MODE);
 
-            SalaryComponent cTangCa = componentMap.getOrDefault("TANG_CA", new SalaryComponent("TANG_CA", "Lương làm thêm giờ (OT)", null, true));
+            SalaryComponent cTangCa = requireComponent(componentMap,"TANG_CA");
             lines.add(createLine(payrollDetailId, cTangCa, lineCounter.getAndIncrement(),
                     otHours, hourlyRate, otMultiplier, otSalary,
                     "Làm thêm giờ: " + otHours + " giờ x hệ số 1.5"));
@@ -83,7 +83,7 @@ public class PayrollCalculationEngine {
                     taxExemptAllowance = taxExemptAllowance.add(amount);
                 }
 
-                SalaryComponent cPhuCap = componentMap.getOrDefault("PHU_CAP", new SalaryComponent("PHU_CAP", allowance.getAllowanceName(), null, true));
+                SalaryComponent cPhuCap = requireComponent(componentMap,"PHU_CAP");
                 lines.add(createLine(payrollDetailId, cPhuCap, lineCounter.getAndIncrement(),
                         BigDecimal.ONE, amount, BigDecimal.ONE, amount,
                         allowance.getAllowanceName() + " (" + allowance.getCalculationBasis() + ")"));
@@ -94,7 +94,7 @@ public class PayrollCalculationEngine {
         BigDecimal insuranceDeduction = baseSalary.multiply(PayrollConstants.TOTAL_INSURANCE_RATE)
                 .setScale(PayrollConstants.MONEY_DECIMAL_SCALE, PayrollConstants.DEFAULT_ROUNDING_MODE);
 
-        SalaryComponent cKhauTru = componentMap.getOrDefault("KHAU_TRU", new SalaryComponent("KHAU_TRU", "Bảo hiểm bắt buộc (BHXH, BHYT, BHTN)", null, true));
+        SalaryComponent cKhauTru = requireComponent(componentMap,"KHAU_TRU");
         lines.add(createLine(payrollDetailId, cKhauTru, lineCounter.getAndIncrement(),
                 BigDecimal.ONE, insuranceDeduction, BigDecimal.ONE, insuranceDeduction,
                 "Trích đóng bảo hiểm 10.5% trên lương cơ bản"));
@@ -145,16 +145,24 @@ public class PayrollCalculationEngine {
         return tax.setScale(PayrollConstants.MONEY_DECIMAL_SCALE, PayrollConstants.DEFAULT_ROUNDING_MODE);
     }
 
+    private SalaryComponent requireComponent(Map<String,SalaryComponent> components,String code) {
+        var component=components.get(code);
+        var expected="KHAU_TRU".equals(code)?com.hrm.enums.SalaryComponentDirection.DEDUCT:com.hrm.enums.SalaryComponentDirection.ADD;
+        if(component==null||component.getComponentId()==null||!Boolean.TRUE.equals(component.getIsActive())||component.getDirection()!=expected)
+            throw new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,
+                "Thành phần lương thiếu/ngừng hoạt động hoặc sai chiều cộng/trừ: "+code);
+        return component;
+    }
     private PayrollLine createLine(Long detailId, SalaryComponent comp, int lineNo,
                                    BigDecimal qty, BigDecimal rate, BigDecimal multi,
                                    BigDecimal amount, String explanation) {
         PayrollLine line = new PayrollLine();
         line.setPayrollDetailId(detailId);
-        line.setComponentId(comp.getComponentId() != null ? comp.getComponentId() : 1L);
+        line.setComponentId(comp.getComponentId());
         line.setLineNo(lineNo);
         line.setComponentCodeSnapshot(comp.getComponentCode());
         line.setComponentNameSnapshot(comp.getComponentName());
-        line.setDirectionSnapshot(comp.getDirection() != null ? comp.getDirection().name() : "ADD");
+        line.setDirectionSnapshot(comp.getDirection().name());
         line.setQuantity(qty);
         line.setUnitRate(rate);
         line.setMultiplier(multi);

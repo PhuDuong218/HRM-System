@@ -1,0 +1,155 @@
+:host { display: block; min-width: 0; }
+.contracts-heading { flex-wrap: wrap; gap: 12px; }
+.contract-filters { display: grid; grid-template-columns: minmax(0, 1fr) minmax(130px, .65fr) minmax(0, 1fr); gap: 14px; margin-bottom: 24px; }
+.filter-field { min-width: 0; }
+.filter-field .form-label { font-size: 13px; font-weight: 600; }
+.filter-actions { grid-column: 1 / -1; display: flex; gap: 10px; justify-content: flex-end; }
+.filter-actions .btn { min-width: 90px; }
+.contracts-table { width:100%; table-layout:fixed; min-width:0; margin-bottom:0; }
+.contracts-table th { white-space:normal; overflow-wrap:anywhere; }
+.contracts-table td { vertical-align: middle; overflow-wrap: anywhere; }
+
+
+
+
+.contracts-table tr.is-selected > td { --bs-table-bg: #e4efff; --bs-table-striped-bg: #e4efff; --bs-table-accent-bg: #e4efff; background-color: #e4efff; color: #173f76; }
+.contracts-table tr.is-selected > td:first-child { box-shadow: inset 4px 0 #2b5ca0; }
+.contracts-table tr.is-selected .btn { background: #2b4f86; border-color: #2b4f86; color: white; }
+.contract-panel { padding: 16px; }
+.contract-panel .card { border: 0 !important; margin-top: 0 !important; }
+.contract-panel .lifecycle-form-card {
+  margin-top: 18px !important;
+  border: 1px solid var(--bs-border-color, #dce5ef) !important;
+  border-radius: 12px;
+  background: var(--bs-tertiary-bg, #f8fafc);
+  box-shadow: 0 4px 16px #1736530d;
+}
+.contract-panel .lifecycle-form-card:focus,
+.contract-panel .salary-form-panel:focus,
+.contract-panel #createFormPanel:focus { outline: 3px solid #8ab8e5; outline-offset: 3px; }
+.contract-form-heading { margin-bottom: 20px; padding-bottom: 14px; border-bottom: 1px solid var(--bs-border-color, #e4eaf2); }
+.contract-form-eyebrow { display: block; margin-bottom: 6px; color: #66819d; font-size: 10px; font-weight: 750; letter-spacing: 1.2px; }
+.contract-form-heading h2,
+.contract-form-heading h3 { margin: 0; color: var(--bs-body-color, #26384d); font-size: 20px; font-weight: 700; letter-spacing: -.25px; }
+.contract-form-heading p { margin: 6px 0 0; color: var(--bs-secondary-color, #708195); font-size: 13px; }
+.contract-form-heading .contract-form-record { display: inline-block; margin-top: 8px; padding: 4px 9px; border-radius: 6px; background: var(--bs-secondary-bg, #edf3f9); color: var(--bs-body-color, #26384d); font-weight: 650; }
+.contract-panel .col-md-6 { width: 100%; }
+
+.contract-list { container:contract-list / inline-size; min-width:0; }
+.contract-list .table-responsive { min-width:0; width:100%; }
+.contracts-table th:nth-child(1) { width:19%; }
+.contracts-table th:nth-child(2) { width:24%; }
+.contracts-table th:nth-child(3) { width:17%; }
+.contracts-table th:nth-child(4) { width:16%; }
+.contracts-table th:nth-child(5) { width:11%; }
+.contracts-table th:nth-child(6) { width:13%; }
+.contracts-table td .btn { max-width:100%; padding:8px; white-space:normal; }
+@container contract-list (max-width: 950px) {
+ .contract-filters { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+ .filter-field:nth-child(3) { grid-column:1 / -1; }
+ .filter-actions { grid-column:1 / -1; }
+}
+@container contract-list (max-width: 640px) {
+ .contracts-table { display:block; min-width:0 !important; }
+ .contracts-table thead { display:none; }
+ .contracts-table tbody { display:grid; gap:12px; }
+ .contracts-table tbody tr { display:block; border:1px solid #dde6f0; border-radius:10px; overflow:hidden; }
+ .contracts-table td { display:grid; grid-template-columns:100px minmax(0,1fr); gap:12px; min-width:0; width:auto; padding:10px 12px; border-bottom-color:#e7edf5; }
+ .contracts-table td::before { content:attr(data-label); color:#64788f; font-size:12px; font-weight:600; }
+ .contracts-table td:last-child { border-bottom:0; }
+ .contracts-table .empty-row td { display:block; }
+ .contracts-table .empty-row td::before { display:none; }
+ .contracts-table tr.is-selected { border-color:#2b5ca0; }
+ .contracts-table tr.is-selected > td:first-child { box-shadow:none; }
+ .table-responsive::before { display:none; }
+ .contracts-table td .btn { justify-self:start; }
+}
+@container contract-list (max-width: 420px) {
+ .contract-filters { grid-template-columns:minmax(0,1fr); }
+ .filter-actions { justify-content:stretch; }
+ .filter-actions .btn { flex:1; min-width:0; min-height:44px; }
+ .contracts-table td { grid-template-columns:85px minmax(0,1fr); gap:8px; }
+}
+@media(max-width:640px) {
+ .contracts-heading > .btn { min-height:44px; }
+}
+
+/* Cho biết các dòng hợp đồng có thể nhấn */
+.contracts-table .contract-row {
+  cursor: pointer;
+}
+
+/* Hiệu ứng khi rê chuột, giữ màu riêng cho dòng đang chọn */
+.contracts-table .contract-row:not(.is-selected):hover > td {
+  --bs-table-bg: #edf4ff;
+  --bs-table-striped-bg: #edf4ff;
+  background-color: #edf4ff;
+}
+
+/* Tách thông tin hợp đồng, tra cứu kỳ lương và lịch sử bằng đường phân cách. */
+.contract-panel > .card > .card-body > dl {
+  padding-bottom: 18px;
+  border-bottom: 1px solid var(--bs-border-color, #e4eaf2);
+}
+
+.salary-section {
+  margin-top: 22px;
+  padding-top: 20px;
+  border-top: 1px solid var(--bs-border-color, #e4eaf2);
+}
+
+.salary-section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+  color: var(--bs-emphasis-color, #26384d);
+  font-size: 1.1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+}
+
+.salary-section h3::before {
+  width: 4px;
+  height: 22px;
+  flex: 0 0 4px;
+  border-radius: 999px;
+  background: var(--bs-primary, #2b5ca0);
+  content: "";
+}
+
+/* Khung riêng để form thêm mức lương tách biệt với bảng lịch sử. */
+.salary-form-panel {
+  padding: 18px;
+  border: 1px solid var(--bs-border-color, #dce5ef);
+  border-radius: 12px;
+  background: var(--bs-tertiary-bg, #f8fafc);
+}
+
+.salary-form-panel .salary-date-field {
+  width: 50%;
+  flex: 0 0 50%;
+  max-width: 50%;
+}
+
+@media (max-width: 480px) {
+  .salary-form-panel {
+    padding: 14px;
+  }
+}
+
+@media (max-width: 360px) {
+  .salary-form-panel .salary-date-field {
+    width: 100%;
+    flex-basis: 100%;
+    max-width: 100%;
+  }
+}
+
+/* Màu hover trong chế độ tối */
+:host-context([data-bs-theme='dark'])
+  .contracts-table .contract-row:not(.is-selected):hover > td {
+  --bs-table-bg: #2c405b;
+  --bs-table-striped-bg: #2c405b;
+  background-color: #2c405b;
+}

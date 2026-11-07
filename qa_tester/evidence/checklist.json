@@ -1,0 +1,827 @@
+[
+  {
+    "id": "FEG-01",
+    "description": "Mở trang lần đầu, mở lại sau F5, mở bằng URL trực tiếp (deep link)",
+    "expected": "Không trắng trang, không lỗi đỏ trong Console, có trạng thái loading rồi dữ liệu"
+  },
+  {
+    "id": "FEG-02",
+    "description": "Danh sách: tìm kiếm, mỗi bộ lọc, kết hợp nhiều bộ lọc, **Xóa lọc**, kết quả rỗng",
+    "expected": "Kết quả đúng; rỗng có thông báo; đổi lọc quay về trang 1; số bản ghi khớp `SELECT COUNT`"
+  },
+  {
+    "id": "FEG-03",
+    "description": "Phân trang: trang đầu/cuối, đổi kích thước trang, trang vượt biên qua URL/API (`page=-1`, `size=0`, `size=100000`)",
+    "expected": "Nút Trước/Sau khóa đúng; \"Trang x/y\" đúng; API không 500"
+  },
+  {
+    "id": "FEG-04",
+    "description": "Chọn bản ghi → chi tiết; chuyển nhanh giữa nhiều bản ghi",
+    "expected": "Không hiển thị lẫn dữ liệu bản ghi cũ (race)"
+  },
+  {
+    "id": "FEG-05",
+    "description": "Form thêm/sửa: bỏ trống từng trường bắt buộc, nhập sai định dạng, quá dài, ký tự đặc biệt, chỉ khoảng trắng",
+    "expected": "Có thông báo **tại trường sai**; nút Lưu khóa khi không hợp lệ; thông điệp tiếng Việt, rõ nghĩa"
+  },
+  {
+    "id": "FEG-06",
+    "description": "Lưu thành công",
+    "expected": "Có phản hồi thành công; danh sách cập nhật; dữ liệu còn nguyên sau F5; DB đúng"
+  },
+  {
+    "id": "FEG-07",
+    "description": "Lưu thất bại do backend (trùng mã, 409, 400, 500)",
+    "expected": "**Hiển thị đúng thông điệp nghiệp vụ**, giữ nguyên dữ liệu đã nhập, không mất form, không \"thành công giả\""
+  },
+  {
+    "id": "FEG-08",
+    "description": "Bấm Lưu 2–5 lần liên tiếp; F5 giữa lúc lưu; Back sau khi lưu",
+    "expected": "Chỉ tạo **một** bản ghi; không lỗi trùng bất ngờ"
+  },
+  {
+    "id": "FEG-09",
+    "description": "Nút Hủy/Đóng/Esc/nền mờ khi form đang sửa dở",
+    "expected": "Hành vi nhất quán; có cảnh báo mất dữ liệu nếu thiết kế yêu cầu; không kẹt panel"
+  },
+  {
+    "id": "FEG-10",
+    "description": "Thao tác nhạy cảm (thôi việc, ngừng dùng, duyệt/từ chối, rút đơn, chấm dứt nhiệm kỳ)",
+    "expected": "Có xác nhận; từ chối cần lý do (nút khóa khi trống)"
+  },
+  {
+    "id": "FEG-11",
+    "description": "Bố cục: desktop 2 cột; ≤1250px drawer; bảng chuyển thẻ khi cột hẹp; kiểm tại **1440, 1280, 1024, 768, 390, 320 px**",
+    "expected": "Không tràn ngang toàn trang; không chữ chồng/cắt; drawer cuộn được, trang sau không cuộn; đóng drawer khôi phục cuộn"
+  },
+  {
+    "id": "FEG-12",
+    "description": "Đổi ngôn ngữ VI ↔ EN",
+    "expected": "Menu, tiêu đề, nhãn, thông báo, trạng thái rỗng đổi đúng; **không** lộ khóa dịch thô (`employees.title`); dữ liệu người dùng giữ nguyên; ngôn ngữ giữ sau F5"
+  },
+  {
+    "id": "FEG-13",
+    "description": "Dark mode / zoom 200% / bàn phím (Tab, Enter, Esc) / focus nhìn thấy / nhãn input",
+    "expected": "Dùng được; tương phản đọc được; thứ tự Tab hợp lý"
+  },
+  {
+    "id": "FEG-14",
+    "description": "Mạng chậm (throttle), offline, backend tắt giữa chừng, 401/403/404/500 giả lập",
+    "expected": "Thông báo có nghĩa; không treo vô hạn spinner; 401 → về `/login`"
+  },
+  {
+    "id": "FEG-15",
+    "description": "Dữ liệu dài, tiếng Việt có dấu, emoji, `<script>`/HTML trong mọi trường rồi xem ở danh sách, chi tiết, audit, tooltip",
+    "expected": "Hiển thị đúng chữ; **không XSS**; không vỡ bố cục"
+  },
+  {
+    "id": "FEG-16",
+    "description": "Định dạng: ngày `dd/MM/yyyy`, giờ, tiền (phân cách nghìn), số; sắp xếp mặc định",
+    "expected": "Nhất quán toàn hệ thống; không lệch ngày do múi giờ (thử ngày sát 00:00)"
+  },
+  {
+    "id": "FEG-17",
+    "description": "Chính tả/dấu tiếng Việt, nhãn nút/tiêu đề không nhất quán giữa các trang",
+    "expected": "Ghi S4 theo từng chỗ"
+  },
+  {
+    "id": "FEG-18",
+    "description": "Mỗi trang: mở DevTools → Console/Network trong cả phiên thao tác",
+    "expected": "Không lỗi JS, không request 4xx/5xx bất thường, không gọi API thừa lặp vòng"
+  },
+  {
+    "id": "LOG-01",
+    "description": "Đăng nhập đúng với ADMIN, HR, EMPLOYEE",
+    "expected": "ADMIN/HR vào khu quản trị; EMPLOYEE **không** vào được khu quản trị web (thông báo rõ, không trắng trang); `/me` đúng vai trò"
+  },
+  {
+    "id": "LOG-02",
+    "description": "Sai mật khẩu / username không tồn tại",
+    "expected": "Cùng một thông điệp chung (không lộ username có tồn tại)"
+  },
+  {
+    "id": "LOG-03",
+    "description": "Tài khoản bị khóa (`is_active=0`) / nhân viên `DA_NGHI`",
+    "expected": "Không đăng nhập được; thông điệp rõ; **mọi token cũ** của tài khoản đó bị từ chối (đề cương 1.2)"
+  },
+  {
+    "id": "LOG-04",
+    "description": "Để trống, chỉ dấu cách, chuỗi dài 10.000, `' OR 1=1--`, `<script>`, Unicode",
+    "expected": "400/401 gọn; không 500; không XSS"
+  },
+  {
+    "id": "LOG-05",
+    "description": "Bấm Enter để đăng nhập; bấm đúp; trình duyệt tự điền; hiện/ẩn mật khẩu (nếu có)",
+    "expected": "Hoạt động; không gửi hai lần"
+  },
+  {
+    "id": "LOG-06",
+    "description": "Sau đăng nhập: chuyển về trang đã định (deep link) hay trang chủ",
+    "expected": "Nhất quán, không vòng lặp chuyển hướng"
+  },
+  {
+    "id": "LOG-07",
+    "description": "**Brute-force**: sai liên tiếp 10–20 lần",
+    "expected": "Ghi nhận có khóa/trễ/giới hạn không (đề cương không yêu cầu → `THIẾU-CHUẨN` nếu không có)"
+  },
+  {
+    "id": "SES-01",
+    "description": "Truy cập trực tiếp **từng route** (toàn bộ route) khi chưa đăng nhập",
+    "expected": "Về `/login`"
+  },
+  {
+    "id": "SES-02",
+    "description": "EMPLOYEE gõ URL quản trị; HR gõ URL chỉ dành ADMIN (vd. `/connection`, tài khoản)",
+    "expected": "Trang \"không có quyền\"/chặn; **và** API tương ứng trả 403"
+  },
+  {
+    "id": "SES-03",
+    "description": "Token hết hạn giữa lúc đang nhập form; token bị sửa tay trong storage",
+    "expected": "401 → về `/login` có thông báo; không mất dữ liệu âm thầm; không treo"
+  },
+  {
+    "id": "SES-04",
+    "description": "Đăng xuất → Back/Forward; mở lại tab cũ; đăng xuất ở tab A khi tab B đang mở",
+    "expected": "Không xem lại được dữ liệu cũ; tab B bị buộc đăng nhập lại khi thao tác tiếp"
+  },
+  {
+    "id": "SES-05",
+    "description": "Đăng xuất rồi **dùng lại token cũ gọi API**",
+    "expected": "401 (thu hồi phiên)"
+  },
+  {
+    "id": "SES-06",
+    "description": "Đổi mật khẩu: sai mật khẩu cũ / trùng cũ / quá yếu / thành công",
+    "expected": "Báo lỗi đúng; thành công thì phiên cũ vô hiệu và đăng nhập được bằng mật khẩu mới"
+  },
+  {
+    "id": "SES-07",
+    "description": "Admin đặt lại mật khẩu cho người khác; HR/EMPLOYEE thử làm việc này",
+    "expected": "Chỉ ADMIN; phiên cũ của người bị đặt lại bị thu hồi; mật khẩu không xuất hiện trong response/log/audit"
+  },
+  {
+    "id": "SES-08",
+    "description": "Làm mới token / thời hạn phiên",
+    "expected": "`CHƯA-ĐẶC-TẢ` (đề cương 1.3 \"cần xác nhận\"): ghi hành vi thực tế (hết hạn sau bao lâu, có gia hạn không)"
+  },
+  {
+    "id": "NAV-01",
+    "description": "Mỗi mục menu: mở đúng trang; mục đang chọn được làm nổi; nhóm menu mở/đóng; thu/mở thanh bên liên tiếp",
+    "expected": "Đúng; mũi tên đúng hướng; không nhảy"
+  },
+  {
+    "id": "NAV-02",
+    "description": "Menu theo vai trò: ADMIN thấy gì, HR thấy gì",
+    "expected": "Khớp phân quyền thật (không hiện mục người dùng không có quyền)"
+  },
+  {
+    "id": "NAV-03",
+    "description": "Menu di động (≤800px), nút mở/đóng, chọn mục thì tự đóng",
+    "expected": "Đúng"
+  },
+  {
+    "id": "NAV-04",
+    "description": "Route không tồn tại → trang 404; route cấm → trang forbidden; placeholder",
+    "expected": "Có trang thông báo, có đường về"
+  },
+  {
+    "id": "NAV-05",
+    "description": "Trang **Kiểm tra kết nối** (ADMIN)",
+    "expected": "Báo đúng trạng thái backend/DB; **không lộ** URL DB, user, mật khẩu, secret"
+  },
+  {
+    "id": "NAV-06",
+    "description": "**Tổng quan**: mọi con số/biểu đồ",
+    "expected": "Khớp `SELECT` DB (nhân viên đang làm, phòng ban, đơn chờ…); không số hard-code/giả"
+  },
+  {
+    "id": "NAV-07",
+    "description": "Backend tắt/khởi động chậm khi mở frontend",
+    "expected": "Thông báo \"không kết nối được máy chủ\" rõ ràng"
+  },
+  {
+    "id": "EMP-01",
+    "description": "Tạo nhân viên hợp lệ đủ các trường (mã, họ tên, ngày sinh, giới tính, email, SĐT, CCCD, địa chỉ, ngày vào làm, phòng ban, chức vụ)",
+    "expected": "Tạo được; tự sinh phân công đầu tiên; **đối chiếu từng cột trong DB** với dữ liệu đã nhập; có audit"
+  },
+  {
+    "id": "EMP-02",
+    "description": "**Mã nhân viên**: trống, trùng (khác hoa/thường, có khoảng trắng đầu/cuối), ký tự lạ, quá dài",
+    "expected": "Chặn; mã duy nhất (đề cương 2.2); thông điệp tại trường"
+  },
+  {
+    "id": "EMP-03",
+    "description": "Họ tên: trống, 1 ký tự, 300 ký tự, số, ký hiệu, tiếng Việt có dấu, emoji",
+    "expected": "Quy tắc rõ ràng; dấu không mất khi lưu/hiển thị"
+  },
+  {
+    "id": "EMP-04",
+    "description": "Ngày sinh: tương lai, hôm nay, quá xa (1900), dưới tuổi lao động tối thiểu, 29/02 năm không nhuận",
+    "expected": "Chặn giá trị phi lý"
+  },
+  {
+    "id": "EMP-05",
+    "description": "Ngày vào làm: tương lai; trước ngày sinh; trước ngày thành lập hợp lý",
+    "expected": "Chặn/thông điệp rõ (nguồn có quy tắc \"Chưa hỗ trợ ngày vào làm trong tương lai\")"
+  },
+  {
+    "id": "EMP-06",
+    "description": "Email: sai định dạng, trùng, có chữ hoa, khoảng trắng; SĐT: chữ, thiếu/thừa số, `+84`, dấu cách; CCCD: 9/12 số, chữ, trùng",
+    "expected": "Kiểm định dạng + trùng; thông điệp rõ"
+  },
+  {
+    "id": "EMP-07",
+    "description": "Gán phòng ban/chức vụ **đã ngừng hoạt động**; phòng ban/chức vụ không tồn tại (gọi thẳng API)",
+    "expected": "Không chọn được ở UI **và** API chặn"
+  },
+  {
+    "id": "EMP-08",
+    "description": "Tìm kiếm theo mã, tên (có dấu/không dấu, hoa/thường), email, SĐT; lọc trạng thái/phòng ban",
+    "expected": "Kết quả đúng, không phân biệt hoa thường theo thiết kế; ký tự `%` `_` không làm hỏng truy vấn"
+  },
+  {
+    "id": "EMP-09",
+    "description": "Xem chi tiết: đủ thông tin (cá nhân, liên hệ, phòng ban, chức vụ, trình độ, trạng thái, lịch sử phân công)",
+    "expected": "Đủ, đúng; không lẫn hồ sơ khác"
+  },
+  {
+    "id": "EMP-10",
+    "description": "Sửa hồ sơ: đổi từng trường; đổi mã; để trống trường bắt buộc; sửa khi hai phiên cùng sửa",
+    "expected": "Lưu đúng; **không ghi đè mù** khi sửa đồng thời (kỳ vọng 409/cảnh báo); audit ghi trước–sau"
+  },
+  {
+    "id": "EMP-11",
+    "description": "Sửa liên hệ (PATCH): hợp lệ/không hợp lệ; tự sửa liên hệ của chính mình",
+    "expected": "Theo quy tắc phân quyền; thông điệp rõ"
+  },
+  {
+    "id": "EMP-12",
+    "description": "**Thôi việc**: nhập ngày nghỉ (trước ngày vào làm, trước phân công hiện tại, hôm nay, tương lai); đang là trưởng phòng; còn đơn chờ duyệt",
+    "expected": "Trạng thái → `DA_NGHI`, lưu ngày nghỉ; **giữ nguyên** hồ sơ, hợp đồng, công, đơn, lương lịch sử (đề cương 2.3); chặn trường hợp trưởng phòng; tài khoản bị vô hiệu"
+  },
+  {
+    "id": "EMP-13",
+    "description": "Sau thôi việc: nhân viên còn xuất hiện ở tìm kiếm (lọc `DA_NGHI`)? có sửa/phân công/nộp đơn được không?",
+    "expected": "Không thao tác nghiệp vụ trái quy tắc; vẫn tra cứu được lịch sử"
+  },
+  {
+    "id": "EMP-14",
+    "description": "**Tái tuyển** (chỉ ADMIN): ngày hợp lệ/không hợp lệ; còn phân công mở; đã có đơn nghỉ việc",
+    "expected": "Tạo phân công mới, giữ ngày vào làm đầu tiên; **không** tự mở tài khoản/hợp đồng/quỹ phép; HR gọi → 403"
+  },
+  {
+    "id": "EMP-15",
+    "description": "`DELETE /employees/{id}` (gọi thẳng API) trên nhân viên có phân công/đơn/hợp đồng",
+    "expected": "Không xóa cứng dữ liệu đang được tham chiếu (đề cương 3.3/4.3 tinh thần \"không xóa danh mục đang được tham chiếu\"); ghi hành vi thực tế"
+  },
+  {
+    "id": "EMP-16",
+    "description": "Phân quyền: HR phòng A xem/sửa NV phòng B; EMPLOYEE xem hồ sơ người khác (đổi ID)",
+    "expected": "HR ngoài scope bị lọc/403; EMPLOYEE chỉ xem của mình (đề cương 2.3) — kể cả gọi thẳng API"
+  },
+  {
+    "id": "EMP-17",
+    "description": "**Dữ liệu riêng tư**: CCCD, địa chỉ nhà của người khác (xem trên UI, API, audit, xuất file)",
+    "expected": "Chỉ chủ hồ sơ xem được; người khác không thấy; sửa hồ sơ người khác không làm mất/ghi đè CCCD đã lưu"
+  },
+  {
+    "id": "EMP-18",
+    "description": "Danh sách lớn: ≥ 100 NV (tự tạo bằng API nếu cần, tiền tố `QA_`) — sắp xếp, phân trang, hiệu năng",
+    "expected": "Phản hồi hợp lý; không treo"
+  },
+  {
+    "id": "EMP-19",
+    "description": "Trường **trình độ** trên hồ sơ nhân viên (đề cương 2.2)",
+    "expected": "Hiển thị trình độ hiện tại đúng, khớp mục Bằng cấp"
+  },
+  {
+    "id": "DEP-01",
+    "description": "Thêm phòng ban: mã/tên/mô tả; mã trùng (hoa/thường, khoảng trắng); trống; quá dài",
+    "expected": "Mã duy nhất; thông điệp tại trường; lưu đúng DB"
+  },
+  {
+    "id": "DEP-02",
+    "description": "Sửa phòng ban: đổi tên/mô tả/mã",
+    "expected": "Lưu đúng; đổi mã có ảnh hưởng dữ liệu liên quan? (ghi nhận); audit"
+  },
+  {
+    "id": "DEP-03",
+    "description": "**Ngừng sử dụng** phòng ban: khi còn nhân viên đang làm; còn trưởng phòng; không còn ai",
+    "expected": "Còn dữ liệu tham chiếu → chặn hoặc yêu cầu xử lý trước; không **xóa** (đề cương 3.3); phòng ban ngừng không chọn được ở form khác nhưng lịch sử vẫn hiển thị"
+  },
+  {
+    "id": "DEP-04",
+    "description": "Có nút/đường **xóa** phòng ban (UI hoặc `DELETE` API) không?",
+    "expected": "Không xóa danh mục đang được tham chiếu"
+  },
+  {
+    "id": "DEP-05",
+    "description": "Tra cứu nhân sự theo phòng ban (đề cương 3.2): số lượng, danh sách",
+    "expected": "Khớp `SELECT` theo phân công đang mở"
+  },
+  {
+    "id": "DEP-06",
+    "description": "Phòng ban: tìm/lọc/phân trang/trạng thái",
+    "expected": "Đúng"
+  },
+  {
+    "id": "HED-01",
+    "description": "Bổ nhiệm trưởng phòng: ứng viên thuộc phòng đó; thuộc phòng khác; đã nghỉ việc; chọn ngày bắt đầu quá khứ/tương lai",
+    "expected": "Chỉ ứng viên hợp lệ; thông điệp rõ"
+  },
+  {
+    "id": "HED-02",
+    "description": "**Một thời điểm chỉ một trưởng phòng/phòng**: bổ nhiệm lần hai chồng thời gian",
+    "expected": "Chặn 409 hoặc thay thế có kiểm soát; lịch sử không chồng/đảo ngày"
+  },
+  {
+    "id": "HED-03",
+    "description": "Kết thúc nhiệm kỳ (`end`): ngày trước ngày bắt đầu; ngày tương lai; đã kết thúc rồi",
+    "expected": "Chặn trái quy tắc; lịch sử đúng"
+  },
+  {
+    "id": "HED-04",
+    "description": "Xem lịch sử trưởng phòng; danh sách ứng viên",
+    "expected": "Đúng thứ tự; đủ; không lộ NV ngoài scope"
+  },
+  {
+    "id": "HED-05",
+    "description": "Trưởng phòng thôi việc / bị điều chuyển sang phòng khác",
+    "expected": "Hệ thống chặn hoặc tự xử lý nhất quán (ghi hành vi)"
+  },
+  {
+    "id": "POS-01",
+    "description": "Thêm/sửa chức vụ: mã/tên/mô tả/trạng thái; mã trùng; trống; quá dài",
+    "expected": "Giống DEP-01"
+  },
+  {
+    "id": "POS-02",
+    "description": "Ngừng chức vụ đang được gán; xóa chức vụ đang được tham chiếu",
+    "expected": "Chặn (đề cương 4.3)"
+  },
+  {
+    "id": "POS-03",
+    "description": "Gán chức vụ cho nhân viên & tra cứu chức vụ hiện tại (4.2)",
+    "expected": "Hiển thị đúng; chức vụ trưởng phòng không gán tùy tiện qua điều chuyển"
+  },
+  {
+    "id": "POS-04",
+    "description": "**Quyền** trang Chức vụ: ADMIN/HR vào được?",
+    "expected": "Không bị 403 oan (lỗi quyền `position.view`… từng được ghi nhận)"
+  },
+  {
+    "id": "POS-05",
+    "description": "\"Chính sách phụ cấp liên quan chỉ áp dụng khi được phê duyệt\" (đề cương 4.2)",
+    "expected": "`CHƯA-ĐẶC-TẢ`/ghi nhận có/không có cơ chế này"
+  },
+  {
+    "id": "ASG-01",
+    "description": "Điều chuyển hợp lệ (phòng/chức vụ/ngày hiệu lực/lý do)",
+    "expected": "Tạo phân công mới, **đóng** phân công cũ, **giữ lịch sử**, có audit kèm lý do"
+  },
+  {
+    "id": "ASG-02",
+    "description": "Lý do: bắt buộc? để trống? quá dài?",
+    "expected": "Theo thiết kế (đề cương 8.2/FE-008: có lý do); ghi hành vi"
+  },
+  {
+    "id": "ASG-03",
+    "description": "Ngày hiệu lực: trước phân công hiện tại, chồng lấn, hôm nay, tương lai xa",
+    "expected": "Chặn trái quy tắc; không để hở/chồng khoảng"
+  },
+  {
+    "id": "ASG-04",
+    "description": "Đích là phòng ban/chức vụ **ngừng hoạt động**; trùng đích hiện tại (không thay đổi gì)",
+    "expected": "Chặn/cảnh báo"
+  },
+  {
+    "id": "ASG-05",
+    "description": "Nhân viên đã nghỉ; nhân viên là trưởng phòng; chuyển sang chức vụ trưởng phòng",
+    "expected": "Chặn đúng quy tắc"
+  },
+  {
+    "id": "ASG-06",
+    "description": "Mỗi nhân viên **tại một thời điểm chỉ có một phân công đang mở**",
+    "expected": "Kiểm bằng `SELECT` sau nhiều thao tác; không có 2 dòng mở"
+  },
+  {
+    "id": "ASG-07",
+    "description": "Hai người điều chuyển cùng một nhân viên đồng thời",
+    "expected": "Chỉ một thành công; không dữ liệu lai"
+  },
+  {
+    "id": "ASG-08",
+    "description": "Danh sách phân công: lọc theo nhân viên/phòng/khoảng ngày; phạm vi HR",
+    "expected": "Đúng; HR chỉ thấy trong scope"
+  },
+  {
+    "id": "ASG-09",
+    "description": "Lịch sử phân công trong hồ sơ nhân viên khớp trang Phân công",
+    "expected": "Khớp"
+  },
+  {
+    "id": "QUA-01",
+    "description": "CRUD danh mục trình độ; mã/tên trùng; trống; ngừng dùng; xóa khi đang được tham chiếu",
+    "expected": "Giống DEP; không xóa dữ liệu đang tham chiếu"
+  },
+  {
+    "id": "QUA-02",
+    "description": "Thêm bằng cấp cho nhân viên: cấp trình độ, chuyên ngành, cơ sở đào tạo, năm hoàn thành",
+    "expected": "Đủ trường theo đề cương 5.2; lưu đúng DB"
+  },
+  {
+    "id": "QUA-03",
+    "description": "Năm hoàn thành: tương lai, trước năm sinh, 0, âm, chữ, quá cũ",
+    "expected": "Chặn giá trị phi lý"
+  },
+  {
+    "id": "QUA-04",
+    "description": "Chuyên ngành/cơ sở đào tạo: trống/quá dài/ký tự đặc biệt",
+    "expected": "Quy tắc rõ; hiển thị đúng dấu"
+  },
+  {
+    "id": "QUA-05",
+    "description": "**Bằng chính**: đặt bằng thứ hai làm chính; gỡ bằng chính; nhân viên chưa có bằng nào",
+    "expected": "Chỉ một bằng chính/NV; bằng cũ bỏ cờ chính; hồ sơ nhân viên hiển thị đúng trình độ hiện tại. (Đề cương 5.3: chính vs nhiều bằng = `CHƯA-ĐẶC-TẢ`)"
+  },
+  {
+    "id": "QUA-06",
+    "description": "Sửa/gỡ bằng cấp",
+    "expected": "Có xác nhận; giữ dấu vết audit; không mất dữ liệu ngoài ý muốn"
+  },
+  {
+    "id": "QUA-07",
+    "description": "Trùng bằng cấp (cùng cấp+chuyên ngành+năm)",
+    "expected": "Ghi nhận cho/không cho"
+  },
+  {
+    "id": "QUA-08",
+    "description": "Chủ hồ sơ xem bằng của mình; người khác (EMPLOYEE khác, HR ngoài scope)",
+    "expected": "Đúng quyền (đề cương 5.3)"
+  },
+  {
+    "id": "QUA-09",
+    "description": "Chứng chỉ có **ngày cấp/ngày hết hạn**, đính kèm tệp",
+    "expected": "`THIẾU-CHUẨN` nếu chưa có (đề cương 5.2 chỉ yêu cầu tên, chuyên ngành, cơ sở, năm)"
+  },
+  {
+    "id": "QUA-10",
+    "description": "Hai trang `/qualifications` và `/certificates`",
+    "expected": "Phân biệt rõ chức năng, không trùng lặp gây nhầm; dữ liệu nhất quán giữa hai trang"
+  },
+  {
+    "id": "LTY-01",
+    "description": "CRUD loại nghỉ; mã trùng; ngừng dùng; loại ngừng dùng không chọn được khi nộp đơn",
+    "expected": "Đúng"
+  },
+  {
+    "id": "LTY-02",
+    "description": "Chính sách loại nghỉ: **\"có lương\"** và **\"trừ quỹ phép\"** là hai cờ độc lập; chưa cấu hình thì sao",
+    "expected": "Lưu/đọc đúng; chưa cấu hình thì không tự suy (đề cương 9.3: không mặc định mọi ngày nghỉ hưởng lương)"
+  },
+  {
+    "id": "ENT-01",
+    "description": "Cấp quỹ phép: số giờ/ngày ≤ 0, rất lớn, thập phân; kỳ hiệu lực ngược/trùng; nhân viên đã nghỉ",
+    "expected": "Chặn phi lý; hiển thị **cấp / đã dùng / còn lại** đúng"
+  },
+  {
+    "id": "ENT-02",
+    "description": "Sửa quỹ: hạ xuống dưới số đã dùng; xóa quỹ đã phát sinh đơn",
+    "expected": "Chặn; không âm quỹ"
+  },
+  {
+    "id": "ENT-03",
+    "description": "Quỹ phép của nhân viên khác (đổi ID); phạm vi HR",
+    "expected": "Đúng quyền"
+  },
+  {
+    "id": "LRQ-01",
+    "description": "Nhân viên (qua API với token EMPLOYEE) nộp đơn nghỉ phép: loại, từ ngày–đến ngày, lý do",
+    "expected": "Tạo đơn `CHO_DUYET`; lưu người nộp, thời điểm; xem được ở `/mine`"
+  },
+  {
+    "id": "LRQ-02",
+    "description": "Biên ngày: ngày quá khứ xa, hôm nay, khoảng ngày ngược, quá dài, **trùng đơn khác**, ngày không có lịch làm",
+    "expected": "Chặn trái quy tắc; thông điệp rõ"
+  },
+  {
+    "id": "LRQ-03",
+    "description": "Vượt quỹ phép còn lại",
+    "expected": "Chặn (hoặc ghi nhận hành vi nếu loại không trừ quỹ)"
+  },
+  {
+    "id": "LRQ-04",
+    "description": "Loại nghỉ ngừng dùng; nhân viên đã nghỉ việc nộp đơn",
+    "expected": "Chặn"
+  },
+  {
+    "id": "LRQ-05",
+    "description": "**Duyệt đơn**: ai được duyệt; lưu người xử lý + thời điểm; quỹ phép bị trừ đúng số giờ; đơn → `DA_DUYET`",
+    "expected": "Đúng (đề cương 9.2); duyệt **lần hai** → 409; quỹ không âm"
+  },
+  {
+    "id": "LRQ-06",
+    "description": "**Từ chối**: bắt buộc lý do; lưu lý do, người, thời điểm",
+    "expected": "Đúng; quỹ không đổi"
+  },
+  {
+    "id": "LRQ-07",
+    "description": "**Rút đơn** (`withdraw`) khi chờ duyệt / đã duyệt / đã từ chối",
+    "expected": "Hợp lệ theo trạng thái; hoàn quỹ đúng; trạng thái không hợp lệ bị chặn"
+  },
+  {
+    "id": "LRQ-08",
+    "description": "Tự duyệt đơn của chính mình (HR/ADMIN có đơn riêng)",
+    "expected": "Bị chặn"
+  },
+  {
+    "id": "LRQ-09",
+    "description": "**Đồng thời**: hai HR cùng duyệt một đơn; hai đơn cùng ăn vào một quỹ còn ít",
+    "expected": "Không duyệt kép, không trừ quá quỹ"
+  },
+  {
+    "id": "LRQ-10",
+    "description": "Danh sách đơn: lọc loại/trạng thái/nhân viên/khoảng ngày; HR theo scope; EMPLOYEE chỉ `/mine`",
+    "expected": "Đúng; không rò đơn người khác"
+  },
+  {
+    "id": "LRQ-11",
+    "description": "Đơn đã duyệt có **phản ánh** vào lịch/công (đề cương 9.3 \"đối chiếu với lịch và công\")",
+    "expected": "Ghi nhận hành vi; sai lệch rõ ràng → lỗi tích hợp"
+  },
+  {
+    "id": "LRQ-12",
+    "description": "Số dư phép: cộng dồn/chuyển năm/hết hạn",
+    "expected": "`THIẾU-CHUẨN` nếu chưa có"
+  },
+  {
+    "id": "LRQ-13",
+    "description": "Nộp đơn bằng ID loại nghỉ/nhân viên **không tồn tại** hoặc đơn khác loại (đổi ID đơn OT/đổi lịch) gọi vào API đơn phép",
+    "expected": "400/404 sạch, không 500"
+  },
+  {
+    "id": "RES-01",
+    "description": "Nộp đơn nghỉ việc: ngày hiệu lực quá khứ/hôm nay/tương lai; lý do; nộp nhiều đơn cho cùng nhân viên",
+    "expected": "Hợp lệ chuyển `CHO_DUYET`; chặn ngày phi lý và đơn trùng"
+  },
+  {
+    "id": "RES-02",
+    "description": "Duyệt đơn nghỉ việc **ngày hiệu lực tương lai**",
+    "expected": "**Không** đổi trạng thái nhân viên ngay (đề cương 9.3: chỉ cập nhật *từ ngày có hiệu lực*)"
+  },
+  {
+    "id": "RES-03",
+    "description": "`execute-due`: chạy khi có đơn đến hạn; chạy lặp; có đơn bị chặn",
+    "expected": "Thực thi đúng; **chạy lặp không thực thi kép**; đơn bị chặn nêu lý do rõ"
+  },
+  {
+    "id": "RES-04",
+    "description": "Sau thực thi: nhân viên → `DA_NGHI` + ngày nghỉ; **tài khoản bị vô hiệu**; phân công đóng; hồ sơ/hợp đồng/công/đơn/lương lịch sử còn nguyên",
+    "expected": "Đúng, kiểm bằng `SELECT`"
+  },
+  {
+    "id": "RES-05",
+    "description": "Nhân viên là trưởng phòng; còn đơn nghỉ phép chờ; còn lịch tương lai",
+    "expected": "Chặn hoặc xử lý nhất quán (ghi hành vi)"
+  },
+  {
+    "id": "RES-06",
+    "description": "Từ chối/rút đơn nghỉ việc; duyệt đơn đã từ chối",
+    "expected": "Máy trạng thái đúng; lý do từ chối bắt buộc"
+  },
+  {
+    "id": "RES-07",
+    "description": "Duyệt thiếu ngày hiệu lực (qua API)",
+    "expected": "Chặn"
+  },
+  {
+    "id": "RES-08",
+    "description": "Rút đơn **sau khi đã thực thi** nghỉ việc",
+    "expected": "Chặn"
+  },
+  {
+    "id": "RES-09",
+    "description": "Tái tuyển nhân viên đã nghỉ rồi nộp đơn mới",
+    "expected": "Luồng hoạt động; không dính dữ liệu cũ sai"
+  },
+  {
+    "id": "RES-10",
+    "description": "Trang `/requests` hiển thị chung hai loại đơn: nhãn loại, lọc loại, nút thao tác đúng theo loại/trạng thái",
+    "expected": "Không hiện nút sai ngữ cảnh"
+  },
+  {
+    "id": "AUD-01",
+    "description": "Sau **mỗi** thao tác ghi ở §5.2–5.7 (tạo/sửa/ngừng/duyệt/từ chối/điều chuyển/thôi việc/tái tuyển)",
+    "expected": "Có dòng audit: **ai, khi nào, đối tượng, hành động, trước–sau, lý do**; đúng người đăng nhập (không giả được từ client)"
+  },
+  {
+    "id": "AUD-02",
+    "description": "Lọc theo bảng/bản ghi/tài khoản/khoảng ngày (mốc kết thúc loại trừ), phân trang, sắp xếp mới → cũ",
+    "expected": "Đúng; số bản ghi khớp `SELECT`"
+  },
+  {
+    "id": "AUD-03",
+    "description": "Giao diện so sánh trước–sau",
+    "expected": "Dễ đọc, không đổ JSON thô; trường ngày/trạng thái hiển thị tiếng Việt"
+  },
+  {
+    "id": "AUD-04",
+    "description": "Dữ liệu riêng tư (CCCD, địa chỉ) trong snapshot với người không phải chủ; mật khẩu/token",
+    "expected": "**Không lộ**"
+  },
+  {
+    "id": "AUD-05",
+    "description": "Thao tác thất bại giữa chừng",
+    "expected": "Không để lại audit \"ma\" mô tả thao tác chưa xảy ra (rollback cùng nghiệp vụ)"
+  },
+  {
+    "id": "AUD-06",
+    "description": "Audit bất biến: có API/UI sửa-xóa audit không; thử `UPDATE/DELETE` qua API",
+    "expected": "Không có đường sửa/xóa"
+  },
+  {
+    "id": "AUD-07",
+    "description": "Quyền: EMPLOYEE, HR ngoài scope xem audit",
+    "expected": "Bị chặn/lọc đúng"
+  },
+  {
+    "id": "AUD-08",
+    "description": "Nhiều endpoint audit cho cùng một bản ghi",
+    "expected": "Kết quả và quyền nhất quán"
+  },
+  {
+    "id": "AUD-09",
+    "description": "Trường **lý do** ở các thao tác cần lý do (điều chuyển, từ chối, thôi việc, rút đơn…)",
+    "expected": "Lý do lưu và hiển thị đúng; thao tác bắt buộc lý do thì chặn khi trống"
+  },
+  {
+    "id": "INT-01",
+    "description": "Dữ liệu một đối tượng ở nhiều màn hình (danh sách, chi tiết, phân công, audit, tổng quan, báo cáo)",
+    "expected": "**Nhất quán tuyệt đối**; không lệch số"
+  },
+  {
+    "id": "INT-02",
+    "description": "Tên trạng thái/nhãn tiếng Việt trên UI ↔ mã trong DB/API (`DANG_LAM`, `DA_NGHI`, `CHO_DUYET`, `DA_DUYET`, `TU_CHOI`…)",
+    "expected": "Đúng ánh xạ, không hiện mã thô"
+  },
+  {
+    "id": "INT-03",
+    "description": "Bộ test Java sẵn có",
+    "expected": "Ghi số liệu thật (pass/fail/error/skip) và phân loại lỗi (sản phẩm/fixture/môi trường); không sửa test"
+  },
+  {
+    "id": "INT-04",
+    "description": "Hiệu năng cảm nhận: mở từng trang Tier 1, thao tác lọc/lưu",
+    "expected": "Ghi trang nào chậm (> 3 giây)"
+  },
+  {
+    "id": "INT-05",
+    "description": "Khởi động từ máy sạch theo README",
+    "expected": "Ghi mọi bước README sai/thiếu (đường dẫn, lệnh, file không tồn tại)"
+  },
+  {
+    "id": "BEG-01",
+    "description": "**Quét xác thực**: gọi từng endpoint không kèm token, token sai chữ ký, token hết hạn, token bị sửa payload (đổi role/employeeId)",
+    "expected": "401. Chỉ `login` và health là công khai"
+  },
+  {
+    "id": "BEG-02",
+    "description": "**Quét quyền**: mỗi endpoint × {EMPLOYEE, HR trong scope, HR ngoài scope, ADMIN}",
+    "expected": "Khớp ma trận kỳ vọng; endpoint nào EMPLOYEE gọi được mà không nên = S1/S2"
+  },
+  {
+    "id": "BEG-03",
+    "description": "**IDOR**: đổi ID nhân viên/đơn/quỹ phép/bằng cấp trên URL và body bằng token người khác",
+    "expected": "403/404, không rò dữ liệu; tổng số bản ghi trong phân trang không lộ dữ liệu ngoài scope"
+  },
+  {
+    "id": "BEG-04",
+    "description": "**Mass assignment**: gửi thêm trường không nên chấp nhận (`role`, `isActive`, `status`, `employeeId`, `createdBy`, `performedBy`, `approvedBy`)",
+    "expected": "Bị bỏ qua; danh tính người thao tác luôn lấy từ JWT"
+  },
+  {
+    "id": "BEG-05",
+    "description": "**Validation song song với UI**: từng trường bắt buộc/định dạng/độ dài/miền giá trị gửi sai trực tiếp",
+    "expected": "400 kèm thông điệp tiếng Việt nêu trường sai; không 500; không lưu dữ liệu rác"
+  },
+  {
+    "id": "BEG-06",
+    "description": "Kiểu dữ liệu sai (chuỗi cho số, số cho ngày), `null`, trường thiếu, JSON hỏng, body rỗng, `Content-Type` sai, payload rất lớn",
+    "expected": "400/415/413 gọn, không 500, không lộ stack trace"
+  },
+  {
+    "id": "BEG-07",
+    "description": "Phân trang & sắp xếp: `page=-1`, `size=0`, `size=100000`, `sort=` trường không tồn tại/chứa ký tự lạ",
+    "expected": "400 hoặc giá trị mặc định an toàn; không 500; có giới hạn trên của `size`"
+  },
+  {
+    "id": "BEG-08",
+    "description": "**Injection**: SQL (`' OR '1'='1`), ký tự LIKE (`%`, `_`), NoSQL, header/log injection trong tìm kiếm, lọc, sắp xếp, mọi chuỗi",
+    "expected": "Không lỗi, không rò dữ liệu, không bị diễn giải"
+  },
+  {
+    "id": "BEG-09",
+    "description": "**Trùng khóa**: tạo cùng mã/số 5–10 lần song song",
+    "expected": "Đúng 1 thành công; còn lại 409; không 500"
+  },
+  {
+    "id": "BEG-10",
+    "description": "**Đồng thời**: hai phiên sửa cùng bản ghi (rowversion), hai người duyệt cùng đơn, điều chuyển song song",
+    "expected": "Không ghi đè mù, không duyệt kép, không trạng thái lai"
+  },
+  {
+    "id": "BEG-11",
+    "description": "**Giao dịch**: ép lỗi giữa thao tác nhiều bước (điều chuyển = đóng cũ + mở mới + audit; duyệt đơn = đổi trạng thái + trừ quỹ + audit; thôi việc)",
+    "expected": "Rollback toàn bộ; không còn dữ liệu dở dang/mồ côi"
+  },
+  {
+    "id": "BEG-12",
+    "description": "**Toàn vẹn tham chiếu**: xóa/ngừng đối tượng đang được tham chiếu (phòng ban, chức vụ, trình độ, loại nghỉ, nhân viên)",
+    "expected": "Chặn hoặc ngừng dùng có kiểm soát; không xóa cứng dữ liệu lịch sử (đề cương 3.3, 4.3, 2.3)"
+  },
+  {
+    "id": "BEG-13",
+    "description": "**Ngày/múi giờ**: gửi ngày ở dạng ISO, có múi giờ, sát 00:00 UTC và UTC+7; cuối tháng/năm; 29/02",
+    "expected": "Ngày lưu và trả về không lệch"
+  },
+  {
+    "id": "BEG-14",
+    "description": "Thông điệp lỗi: cùng một lỗi nghiệp vụ ở nhiều API",
+    "expected": "Cùng mã & cách diễn đạt; tiếng Việt; không lộ tên bảng/câu SQL/đường dẫn nội bộ"
+  },
+  {
+    "id": "BEG-15",
+    "description": "Header & cấu hình: CORS, header bảo mật, HTTP method không hỗ trợ, `OPTIONS`",
+    "expected": "Không mở toàn bộ origin không cần thiết; 405 đúng"
+  },
+  {
+    "id": "BEG-16",
+    "description": "Nhật ký/log backend khi chạy thử",
+    "expected": "Không in mật khẩu/JWT/CCCD; ghi nhận nếu bật `show-sql` trên môi trường thật"
+  },
+  {
+    "id": "BEG-17",
+    "description": "**Kiểm tra bất biến dữ liệu bằng `SELECT`** sau toàn bộ phiên test (tự viết truy vấn từ schema)",
+    "expected": "Không vi phạm: (a) nhân viên có >1 phân công đang mở; (b) phòng ban có >1 trưởng phòng tại cùng thời điểm; (c) khoảng hiệu lực chồng lấn/hở; (d) quỹ phép âm hoặc tổng phân bổ ≠ giờ nghỉ; (e) đơn đã duyệt/từ chối thiếu người xử lý–thời điểm; (f) nhân viên `DA_NGHI` còn tài khoản hoạt động; (g) mã trùng sai hoa/thường; (h) bản ghi tham chiếu tới bản ghi không còn"
+  },
+  {
+    "id": "BEG-18",
+    "description": "Lệch giữa **tài liệu CSDL** (`Giai_thich_CSDL_HRM_Center.docx`, 33 bảng) và **schema/code thực tế**",
+    "expected": "Liệt kê bảng/cột/ràng buộc/mô tả không khớp"
+  },
+  {
+    "id": "SM-01",
+    "description": "Hợp đồng & loại hợp đồng (`/contracts`, `/contract-types`)",
+    "expected": "Mở trang; tạo 1 hợp đồng cho NV `QA_`; tạo hợp đồng **chồng thời hạn** bị chặn; gia hạn; chấm dứt; hợp đồng còn tra cứu được sau khi NV nghỉ (đề cương 6.2)"
+  },
+  {
+    "id": "SM-02",
+    "description": "Ca & lịch làm việc (`/work-shifts`, `/schedules`)",
+    "expected": "Tạo ca; xếp lịch cho NV; **lịch chồng lấn** của cùng NV bị chặn (7.2); NV xem lịch mình (API); lịch **không tự tạo công/tiền công** (7.3)"
+  },
+  {
+    "id": "SM-03",
+    "description": "Chấm công & tổng hợp (`/attendance`, `/attendance/summary`)",
+    "expected": "NV check-in/out (API); HR xem, xác nhận, sửa có lý do (8.2); danh sách bất thường; tổng hợp công chỉ tính công đã xác nhận"
+  },
+  {
+    "id": "SM-04",
+    "description": "Tăng ca (`/overtime`)",
+    "expected": "Đăng ký (API); trùng khoảng bị chặn; duyệt/từ chối; trạng thái `CHO_DUYET/DA_DUYET/TU_CHOI`; tự duyệt bị chặn"
+  },
+  {
+    "id": "SM-05",
+    "description": "Phụ cấp (`/allowances`)",
+    "expected": "Ghi nhận giao diện đã có hay là placeholder; API: tạo loại + gán; **trùng khoản** bị chặn (11.3)"
+  },
+  {
+    "id": "SM-06",
+    "description": "Khen thưởng/kỷ luật (`/decisions`)",
+    "expected": "Ghi nhận giao diện; API: tạo, duyệt/từ chối; tự duyệt quyết định của mình bị chặn"
+  },
+  {
+    "id": "SM-07",
+    "description": "Tiền lương (`/payroll`)",
+    "expected": "Ghi nhận giao diện; API: kỳ lương → draft → tính → chốt → công bố; **bảng đã chốt không sửa/tính lại** (13.3); **EMPLOYEE gọi API lương quản trị phải bị 403 (nếu lọt = S1)**"
+  },
+  {
+    "id": "SM-08",
+    "description": "Phiếu lương (`/payslips`)",
+    "expected": "NV chỉ xem phiếu **của mình** và **đã công bố**, kể cả gọi thẳng API/tải tệp (14.2); đổi ID phiếu → 403/404; nội dung phiếu khớp bảng lương"
+  },
+  {
+    "id": "SM-09",
+    "description": "Báo cáo (`/reports`)",
+    "expected": "Ghi nhận giao diện; các API báo cáo trả dữ liệu; số liệu nhân sự khớp `SELECT`; xuất file mở được; EMPLOYEE bị chặn (15.3)"
+  },
+  {
+    "id": "SM-10",
+    "description": "Quản lý tài khoản (`/accounts`)",
+    "expected": "Ghi nhận giao diện; API đặt lại mật khẩu/khóa-mở tài khoản/quyền HR theo phòng; tài khoản bị khóa không truy cập được (1.2)"
+  },
+  {
+    "id": "SM-11",
+    "description": "Quét nhanh toàn hệ thống",
+    "expected": "Mở **toàn bộ route** (đếm lại từ `frontend/src/app/app.routes.ts`; báo cáo cũ ghi 26) ở 2 kích thước (1440, 390): ghi route nào lỗi/trắng/lỗi Console/là placeholder; EMPLOYEE gọi mẫu 20 API quản trị phải 403"
+  }
+]

@@ -12,13 +12,13 @@
 </div>
 
 @if (message) {
-  <div class="alert alert-success" role="status">
+  <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">
     {{(message) | translate}}
   </div>
 }
 
 @if (error) {
-  <div class="alert alert-danger" role="alert">
+  <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">
     {{(error) | translate}}
   </div>
 }
@@ -27,7 +27,7 @@
   <section class="surface mb-4">
     <h2>{{(editing ? 'Sửa loại hợp đồng' : 'Thêm loại hợp đồng') | translate}}</h2>
 
-    <form #typeForm="ngForm"
+    <form [hrmEditForm]="!!editing" #typeForm="ngForm"
           class="row g-3"
           (ngSubmit)="save()">
 
@@ -86,7 +86,7 @@
         </div>
       }
 
-      <div class="col-12"><label for="type-reason" class="form-label">Lý do</label><input id="type-reason" name="reason" class="form-control" maxlength="500" required [(ngModel)]="form.reason" [disabled]="saving"></div>
+      <div class="col-12"><label for="type-reason" class="form-label">Lý do</label><input data-hrm-audit id="type-reason" name="reason" class="form-control" maxlength="500" required [(ngModel)]="form.reason" [disabled]="saving"></div>
       <div class="col-12 d-flex gap-2">
         <button type="submit"
                 class="btn btn-primary"

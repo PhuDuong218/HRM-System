@@ -1,0 +1,9 @@
+<hrm-action-dialog />
+<!-- Router chọn component cần hiển thị theo URL. -->
+<router-outlet />
+<hrm-confirmation/>
+@if (auth.sessionNotice(); as sessionNotice) {
+  @if (currentUrl().split('?')[0].split('#')[0] !== '/login') {
+    <app-session-expired-dialog [message]="sessionNotice" (exit)="auth.exitExpiredSession()" />
+  }
+}

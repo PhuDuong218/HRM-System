@@ -67,6 +67,13 @@
 .permission-summary span { color: #738397; }
 .scope-confirm { padding:12px; border:1px solid #e7d3a1; border-radius:8px; background:#fff8e9; color:#6c501d; font-size:13px; line-height:1.5; }
 .scope-confirm p { margin:0 0 10px; }
+.scope-options{display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr));gap:10px;margin:14px 0}
+.scope-options .permission-option{display:flex;align-items:flex-start;gap:10px;margin:0;padding:12px;border:1px solid var(--hrm-border-color,#d8e2ec);border-radius:9px;background:var(--hrm-surface,#fff);color:var(--hrm-text,#24415f);cursor:pointer;min-width:0;line-height:1.5}
+.scope-options .permission-option.is-selected{border-color:#004581;background:var(--hrm-primary-soft,#eaf3fc)}
+.scope-options .permission-option:has(input:disabled){opacity:.6;cursor:not-allowed}
+.scope-options .permission-option:focus-within{outline:2px solid #004581;outline-offset:2px}
+.scope-options input{flex:0 0 18px;width:18px;height:18px;margin:2px 0 0;accent-color:#004581}
+.scope-options span{min-width:0;overflow-wrap:anywhere}.scope-options small{display:block}
 :host-context([data-bs-theme='dark']) .scope-confirm { border-color:#78643e; background:#463a25; color:#f3d59a; }
 .detail-grid + .detail-label { margin-top: 22px; }
 :host-context([data-bs-theme='dark']) .section-nav button { background: #1c2a3c; border-color: #506580; color: #c2d0e2; }

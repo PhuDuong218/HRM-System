@@ -1,3 +1,5 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import { Component, DestroyRef, EventEmitter, Input, OnChanges, Output, inject } from "@angular/core";
 import { HttpErrorResponse } from "@angular/common/http";
 import { takeUntilDestroyed } from "@angular/core/rxjs-interop";
@@ -12,7 +14,7 @@ type WarningTab = "expiring" | "without";
 @Component({
   selector: "app-contract-warnings",
   standalone: true,
-  imports: [Pagination],
+  imports:[SearchAssistDirective,HrmNotice,Pagination],
   templateUrl: "./contract-warnings.html",
   styleUrl: "./contract-warnings.css",
 })

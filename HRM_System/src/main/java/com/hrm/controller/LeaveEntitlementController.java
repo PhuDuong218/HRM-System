@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.*;
 @RestController
 @RequestMapping("/leave-entitlements")
 public class LeaveEntitlementController {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService scope;
     private final LeaveEntitlementService service;
     private final PersonnelAccessService access;
     private final PersonnelCatalogService writes;
@@ -22,7 +23,7 @@ public class LeaveEntitlementController {
         @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
         @RequestParam(required=false) @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
         @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){access.manager(p);return service.getAllEntitlements(employeeId,leaveTypeId,fromDate,toDate,page,size);}
-    @GetMapping("/employee/{employeeId}") public List<LeaveEntitlementDTO> getByEmployeeId(@PathVariable Long employeeId,Principal p){access.ownerOrManager(p,employeeId);return service.getByEmployeeId(employeeId);}
+    @GetMapping("/employee/{employeeId}") public List<LeaveEntitlementDTO> getByEmployeeId(@PathVariable Long employeeId,Principal p){access.ownerOrManager(p,employeeId);scope.employee(employeeId,true);return service.getByEmployeeId(employeeId);}
     @GetMapping("/{id}") public LeaveEntitlementDTO getById(@PathVariable Long id,Principal p){access.actor(p);var result=service.getById(id);access.ownerOrManager(p,result.employeeId());return result;}
     @PostMapping @ResponseStatus(HttpStatus.CREATED)
     public LeaveEntitlementDTO addLeaveEntitlement(@Valid @RequestBody LeaveEntitlementRequestDTO request,Principal p){return writes.write(p,"leave_entitlements",null,"LEAVE_ENTITLEMENT_CREATE",()->service.addLeaveEntitlement(request),LeaveEntitlementDTO::entitlementId,request.getReason());}

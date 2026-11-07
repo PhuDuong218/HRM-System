@@ -1,0 +1,10 @@
+{
+  "tag": "QAFIX-mw4ocgtr",
+  "results": [
+    {
+      "name": "execution",
+      "pass": false,
+      "error": "A verified full database backup is required before live writes."
+    }
+  ]
+}

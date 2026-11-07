@@ -1,0 +1,17 @@
+{
+  "note": "Syntax only; proposals not applied or integration-tested",
+  "results": [
+    {
+      "file": "frontend/src/app/pages/payroll/payroll.ts",
+      "syntaxErrors": []
+    },
+    {
+      "file": "frontend/src/app/services/language.service.ts",
+      "syntaxErrors": []
+    },
+    {
+      "file": "payroll.html",
+      "syntaxErrors": []
+    }
+  ]
+}

@@ -1,3 +1,7 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
@@ -12,8 +16,10 @@ import { Observable, finalize } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDetail, OtFilter, OtBreak, OtWorkflow, OtRegistration, OtActual, OtWindow } from './overtime-api.service';
 
-@Component({selector:'app-overtime',standalone:true,imports:[Breadcrumb,Pagination,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
+@Component({selector:'app-overtime',standalone:true,imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
 export class OvertimePage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
     readonly clockTiming = clockTiming;
   private readonly api=inject(OvertimeApiService);private readonly destroyRef=inject(DestroyRef);
   private readonly host=inject(ElementRef) as ElementRef<HTMLElement>;
@@ -123,27 +129,27 @@ export class OvertimePage implements OnInit {
       for(let j=0;j<i;j++){const other=this.breaks[j];if(begin<Date.parse(other.breakEnd)&&finish>Date.parse(other.breakStart))return this.invalid('Khoảng nghỉ '+(i+1)+' chồng lấn khoảng nghỉ '+(j+1)+'.','breakStart'+i);}
     }return true;
   }
-  save(){if(this.saving||this.mode==='create'&&!this.context?.canRegister)return;const r=this.detail?.row;if(['create','edit','actual','amend'].includes(this.mode)&&!this.validTimes())return;
+  async save(){if(this.saving||this.mode==='create'&&!this.context?.canRegister)return;const r=this.detail?.row;if(['create','edit','actual','amend'].includes(this.mode)&&!this.validTimes())return;
     if(this.workContent.length>2000){this.invalid('Nội dung công việc tối đa 2000 ký tự.','otWork');return;}
     if(!this.reason.trim()||this.reason.length>1000){this.invalid('Lý do bắt buộc, tối đa 1000 ký tự.','otReason');return;}
     if(['create','edit','actual','amend'].includes(this.mode)){
       this.actionError='';
-      if(!window.confirm(this.actualMode?'Lưu giờ OT thực tế đã xác minh? Giờ đề nghị sẽ không được tự dùng thay thế.':this.mode==='create'?'Gửi đơn OT để xét duyệt?':'Lưu thay đổi đơn OT chờ duyệt?'))return;
+      if(!(await this.actionDialogInPage.confirm(this.actualMode?'Lưu giờ OT thực tế đã xác minh? Giờ đề nghị sẽ không được tự dùng thay thế.':this.mode==='create'?'Gửi đơn OT để xét duyệt?':'Lưu thay đổi đơn OT chờ duyệt?')))return;
       if(this.actualMode&&r){const data:OtActual={actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.breakTotal(),breaks:this.breaks.map(b=>({...b})),reason:this.reason.trim()};this.mutate(this.api.action(r,this.mode==='amend'?'amend-actual':'actual',this.reason.trim(),data),'Đã ghi nhận giờ thực tế.',r.ot.overtimeId);}
       else{const body:OtRegistration={requestedStart:this.start,requestedEnd:this.end,reason:this.reason.trim(),workContent:this.workContent.trim(),breaks:this.breaks.map(b=>({...b}))};if(this.mode==='create')this.mutate(this.api.register(body),'Đã gửi đơn OT, chờ duyệt.');else if(r)this.mutate(this.api.edit(r,body),'Đã cập nhật đơn OT.',r.ot.overtimeId);}return;
     }
     if(!r)return;
     if(this.mode==='overflow'&&(!this.windows.length||this.windows.some(w=>!w.workDate||!w.start||!w.end||w.end<=w.start))){this.actionError='Thêm ít nhất một khoảng vượt theo từng ngày thực tế.';return;}
-    if(!window.confirm(this.mode==='cancelRequest'?'Gửi yêu cầu hủy? Đơn gốc vẫn đã duyệt trong khi chờ quyết định.':this.mode==='overflow'?'Gửi đề nghị xem xét phần OT vượt?':'Xác nhận thao tác với đơn OT này?'))return;
+    if(!(await this.actionDialogInPage.confirm(this.mode==='cancelRequest'?'Gửi yêu cầu hủy? Đơn gốc vẫn đã duyệt trong khi chờ quyết định.':this.mode==='overflow'?'Gửi đề nghị xem xét phần OT vượt?':'Xác nhận thao tác với đơn OT này?')))return;
     if(this.mode==='cancelRequest'||this.mode==='overflow')this.mutate(this.api.submitWorkflow(r,this.mode==='overflow'?'overflow':'cancel',this.reason.trim(),this.windows),'Đã gửi yêu cầu riêng, chưa thay đổi hiệu lực đơn gốc.',r.ot.overtimeId);
     else if(['reject','cancel','reopen'].includes(this.mode))this.mutate(this.api.action(r,this.mode,this.reason.trim()),this.mode==='reject'?'Đã từ chối đơn OT.':this.mode==='cancel'?'Đã hủy đơn chờ duyệt.':'Đã mở lại xác nhận để đối soát.',r.ot.overtimeId);
   }
-  approve(){const r=this.detail?.row;if(!r?.actions.approve||this.saving)return;if(window.confirm(`Duyệt OT của ${r.fullName}? Backend sẽ kiểm tra chồng lấn và giới hạn 12 giờ/ngày.`))this.mutate(this.api.action(r,'approve',''),'Đã duyệt đơn OT. Chưa xác nhận giờ thực tế.',r.ot.overtimeId);}
-  confirmActual(){const r=this.detail?.row;if(!r?.actions.confirm||this.detail?.reconciliationIssue||this.saving)return;if(window.confirm(`Xác nhận giờ OT thực tế của ${r.fullName}? Chỉ phút hợp lệ được công nhận.`))this.mutate(this.api.action(r,'confirm',''),'Đã xác nhận giờ OT thực tế.',r.ot.overtimeId);}
+  async approve(){const r=this.detail?.row;if(!r?.actions.approve||this.saving)return;if((await this.actionDialogInPage.confirm(`Duyệt OT của ${r.fullName}? Backend sẽ kiểm tra chồng lấn và giới hạn 12 giờ/ngày.`)))this.mutate(this.api.action(r,'approve',''),'Đã duyệt đơn OT. Chưa xác nhận giờ thực tế.',r.ot.overtimeId);}
+  async confirmActual(){const r=this.detail?.row;if(!r?.actions.confirm||this.detail?.reconciliationIssue||this.saving)return;if((await this.actionDialogInPage.confirm(`Xác nhận giờ OT thực tế của ${r.fullName}? Chỉ phút hợp lệ được công nhận.`)))this.mutate(this.api.action(r,'confirm',''),'Đã xác nhận giờ OT thực tế.',r.ot.overtimeId);}
   private mutate(request:Observable<unknown>,message:string,id?:number){this.saving=true;this.actionError='';this.feedback='';request.pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({next:()=>{this.saving=false;this.feedback=message;this.mode='view';if(this.tab==='other'){this.loadInbox(this.page);this.selectedWorkflow=null;}else this.load();if(id)this.viewId(id);else this.closePanel();},error:e=>this.actionError=this.api.message(e)});}
   searchInbox(){if(this.busy||!this.range())return;this.appliedInbox={mine:this.inboxMine,from:this.from,to:this.to,type:this.workflowType,status:this.workflowStatus};this.closePanel();this.loadInbox(0);}
   loadInbox(page=this.page){if(this.busy||!this.appliedInbox)return;this.loading=true;this.error='';const f=this.appliedInbox;this.api.inbox(f.mine,f.from,f.to,f.type,f.status,page).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.loading=false)).subscribe({next:r=>{this.workflows=r.items;this.page=r.page;this.pages=r.totalPages;this.total=r.totalElements;},error:e=>{this.workflows=[];this.error=this.api.message(e);}});}
   viewWorkflow(w:OtWorkflow){if(this.saving)return;this.selectedWorkflow=w;this.selectedEmployee=null;this.decisionReason='';this.accepted=w.intervals.map(i=>({intervalId:i.interval_id,approvedStart:i.requested_start,approvedEnd:i.requested_end,selected:true}));this.viewId(w.overtimeId);}
-  decide(approve:boolean){const w=this.selectedWorkflow;if(!w?.canDecide||this.saving)return;if(!approve&&!this.decisionReason.trim()){this.actionError='Từ chối bắt buộc lý do.';return;}const accepted=this.accepted.filter(i=>i.selected).map(({selected,...i})=>i);if(approve&&w.type==='OT_VUOT'&&!accepted.length){this.actionError='Chọn ít nhất một khoảng vượt được duyệt.';return;}if(!window.confirm(approve?'Duyệt yêu cầu này theo thẩm quyền?':'Từ chối yêu cầu? Đơn gốc được giữ nguyên.'))return;this.mutate(this.api.decide(w,approve,this.decisionReason.trim(),accepted),approve?'Đã duyệt yêu cầu.':'Đã từ chối yêu cầu.');}
+  async decide(approve:boolean){const w=this.selectedWorkflow;if(!w?.canDecide||this.saving)return;if(!approve&&!this.decisionReason.trim()){this.actionError='Từ chối bắt buộc lý do.';return;}const accepted=this.accepted.filter(i=>i.selected).map(({selected,...i})=>i);if(approve&&w.type==='OT_VUOT'&&!accepted.length){this.actionError='Chọn ít nhất một khoảng vượt được duyệt.';return;}if(!(await this.actionDialogInPage.confirm(approve?'Duyệt yêu cầu này theo thẩm quyền?':'Từ chối yêu cầu? Đơn gốc được giữ nguyên.')))return;this.mutate(this.api.decide(w,approve,this.decisionReason.trim(),accepted),approve?'Đã duyệt yêu cầu.':'Đã từ chối yêu cầu.');}
 }
 

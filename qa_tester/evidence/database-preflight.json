@@ -1,0 +1,167 @@
+{
+  "connected": true,
+  "results": [
+    [
+      {
+        "database_name": "hrm_test"
+      }
+    ],
+    [
+      {
+        "tables_count": 50
+      }
+    ],
+    [
+      {
+        "name": "accounts"
+      },
+      {
+        "name": "allowance_types"
+      },
+      {
+        "name": "attendance_breaks"
+      },
+      {
+        "name": "attendance_correction_request_details"
+      },
+      {
+        "name": "attendance_records"
+      },
+      {
+        "name": "audit_logs"
+      },
+      {
+        "name": "contract_salary_terms"
+      },
+      {
+        "name": "contract_types"
+      },
+      {
+        "name": "contracts"
+      },
+      {
+        "name": "departments"
+      },
+      {
+        "name": "employee_allowances"
+      },
+      {
+        "name": "employee_assignments"
+      },
+      {
+        "name": "employee_decisions"
+      },
+      {
+        "name": "employee_qualifications"
+      },
+      {
+        "name": "employee_request_withdrawals"
+      },
+      {
+        "name": "employee_requests"
+      },
+      {
+        "name": "employees"
+      },
+      {
+        "name": "g2_leave_allocations"
+      },
+      {
+        "name": "g2_leave_policies"
+      },
+      {
+        "name": "g2_resignation_executions"
+      },
+      {
+        "name": "hr_department_scopes"
+      },
+      {
+        "name": "leave_entitlements"
+      },
+      {
+        "name": "leave_request_details"
+      },
+      {
+        "name": "leave_types"
+      },
+      {
+        "name": "overtime_breaks"
+      },
+      {
+        "name": "overtime_overflow_intervals"
+      },
+      {
+        "name": "overtime_request_details"
+      },
+      {
+        "name": "overtime_requests"
+      },
+      {
+        "name": "payroll_batch_policies"
+      },
+      {
+        "name": "payroll_batches"
+      },
+      {
+        "name": "payroll_calculation_policies"
+      },
+      {
+        "name": "payroll_details"
+      },
+      {
+        "name": "payroll_insurance_bases"
+      },
+      {
+        "name": "payroll_lines"
+      },
+      {
+        "name": "payroll_periods"
+      },
+      {
+        "name": "payroll_snapshots"
+      },
+      {
+        "name": "payslips"
+      },
+      {
+        "name": "permissions"
+      },
+      {
+        "name": "positions"
+      },
+      {
+        "name": "qualification_levels"
+      },
+      {
+        "name": "resignation_request_details"
+      },
+      {
+        "name": "role_permissions"
+      },
+      {
+        "name": "roles"
+      },
+      {
+        "name": "salary_components"
+      },
+      {
+        "name": "schedule_change_request_breaks"
+      },
+      {
+        "name": "schedule_change_request_details"
+      },
+      {
+        "name": "work_schedule_breaks"
+      },
+      {
+        "name": "work_schedules"
+      },
+      {
+        "name": "work_shift_breaks"
+      },
+      {
+        "name": "work_shifts"
+      }
+    ]
+  ]
+}

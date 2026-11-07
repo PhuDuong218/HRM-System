@@ -1,3 +1,7 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
@@ -44,10 +48,12 @@ const shiftValidator: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-work-shifts', standalone: true,
-  imports:[Breadcrumb,DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-shifts.html', styleUrl: '../work-module.css',
 })
 export class WorkShiftsPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly url = `${API_BASE_URL}/management/shifts`;
@@ -223,7 +229,7 @@ export class WorkShiftsPage implements OnInit {
   }
   addBreak(): void { if (!this.busy) { this.breaks.push(this.createBreak()); this.form.markAsDirty(); } }
   removeBreak(index: number): void { if (!this.busy) { this.breaks.removeAt(index); this.form.markAsDirty(); } }
-  save(): void {
+  async save(): Promise<void> {
     if (this.busy || !this.detailsReady || !this.breaksLoaded || !['create', 'edit'].includes(this.mode)) return;
     this.form.markAllAsTouched();
     const v = this.form.getRawValue(), name = v.shiftName.trim();
@@ -241,7 +247,7 @@ export class WorkShiftsPage implements OnInit {
     const question = creating
       ? 'Bạn có chắc chắn muốn thêm ca làm việc này?'
       : 'Bạn có chắc chắn muốn lưu các thay đổi của ca làm việc này?';
-    if (!window.confirm(`${question}\n\nMã ca: ${body.shift.shiftCode}\nTên ca: ${name}\nThời gian: ${v.startTime} – ${v.endTime}${endDay}\nTổng phút nghỉ: ${body.shift.breakMinutes}`)) return;
+    if (!(await this.actionDialogInPage.confirm(`${question}\n\nMã ca: ${body.shift.shiftCode}\nTên ca: ${name}\nThời gian: ${v.startTime} – ${v.endTime}${endDay}\nTổng phút nghỉ: ${body.shift.breakMinutes}`))) return;
     const request = creating ? this.http.post<ShiftView>(this.url, body) : this.http.put<ShiftView>(`${this.url}/${target!.shiftId}`, body);
     this.saving = true; this.panelError = ''; this.success = '';
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
@@ -265,14 +271,14 @@ export class WorkShiftsPage implements OnInit {
     this.detailsReady = false; this.panelError = ''; this.success = '';
     this.deactivateReason.reset();
   }
-  confirmDeactivate(): void {
+  async confirmDeactivate(): Promise<void> {
     if (this.busy || !['deactivate','activate'].includes(this.mode) || !this.selected) return;
     const activating=this.mode==='activate';
     this.deactivateReason.markAsTouched();
     const reason = this.deactivateReason.value.trim();
     if (!reason) this.deactivateReason.setErrors({ required: true });
     if (this.deactivateReason.invalid) return;
-    if (!window.confirm(`Bạn có chắc chắn muốn ${activating?'mở khóa':'khóa'} ca làm việc này?\n\nMã ca: ${this.selected.shiftCode}\nTên ca: ${this.selected.shiftName}\nLý do: ${reason}\n\nCa sẽ chuyển sang trạng thái ${activating?'hoạt động':'ngừng hoạt động'}.`)) return;
+    if (!(await this.actionDialogInPage.confirm(`Bạn có chắc chắn muốn ${activating?'mở khóa':'khóa'} ca làm việc này?\n\nMã ca: ${this.selected.shiftCode}\nTên ca: ${this.selected.shiftName}\nLý do: ${reason}\n\nCa sẽ chuyển sang trạng thái ${activating?'hoạt động':'ngừng hoạt động'}.`))) return;
     this.saving = true; this.panelError = '';
     const id = this.selected.shiftId;
     // API khóa thống nhất ở cả hai chế độ backend, luôn lưu lý do vào audit.

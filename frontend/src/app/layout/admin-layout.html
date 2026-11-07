@@ -1,3 +1,4 @@
+<hrm-toast-outlet />
 <div class="app-shell" [class.sidebar-collapsed]="sidebarCollapsed" [class.mobile-menu-open]="menuOpen">
   @if(menuOpen){<button type="button" class="menu-backdrop" [attr.aria-label]="&quot;Đóng danh mục&quot; | translate" tabindex="-1" (click)="closeMobileMenu()"></button>}
   <div class="sidebar-rail" (keydown)="menuKeydown($event)" (mouseleave)="closeFlyout()" (focusout)="railFocusOut($event)">
@@ -63,7 +64,7 @@
     <header class="topbar">
       <div class="d-flex align-items-center gap-3"><button type="button" class="btn btn-outline-secondary menu-button" #menuTrigger (click)="toggleMobileMenu()" [attr.aria-expanded]="menuOpen" aria-controls="main-menu" [attr.aria-label]="language.t('Danh mục')"><svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg><span>Menu</span></button><app-breadcrumb class="topbar-breadcrumb"/></div>
       <div class="account-actions">
-        <button type="button" class="language-toggle" role="switch"
+        <button data-hrm-preference type="button" class="language-toggle" role="switch"
                 (click)="language.toggle()" [class.is-english]="language.current() === 'en'"
                 [attr.aria-checked]="language.current() === 'en'"
                 [attr.aria-label]="(language.current() === 'vi' ? 'Ngôn ngữ: Tiếng Việt. Chuyển sang tiếng Anh' : 'Language: English. Switch to Vietnamese') | translate"
@@ -72,7 +73,7 @@
           <span class="language-option" [class.is-active]="language.current() === 'vi'" aria-hidden="true">VI</span>
           <span class="language-option" [class.is-active]="language.current() === 'en'" aria-hidden="true">EN</span>
         </button>
-        <button type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.title]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.aria-pressed]="darkMode">
+        <button data-hrm-preference type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.title]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.aria-pressed]="darkMode">
           <hrm-icon [name]="darkMode?'sun':'moon'"/>
         </button>
         <div class="profile-anchor">
@@ -98,7 +99,7 @@
         </button>
       </div>
     </header>
-    <main class="page-content"><router-outlet /></main>
+    <main class="page-content"><app-exit-workflow-banner/><router-outlet /></main>
     <footer>{{ "HRM Center · Nền tảng quản lý nhân sự trung tâm giáo dục" | translate }}</footer>
   </div>
 </div>
@@ -109,7 +110,7 @@
     <button type="button" class="profile-close" (click)="closeProfile()" [attr.aria-label]="&quot;Đóng hồ sơ&quot; | translate">{{ "×" | translate }}</button>
   </div>
   @if (profileLoading) { <p class="profile-status" role="status">{{ "Đang tải thông tin…" | translate }}</p> }
-  @if (profileError) { <div class="profile-error" role="alert">{{(profileError) | translate}} <button type="button" (click)="refreshProfile()">{{ "Thử lại" | translate }}</button></div> }
+  @if (profileError) { <div [hrmNotice]="profileError" noticeKind="error" class="profile-error" role="alert">{{(profileError) | translate}} <button type="button" (click)="refreshProfile()">{{ "Thử lại" | translate }}</button></div> }
   @if (auth.profile(); as profile) {
     <div class="profile-identity">
       <span class="profile-avatar profile-avatar-large" aria-hidden="true">{{profile.fullName.charAt(0).toUpperCase()}}</span>
@@ -174,7 +175,7 @@
         <label for="confirm-password">{{language.t("Xác nhận mật khẩu mới")}}</label>
         <div class="password-input"><input #confirmPassword id="confirm-password" name="confirmPassword" [type]="showConfirmPassword ? 'text' : 'password'" autocomplete="new-password" required [disabled]="passwordLoading"><button type="button" (click)="showConfirmPassword = !showConfirmPassword" [attr.aria-label]="(showConfirmPassword ? 'Ẩn mật khẩu xác nhận' : 'Hiện mật khẩu xác nhận') | translate" [attr.aria-pressed]="showConfirmPassword">{{(showConfirmPassword ? 'Ẩn' : 'Hiện') | translate}}</button></div>
       </div>
-      @if (passwordError) { <p class="password-error" role="alert">{{(passwordError) | translate}}</p> }
+      @if (passwordError) { <p [hrmNotice]="passwordError" noticeKind="error" class="password-error" role="alert">{{(passwordError) | translate}}</p> }
     </div>
     <div class="profile-dialog-footer">
       <button type="button" class="btn btn-outline-primary" (click)="backToProfile()" [disabled]="passwordLoading">{{language.t("Quay lại")}}</button>

@@ -15,7 +15,7 @@
   </div>
 
   @if (tab === 'expiring') {
-    <form class="warning-filter" (submit)="$event.preventDefault(); applyDays(daysInput.value)">
+    <form data-hrm-filter class="warning-filter" (submit)="$event.preventDefault(); applyDays(daysInput.value)">
       <div>
         <label for="contract-warning-days" class="form-label">Hết hạn trong số ngày tới</label>
         <input #daysInput id="contract-warning-days" type="number" class="form-control" min="1" max="365" step="1"
@@ -33,7 +33,7 @@
   @if (loading) {
     <p role="status" class="mb-0">Đang tải cảnh báo…</p>
   } @else if (error) {
-    <div class="alert alert-warning mb-0" role="alert">{{error}}
+    <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning mb-0" role="alert">{{error}}
       <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="load(0)">Thử lại</button>
     </div>
   } @else if (tab === 'expiring' && expiring; as result) {

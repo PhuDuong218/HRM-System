@@ -1,3 +1,4 @@
+import {HrmNotice} from '../../shared/ui/notice';
 import {Breadcrumb} from '../../shared/breadcrumb';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
@@ -7,7 +8,7 @@ import { PayrollService } from '../../services/payroll.service';
 @Component({
   selector: 'app-payslips',
   standalone: true,
-  imports:[Breadcrumb,CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,Breadcrumb,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payslips.html',
   styleUrl: './payslips.css'
 })
@@ -63,7 +64,7 @@ export class PayslipsPage implements OnInit {
           printWin.document.close();
         }
       },
-      error: () => alert('Không thể tải bản in phiếu lương.')
+      error: () => this.errorMessage = 'Không thể tải bản in phiếu lương.'
     });
   }
 }

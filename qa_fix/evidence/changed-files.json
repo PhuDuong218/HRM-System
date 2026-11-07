@@ -1,0 +1,23 @@
+[
+  "HRM_System/src/main/java/com/hrm/dto/EmployeeDTO.java",
+  "HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java",
+  "HRM_System/src/main/java/com/hrm/dto/EmployeeUpdateRequestDTO.java",
+  "HRM_System/src/main/java/com/hrm/dto/EmployeeContactPatchDTO.java",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeCreationAuditService.java",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeContactService.java",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeService.java",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeQualificationService.java",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeSupplement.java",
+  "frontend/src/app/services/employee.service.ts",
+  "frontend/src/app/pages/employees/employees.ts",
+  "frontend/src/app/pages/employees/employees.html",
+  "frontend/src/app/pages/employees/employee-form.validation.ts",
+  "HRM_System/src/main/java/com/hrm/config/PersonnelPrivacyAdvice.java",
+  "frontend/src/app/pages/employees/employees.css",
+  "HRM_System/src/main/java/com/hrm/service/EmployeeWriteRules.java",
+  "HRM_System/src/test/java/com/hrm/service/EmployeeWriteFixRegressionTest.java",
+  "HRM_System/src/test/java/com/hrm/service/EmployeeProfileVersionFixTest.java",
+  "HRM_System/src/test/java/com/hrm/service/QualificationDuplicateFixTest.java",
+  "HRM_System/src/test/java/com/hrm/service/EmployeePrivacyWriteFixTest.java",
+  "frontend/test-tools/employee-write-version.test.cjs"
+]

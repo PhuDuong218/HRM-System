@@ -1,0 +1,14 @@
+[
+  [
+    {
+      "definition": "CREATE TRIGGER dbo.[tr_accounts_no_delete] ON dbo.[accounts] INSTEAD OF DELETE AS\n            BEGIN SET NOCOUNT ON; IF EXISTS(SELECT 1 FROM deleted)\n                THROW 51001, N'Không hard-delete. Giữ lịch sử; dùng trạng thái hoặc phiên bản điều chỉnh.', 1; END;",
+      "name": "tr_accounts_no_delete"
+    }
+  ],
+  [
+    {
+      "is_nullable": false,
+      "name": "token_version"
+    }
+  ]
+]

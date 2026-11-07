@@ -1,0 +1,128 @@
+diff --git a/HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java b/HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java
+index 31b1533..895026e 100644
+--- a/HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java
++++ b/HRM_System/src/main/java/com/hrm/dto/EmployeeRequestDTO.java
+@@ -25,6 +25,7 @@ public class EmployeeRequestDTO {
+     @Past(message = "Ngày sinh phải là một ngày trong quá khứ")
+     private LocalDate birthDate;
+ 
++    @NotBlank(message = "Email không được để trống")
+     @Email(message = "Định dạng email không hợp lệ")
+     @Size(max = 254)
+     private String email;
+@@ -39,6 +40,8 @@ public class EmployeeRequestDTO {
+     private LocalDate hireDate;
+ 
+     @Size(max = 50)
++    @NotBlank(message = "CCCD/CMND không được để trống")
++    @Pattern(regexp = "[0-9]{9}|[0-9]{12}", message = "CCCD/CMND phải gồm 9 hoặc 12 chữ số")
+     private String identityNumber; // Căn cước công dân
+ 
+     // --- CÁC TRƯỜNG BẮT BUỘC ĐỂ TẠO PHÂN CÔNG CÔNG TÁC ---
+@@ -50,6 +53,7 @@ public class EmployeeRequestDTO {
+     @NotNull(message = "Bắt buộc phải chọn Chức vụ khi thêm nhân viên")
+     @jakarta.validation.constraints.Positive(message = "ID chức vụ phải lớn hơn 0")
+     private Long positionId;
++@NotBlank(message = "Địa chỉ không được để trống")
+ @Size(max = 500, message = "Địa chỉ không vượt quá 500 ký tự")
+ private String address;
+     // TODO: Sử dụng Generate Getters and Setters cho toàn bộ các biến trên
+@@ -105,7 +109,7 @@ private String address;
+     }
+ 
+     public void setIdentityNumber(String identityNumber) {
+-        this.identityNumber = identityNumber;
++        this.identityNumber = identityNumber == null ? null : identityNumber.trim();
+     }
+ 
+     public Long getDepartmentId() {
+diff --git a/HRM_System/src/test/java/com/hrm/service/EmployeeWriteFixRegressionTest.java b/HRM_System/src/test/java/com/hrm/service/EmployeeWriteFixRegressionTest.java
+new file mode 100644
+--- /dev/null
++++ b/HRM_System/src/test/java/com/hrm/service/EmployeeWriteFixRegressionTest.java
+@@ -0,0 +1,51 @@
++package com.hrm.service;
++
++import com.hrm.dto.*;
++import com.hrm.model.*;
++import com.hrm.repository.*;
++import jakarta.validation.Validation;
++import org.junit.jupiter.api.Test;
++import org.springframework.web.server.ResponseStatusException;
++import java.util.*;
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.Mockito.*;
++
++class EmployeeWriteFixRegressionTest {
++    private Set<String> invalid(Object dto) {
++        try(var factory=Validation.buildDefaultValidatorFactory()) {
++            var fields=new HashSet<String>();
++            factory.getValidator().validate(dto).forEach(v->fields.add(v.getPropertyPath().toString()));
++            return fields;
++        }
++    }
++    @Test void creatingRequiresAllThreeContactFields() {
++        for(String value:new String[]{null,"","   "}) {
++            var dto=new EmployeeRequestDTO();dto.setEmail(value);dto.setIdentityNumber(value);dto.setAddress(value);
++            assertTrue(invalid(dto).containsAll(Set.of("email","identityNumber","address")));
++        }
++    }
++    @Test void malformedIdentityIsRejectedOnBothWriteDtos() {
++        for(String value:List.of("CCCDabc","12345678","1234567890","12345678901","1234567890123","12345678901a","123 456789012")) {
++            var create=new EmployeeRequestDTO();create.setIdentityNumber(value);
++            var edit=new EmployeeUpdateRequestDTO();edit.setIdentityNumber(value);
++            assertTrue(invalid(create).contains("identityNumber"),value);
++            assertTrue(invalid(edit).contains("identityNumber"),value);
++        }
++    }
++    @Test void profileAndContactRequireReasonAndReadVersion() {
++        assertTrue(invalid(new EmployeeUpdateRequestDTO()).containsAll(Set.of("reason","version")));
++        assertTrue(invalid(new EmployeeContactPatchDTO()).containsAll(Set.of("reason","version")));
++    }
++    @Test void duplicateQualificationCannotBeCreated() {
++        var repo=mock(EmployeeQualificationRepository.class);var employees=mock(EmployeeRepository.class);var levels=mock(QualificationLevelRepository.class);
++        var employee=new Employee();employee.setEmployeeId(700L);
++        var level=new QualificationLevel();level.setQualificationLevelId(2L);level.setIsActive(true);
++        var existing=new EmployeeQualification();existing.setEmployee(employee);existing.setQualificationLevel(level);existing.setMajor("Quản trị");existing.setInstitution("Trường QA");existing.setGraduationYear(2020);existing.setCertificateNumber("QAFIX-A");
++        when(employees.findByIdForUpdate(700L)).thenReturn(Optional.of(employee));when(levels.findById(2L)).thenReturn(Optional.of(level));
++        when(repo.findAllByEmployeeWithLevel(700L)).thenReturn(List.of(existing));when(repo.saveAndFlush(any())).thenAnswer(i->i.getArgument(0));
++        var dto=new EmployeeQualificationRequestDTO();dto.setQualificationLevelId(2L);dto.setMajor(" quản trị ");dto.setInstitution("trường qa");dto.setGraduationYear(2020);dto.setCertificateNumber("qafix-a");
++        var service=new EmployeeQualificationService(repo,employees,levels);
++        assertEquals(409,assertThrows(ResponseStatusException.class,()->service.addEmployeeQualification(700L,dto)).getStatusCode().value());
++        verify(repo,never()).saveAndFlush(any());
++    }
++}
+diff --git a/HRM_System/src/test/java/com/hrm/service/EmployeePrivacyWriteFixTest.java b/HRM_System/src/test/java/com/hrm/service/EmployeePrivacyWriteFixTest.java
+new file mode 100644
+--- /dev/null
++++ b/HRM_System/src/test/java/com/hrm/service/EmployeePrivacyWriteFixTest.java
+@@ -0,0 +1,29 @@
++package com.hrm.service;
++import com.hrm.config.PersonnelPrivacyAdvice;
++import com.hrm.dto.EmployeeUpdateRequestDTO;
++import com.hrm.security.AuthenticatedAccount;
++import org.junit.jupiter.api.*;
++import org.springframework.jdbc.core.JdbcTemplate;
++import org.springframework.mock.web.MockHttpServletRequest;
++import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
++import org.springframework.security.core.context.SecurityContextHolder;
++import org.springframework.web.context.request.*;
++import java.util.*;
++import org.springframework.web.server.ResponseStatusException;
++import static org.junit.jupiter.api.Assertions.*;
++import static org.mockito.Mockito.*;
++class EmployeePrivacyWriteFixTest {
++ @AfterEach void cleanup(){SecurityContextHolder.clearContext();RequestContextHolder.resetRequestAttributes();}
++ private PersonnelPrivacyAdvice setup(boolean owner,boolean visible){
++  var actor=new AuthenticatedAccount(1L,owner?700L:1L,"QAFIX-user","ADMIN");
++  SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor,null,List.of()));
++  var request=new MockHttpServletRequest("PUT","/employees/700");RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(request));
++  var scope=mock(PersonnelScopeService.class);when(scope.canReadPrivate(700L)).thenReturn(visible);var db=mock(JdbcTemplate.class);
++  when(db.queryForList(anyString(),eq(700L))).thenReturn(List.of(Map.of("email","old@example.invalid","phone","0901234588","identity_number","099900000006","address","QAFIX address")));
++  return new PersonnelPrivacyAdvice(scope,db,mock(AuditReadPolicy.class));
++ }
++ @Test void omittedContactOnOwnProfileDoesNotBecomeAForbiddenChange(){var advice=setup(true,true);var dto=new EmployeeUpdateRequestDTO();assertSame(dto,advice.afterBodyRead(dto,null,null,null,null));assertFalse(dto.hasEmail());assertFalse(dto.hasIdentityNumber());}
++ @Test void hiddenPrivateFieldsAreIgnoredRatherThanClearedOrValidated(){var advice=setup(false,false);var dto=new EmployeeUpdateRequestDTO();dto.setIdentityNumber("");dto.setAddress("");advice.afterBodyRead(dto,null,null,null,null);assertFalse(dto.hasIdentityNumber());assertFalse(dto.hasAddress());assertNull(dto.getAddress());}
++ @Test void visibleOwnerCannotSendBlankPrivateValue(){var advice=setup(true,true);var dto=new EmployeeUpdateRequestDTO();dto.setAddress(" ");assertEquals(400,assertThrows(ResponseStatusException.class,()->advice.afterBodyRead(dto,null,null,null,null)).getStatusCode().value());}
++ @Test void malformedIdentityCheckedBeforeOwnContactAuthorization(){var advice=setup(true,true);var dto=new EmployeeUpdateRequestDTO();dto.setIdentityNumber("CCCDabc");assertEquals(400,assertThrows(ResponseStatusException.class,()->advice.afterBodyRead(dto,null,null,null,null)).getStatusCode().value());}
++}

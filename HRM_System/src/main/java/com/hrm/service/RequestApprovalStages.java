@@ -38,6 +38,19 @@ public class RequestApprovalStages {
  public void requireFinalApproval(long request,long employee){
   requireFinalApproval(request,employee,null);
  }
+ /** Read-only counterpart: a preview must never mark a stage as skipped. */
+ public String finalApprovalBlocker(long request,long employee){
+  var stage=stage(request);String status=String.valueOf(stage.get("stageStatus"));
+  if("LEGACY".equals(status)||"SKIPPED".equals(status))return null;
+  if("PENDING".equals(status)){
+   long current=department(employee);
+   long heads=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_assignments a JOIN dbo.positions p ON p.position_id=a.position_id JOIN dbo.employees e ON e.employee_id=a.employee_id WHERE a.department_id=? AND p.position_code='TRUONG_PHONG' AND e.employment_status='DANG_LAM' AND a.effective_from<=? AND (a.effective_to IS NULL OR a.effective_to>?)",Long.class,current,support.today(),support.today());
+   if(heads==0)return null;
+  }
+  if(!"APPROVED".equals(status))return "Đơn cần trưởng phòng duyệt cấp 1 trước khi HR/ADMIN duyệt cuối";
+  if(((Number)stage.get("departmentId")).longValue()!=department(employee))return "Nhân viên đã đổi phòng; cần rút và nộp lại đơn để trưởng phòng mới xử lý";
+  return null;
+ }
  public void requireFinalApproval(long request,long employee,Long actor){
   var stage=stage(request);String status=String.valueOf(stage.get("stageStatus"));
   if("LEGACY".equals(status)||"SKIPPED".equals(status))return;

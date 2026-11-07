@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ToastOutlet} from '../../shared/ui/toast-outlet';
+import {HrmNotice} from '../../shared/ui/notice';
 import {HrmButton} from '../../shared/ui/button';
 import {HrmIcon} from '../../shared/ui/icon';
 import { Component, ElementRef, ViewChild, inject } from '@angular/core';
@@ -12,7 +15,7 @@ import { navigation } from '../../navigation';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports:[HrmButton,HrmIcon],
+  imports:[SearchAssistDirective,ToastOutlet,HrmNotice,HrmButton,HrmIcon],
   templateUrl: './login.html',
   styleUrl: './login.css'
 })

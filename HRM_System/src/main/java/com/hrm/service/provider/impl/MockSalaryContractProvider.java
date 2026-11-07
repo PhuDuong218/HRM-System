@@ -12,6 +12,7 @@ import java.util.List;
 
 @Service
 public class MockSalaryContractProvider implements SalaryContractProvider {
+    @Override public boolean isSynthetic() { return true; }
 
     @Override
     public EmployeeSalaryProfileDTO getSalaryProfile(Long employeeId, LocalDate periodStart, LocalDate periodEnd) {

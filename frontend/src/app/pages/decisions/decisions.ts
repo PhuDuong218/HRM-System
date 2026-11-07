@@ -1,3 +1,7 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -30,11 +34,13 @@ type Action = 'approve' | 'reject';
 @Component({
   selector: 'app-decisions',
   standalone: true,
-  imports:[PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './decisions.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class DecisionsPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private api = inject(DecisionService);
   private periodsApi = inject(AllowanceService);
   private personnel = inject(EmployeeService);
@@ -356,9 +362,9 @@ export class DecisionsPage implements OnInit {
     );
   }
 
-  remove(row: DecisionResponse): void {
+  async remove(row: DecisionResponse): Promise<void> {
     if (this.saving || row.approvalStatus !== 'CHO_DUYET') return;
-    const reason = window.prompt('Nhập lý do xóa quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):');
+    const reason = (await this.actionDialogInPage.prompt('Nhập lý do xóa quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):'));
     if (reason === null) return;
     if (!reason.trim()) {
       this.error = 'Vui lòng nhập lý do.';
@@ -368,7 +374,7 @@ export class DecisionsPage implements OnInit {
       this.error = 'Lý do không được vượt quá 500 ký tự.';
       return;
     }
-    if (!window.confirm('Xóa quyết định ' + row.decisionNumber + '?')) return;
+    if (!(await this.actionDialogInPage.confirm('Xóa quyết định ' + row.decisionNumber + '?'))) return;
     this.run(
       this.api.remove(row.decisionId, reason.trim()),
       'Đã xóa quyết định chờ duyệt.',

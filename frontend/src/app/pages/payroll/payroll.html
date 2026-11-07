@@ -51,10 +51,10 @@
   </div>
 
   @if (actionMessage) {
-    <div class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div>
+    <div [hrmNotice]="actionMessage" noticeKind="success" class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div>
   }
   @if (errorMessage) {
-    <div class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div>
+    <div [hrmNotice]="errorMessage" noticeKind="error" class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div>
   }
 </section>
 

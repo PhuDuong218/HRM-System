@@ -32,6 +32,8 @@ public class EmployeeRequestController {
     public Page<Map<String,Object>> list(@RequestParam(required=false) String status,@RequestParam(required=false) String type,
             @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){return service.list(false,status,type,page,size,p);}
     @GetMapping("/{id}") public Map<String,Object> detail(@PathVariable long id,Principal p){return service.detail(id,p);}
+    @GetMapping("/{id}/resignation-readiness")
+    public com.hrm.dto.ResignationReadinessDTO resignationReadiness(@PathVariable long id,@RequestParam(required=false) java.time.LocalDate lastWorkingDate,Principal p){return service.resignationReadiness(id,lastWorkingDate,p);}
     @PostMapping("/{id}/approve") public Map<String,Object> approve(@PathVariable long id,@Valid @RequestBody Decision body,Principal p){return service.approve(id,body,p);}
     @PostMapping("/{id}/reject") public Map<String,Object> reject(@PathVariable long id,@Valid @RequestBody Rejection body,Principal p){return service.reject(id,body,p);}
     @PostMapping("/{id}/withdraw") public Map<String,Object> withdraw(@PathVariable long id,@Valid @RequestBody Rejection body,Principal p){return service.withdraw(id,body,p);}

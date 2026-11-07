@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import {Feedback} from '../../shared/ui/feedback';
 import {HrmButton} from '../../shared/ui/button';
@@ -15,7 +18,7 @@ import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { employeeFormErrors } from './employee-form.validation';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
-@Component({ selector: 'app-employees', standalone: true, imports:[RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
+@Component({ selector: 'app-employees', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage extends ManagementPageBase implements OnInit {
     profileText(text:string){return this.i18n.current?.()==='en'?({
         'Hồ sơ đã thay đổi':'Employee profile has changed',

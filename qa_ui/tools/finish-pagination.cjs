@@ -1,0 +1,5 @@
+const fs=require('node:fs');
+function edit(p,fn){const b='qa_ui/backup_pagination/'+p; if(!fs.existsSync(b)){fs.mkdirSync(require('node:path').dirname(b),{recursive:true});fs.copyFileSync(p,b)}fs.writeFileSync(p,fn(fs.readFileSync(p,'utf8')))}
+edit('frontend/src/app/pages/departments/departments.html',s=>s.replace(/<div class="candidate-navigation">[\s\S]*?<\/div><\/div>/,'<app-pagination [page]="candidatePage" [pages]="candidatePages" [busy]="saving" label="Danh sách ứng viên" (pageChange)="loadCandidates($event)"/>'));
+edit('frontend/src/app/shared/ot-supplement-panel.html',s=>s.replace(/<div class="d-flex gap-2 mb-2"><button[\s\S]*?<\/div>/,'<app-pagination [page]="candidatePage" [pages]="candidatePages" [busy]="saving||loading" (pageChange)="loadCandidates($event)"/>').replace(/<div class="d-flex gap-2"><button[\s\S]*?<\/div>/,'<app-pagination [page]="page" [pages]="pages" [busy]="saving||loading" (pageChange)="load($event)"/>'));
+edit('frontend/src/app/shared/ot-supplement-panel.ts',s=>"import {Pagination} from './pagination';\n"+s.replace('imports: [','imports: [Pagination,'));

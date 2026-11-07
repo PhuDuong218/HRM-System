@@ -1,0 +1,92 @@
+<section class="surface contract-warnings mb-4" aria-labelledby="contract-warning-title">
+  <div class="warning-heading">
+    <div>
+      <h2 id="contract-warning-title" class="h5 mb-1">Cảnh báo hợp đồng</h2>
+      <p class="small text-body-secondary mb-0">Chỉ gồm nhân viên đang làm việc. Ngày cuối hợp đồng vẫn còn hiệu lực.</p>
+    </div>
+    <button type="button" class="btn btn-outline-secondary" [disabled]="loading" (click)="load(0)">Tải lại</button>
+  </div>
+
+  <div class="warning-tabs" role="group" aria-label="Nhóm cảnh báo hợp đồng">
+    <button type="button" class="btn" [class.btn-primary]="tab === 'expiring'" [class.btn-outline-secondary]="tab !== 'expiring'"
+      [attr.aria-pressed]="tab === 'expiring'" (click)="selectTab('expiring')">Sắp hết hạn</button>
+    <button type="button" class="btn" [class.btn-primary]="tab === 'without'" [class.btn-outline-secondary]="tab !== 'without'"
+      [attr.aria-pressed]="tab === 'without'" (click)="selectTab('without')">Chưa có hợp đồng hiệu lực</button>
+  </div>
+
+  @if (tab === 'expiring') {
+    <form data-hrm-filter class="warning-filter" (submit)="$event.preventDefault(); applyDays(daysInput.value)">
+      <div>
+        <label for="contract-warning-days" class="form-label">Hết hạn trong số ngày tới</label>
+        <input #daysInput id="contract-warning-days" type="number" class="form-control" min="1" max="365" step="1"
+          [value]="days" required [disabled]="loading" />
+      </div>
+      <button type="submit" class="btn btn-primary" [disabled]="loading">Xem cảnh báo</button>
+    </form>
+  } @else {
+    <p class="small text-body-secondary">
+      Không có hợp đồng nào bao phủ hôm nay. Cột hợp đồng tiếp theo giúp phân biệt nhân viên đã có lịch ký mới.
+      Nhãn quá 30 ngày là dấu hiệu cần rà soát hồ sơ.
+    </p>
+  }
+
+  @if (loading) {
+    <p role="status" class="mb-0">Đang tải cảnh báo…</p>
+  } @else if (error) {
+    <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning mb-0" role="alert">{{error}}
+      <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="load(0)">Thử lại</button>
+    </div>
+  } @else if (tab === 'expiring' && expiring; as result) {
+    <p class="small text-body-secondary">Tổng cộng: {{result.totalElements}} hợp đồng trong khoảng từ hôm nay đến {{days}} ngày tới.</p>
+    <div class="warning-table-wrap">
+      <table class="table warning-table align-middle">
+        <caption class="visually-hidden">Hợp đồng sắp hết hạn</caption>
+        <thead><tr><th scope="col">Mã nhân viên</th><th scope="col">Họ tên</th><th scope="col">Ngày hết hạn</th><th scope="col">Còn lại</th><th scope="col">Thao tác</th></tr></thead>
+        <tbody>
+          @for (row of result.items; track row.contractId) {
+            <tr>
+              <td data-label="Mã nhân viên">{{row.employeeCode}}</td>
+              <td data-label="Họ tên">{{row.employeeName}}</td>
+              <td data-label="Ngày hết hạn">{{row.endDate}}</td>
+              <td data-label="Còn lại"><span [class.text-danger]="row.daysLeft === 0">{{row.daysLeft === 0 ? 'Hết hạn hôm nay' : row.daysLeft + ' ngày'}}</span></td>
+              <td data-label="Thao tác"><button type="button" class="btn btn-sm btn-outline-primary" (click)="openContract.emit(row.contractId)">Xem hợp đồng #{{row.contractId}}</button></td>
+            </tr>
+          } @empty {
+            <tr class="empty-row"><td colspan="5" class="text-center text-body-secondary py-3">Không có hợp đồng sắp hết hạn trong khoảng đã chọn.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination label="Phân trang hợp đồng sắp hết hạn" [page]="result.page" [pages]="result.totalPages" [busy]="loading" (pageChange)="load($event)" />
+  } @else if (tab === 'without' && without; as result) {
+    <p class="small text-body-secondary">Tổng cộng: {{result.totalElements}} nhân viên chưa có hợp đồng hiệu lực hôm nay.</p>
+    <div class="warning-table-wrap">
+      <table class="table warning-table align-middle">
+        <caption class="visually-hidden">Nhân viên chưa có hợp đồng hiệu lực</caption>
+        <thead><tr><th scope="col">Mã nhân viên</th><th scope="col">Họ tên</th><th scope="col">Hợp đồng gần nhất hết hạn</th><th scope="col">Quá hạn</th><th scope="col">Hợp đồng tiếp theo bắt đầu</th></tr></thead>
+        <tbody>
+          @for (row of result.items; track row.employeeId) {
+            <tr>
+              <td data-label="Mã nhân viên">{{row.employeeCode}}</td>
+              <td data-label="Họ tên">{{row.employeeName}}</td>
+              <td data-label="Lần hết hạn gần nhất">{{row.lastContractEndDate ?? 'Chưa có hợp đồng hết hạn'}}</td>
+              <td data-label="Quá hạn">
+                <div>
+                  @if (row.overdueDays === null) { <span class="text-body-secondary">Chưa xác định</span> }
+                  @else {
+                    <span>{{row.overdueDays}} ngày</span>
+                    @if (row.overdueOver30) { <span class="badge text-bg-danger ms-2">Quá 30 ngày</span> }
+                  }
+                </div>
+              </td>
+              <td data-label="Hợp đồng tiếp theo">{{row.nextContractStart ?? 'Chưa có lịch'}}</td>
+            </tr>
+          } @empty {
+            <tr class="empty-row"><td colspan="5" class="text-center text-body-secondary py-3">Không có nhân viên cần cảnh báo.</td></tr>
+          }
+        </tbody>
+      </table>
+    </div>
+    <app-pagination label="Phân trang nhân viên chưa có hợp đồng" [page]="result.page" [pages]="result.totalPages" [busy]="loading" (pageChange)="load($event)" />
+  }
+</section>

@@ -1,0 +1,165 @@
+{
+  "executedAt": "2026-11-06T06:34:18.871Z",
+  "fixture": {
+    "tag": "QA6-mw4lfj2n",
+    "positionId": 11,
+    "employeeId": 36,
+    "missingFieldsEmployeeId": 37,
+    "degreeA": 33,
+    "degreeB": 34,
+    "duplicateDegree": 36
+  },
+  "account": 35,
+  "quota": 33,
+  "ids": [
+    7,
+    8
+  ],
+  "results": [
+    {
+      "id": "create-test-employee-account",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/api/admin/accounts",
+      "expected": [
+        201,
+        200
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "eight-hour-quota",
+      "actor": "admin",
+      "method": "POST",
+      "path": "/leave-entitlements",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "submit-10",
+      "actor": "worker",
+      "method": "POST",
+      "path": "/employee-requests/leave",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "employee-cannot-final-approve-10",
+      "actor": "worker",
+      "method": "POST",
+      "path": "/employee-requests/7/approve",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "head-first-10",
+      "actor": "head",
+      "method": "POST",
+      "path": "/employee-requests/7/head-decision",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "submit-11",
+      "actor": "worker",
+      "method": "POST",
+      "path": "/employee-requests/leave",
+      "expected": [
+        201
+      ],
+      "actual": 201,
+      "pass": true
+    },
+    {
+      "id": "employee-cannot-final-approve-11",
+      "actor": "worker",
+      "method": "POST",
+      "path": "/employee-requests/8/approve",
+      "expected": [
+        403
+      ],
+      "actual": 403,
+      "pass": true
+    },
+    {
+      "id": "head-first-11",
+      "actor": "head",
+      "method": "POST",
+      "path": "/employee-requests/8/head-decision",
+      "expected": [
+        200
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "two-approvals-only-eight-hours",
+      "pass": true,
+      "evidence": [
+        200,
+        409
+      ]
+    },
+    {
+      "id": "balance-never-negative",
+      "pass": true,
+      "evidence": {
+        "used": 8,
+        "remaining": 0
+      }
+    },
+    {
+      "id": "double-cancel-refunds-once",
+      "pass": true,
+      "evidence": [
+        200,
+        409
+      ]
+    },
+    {
+      "id": "balance-restored-to-eight",
+      "pass": true,
+      "evidence": {
+        "used": 0,
+        "remaining": 8
+      }
+    },
+    {
+      "id": "cleanup-request-8",
+      "actor": "worker",
+      "method": "POST",
+      "path": "/employee-requests/8/withdraw",
+      "expected": [
+        200,
+        204
+      ],
+      "actual": 200,
+      "pass": true
+    },
+    {
+      "id": "disable-test-account",
+      "actor": "admin",
+      "method": "PATCH",
+      "path": "/api/admin/accounts/35/status",
+      "expected": [
+        200,
+        204
+      ],
+      "actual": 200,
+      "pass": true
+    }
+  ]
+}

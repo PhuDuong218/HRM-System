@@ -1,0 +1,6050 @@
+[
+  {
+    "id": "BEG-01-none-GET/qualification-levels",
+    "method": "GET",
+    "path": "/qualification-levels",
+    "controller": "QualificationLevelController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 733,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/qualification-levels",
+    "method": "GET",
+    "path": "/qualification-levels",
+    "controller": "QualificationLevelController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employees/999999999",
+    "method": "PUT",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 732,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employees/999999999",
+    "method": "PUT",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/detail",
+    "method": "GET",
+    "path": "/employees/999999999/detail",
+    "controller": "EmployeeDetailController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 726,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/detail",
+    "method": "GET",
+    "path": "/employees/999999999/detail",
+    "controller": "EmployeeDetailController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/auth/change-password",
+    "method": "POST",
+    "path": "/api/auth/change-password",
+    "controller": "AuthController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 730,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/auth/change-password",
+    "method": "POST",
+    "path": "/api/auth/change-password",
+    "controller": "AuthController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/salary-components",
+    "method": "POST",
+    "path": "/salary-components",
+    "controller": "SalaryComponentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 726,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/salary-components",
+    "method": "POST",
+    "path": "/salary-components",
+    "controller": "SalaryComponentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-decisions/999999999/approve",
+    "method": "POST",
+    "path": "/employee-decisions/999999999/approve",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 726,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-decisions/999999999/approve",
+    "method": "POST",
+    "path": "/employee-decisions/999999999/approve",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/payroll/export",
+    "method": "GET",
+    "path": "/api/reports/payroll/export",
+    "controller": "ReportExportController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/payroll/export",
+    "method": "GET",
+    "path": "/api/reports/payroll/export",
+    "controller": "ReportExportController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contract-types",
+    "method": "POST",
+    "path": "/contract-types",
+    "controller": "ContractTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contract-types",
+    "method": "POST",
+    "path": "/contract-types",
+    "controller": "ContractTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/leave-types/999999999",
+    "method": "DELETE",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/leave-types/999999999",
+    "method": "DELETE",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/accounts/999999999/reset-password",
+    "method": "POST",
+    "path": "/api/admin/accounts/999999999/reset-password",
+    "controller": "AdminAccountController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/accounts/999999999/reset-password",
+    "method": "POST",
+    "path": "/api/admin/accounts/999999999/reset-password",
+    "controller": "AdminAccountController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/audit-logs",
+    "method": "GET",
+    "path": "/audit-logs",
+    "controller": "AuditLogController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/audit-logs",
+    "method": "GET",
+    "path": "/audit-logs",
+    "controller": "AuditLogController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/leave-entitlements/999999999",
+    "method": "GET",
+    "path": "/leave-entitlements/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/leave-entitlements/999999999",
+    "method": "GET",
+    "path": "/leave-entitlements/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/me/payslips",
+    "method": "GET",
+    "path": "/api/me/payslips",
+    "controller": "PayrollController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/me/payslips",
+    "method": "GET",
+    "path": "/api/me/payslips",
+    "controller": "PayrollController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 20,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contracts/999999999/salary-terms/999999999/change-rate",
+    "method": "POST",
+    "path": "/contracts/999999999/salary-terms/999999999/change-rate",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contracts/999999999/salary-terms/999999999/change-rate",
+    "method": "POST",
+    "path": "/contracts/999999999/salary-terms/999999999/change-rate",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/leave-entitlements/999999999",
+    "method": "PUT",
+    "path": "/leave-entitlements/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 16,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/leave-entitlements/999999999",
+    "method": "PUT",
+    "path": "/leave-entitlements/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/me/schedules",
+    "method": "GET",
+    "path": "/api/me/schedules",
+    "controller": "ScheduleQueryController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/me/schedules",
+    "method": "GET",
+    "path": "/api/me/schedules",
+    "controller": "ScheduleQueryController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-batches/draft",
+    "method": "POST",
+    "path": "/payroll-batches/draft",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-batches/draft",
+    "method": "POST",
+    "path": "/payroll-batches/draft",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/allowances/999999999",
+    "method": "GET",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/allowances/999999999",
+    "method": "GET",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/resignations/execute-due",
+    "method": "POST",
+    "path": "/employee-requests/resignations/execute-due",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/resignations/execute-due",
+    "method": "POST",
+    "path": "/employee-requests/resignations/execute-due",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employees/999999999/allowances/999999999",
+    "method": "PUT",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employees/999999999/allowances/999999999",
+    "method": "PUT",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-batches",
+    "method": "GET",
+    "path": "/payroll-batches",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-batches",
+    "method": "GET",
+    "path": "/payroll-batches",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/positions",
+    "method": "GET",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/positions",
+    "method": "GET",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/positions/search",
+    "method": "GET",
+    "path": "/positions/search",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/positions/search",
+    "method": "GET",
+    "path": "/positions/search",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/999999999/withdraw",
+    "method": "POST",
+    "path": "/employee-requests/999999999/withdraw",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/999999999/withdraw",
+    "method": "POST",
+    "path": "/employee-requests/999999999/withdraw",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contracts/999999999/terminate",
+    "method": "POST",
+    "path": "/contracts/999999999/terminate",
+    "controller": "ContractController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contracts/999999999/terminate",
+    "method": "POST",
+    "path": "/contracts/999999999/terminate",
+    "controller": "ContractController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-requests/balances/999999999",
+    "method": "GET",
+    "path": "/employee-requests/balances/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-requests/balances/999999999",
+    "method": "GET",
+    "path": "/employee-requests/balances/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/leave-types/999999999",
+    "method": "GET",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/leave-types/999999999",
+    "method": "GET",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/allowance-types",
+    "method": "POST",
+    "path": "/allowance-types",
+    "controller": "AllowanceTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/allowance-types",
+    "method": "POST",
+    "path": "/allowance-types",
+    "controller": "AllowanceTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/leave-types/999999999",
+    "method": "PUT",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/leave-types/999999999",
+    "method": "PUT",
+    "path": "/leave-types/999999999",
+    "controller": "LeaveTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/management/shifts",
+    "method": "POST",
+    "path": "/api/management/shifts",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/management/shifts",
+    "method": "POST",
+    "path": "/api/management/shifts",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments/999999999/head",
+    "method": "GET",
+    "path": "/departments/999999999/head",
+    "controller": "DepartmentHeadController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments/999999999/head",
+    "method": "GET",
+    "path": "/departments/999999999/head",
+    "controller": "DepartmentHeadController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/api/admin/accounts/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/api/admin/accounts/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-decisions",
+    "method": "GET",
+    "path": "/employee-decisions",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-decisions",
+    "method": "GET",
+    "path": "/employee-decisions",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employees/999999999/transfer",
+    "method": "PUT",
+    "path": "/employees/999999999/transfer",
+    "controller": "EmployeeAssignmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employees/999999999/transfer",
+    "method": "PUT",
+    "path": "/employees/999999999/transfer",
+    "controller": "EmployeeAssignmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/management/shifts/999999999",
+    "method": "PUT",
+    "path": "/api/management/shifts/999999999",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/management/shifts/999999999",
+    "method": "PUT",
+    "path": "/api/management/shifts/999999999",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/permissions",
+    "method": "POST",
+    "path": "/api/admin/permissions",
+    "controller": "AdminPermissionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/permissions",
+    "method": "POST",
+    "path": "/api/admin/permissions",
+    "controller": "AdminPermissionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/positions",
+    "method": "POST",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/positions",
+    "method": "POST",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 16,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/admin/hr-scopes/999999999",
+    "method": "PUT",
+    "path": "/api/admin/hr-scopes/999999999",
+    "controller": "HrDepartmentScopeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/admin/hr-scopes/999999999",
+    "method": "PUT",
+    "path": "/api/admin/hr-scopes/999999999",
+    "controller": "HrDepartmentScopeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/departments/999999999/head/end",
+    "method": "POST",
+    "path": "/departments/999999999/head/end",
+    "controller": "DepartmentHeadController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/departments/999999999/head/end",
+    "method": "POST",
+    "path": "/departments/999999999/head/end",
+    "controller": "DepartmentHeadController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 19,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/departments/999999999/head",
+    "method": "PUT",
+    "path": "/departments/999999999/head",
+    "controller": "DepartmentHeadController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/departments/999999999/head",
+    "method": "PUT",
+    "path": "/departments/999999999/head",
+    "controller": "DepartmentHeadController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 19,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/management/schedules/search",
+    "method": "GET",
+    "path": "/api/management/schedules/search",
+    "controller": "ScheduleQueryController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/management/schedules/search",
+    "method": "GET",
+    "path": "/api/management/schedules/search",
+    "controller": "ScheduleQueryController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/positions/999999999",
+    "method": "PUT",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/positions/999999999",
+    "method": "PUT",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/allowances/999999999/end-from",
+    "method": "POST",
+    "path": "/employees/999999999/allowances/999999999/end-from",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/allowances/999999999/end-from",
+    "method": "POST",
+    "path": "/employees/999999999/allowances/999999999/end-from",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-assignments/search",
+    "method": "GET",
+    "path": "/employee-assignments/search",
+    "controller": "PersonnelSearchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-assignments/search",
+    "method": "GET",
+    "path": "/employee-assignments/search",
+    "controller": "PersonnelSearchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/leave-types",
+    "method": "POST",
+    "path": "/leave-types",
+    "controller": "LeaveTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/leave-types",
+    "method": "POST",
+    "path": "/leave-types",
+    "controller": "LeaveTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/assignments",
+    "method": "GET",
+    "path": "/employees/999999999/assignments",
+    "controller": "EmployeeAssignmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 15,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/assignments",
+    "method": "GET",
+    "path": "/employees/999999999/assignments",
+    "controller": "EmployeeAssignmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-periods",
+    "method": "GET",
+    "path": "/payroll-periods",
+    "controller": "PayrollPeriodController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-periods",
+    "method": "GET",
+    "path": "/payroll-periods",
+    "controller": "PayrollPeriodController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contract-types",
+    "method": "GET",
+    "path": "/contract-types",
+    "controller": "ContractTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 15,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contract-types",
+    "method": "GET",
+    "path": "/contract-types",
+    "controller": "ContractTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-batches/period/999999999",
+    "method": "GET",
+    "path": "/payroll-batches/period/999999999",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-batches/period/999999999",
+    "method": "GET",
+    "path": "/payroll-batches/period/999999999",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees",
+    "method": "GET",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 20,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees",
+    "method": "GET",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/accounts/999999999",
+    "method": "GET",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/accounts/999999999",
+    "method": "GET",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/management/shifts/999999999",
+    "method": "GET",
+    "path": "/api/management/shifts/999999999",
+    "controller": "WorkShiftReadOnlyController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/management/shifts/999999999",
+    "method": "GET",
+    "path": "/api/management/shifts/999999999",
+    "controller": "WorkShiftReadOnlyController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments",
+    "method": "GET",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments",
+    "method": "GET",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/allowances",
+    "method": "GET",
+    "path": "/employees/999999999/allowances",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/allowances",
+    "method": "GET",
+    "path": "/employees/999999999/allowances",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/admin/accounts/999999999",
+    "method": "PUT",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/admin/accounts/999999999",
+    "method": "PUT",
+    "path": "/api/admin/accounts/999999999",
+    "controller": "AdminAccountManagementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/accounts",
+    "method": "POST",
+    "path": "/api/admin/accounts",
+    "controller": "AdminAccountManagementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/accounts",
+    "method": "POST",
+    "path": "/api/admin/accounts",
+    "controller": "AdminAccountManagementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/admin/roles/999999999/permissions",
+    "method": "PUT",
+    "path": "/api/admin/roles/999999999/permissions",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 17,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/admin/roles/999999999/permissions",
+    "method": "PUT",
+    "path": "/api/admin/roles/999999999/permissions",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-batches/999999999/details",
+    "method": "GET",
+    "path": "/payroll-batches/999999999/details",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-batches/999999999/details",
+    "method": "GET",
+    "path": "/payroll-batches/999999999/details",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/contracts",
+    "method": "GET",
+    "path": "/api/reports/contracts",
+    "controller": "ContractStatisticsController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/contracts",
+    "method": "GET",
+    "path": "/api/reports/contracts",
+    "controller": "ContractStatisticsController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/allowances/999999999/change-from",
+    "method": "POST",
+    "path": "/employees/999999999/allowances/999999999/change-from",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/allowances/999999999/change-from",
+    "method": "POST",
+    "path": "/employees/999999999/allowances/999999999/change-from",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/api/admin/roles/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/api/admin/roles/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 25,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/positions/999999999",
+    "method": "GET",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/positions/999999999",
+    "method": "GET",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/employees/999999999",
+    "method": "DELETE",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/employees/999999999",
+    "method": "DELETE",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/contracts/999999999/salary-terms/999999999",
+    "method": "DELETE",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/contracts/999999999/salary-terms/999999999",
+    "method": "DELETE",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 24,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/employees/export",
+    "method": "GET",
+    "path": "/api/reports/employees/export",
+    "controller": "ReportExportController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/employees/export",
+    "method": "GET",
+    "path": "/api/reports/employees/export",
+    "controller": "ReportExportController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contracts/999999999/salary-terms",
+    "method": "POST",
+    "path": "/contracts/999999999/salary-terms",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contracts/999999999/salary-terms",
+    "method": "POST",
+    "path": "/contracts/999999999/salary-terms",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments/search",
+    "method": "GET",
+    "path": "/departments/search",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments/search",
+    "method": "GET",
+    "path": "/departments/search",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 19,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments",
+    "method": "GET",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 27,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments",
+    "method": "GET",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/leave-entitlements/employee/999999999",
+    "method": "GET",
+    "path": "/leave-entitlements/employee/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/leave-entitlements/employee/999999999",
+    "method": "GET",
+    "path": "/leave-entitlements/employee/999999999",
+    "controller": "LeaveEntitlementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/contracts/999999999/salary-terms/999999999",
+    "method": "PUT",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 19,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/contracts/999999999/salary-terms/999999999",
+    "method": "PUT",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/contracts/export",
+    "method": "GET",
+    "path": "/api/reports/contracts/export",
+    "controller": "ReportExportController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/contracts/export",
+    "method": "GET",
+    "path": "/api/reports/contracts/export",
+    "controller": "ReportExportController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/g1/audit",
+    "method": "GET",
+    "path": "/g1/audit",
+    "controller": "G1AuditController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/g1/audit",
+    "method": "GET",
+    "path": "/g1/audit",
+    "controller": "G1AuditController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 15,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/salary-components",
+    "method": "GET",
+    "path": "/salary-components",
+    "controller": "SalaryComponentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/salary-components",
+    "method": "GET",
+    "path": "/salary-components",
+    "controller": "SalaryComponentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-assignments",
+    "method": "GET",
+    "path": "/employee-assignments",
+    "controller": "EmployeeAssignmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-assignments",
+    "method": "GET",
+    "path": "/employee-assignments",
+    "controller": "EmployeeAssignmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 25,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/employees",
+    "method": "GET",
+    "path": "/api/reports/employees",
+    "controller": "EmployeeStatisticsController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/employees",
+    "method": "GET",
+    "path": "/api/reports/employees",
+    "controller": "EmployeeStatisticsController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/management/shifts/capabilities",
+    "method": "GET",
+    "path": "/api/management/shifts/capabilities",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/management/shifts/capabilities",
+    "method": "GET",
+    "path": "/api/management/shifts/capabilities",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contracts/999999999/renew",
+    "method": "POST",
+    "path": "/contracts/999999999/renew",
+    "controller": "ContractController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contracts/999999999/renew",
+    "method": "POST",
+    "path": "/contracts/999999999/renew",
+    "controller": "ContractController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/allowance-types",
+    "method": "GET",
+    "path": "/allowance-types",
+    "controller": "AllowanceTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/allowance-types",
+    "method": "GET",
+    "path": "/allowance-types",
+    "controller": "AllowanceTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payslips/999999999/html",
+    "method": "GET",
+    "path": "/payslips/999999999/html",
+    "controller": "PayslipController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payslips/999999999/html",
+    "method": "GET",
+    "path": "/payslips/999999999/html",
+    "controller": "PayslipController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/management/shifts",
+    "method": "GET",
+    "path": "/api/management/shifts",
+    "controller": "WorkShiftReadOnlyController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/management/shifts",
+    "method": "GET",
+    "path": "/api/management/shifts",
+    "controller": "WorkShiftReadOnlyController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/rehire",
+    "method": "POST",
+    "path": "/employees/999999999/rehire",
+    "controller": "EmployeeRehireController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/rehire",
+    "method": "POST",
+    "path": "/employees/999999999/rehire",
+    "controller": "EmployeeRehireController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 19,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-requests/999999999",
+    "method": "GET",
+    "path": "/employee-requests/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-requests/999999999",
+    "method": "GET",
+    "path": "/employee-requests/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/roles/999999999",
+    "method": "GET",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/roles/999999999",
+    "method": "GET",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/qualifications",
+    "method": "POST",
+    "path": "/employees/999999999/qualifications",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/qualifications",
+    "method": "POST",
+    "path": "/employees/999999999/qualifications",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contracts/999999999/salary-terms/999999999",
+    "method": "GET",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contracts/999999999/salary-terms/999999999",
+    "method": "GET",
+    "path": "/contracts/999999999/salary-terms/999999999",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/allowance-types/999999999",
+    "method": "DELETE",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/allowance-types/999999999",
+    "method": "DELETE",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/admin/roles/999999999",
+    "method": "PUT",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/admin/roles/999999999",
+    "method": "PUT",
+    "path": "/api/admin/roles/999999999",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/leave",
+    "method": "POST",
+    "path": "/employee-requests/leave",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/leave",
+    "method": "POST",
+    "path": "/employee-requests/leave",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/hr-scopes",
+    "method": "POST",
+    "path": "/api/admin/hr-scopes",
+    "controller": "HrDepartmentScopeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/hr-scopes",
+    "method": "POST",
+    "path": "/api/admin/hr-scopes",
+    "controller": "HrDepartmentScopeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/work/export",
+    "method": "GET",
+    "path": "/api/reports/work/export",
+    "controller": "ReportExportController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/work/export",
+    "method": "GET",
+    "path": "/api/reports/work/export",
+    "controller": "ReportExportController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/999999999/approve",
+    "method": "POST",
+    "path": "/employee-requests/999999999/approve",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/999999999/approve",
+    "method": "POST",
+    "path": "/employee-requests/999999999/approve",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payslips/999999999",
+    "method": "GET",
+    "path": "/payslips/999999999",
+    "controller": "PayslipController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payslips/999999999",
+    "method": "GET",
+    "path": "/payslips/999999999",
+    "controller": "PayslipController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 23,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-decisions/999999999/reject",
+    "method": "POST",
+    "path": "/employee-decisions/999999999/reject",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 26,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-decisions/999999999/reject",
+    "method": "POST",
+    "path": "/employee-decisions/999999999/reject",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/hr-scopes/999999999/revoke",
+    "method": "POST",
+    "path": "/api/admin/hr-scopes/999999999/revoke",
+    "controller": "HrDepartmentScopeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/hr-scopes/999999999/revoke",
+    "method": "POST",
+    "path": "/api/admin/hr-scopes/999999999/revoke",
+    "controller": "HrDepartmentScopeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payslips/my-payslips",
+    "method": "GET",
+    "path": "/payslips/my-payslips",
+    "controller": "PayslipController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 18,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payslips/my-payslips",
+    "method": "GET",
+    "path": "/payslips/my-payslips",
+    "controller": "PayslipController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/payroll-periods/999999999",
+    "method": "PUT",
+    "path": "/payroll-periods/999999999",
+    "controller": "PayrollPeriodController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/payroll-periods/999999999",
+    "method": "PUT",
+    "path": "/payroll-periods/999999999",
+    "controller": "PayrollPeriodController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/hello",
+    "method": "GET",
+    "path": "/hello",
+    "controller": "HelloController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 200,
+    "body": "Xin chào HRM Trung tâm Giáo dục!",
+    "ms": 28,
+    "result": "OBSERVED",
+    "note": "Intentional public hello; policy clarification required."
+  },
+  {
+    "id": "BEG-01-invalid-GET/hello",
+    "method": "GET",
+    "path": "/hello",
+    "controller": "HelloController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 200,
+    "body": "Xin chào HRM Trung tâm Giáo dục!",
+    "ms": 14,
+    "result": "OBSERVED",
+    "note": "Intentional public hello; policy clarification required."
+  },
+  {
+    "id": "BEG-01-none-GET/employee-qualifications/search",
+    "method": "GET",
+    "path": "/employee-qualifications/search",
+    "controller": "PersonnelSearchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-qualifications/search",
+    "method": "GET",
+    "path": "/employee-qualifications/search",
+    "controller": "PersonnelSearchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-batches/999999999/adjust",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/adjust",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-batches/999999999/adjust",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/adjust",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments/999999999/head/candidates",
+    "method": "GET",
+    "path": "/departments/999999999/head/candidates",
+    "controller": "DepartmentHeadController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments/999999999/head/candidates",
+    "method": "GET",
+    "path": "/departments/999999999/head/candidates",
+    "controller": "DepartmentHeadController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contracts/999999999",
+    "method": "GET",
+    "path": "/contracts/999999999",
+    "controller": "ContractController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contracts/999999999",
+    "method": "GET",
+    "path": "/contracts/999999999",
+    "controller": "ContractController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/admin/roles",
+    "method": "POST",
+    "path": "/api/admin/roles",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/admin/roles",
+    "method": "POST",
+    "path": "/api/admin/roles",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 24,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/positions/999999999",
+    "method": "DELETE",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/positions/999999999",
+    "method": "DELETE",
+    "path": "/positions/999999999",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contracts/999999999/salary-terms",
+    "method": "GET",
+    "path": "/contracts/999999999/salary-terms",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contracts/999999999/salary-terms",
+    "method": "GET",
+    "path": "/contracts/999999999/salary-terms",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/leave-entitlements",
+    "method": "POST",
+    "path": "/leave-entitlements",
+    "controller": "LeaveEntitlementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/leave-entitlements",
+    "method": "POST",
+    "path": "/leave-entitlements",
+    "controller": "LeaveEntitlementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/allowance-types/999999999",
+    "method": "GET",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/allowance-types/999999999",
+    "method": "GET",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/permissions",
+    "method": "GET",
+    "path": "/api/admin/permissions",
+    "controller": "AdminPermissionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 15,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/permissions",
+    "method": "GET",
+    "path": "/api/admin/permissions",
+    "controller": "AdminPermissionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/qualification-levels",
+    "method": "POST",
+    "path": "/qualification-levels",
+    "controller": "QualificationLevelController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/qualification-levels",
+    "method": "POST",
+    "path": "/qualification-levels",
+    "controller": "QualificationLevelController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/decision-payroll-items",
+    "method": "GET",
+    "path": "/employees/999999999/decision-payroll-items",
+    "controller": "DecisionPayrollController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/decision-payroll-items",
+    "method": "GET",
+    "path": "/employees/999999999/decision-payroll-items",
+    "controller": "DecisionPayrollController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/departments/999999999",
+    "method": "PUT",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/departments/999999999",
+    "method": "PUT",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-requests/mine",
+    "method": "GET",
+    "path": "/employee-requests/mine",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-requests/mine",
+    "method": "GET",
+    "path": "/employee-requests/mine",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-periods/999999999",
+    "method": "GET",
+    "path": "/payroll-periods/999999999",
+    "controller": "PayrollPeriodController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-periods/999999999",
+    "method": "GET",
+    "path": "/payroll-periods/999999999",
+    "controller": "PayrollPeriodController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/allowance-types/999999999",
+    "method": "PUT",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/allowance-types/999999999",
+    "method": "PUT",
+    "path": "/allowance-types/999999999",
+    "controller": "AllowanceTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/positions",
+    "method": "GET",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/positions",
+    "method": "GET",
+    "path": "/positions",
+    "controller": "PositionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-batches/999999999/lock",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/lock",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-batches/999999999/lock",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/lock",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 15,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/leave-types",
+    "method": "GET",
+    "path": "/leave-types",
+    "controller": "LeaveTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/leave-types",
+    "method": "GET",
+    "path": "/leave-types",
+    "controller": "LeaveTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-requests/leave-policies/999999999",
+    "method": "GET",
+    "path": "/employee-requests/leave-policies/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-requests/leave-policies/999999999",
+    "method": "GET",
+    "path": "/employee-requests/leave-policies/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/contracts",
+    "method": "POST",
+    "path": "/contracts",
+    "controller": "ContractController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/contracts",
+    "method": "POST",
+    "path": "/contracts",
+    "controller": "ContractController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/resignation",
+    "method": "POST",
+    "path": "/employee-requests/resignation",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/resignation",
+    "method": "POST",
+    "path": "/employee-requests/resignation",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employee-requests/leave-policies/999999999",
+    "method": "PUT",
+    "path": "/employee-requests/leave-policies/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employee-requests/leave-policies/999999999",
+    "method": "PUT",
+    "path": "/employee-requests/leave-policies/999999999",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PATCH/api/management/shifts/999999999/deactivate",
+    "method": "PATCH",
+    "path": "/api/management/shifts/999999999/deactivate",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PATCH/api/management/shifts/999999999/deactivate",
+    "method": "PATCH",
+    "path": "/api/management/shifts/999999999/deactivate",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/auth/me",
+    "method": "GET",
+    "path": "/api/auth/me",
+    "controller": "AuthController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/auth/me",
+    "method": "GET",
+    "path": "/api/auth/me",
+    "controller": "AuthController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PATCH/employees/999999999/contact",
+    "method": "PATCH",
+    "path": "/employees/999999999/contact",
+    "controller": "EmployeeDetailController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PATCH/employees/999999999/contact",
+    "method": "PATCH",
+    "path": "/employees/999999999/contact",
+    "controller": "EmployeeDetailController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/salary-components/999999999",
+    "method": "DELETE",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/salary-components/999999999",
+    "method": "DELETE",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees",
+    "method": "POST",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees",
+    "method": "POST",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 4,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/work",
+    "method": "GET",
+    "path": "/api/reports/work",
+    "controller": "WorkStatisticsController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/work",
+    "method": "GET",
+    "path": "/api/reports/work",
+    "controller": "WorkStatisticsController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-requests",
+    "method": "GET",
+    "path": "/employee-requests",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-requests",
+    "method": "GET",
+    "path": "/employee-requests",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments/999999999",
+    "method": "GET",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments/999999999",
+    "method": "GET",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/accounts",
+    "method": "GET",
+    "path": "/api/admin/accounts",
+    "controller": "AdminAccountManagementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 18,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/accounts",
+    "method": "GET",
+    "path": "/api/admin/accounts",
+    "controller": "AdminAccountManagementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-batches/999999999/publish",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/publish",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-batches/999999999/publish",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/publish",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/management/attendance",
+    "method": "GET",
+    "path": "/api/management/attendance",
+    "controller": "AttendanceManagementReadOnlyController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/management/attendance",
+    "method": "GET",
+    "path": "/api/management/attendance",
+    "controller": "AttendanceManagementReadOnlyController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-requests/999999999/reject",
+    "method": "POST",
+    "path": "/employee-requests/999999999/reject",
+    "controller": "EmployeeRequestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-requests/999999999/reject",
+    "method": "POST",
+    "path": "/employee-requests/999999999/reject",
+    "controller": "EmployeeRequestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/departments/999999999/head/history",
+    "method": "GET",
+    "path": "/departments/999999999/head/history",
+    "controller": "DepartmentHeadController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/departments/999999999/head/history",
+    "method": "GET",
+    "path": "/departments/999999999/head/history",
+    "controller": "DepartmentHeadController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/contract-types/999999999",
+    "method": "DELETE",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/contract-types/999999999",
+    "method": "DELETE",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employee-qualifications/999999999/primary",
+    "method": "PUT",
+    "path": "/employee-qualifications/999999999/primary",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employee-qualifications/999999999/primary",
+    "method": "PUT",
+    "path": "/employee-qualifications/999999999/primary",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/qualification-levels/999999999",
+    "method": "DELETE",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/qualification-levels/999999999",
+    "method": "DELETE",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-integration-test/attendance/999999999",
+    "method": "GET",
+    "path": "/payroll-integration-test/attendance/999999999",
+    "controller": "PayrollIntegrationTestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-integration-test/attendance/999999999",
+    "method": "GET",
+    "path": "/payroll-integration-test/attendance/999999999",
+    "controller": "PayrollIntegrationTestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees",
+    "method": "GET",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees",
+    "method": "GET",
+    "path": "/employees",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/api/admin/permissions/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/api/admin/permissions/999999999",
+    "method": "DELETE",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/salary-components/999999999",
+    "method": "GET",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/salary-components/999999999",
+    "method": "GET",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employee-decisions",
+    "method": "POST",
+    "path": "/employee-decisions",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employee-decisions",
+    "method": "POST",
+    "path": "/employee-decisions",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/api/admin/permissions/999999999",
+    "method": "PUT",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/api/admin/permissions/999999999",
+    "method": "PUT",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/me/salary",
+    "method": "GET",
+    "path": "/api/me/salary",
+    "controller": "PayrollController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/me/salary",
+    "method": "GET",
+    "path": "/api/me/salary",
+    "controller": "PayrollController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/salary-rates",
+    "method": "GET",
+    "path": "/employees/999999999/salary-rates",
+    "controller": "ContractSalaryTermController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/salary-rates",
+    "method": "GET",
+    "path": "/employees/999999999/salary-rates",
+    "controller": "ContractSalaryTermController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/api/auth/logout",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "controller": "AuthController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/api/auth/logout",
+    "method": "POST",
+    "path": "/api/auth/logout",
+    "controller": "AuthController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/employee-decisions/999999999",
+    "method": "DELETE",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/employee-decisions/999999999",
+    "method": "DELETE",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/employee-qualifications/999999999",
+    "method": "DELETE",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/employee-qualifications/999999999",
+    "method": "DELETE",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/salary-components/999999999",
+    "method": "PUT",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/salary-components/999999999",
+    "method": "PUT",
+    "path": "/salary-components/999999999",
+    "controller": "SalaryComponentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/qualifications",
+    "method": "GET",
+    "path": "/employees/999999999/qualifications",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/qualifications",
+    "method": "GET",
+    "path": "/employees/999999999/qualifications",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employee-decisions/999999999",
+    "method": "PUT",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employee-decisions/999999999",
+    "method": "PUT",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-batches/999999999/calculate",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/calculate",
+    "controller": "PayrollBatchController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-batches/999999999/calculate",
+    "method": "POST",
+    "path": "/payroll-batches/999999999/calculate",
+    "controller": "PayrollBatchController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/g2/audit",
+    "method": "GET",
+    "path": "/g2/audit",
+    "controller": "PersonnelAuditController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/g2/audit",
+    "method": "GET",
+    "path": "/g2/audit",
+    "controller": "PersonnelAuditController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/personnel/audit",
+    "method": "GET",
+    "path": "/personnel/audit",
+    "controller": "PersonnelAuditController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/personnel/audit",
+    "method": "GET",
+    "path": "/personnel/audit",
+    "controller": "PersonnelAuditController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/hr-scopes",
+    "method": "GET",
+    "path": "/api/admin/hr-scopes",
+    "controller": "HrDepartmentScopeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/hr-scopes",
+    "method": "GET",
+    "path": "/api/admin/hr-scopes",
+    "controller": "HrDepartmentScopeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/payroll-integration-test/salary-profile/999999999",
+    "method": "GET",
+    "path": "/payroll-integration-test/salary-profile/999999999",
+    "controller": "PayrollIntegrationTestController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/payroll-integration-test/salary-profile/999999999",
+    "method": "GET",
+    "path": "/payroll-integration-test/salary-profile/999999999",
+    "controller": "PayrollIntegrationTestController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contract-types/999999999",
+    "method": "GET",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contract-types/999999999",
+    "method": "GET",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/departments",
+    "method": "POST",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/departments",
+    "method": "POST",
+    "path": "/departments",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/reports/payroll",
+    "method": "GET",
+    "path": "/api/reports/payroll",
+    "controller": "PayrollStatisticsController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/reports/payroll",
+    "method": "GET",
+    "path": "/api/reports/payroll",
+    "controller": "PayrollStatisticsController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/payroll-periods",
+    "method": "POST",
+    "path": "/payroll-periods",
+    "controller": "PayrollPeriodController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/payroll-periods",
+    "method": "POST",
+    "path": "/payroll-periods",
+    "controller": "PayrollPeriodController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/terminate",
+    "method": "POST",
+    "path": "/employees/999999999/terminate",
+    "controller": "EmployeeTerminationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/terminate",
+    "method": "POST",
+    "path": "/employees/999999999/terminate",
+    "controller": "EmployeeTerminationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/search",
+    "method": "GET",
+    "path": "/employees/search",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/search",
+    "method": "GET",
+    "path": "/employees/search",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999/allowance-calculations",
+    "method": "GET",
+    "path": "/employees/999999999/allowance-calculations",
+    "controller": "AllowanceCalculationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999/allowance-calculations",
+    "method": "GET",
+    "path": "/employees/999999999/allowance-calculations",
+    "controller": "AllowanceCalculationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/qualification-levels/999999999",
+    "method": "GET",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/qualification-levels/999999999",
+    "method": "GET",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/contracts",
+    "method": "GET",
+    "path": "/contracts",
+    "controller": "ContractController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/contracts",
+    "method": "GET",
+    "path": "/contracts",
+    "controller": "ContractController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/contract-types/999999999",
+    "method": "PUT",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 7,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/contract-types/999999999",
+    "method": "PUT",
+    "path": "/contract-types/999999999",
+    "controller": "ContractTypeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PATCH/api/management/shifts/999999999/activate",
+    "method": "PATCH",
+    "path": "/api/management/shifts/999999999/activate",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PATCH/api/management/shifts/999999999/activate",
+    "method": "PATCH",
+    "path": "/api/management/shifts/999999999/activate",
+    "controller": "WorkShiftManagementWriteController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/health",
+    "method": "GET",
+    "path": "/health",
+    "controller": "HealthController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/health",
+    "method": "GET",
+    "path": "/health",
+    "controller": "HealthController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/permissions/999999999",
+    "method": "GET",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 10,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/permissions/999999999",
+    "method": "GET",
+    "path": "/api/admin/permissions/999999999",
+    "controller": "AdminPermissionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/qualification-levels/999999999",
+    "method": "PUT",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/qualification-levels/999999999",
+    "method": "PUT",
+    "path": "/qualification-levels/999999999",
+    "controller": "QualificationLevelController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-POST/employees/999999999/allowances",
+    "method": "POST",
+    "path": "/employees/999999999/allowances",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-POST/employees/999999999/allowances",
+    "method": "POST",
+    "path": "/employees/999999999/allowances",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/api/admin/roles",
+    "method": "GET",
+    "path": "/api/admin/roles",
+    "controller": "AdminRoleController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/api/admin/roles",
+    "method": "GET",
+    "path": "/api/admin/roles",
+    "controller": "AdminRoleController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 11,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-decisions/999999999",
+    "method": "GET",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 8,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-decisions/999999999",
+    "method": "GET",
+    "path": "/employee-decisions/999999999",
+    "controller": "EmployeeDecisionController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 18,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employee-qualifications/999999999",
+    "method": "GET",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employee-qualifications/999999999",
+    "method": "GET",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/departments/999999999",
+    "method": "DELETE",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/departments/999999999",
+    "method": "DELETE",
+    "path": "/departments/999999999",
+    "controller": "DepartmentController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 12,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/employees/999999999",
+    "method": "GET",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 14,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/employees/999999999",
+    "method": "GET",
+    "path": "/employees/999999999",
+    "controller": "EmployeeController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-GET/leave-entitlements",
+    "method": "GET",
+    "path": "/leave-entitlements",
+    "controller": "LeaveEntitlementController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 16,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-GET/leave-entitlements",
+    "method": "GET",
+    "path": "/leave-entitlements",
+    "controller": "LeaveEntitlementController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 6,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-DELETE/employees/999999999/allowances/999999999",
+    "method": "DELETE",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 13,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-DELETE/employees/999999999/allowances/999999999",
+    "method": "DELETE",
+    "path": "/employees/999999999/allowances/999999999",
+    "controller": "EmployeeAllowanceController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-none-PUT/employee-qualifications/999999999",
+    "method": "PUT",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "none",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 5,
+    "result": "PASS"
+  },
+  {
+    "id": "BEG-01-invalid-PUT/employee-qualifications/999999999",
+    "method": "PUT",
+    "path": "/employee-qualifications/999999999",
+    "controller": "EmployeeQualificationController",
+    "role": "invalid",
+    "expected": [
+      401
+    ],
+    "status": 401,
+    "body": {
+      "trang_thai": 401,
+      "loi_chi_tiet": "Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."
+    },
+    "ms": 9,
+    "result": "PASS"
+  }
+]

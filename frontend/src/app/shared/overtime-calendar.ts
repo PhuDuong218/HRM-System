@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from './search-assist.directive';
+import {ActionDialogService} from './ui/action-dialog';
+import {HrmNotice} from './ui/notice';
 import {DetailFocusDirective} from './detail-focus.directive';
 import {OtSupplementPanelComponent} from './ot-supplement-panel';
 import {RowViewDirective} from './row-view.directive';
@@ -9,8 +12,10 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {API_BASE_URL} from '../services/api.config';
 import {OtDetail,OtRow,OtBreak,OvertimeApiService} from '../pages/overtime/overtime-api.service';
 interface Slot {row:OtRow;canCheckIn:boolean;canCheckOut:boolean;}
-@Component({selector:'app-overtime-calendar',standalone:true,imports: [DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule],templateUrl:'./overtime-calendar.html'})
+@Component({selector:'app-overtime-calendar',standalone:true,imports:[SearchAssistDirective,HrmNotice,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule],templateUrl:'./overtime-calendar.html'})
 export class OvertimeCalendarComponent implements OnChanges {
+ protected actionDialogInPage=inject(ActionDialogService);
+
  @Input() mine=false;@Input() initialFrom='';@Input() initialTo='';@Input() employeeId:number|null=null;@Input() departmentId='';
  private http=inject(HttpClient);private destroy=inject(DestroyRef);private api=inject(OvertimeApiService);private version=0;
  private date(offset:number){const d=new Date();d.setDate(d.getDate()+offset);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
@@ -26,8 +31,8 @@ export class OvertimeCalendarComponent implements OnChanges {
  }
  checkout(slot:Slot){if(this.saving)return;this.selected=slot;this.rests=[];this.noRest=false;this.error='';this.message='';}
  addRest(){this.noRest=false;this.rests.push({breakStart:'',breakEnd:''});}
- clock(slot:Slot,checkIn:boolean){if(this.saving||!this.mine)return;if(!checkIn&&(!this.rests.length&&!this.noRest||this.rests.some(b=>!b.breakStart||!b.breakEnd||b.breakEnd<=b.breakStart))){this.error='Nhập khoảng nghỉ thực tế hoặc xác nhận không nghỉ.';return;}
-  if(!window.confirm(`${checkIn?'Check-in':'Check-out'} OT ${slot.row.ot.requestCode}? Giờ ghi nhận lấy từ máy chủ.`))return;
+ async clock(slot:Slot,checkIn:boolean){if(this.saving||!this.mine)return;if(!checkIn&&(!this.rests.length&&!this.noRest||this.rests.some(b=>!b.breakStart||!b.breakEnd||b.breakEnd<=b.breakStart))){this.error='Nhập khoảng nghỉ thực tế hoặc xác nhận không nghỉ.';return;}
+  if(!(await this.actionDialogInPage.confirm(`${checkIn?'Check-in':'Check-out'} OT ${slot.row.ot.requestCode}? Giờ ghi nhận lấy từ máy chủ.`)))return;
   this.saving=true;this.error='';this.message='';this.http.post(`${API_BASE_URL}/overtime/workspace/calendar/${slot.row.ot.overtimeId}/${checkIn?'check-in':'check-out'}`,{expectedVersion:slot.row.version,breaks:checkIn?[]:this.rests,noBreaksConfirmed:!checkIn&&this.noRest}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:()=>{this.saving=false;this.message=checkIn?'Đã check-in OT.':'Đã check-out OT; chờ người có thẩm quyền xác nhận thực tế.';this.selected=null;this.load(this.page);},error:e=>{this.saving=false;this.error=this.api.message(e);}});
  }
 }

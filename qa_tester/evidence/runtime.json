@@ -1,0 +1,899 @@
+{
+  "database" : "hrm_test",
+  "profiles" : [ "local", "hrm-db" ],
+  "salaryProvider" : "com.hrm.service.provider.impl.MockSalaryContractProvider",
+  "attendanceProvider" : "com.hrm.service.provider.impl.MockAttendanceDataProvider",
+  "calculationEngine" : "com.hrm.service.engine.PayrollCalculationEngine",
+  "automaticSchedulers" : "suppressed by QA-only launcher; job beans may be invoked separately",
+  "routes" : [ {
+    "methods" : [ "GET" ],
+    "handler" : "getAllQualificationLevels",
+    "controller" : "QualificationLevelController",
+    "paths" : [ "/qualification-levels" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "replaceEmployee",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeDetail",
+    "controller" : "EmployeeDetailController",
+    "paths" : [ "/employees/{id}/detail" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "changePassword",
+    "controller" : "AuthController",
+    "paths" : [ "/api/auth/change-password" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "SalaryComponentController",
+    "paths" : [ "/salary-components" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "approve",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions/{id}/approve" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "exportPayroll",
+    "controller" : "ReportExportController",
+    "paths" : [ "/api/reports/payroll/export" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "ContractTypeController",
+    "paths" : [ "/contract-types" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deleteLeaveType",
+    "controller" : "LeaveTypeController",
+    "paths" : [ "/leave-types/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "resetPassword",
+    "controller" : "AdminAccountController",
+    "paths" : [ "/api/admin/accounts/{accountId}/reset-password" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "search",
+    "controller" : "AuditLogController",
+    "paths" : [ "/audit-logs" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getById",
+    "controller" : "LeaveEntitlementController",
+    "paths" : [ "/leave-entitlements/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getMyPayslips",
+    "controller" : "PayrollController",
+    "paths" : [ "/api/me/payslips" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "change",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms/{id}/change-rate" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "updateLeaveEntitlement",
+    "controller" : "LeaveEntitlementController",
+    "paths" : [ "/leave-entitlements/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "mine",
+    "controller" : "ScheduleQueryController",
+    "paths" : [ "/api/me/schedules" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "createDraft",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/draft" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "login",
+    "controller" : "AuthController",
+    "paths" : [ "/api/auth/login" ]
+  }, {
+    "methods" : [ ],
+    "handler" : "errorHtml",
+    "controller" : "BasicErrorController",
+    "paths" : [ "/error" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "execute",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/resignations/execute-due" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAll",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "searchPositions",
+    "controller" : "PositionController",
+    "paths" : [ "/positions", "/positions/search" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "withdraw",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/{id}/withdraw" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "terminate",
+    "controller" : "ContractController",
+    "paths" : [ "/contracts/{id}/terminate" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "balances",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/balances/{employeeId}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getLeaveTypeById",
+    "controller" : "LeaveTypeController",
+    "paths" : [ "/leave-types/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "AllowanceTypeController",
+    "paths" : [ "/allowance-types" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "updateLeaveType",
+    "controller" : "LeaveTypeController",
+    "paths" : [ "/leave-types/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "WorkShiftManagementWriteController",
+    "paths" : [ "/api/management/shifts" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "DepartmentHeadController",
+    "paths" : [ "/departments/{departmentId}/head" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "AdminAccountManagementController",
+    "paths" : [ "/api/admin/accounts/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "transferEmployee",
+    "controller" : "EmployeeAssignmentController",
+    "paths" : [ "/employees/{id}/transfer" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "WorkShiftManagementWriteController",
+    "paths" : [ "/api/management/shifts/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "AdminPermissionController",
+    "paths" : [ "/api/admin/permissions" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "addPosition",
+    "controller" : "PositionController",
+    "paths" : [ "/positions" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "HrDepartmentScopeController",
+    "paths" : [ "/api/admin/hr-scopes/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "end",
+    "controller" : "DepartmentHeadController",
+    "paths" : [ "/departments/{departmentId}/head/end" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "appoint",
+    "controller" : "DepartmentHeadController",
+    "paths" : [ "/departments/{departmentId}/head" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "management",
+    "controller" : "ScheduleQueryController",
+    "paths" : [ "/api/management/schedules/search" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "updatePosition",
+    "controller" : "PositionController",
+    "paths" : [ "/positions/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "end",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances/{id}/end-from" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "assignments",
+    "controller" : "PersonnelSearchController",
+    "paths" : [ "/employee-assignments/search" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "addLeaveType",
+    "controller" : "LeaveTypeController",
+    "paths" : [ "/leave-types" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeHistory",
+    "controller" : "EmployeeAssignmentController",
+    "paths" : [ "/employees/{id}/assignments" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAll",
+    "controller" : "PayrollPeriodController",
+    "paths" : [ "/payroll-periods" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAll",
+    "controller" : "ContractTypeController",
+    "paths" : [ "/contract-types" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getByPeriod",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/period/{periodId}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeesPage",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "AdminAccountManagementController",
+    "paths" : [ "/api/admin/accounts/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "WorkShiftReadOnlyController",
+    "paths" : [ "/api/management/shifts/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "listDepartments",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "AdminAccountManagementController",
+    "paths" : [ "/api/admin/accounts/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "AdminAccountManagementController",
+    "paths" : [ "/api/admin/accounts" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "permissions",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles/{id}/permissions" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getBatchDetails",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/{batchId}/details" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getContractStatistics",
+    "controller" : "ContractStatisticsController",
+    "paths" : [ "/api/reports/contracts" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "change",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances/{id}/change-from" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getPositionById",
+    "controller" : "PositionController",
+    "paths" : [ "/positions/{id}" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "terminateEmployee",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees/{id}" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "exportEmployees",
+    "controller" : "ReportExportController",
+    "paths" : [ "/api/reports/employees/export" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "searchDepartments",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments/search", "/departments" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getByEmployeeId",
+    "controller" : "LeaveEntitlementController",
+    "paths" : [ "/leave-entitlements/employee/{employeeId}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "exportContracts",
+    "controller" : "ReportExportController",
+    "paths" : [ "/api/reports/contracts/export" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "history",
+    "controller" : "G1AuditController",
+    "paths" : [ "/g1/audit" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAll",
+    "controller" : "SalaryComponentController",
+    "paths" : [ "/salary-components" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAllAssignments",
+    "controller" : "EmployeeAssignmentController",
+    "paths" : [ "/employee-assignments" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeStatistics",
+    "controller" : "EmployeeStatisticsController",
+    "paths" : [ "/api/reports/employees" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "capabilities",
+    "controller" : "WorkShiftManagementWriteController",
+    "paths" : [ "/api/management/shifts/capabilities" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "renew",
+    "controller" : "ContractController",
+    "paths" : [ "/contracts/{id}/renew" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "AllowanceTypeController",
+    "paths" : [ "/allowance-types" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "viewPayslipHtml",
+    "controller" : "PayslipController",
+    "paths" : [ "/payslips/{payslipId}/html" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "WorkShiftReadOnlyController",
+    "paths" : [ "/api/management/shifts" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "rehire",
+    "controller" : "EmployeeRehireController",
+    "paths" : [ "/employees/{id}/rehire" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "detail",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "addEmployeeQualification",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employees/{employeeId}/qualifications" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms/{id}" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deactivate",
+    "controller" : "AllowanceTypeController",
+    "paths" : [ "/allowance-types/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "leave",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/leave" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "grant",
+    "controller" : "HrDepartmentScopeController",
+    "paths" : [ "/api/admin/hr-scopes" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "exportWork",
+    "controller" : "ReportExportController",
+    "paths" : [ "/api/reports/work/export" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "approve",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/{id}/approve" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getPayslipDetail",
+    "controller" : "PayslipController",
+    "paths" : [ "/payslips/{payslipId}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "reject",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions/{id}/reject" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "revoke",
+    "controller" : "HrDepartmentScopeController",
+    "paths" : [ "/api/admin/hr-scopes/{id}/revoke" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getMyPayslips",
+    "controller" : "PayslipController",
+    "paths" : [ "/payslips/my-payslips" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "PayrollPeriodController",
+    "paths" : [ "/payroll-periods/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "hello",
+    "controller" : "HelloController",
+    "paths" : [ "/hello" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "qualifications",
+    "controller" : "PersonnelSearchController",
+    "paths" : [ "/employee-qualifications/search" ]
+  }, {
+    "methods" : [ ],
+    "handler" : "error",
+    "controller" : "BasicErrorController",
+    "paths" : [ "/error" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "createAdjustment",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/{batchId}/adjust" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "candidates",
+    "controller" : "DepartmentHeadController",
+    "paths" : [ "/departments/{departmentId}/head/candidates" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getOne",
+    "controller" : "ContractController",
+    "paths" : [ "/contracts/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deletePosition",
+    "controller" : "PositionController",
+    "paths" : [ "/positions/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/contracts/{contractId}/salary-terms" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "addLeaveEntitlement",
+    "controller" : "LeaveEntitlementController",
+    "paths" : [ "/leave-entitlements" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "AllowanceTypeController",
+    "paths" : [ "/allowance-types/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "AdminPermissionController",
+    "paths" : [ "/api/admin/permissions" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "addQualificationLevel",
+    "controller" : "QualificationLevelController",
+    "paths" : [ "/qualification-levels" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "DecisionPayrollController",
+    "paths" : [ "/employees/{employeeId}/decision-payroll-items" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "replaceDepartment",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "mine",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/mine" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getById",
+    "controller" : "PayrollPeriodController",
+    "paths" : [ "/payroll-periods/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "AllowanceTypeController",
+    "paths" : [ "/allowance-types/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAllPositions",
+    "controller" : "PositionController",
+    "paths" : [ "/positions" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "lockBatch",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/{batchId}/lock" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAllLeaveTypes",
+    "controller" : "LeaveTypeController",
+    "paths" : [ "/leave-types" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "policy",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/leave-policies/{leaveTypeId}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "ContractController",
+    "paths" : [ "/contracts" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "resignation",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/resignation" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "policy",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/leave-policies/{leaveTypeId}" ]
+  }, {
+    "methods" : [ "PATCH" ],
+    "handler" : "deactivate",
+    "controller" : "WorkShiftManagementWriteController",
+    "paths" : [ "/api/management/shifts/{id}/deactivate" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "currentUser",
+    "controller" : "AuthController",
+    "paths" : [ "/api/auth/me" ]
+  }, {
+    "methods" : [ "PATCH" ],
+    "handler" : "patchEmployeeContact",
+    "controller" : "EmployeeDetailController",
+    "paths" : [ "/employees/{id}/contact" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "SalaryComponentController",
+    "paths" : [ "/salary-components/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "createEmployee",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getWorkStatistics",
+    "controller" : "WorkStatisticsController",
+    "paths" : [ "/api/reports/work" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getDepartmentDetails",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "AdminAccountManagementController",
+    "paths" : [ "/api/admin/accounts" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "publishBatch",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/{batchId}/publish" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "search",
+    "controller" : "AttendanceManagementReadOnlyController",
+    "paths" : [ "/api/management/attendance" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "reject",
+    "controller" : "EmployeeRequestController",
+    "paths" : [ "/employee-requests/{id}/reject" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "history",
+    "controller" : "DepartmentHeadController",
+    "paths" : [ "/departments/{departmentId}/head/history" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deactivate",
+    "controller" : "ContractTypeController",
+    "paths" : [ "/contract-types/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "setPrimaryEmployeeQualification",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employee-qualifications/{id}/primary" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deleteQualificationLevel",
+    "controller" : "QualificationLevelController",
+    "paths" : [ "/qualification-levels/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAttendance",
+    "controller" : "PayrollIntegrationTestController",
+    "paths" : [ "/payroll-integration-test/attendance/{employeeId}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "listEmployees",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "AdminPermissionController",
+    "paths" : [ "/api/admin/permissions/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getById",
+    "controller" : "SalaryComponentController",
+    "paths" : [ "/salary-components/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "AdminPermissionController",
+    "paths" : [ "/api/admin/permissions/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getMySalary",
+    "controller" : "PayrollController",
+    "paths" : [ "/api/me/salary" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "period",
+    "controller" : "ContractSalaryTermController",
+    "paths" : [ "/employees/{employeeId}/salary-rates" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "logout",
+    "controller" : "AuthController",
+    "paths" : [ "/api/auth/logout" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions/{id}" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deleteEmployeeQualification",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employee-qualifications/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "SalaryComponentController",
+    "paths" : [ "/salary-components/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeQualificationsByEmployeeId",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employees/{employeeId}/qualifications" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "calculatePayroll",
+    "controller" : "PayrollBatchController",
+    "paths" : [ "/payroll-batches/{batchId}/calculate" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "history",
+    "controller" : "PersonnelAuditController",
+    "paths" : [ "/g2/audit", "/personnel/audit" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "all",
+    "controller" : "HrDepartmentScopeController",
+    "paths" : [ "/api/admin/hr-scopes" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getSalaryProfile",
+    "controller" : "PayrollIntegrationTestController",
+    "paths" : [ "/payroll-integration-test/salary-profile/{employeeId}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getOne",
+    "controller" : "ContractTypeController",
+    "paths" : [ "/contract-types/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "createDepartment",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getPayrollStatistics",
+    "controller" : "PayrollStatisticsController",
+    "paths" : [ "/api/reports/payroll" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "PayrollPeriodController",
+    "paths" : [ "/payroll-periods" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "terminateEmployee",
+    "controller" : "EmployeeTerminationController",
+    "paths" : [ "/employees/{id}/terminate" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "searchEmployees",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees/search" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "calculate",
+    "controller" : "AllowanceCalculationController",
+    "paths" : [ "/employees/{employeeId}/allowance-calculations" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getQualificationLevelById",
+    "controller" : "QualificationLevelController",
+    "paths" : [ "/qualification-levels/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "search",
+    "controller" : "ContractController",
+    "paths" : [ "/contracts" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "update",
+    "controller" : "ContractTypeController",
+    "paths" : [ "/contract-types/{id}" ]
+  }, {
+    "methods" : [ "PATCH" ],
+    "handler" : "activate",
+    "controller" : "WorkShiftManagementWriteController",
+    "paths" : [ "/api/management/shifts/{id}/activate" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "health",
+    "controller" : "HealthController",
+    "paths" : [ "/health", "/api/health" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "AdminPermissionController",
+    "paths" : [ "/api/admin/permissions/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "updateQualificationLevel",
+    "controller" : "QualificationLevelController",
+    "paths" : [ "/qualification-levels/{id}" ]
+  }, {
+    "methods" : [ "POST" ],
+    "handler" : "create",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "list",
+    "controller" : "AdminRoleController",
+    "paths" : [ "/api/admin/roles" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "get",
+    "controller" : "EmployeeDecisionController",
+    "paths" : [ "/employee-decisions/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeQualificationById",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employee-qualifications/{id}" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "deactivateDepartment",
+    "controller" : "DepartmentController",
+    "paths" : [ "/departments/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getEmployeeDetails",
+    "controller" : "EmployeeController",
+    "paths" : [ "/employees/{id}" ]
+  }, {
+    "methods" : [ "GET" ],
+    "handler" : "getAllEntitlements",
+    "controller" : "LeaveEntitlementController",
+    "paths" : [ "/leave-entitlements" ]
+  }, {
+    "methods" : [ "DELETE" ],
+    "handler" : "delete",
+    "controller" : "EmployeeAllowanceController",
+    "paths" : [ "/employees/{employeeId}/allowances/{id}" ]
+  }, {
+    "methods" : [ "PUT" ],
+    "handler" : "updateEmployeeQualification",
+    "controller" : "EmployeeQualificationController",
+    "paths" : [ "/employee-qualifications/{id}" ]
+  } ]
+}
