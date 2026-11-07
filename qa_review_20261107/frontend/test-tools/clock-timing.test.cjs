@@ -1,8 +1,0 @@
-const {test}=require('node:test');const assert=require('node:assert/strict');const fs=require('node:fs');const vm=require('node:vm');const ts=require('typescript');
-const exportsObject={};vm.runInNewContext(ts.transpileModule(fs.readFileSync('src/app/shared/clock-timing.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText,{exports:exportsObject,Date,Number,Math});
-const {clockTiming}=exportsObject;
-test('check-in reports the full schedule offset including seconds',()=>assert.equal(clockTiming('2026-11-04T08:00:00','2026-11-04T09:01:52.152','in'),'Check-in muộn 61 phút 52 giây'));
-test('early and late checkout are independent from check-in',()=>{assert.equal(clockTiming('2026-11-04T17:00:00','2026-11-04T16:45:00','out'),'Check-out sớm 15 phút');assert.equal(clockTiming('2026-11-04T17:00:00','2026-11-04T17:20:00','out'),'Check-out muộn 20 phút');});
-test('overnight and previous-day early check-in use the full date',()=>{assert.equal(clockTiming('2026-11-05T06:00:00','2026-11-05T05:50:00','out'),'Check-out sớm 10 phút');assert.equal(clockTiming('2026-11-05T00:00:00','2026-11-04T23:45:00','in'),'Check-in sớm 15 phút');});
-test('missing or invalid timestamps do not invent a deviation',()=>{assert.equal(clockTiming('2026-11-04T08:00:00',null,'in'),'');assert.equal(clockTiming('bad','bad','out'),'');});
-test('exact and sub-minute times remain distinct',()=>{assert.equal(clockTiming('2026-11-04T08:00:00','2026-11-04T08:00:00','in'),'Check-in đúng giờ');assert.equal(clockTiming('2026-11-04T08:00:00','2026-11-04T08:00:30','in'),'Check-in muộn 30 giây');});

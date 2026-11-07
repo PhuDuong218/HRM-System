@@ -12,3 +12,7 @@
 /frontend/KIEM_TRA.md
 git add .gitignore
 git diff --cached --name-status
+/qa_fix/
+/qa_review_20261107/
+/qa_tester/
+/qa_ui/
