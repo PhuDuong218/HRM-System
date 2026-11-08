@@ -2,7 +2,7 @@ import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,Input,OnInit,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
 import {HttpClient,HttpParams} from '@angular/common/http';
-import {firstValueFrom} from 'rxjs';
+import {firstValueFrom,Subscription,timer,switchMap} from 'rxjs';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {AttendanceApiService,AttendanceRow,AttendanceDetail} from '../pages/attendance/attendance-api.service';
 import {API_BASE_URL} from '../services/api.config';
@@ -19,6 +19,7 @@ type State='normal'|'late'|'absent'|'missing'|'maternity'|'leave'|'holiday'|'ot'
 export class AttendanceCalendarComponent implements OnInit {
  @Input() initialMonth='';
  private api=inject(AttendanceApiService);private http=inject(HttpClient);private destroy=inject(DestroyRef);
+ employeeOptions:Array<[number,string]>=[];lookupLoading=false;lookupError='';private lookupVersion=0;private lookupSubscription?:Subscription;
  private version=0;private detailVersion=0;private timer?:ReturnType<typeof setTimeout>;
  readonly timing=clockTiming;
  month=new Intl.DateTimeFormat('en-CA',{timeZone:'Asia/Ho_Chi_Minh',year:'numeric',month:'2-digit'}).format(new Date()).slice(0,7);
@@ -31,7 +32,7 @@ export class AttendanceCalendarComponent implements OnInit {
  readonly weekdays=['T2','T3','T4','T5','T6','T7','CN'];
  readonly filters=[['all','Tất cả'],['normal','Đi làm'],['late','Muộn / về sớm'],['missing','Thiếu chấm công'],['absent','Vắng'],['maternity','Nghỉ thai sản'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)']];
  readonly legend=[['normal','Đi làm bình thường'],['late','Muộn / về sớm'],['absent','Nghỉ không phép'],['missing','Chưa / thiếu chấm công'],['maternity','Nghỉ thai sản'],['leave','Nghỉ phép'],['holiday','Ngày lễ'],['ot','Tăng ca (OT)'],['empty','Không có lịch']];
- constructor(){this.destroy.onDestroy(()=>{++this.version;++this.detailVersion;clearTimeout(this.timer);});}
+ constructor(){this.destroy.onDestroy(()=>{++this.version;++this.detailVersion;clearTimeout(this.timer);++this.lookupVersion;this.lookupSubscription?.unsubscribe();});}
  ngOnInit(){if(/^\d{4}-\d{2}$/.test(this.initialMonth))this.month=this.initialMonth;this.anchor=this.month+'-01';this.api.context().pipe(takeUntilDestroyed(this.destroy)).subscribe({next:c=>this.canMine=c.mine,error:e=>this.error=this.api.message(e)});this.load();}
  add(d:string,n:number){const x=new Date(d+'T12:00:00Z');x.setUTCDate(x.getUTCDate()+n);return x.toISOString().slice(0,10);}
  get first(){if(this.mode==='month')return this.month+'-01';return this.add(this.anchor,-((new Date(this.anchor+'T12:00:00Z').getUTCDay()+6)%7));}
@@ -41,15 +42,26 @@ export class AttendanceCalendarComponent implements OnInit {
  setMode(mode:'month'|'week'){this.mode=mode;this.load();}
  private async pages<T>(url:string,params:HttpParams,field:'items'|'content'):Promise<T[]>{const out:T[]=[];let page=0,total=1;do{const r=await firstValueFrom(this.http.get<{items:T[];content:T[];totalPages:number}>(API_BASE_URL+url,{params:params.set('page',page)}).pipe(takeUntilDestroyed(this.destroy)));out.push(...r[field]);total=r.totalPages;page++;}while(page<total);return out;}
  async load(){if(this.saving)return;const v=++this.version;++this.detailVersion;this.loading=true;this.error='';this.overtime=[];this.otError='';this.leaveError='';this.leaves=[];this.types=[];this.rows=[];this.selected=null;this.detail=null;this.proposal=false;this.days=[];
-  const first=this.first,last=this.last,mine=this.mine;
+  const first=this.first,last=this.last,mine=this.mine;this.lookupEmployees(this.employee?this.q.replace(/[—–]/g,'-'):this.q);
   const params=new HttpParams().set('mine',mine).set('from',this.add(first,-1)).set('to',last);
   try{const [rows,leaveData,policy,ot]=await Promise.all([this.pages<AttendanceRow>('/attendance-workspace/records',params,'items'),Promise.all([this.pages<Leave>('/employee-requests'+(mine?'/mine':''),new HttpParams().set('type','NGHI_PHEP').set('status','DA_DUYET').set('size',100),'content'),this.pages<LeaveType>('/leave-types',new HttpParams().set('size',100),'content')]).catch(e=>{if(v===this.version)this.leaveError=this.api.message(e);return null;}),firstValueFrom(this.http.get<{configured:boolean;holidays:string[]}>(API_BASE_URL+'/attendance-workspace/calendar-policy').pipe(takeUntilDestroyed(this.destroy))).catch(()=>null),this.pages<OtSlot>('/overtime/workspace/calendar',params,'items').catch(e=>{if(v===this.version)this.otError=this.api.message(e);return [];})]);if(v!==this.version)return;this.rows=rows;this.overtime=ot;this.holidays=policy?.holidays??[];this.calendarWarning=policy?.configured?'':'Chưa có lịch lễ chính thức từ máy chủ; không tự suy đoán ngày lễ.';this.types=leaveData?.[1]??[];this.leaves=(leaveData?.[0]??[]).filter(l=>!l.withdrawnAt&&this.leaveState(l)!==null&&l.leaveStart<this.add(last,1)+'T00:00:00'&&l.leaveEnd>first+'T00:00:00');this.rebuild();}catch(e){if(v===this.version)this.error=this.api.message(e);}finally{if(v===this.version)this.loading=false;}
  }
  normalize(s:string){return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/đ/g,'d').replace(/Đ/g,'D').toLowerCase();}
- get employees(){const people=new Map<number,string>(this.rows.map(r=>[r.employeeId,r.employeeLabel]));for(const slot of this.overtime)people.set(slot.row.ot.employeeId,slot.row.employeeCode+' — '+slot.row.fullName);return [...people.entries()].sort((a,b)=>a[1].localeCompare(b[1],'vi'));}
- get suggestions(){const q=this.normalize(this.q.trim());return this.employees.filter(e=>this.normalize(e[1]).includes(q));}
- searchEmployee(value:string){this.q=value;this.employee='';this.suggesting=!!value.trim();this.rebuild();}
- chooseEmployee(value:string){this.employee=value;this.suggesting=false;this.q=this.employees.find(e=>e[0]===+value)?.[1]||'';this.rebuild();}
+ get employees(){return this.employeeOptions;}
+ get suggestions(){return this.employeeOptions;}
+ lookupEmployees(query:string){
+  const version=++this.lookupVersion;this.lookupSubscription?.unsubscribe();this.lookupError='';
+  if(this.mine){this.lookupLoading=false;this.employeeOptions=[];return;}
+  this.lookupLoading=true;this.employeeOptions=[];
+  const params=new HttpParams().set('q',query.trim()).set('date',this.last);
+  this.lookupSubscription=timer(250).pipe(switchMap(()=>this.http.get<Array<{employeeId:number;employeeCode:string;fullName:string}>>(API_BASE_URL+'/management/schedule-workspace/employees',{params})),takeUntilDestroyed(this.destroy)).subscribe({
+   next:options=>{if(version!==this.lookupVersion)return;this.employeeOptions=options.map(e=>[e.employeeId,e.employeeCode+' - '+e.fullName]);this.lookupLoading=false;
+    if(this.employee&&!options.some(e=>e.employeeId===+this.employee)){this.employee='';this.rebuild();}},
+   error:e=>{if(version!==this.lookupVersion)return;this.lookupLoading=false;this.lookupError=this.api.message(e);this.employee='';this.rebuild();}
+  });
+ }
+ searchEmployee(value:string){if(this.saving)return;this.q=value;this.employee='';this.suggesting=!!value.trim();this.rebuild();this.lookupEmployees(value);}
+ chooseEmployee(value:string){if(this.saving)return;const option=this.employeeOptions.find(e=>e[0]===+value);this.employee=option?value:'';this.suggesting=false;if(option)this.q=option[1];this.rebuild();}
  get scopedRows(){return this.mine?this.rows:this.employee?this.rows.filter(r=>r.employeeId===+this.employee):[];}
  leaveState(l:Leave):'maternity'|'leave'|null{const t=this.types.find(t=>t.leaveTypeId===l.leaveTypeId);const text=this.normalize((t?.typeCode||'')+' '+(t?.typeName||'')).replace(/[_-]/g,' ');if(/\b(thai san|maternity)\b/.test(text))return 'maternity';if(/\b(om|sick)\b/.test(text))return null;return t?'leave':null;}
  leaveName(l:Leave){return this.types.find(t=>t.leaveTypeId===l.leaveTypeId)?.typeName||'';}

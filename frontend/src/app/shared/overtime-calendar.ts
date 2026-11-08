@@ -14,7 +14,13 @@ export class OvertimeCalendarComponent implements OnChanges {
  @Input() mine=false;@Input() initialFrom='';@Input() initialTo='';@Input() employeeId:number|null=null;@Input() departmentId='';
  private http=inject(HttpClient);private destroy=inject(DestroyRef);private api=inject(OvertimeApiService);private version=0;
  private date(offset:number){const d=new Date();d.setDate(d.getDate()+offset);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
- from=this.date(-7);to=this.date(30);items:Slot[]=[];page=0;pages=0;total=0;loading=false;saving=false;error='';message='';selected:Slot|null=null;rests:OtBreak[]=[];noRest=false;
+ from=this.date(-7);to=this.date(30);items:Slot[]=[];page=0;pages=0;total=0;loading=false;saving=false;selected:Slot|null=null;rests:OtBreak[]=[];noRest=false;
+ private errorValue='';private messageValue='';private errorTimer?:ReturnType<typeof setTimeout>;private messageTimer?:ReturnType<typeof setTimeout>;
+ get error(){return this.errorValue;}
+ set error(value:string){clearTimeout(this.errorTimer);this.errorValue=value;if(value)this.errorTimer=setTimeout(()=>this.errorValue='',10000);}
+ get message(){return this.messageValue;}
+ set message(value:string){clearTimeout(this.messageTimer);this.messageValue=value;if(value)this.messageTimer=setTimeout(()=>this.messageValue='',10000);}
+ constructor(){this.destroy.onDestroy(()=>{clearTimeout(this.errorTimer);clearTimeout(this.messageTimer);});}
  supplementId:number|null=null;
  viewDetail:OtDetail|null=null;viewLoading=false;private viewVersion=0;
  view(slot:Slot){if(this.saving)return;const version=++this.viewVersion;this.viewLoading=true;this.viewDetail=null;this.error='';this.api.detail(slot.row.ot.overtimeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:d=>{if(version===this.viewVersion){this.viewDetail=d;this.viewLoading=false;}},error:e=>{if(version===this.viewVersion){this.error=this.api.message(e);this.viewLoading=false;}}});}

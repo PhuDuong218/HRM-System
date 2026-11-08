@@ -1,3 +1,4 @@
+@if(success){<div class="alert alert-success" role="status">{{success}}</div>}
 <p class="eyebrow">HỆ THỐNG</p>
 <h1>Tài khoản và phân quyền</h1>
 <p class="page-description">Quản lý tài khoản, vai trò và quyền truy cập của nhân viên.</p>
@@ -143,21 +144,23 @@
 </section>
 }
 
-<dialog #actionDialog class="action-dialog" aria-labelledby="action-dialog-title" (close)="clearDialog()">
+<dialog #actionDialog class="action-dialog" aria-labelledby="action-dialog-title" (close)="clearDialog()" (cancel)="cancelDialog($event)">
   <div class="dialog-header"><div><p class="eyebrow mb-2">TÀI KHOẢN VÀ PHÂN QUYỀN</p><h2 id="action-dialog-title" class="mb-0">{{ dialogTitle }}</h2></div><button type="button" class="dialog-close" aria-label="Đóng" (click)="closeDialog()">×</button></div>
   <div class="dialog-body">
-    @if (dialogMode !== 'account-view' && dialogMode !== 'role-view' && dialogMode !== 'permission-view') {
+    @if(dialogError){<div class="alert alert-warning" role="alert">{{dialogError}}</div>}
+    @if(dialogMode==='account-edit'){<p class="muted small">Mã nhân viên được giữ nguyên. Thay đổi tài khoản sẽ yêu cầu người dùng đăng nhập lại.</p>}
+    @if (dialogMode !== 'account-view' && dialogMode !== 'account-edit' && dialogMode !== 'role-view' && dialogMode !== 'permission-view') {
       <div class="preview-notice" role="status">Biểu mẫu xem trước. Chức năng lưu thay đổi sẽ được kết nối khi API hoàn thiện.</div>
     }
 
     @if (dialogMode === 'account-view' && selectedAccount; as account) {
       <dl class="detail-grid"><div><dt>Tên đăng nhập</dt><dd>{{ account.username }}</dd></div><div><dt>Mã nhân viên</dt><dd>{{ account.employeeCode || '—' }}</dd></div><div><dt>Họ và tên</dt><dd>{{ account.fullName || '—' }}</dd></div><div><dt>Vai trò</dt><dd>{{ account.roleName || account.roleCode }}</dd></div><div><dt>Trạng thái</dt><dd>{{ account.active ? 'Đang hoạt động' : 'Đã khóa' }}</dd></div><div><dt>ID tài khoản</dt><dd>{{ account.accountId }}</dd></div></dl>
     } @else if (dialogMode === 'account-create' || dialogMode === 'account-edit') {
-      <div class="dialog-grid">
+      <div class="dialog-grid" [formGroup]="editForm">
         <div><label class="form-label" for="edit-employee">{{ dialogMode === 'account-create' ? 'ID nhân viên' : 'Nhân viên' }}</label><input id="edit-employee" class="form-control" [type]="dialogMode === 'account-create' ? 'number' : 'text'" [readOnly]="dialogMode === 'account-edit'" [value]="selectedAccount ? (selectedAccount.employeeCode || selectedAccount.employeeId) : ''" placeholder="Nhập ID nhân viên"></div>
-        <div><label class="form-label" for="edit-username">Tên đăng nhập</label><input id="edit-username" class="form-control" maxlength="100" [value]="selectedAccount?.username || ''" placeholder="Nhập tên đăng nhập"></div>
-        <div><label class="form-label" for="edit-role">Vai trò</label><select id="edit-role" class="form-select"><option value="">Chọn vai trò</option>@for (item of roles; track item.roleId) { <option [value]="item.roleId" [selected]="item.roleId === selectedAccount?.roleId">{{ item.roleName }} ({{ item.roleCode }})</option> }</select></div>
-        <div><label class="form-label" for="edit-status">Trạng thái</label><select id="edit-status" class="form-select"><option value="true" [selected]="!selectedAccount || selectedAccount.active">Đang hoạt động</option><option value="false" [selected]="!!selectedAccount && !selectedAccount.active">Đã khóa</option></select></div>
+        <div><label class="form-label" for="edit-username">Tên đăng nhập</label><input id="edit-username" class="form-control" maxlength="100" formControlName="username" [readOnly]="saving" placeholder="Nhập tên đăng nhập">@if(editForm.controls.username.touched && editForm.controls.username.invalid){<small class="text-danger">Dùng chữ không dấu, số và các ký tự . _ @ -; tối đa 100 ký tự.</small>}</div>
+        <div><label class="form-label" for="edit-role">Vai trò</label><select id="edit-role" class="form-select" formControlName="roleId"><option [ngValue]="null">Chọn vai trò</option>@for (item of roles; track item.roleId) { <option [ngValue]="item.roleId">{{ item.roleName }} ({{ item.roleCode }})</option> }</select></div>
+        <div><label class="form-label" for="edit-status">Trạng thái</label><select id="edit-status" class="form-select" formControlName="active"><option [ngValue]="true">Đang hoạt động</option><option [ngValue]="false">Đã khóa</option></select></div>
         @if (dialogMode === 'account-create') { <div><label class="form-label" for="create-password">Mật khẩu ban đầu</label><input id="create-password" class="form-control" type="password" autocomplete="new-password" placeholder="Nhập mật khẩu"></div><div><label class="form-label" for="confirm-create-password">Xác nhận mật khẩu</label><input id="confirm-create-password" class="form-control" type="password" autocomplete="new-password" placeholder="Nhập lại mật khẩu"></div> }
       </div>
     } @else if (dialogMode === 'account-reset' && selectedAccount; as account) {
@@ -191,7 +194,9 @@
   <div class="dialog-footer">
     <button type="button" class="btn btn-outline-primary" (click)="closeDialog()">Đóng</button>
     @if (dialogMode !== 'account-view' && dialogMode !== 'role-view' && dialogMode !== 'permission-view') {
+      @if(dialogMode==='account-edit') {<button type="button" class="btn btn-primary" [disabled]="saving||rolesLoading||!!rolesError" (click)="saveAccount()">{{saving?'Đang lưu…':'Lưu thay đổi'}}</button>} @else {
       <button type="button" class="btn btn-primary" disabled>{{ dialogMode === 'account-lock' ? (selectedAccount?.active ? 'Khóa tài khoản' : 'Mở khóa') : dialogMode === 'role-delete' || dialogMode === 'permission-delete' ? 'Xóa' : 'Lưu thay đổi' }}</button>
+      }
     }
   </div>
 </dialog>

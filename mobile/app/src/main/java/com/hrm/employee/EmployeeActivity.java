@@ -1142,13 +1142,15 @@ public class EmployeeActivity extends AppCompatActivity {
     private String clockReviewState(JSONObject row,boolean checkIn){
         String side=checkIn?"check-in":"check-out";
         if(str(row,checkIn?"actualStart":"actualEnd").isEmpty())return "Chưa "+side;
+        if("DA_XAC_NHAN".equals(str(row,"verificationStatus")))return "Đã xác nhận "+side+" trong công";
         return row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed")?"Đã đối soát "+side:"Đã "+side+" — chờ đối soát";
     }
     private void clockReviewFacts(LinearLayout box,JSONObject row){
         for(boolean checkIn:new boolean[]{true,false}){
             boolean recorded=!str(row,checkIn?"actualStart":"actualEnd").isEmpty();
             boolean reviewed=row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed");
-            badge(box,clockReviewState(row,checkIn),reviewed?"DA_DOI_SOAT":recorded?"CHO_DOI_SOAT":"CHUA_GHI_NHAN");
+            boolean confirmed="DA_XAC_NHAN".equals(str(row,"verificationStatus"));
+            badge(box,clockReviewState(row,checkIn),(reviewed||confirmed)?"DA_DOI_SOAT":recorded?"CHO_DOI_SOAT":"CHUA_GHI_NHAN");
             if(reviewed)box.addView(text(str(row,checkIn?"checkInReviewer":"checkOutReviewer")+" · "+utc(str(row,checkIn?"checkInReviewedAt":"checkOutReviewedAt")),12,MUTED,false));
         }
     }
@@ -1860,7 +1862,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 { "Ngày sinh", "birthDate" }, { "Điện thoại", "phone" }, { "Email", "email" },
                 { "Địa chỉ", "address" } })
             line(info, field[0], str(p, field[1]));
-        info.addView(text("Thông tin hồ sơ ở chế độ chỉ xem. Liên hệ HR khi cần cập nhật.", 12, MUTED, false));
+        info.addView(text("Bạn có thể cập nhật thông tin liên hệ. Thông tin nhân sự khác vui lòng liên hệ HR.", 12, MUTED, false));
+        button(info, "Chỉnh sửa hồ sơ", true, this::editProfile);
         LinearLayout income = card("Lương và phúc lợi");
         button(income, "Phiếu lương cá nhân đã công bố", false, () -> fetch("/api/me/payslips", data -> {
             JSONArray rows = data.optJSONArray("items");
@@ -1912,6 +1915,72 @@ public class EmployeeActivity extends AppCompatActivity {
                                 });
                             });
                         }).show());
+    }
+
+    private void editProfile() {
+        if (writing) return;
+        JSONObject p = session.profile();
+        LinearLayout box = form();
+        TextInputEditText email = input(box, "Email", str(p, "email"),
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        TextInputEditText phone = input(box, "Số điện thoại", str(p, "phone"), InputType.TYPE_CLASS_PHONE);
+        TextInputEditText address = input(box, "Địa chỉ", str(p, "address"),
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        TextView notice = text("", 13, 0xffa32b32, false);
+        box.addView(notice);
+        dialog("Chỉnh sửa hồ sơ cá nhân", box, "Lưu thay đổi", d -> {
+            if (writing) return;
+            String e = value(email), ph = value(phone).replaceAll("[\\s().-]", ""), a = value(address);
+            if (ph.startsWith("+84")) ph = "0" + ph.substring(3);
+            final String normalizedPhone = ph;
+            if (e.length() > 254 || (!e.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(e).matches())) {
+                email.setError("Email không hợp lệ"); email.requestFocus(); return;
+            }
+            if (!ph.matches("^(?:0[35789][0-9]{8})?$")) {
+                phone.setError("Nhập số điện thoại Việt Nam gồm 10 chữ số"); phone.requestFocus(); return;
+            }
+            if (a.length() > 500) {
+                address.setError("Địa chỉ tối đa 500 ký tự"); address.requestFocus(); return;
+            }
+            phone.setText(normalizedPhone);
+            email.setEnabled(false); phone.setEnabled(false); address.setEnabled(false);
+            notice.setTextColor(MUTED);
+            notice.setText("Đang lưu thay đổi…");
+            writing = true;
+            d.setCancelable(false);
+            d.getButton(-1).setEnabled(false);
+            d.getButton(-2).setEnabled(false);
+            String token = session.token();
+            executor.execute(() -> {
+                try {
+                    JSONObject updated = api.send("/api/me/profile", "PUT", token,
+                            json("email", e, "phone", normalizedPhone, "address", a));
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        session.signIn(token, updated);
+                        d.dismiss();
+                        toast("Đã cập nhật hồ sơ cá nhân.");
+                        render();
+                    });
+                } catch (Exception error) {
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        d.setCancelable(true);
+                        email.setEnabled(true); phone.setEnabled(true); address.setEnabled(true);
+                        notice.setTextColor(0xffa32b32);
+                        d.getButton(-1).setEnabled(true);
+                        d.getButton(-2).setEnabled(true);
+                        if (error instanceof HrmApi.ApiException && ((HrmApi.ApiException) error).status == 401) {
+                            d.dismiss(); session.clearSession(); signOutLocal(); return;
+                        }
+                        notice.setText(HrmApi.message(error));
+                        notice.postDelayed(() -> notice.setText(""), 10000);
+                    });
+                }
+            });
+        });
     }
 
     private void changePassword() {

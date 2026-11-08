@@ -1,7 +1,8 @@
+import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription } from 'rxjs';
+import { Subscription, timer } from 'rxjs';
 import { Account, AccountFilters, AccountRole, AccountService, AccessPermission } from '../../services/account.service';
 
 type Section = 'accounts' | 'roles' | 'permissions';
@@ -12,6 +13,7 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 @Component({
   selector: 'app-accounts',
   standalone: true,
+  imports: [ReactiveFormsModule],
   templateUrl: './accounts.html',
   styleUrl: './accounts.css'
 })
@@ -21,6 +23,16 @@ export class AccountsPage implements OnInit {
   private destroyRef = inject(DestroyRef);
   private pending?: Subscription;
   private filters: AccountFilters = { keyword: '', active: '', roleId: '' };
+
+  saving = false;
+  dialogError = '';
+  success = '';
+  private feedbackTimer?: Subscription;
+  readonly editForm = new FormGroup({
+    username: new FormControl('', {nonNullable:true, validators:[Validators.required, Validators.maxLength(100), Validators.pattern('[A-Za-z0-9][A-Za-z0-9._@-]*')]}),
+    roleId: new FormControl<number|null>(null, [Validators.required, Validators.min(1)]),
+    active: new FormControl(true, {nonNullable:true})
+  });
 
   rows: Account[] = [];
   roles: AccountRole[] = [];
@@ -119,14 +131,48 @@ export class AccountsPage implements OnInit {
   }
 
   openDialog(mode: DialogMode, item?: Account | AccountRole | AccessPermission): void {
+    if (this.saving) return;
+    this.dialogError = '';
+    this.feedbackTimer?.unsubscribe();
     this.selectedAccount = item && 'accountId' in item ? item : null;
     this.selectedRole = item && 'roleId' in item && !('accountId' in item) ? item : null;
     this.selectedPermission = item && 'permissionId' in item ? item : null;
+    this.editForm.reset({username:this.selectedAccount?.username ?? '', roleId:this.selectedAccount?.roleId ?? null, active:this.selectedAccount?.active ?? true});
     this.dialogMode = mode;
     this.actionDialog?.nativeElement.showModal();
   }
 
-  closeDialog(): void { this.actionDialog?.nativeElement.close(); }
+  closeDialog(): void { if (!this.saving) this.actionDialog?.nativeElement.close(); }
+  cancelDialog(event: Event): void { if (this.saving) event.preventDefault(); }
+  saveAccount(): void {
+    if (this.saving || this.dialogMode !== 'account-edit' || !this.selectedAccount) return;
+    this.editForm.controls.username.setValue(this.editForm.controls.username.value.trim());
+    this.editForm.markAllAsTouched();
+    if (this.editForm.invalid) { this.dialogError = 'Nhập tên đăng nhập hợp lệ và chọn vai trò.'; return; }
+    const value = this.editForm.getRawValue();
+    if (!this.roles.some(role => role.roleId === value.roleId)) { this.dialogError = 'Vai trò không hợp lệ. Hãy tải lại danh sách vai trò.'; return; }
+    if (!window.confirm('Lưu thay đổi tài khoản ' + this.selectedAccount.username + '? Tài khoản bị thay đổi sẽ cần đăng nhập lại.')) return;
+    this.saving = true; this.dialogError = '';
+    this.api.update(this.selectedAccount.accountId, {username:value.username, roleId:value.roleId!, active:value.active})
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: updated => {
+          this.saving = false;
+          this.rows = this.rows.map(row => row.accountId === updated.accountId ? updated : row);
+          this.closeDialog();
+          this.success = 'Đã cập nhật tài khoản ' + updated.username + '.';
+          this.feedbackTimer?.unsubscribe();
+          this.feedbackTimer = timer(10000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.success = '');
+          this.load(this.page);
+        },
+        error: error => {
+          this.saving = false;
+          const detail = error instanceof HttpErrorResponse ? error.error?.loi_chi_tiet ?? error.error?.detail ?? error.error?.message : null;
+          this.dialogError = typeof detail === 'string' ? detail : 'Không lưu được tài khoản. Kiểm tra kết nối và thử lại.';
+          this.feedbackTimer?.unsubscribe();
+          this.feedbackTimer = timer(10000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.dialogError = '');
+        }
+      });
+  }
   clearDialog(): void {
     this.dialogMode = null;
     this.selectedAccount = null;
