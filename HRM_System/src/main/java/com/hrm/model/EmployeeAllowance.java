@@ -3,6 +3,7 @@ package com.hrm.model;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import com.hrm.enums.AllowanceCalculationBasis;
+import com.hrm.enums.AllowanceAmountType;
 import jakarta.persistence.*;
 
 @Entity
@@ -19,6 +20,8 @@ public class EmployeeAllowance extends BaseEntity {
     @Enumerated(EnumType.STRING)
     @Column(name="calculation_basis",nullable=false,length=20) private AllowanceCalculationBasis calculationBasis;
     @Column(name="amount",nullable=false,precision=19,scale=4) private BigDecimal amount;
+    @Enumerated(EnumType.STRING)
+    @Column(name="amount_type",nullable=false,length=24) private AllowanceAmountType amountType = AllowanceAmountType.FIXED;
     @Column(name="condition_note",length=1000) private String conditionNote;
 
     public EmployeeAllowance() {}
@@ -35,6 +38,8 @@ public class EmployeeAllowance extends BaseEntity {
     public void setCalculationBasis(AllowanceCalculationBasis v) { calculationBasis=v; }
     public BigDecimal getAmount() { return amount; }
     public void setAmount(BigDecimal v) { amount=v; }
+    public AllowanceAmountType getAmountType() { return amountType; }
+    public void setAmountType(AllowanceAmountType v) { amountType=v; }
     public String getConditionNote() { return conditionNote; }
     public void setConditionNote(String v) { conditionNote=v; }
 }

@@ -125,6 +125,9 @@ default List<EmployeeAssignment> findCurrentByEmployeeIds(
             employeeIds,
             LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh")));
 }
-    @Query(value="SELECT a FROM EmployeeAssignment a JOIN FETCH a.employee JOIN FETCH a.department JOIN FETCH a.position WHERE a.employee.employeeId IN :ids",countQuery="SELECT COUNT(a) FROM EmployeeAssignment a WHERE a.employee.employeeId IN :ids")
-    Page<EmployeeAssignment> findScoped(@Param("ids") Collection<Long> ids,Pageable pageable);
+    @Query(value="SELECT a FROM EmployeeAssignment a JOIN FETCH a.employee JOIN FETCH a.department JOIN FETCH a.position WHERE a.employee.employeeId IN :ids AND a.department.departmentId IN :departments",countQuery="SELECT COUNT(a) FROM EmployeeAssignment a WHERE a.employee.employeeId IN :ids AND a.department.departmentId IN :departments")
+    Page<EmployeeAssignment> findScoped(@Param("ids") Collection<Long> ids,@Param("departments") Collection<Long> departments,Pageable pageable);
+
+    @Query(value="SELECT a FROM EmployeeAssignment a JOIN FETCH a.employee JOIN FETCH a.department JOIN FETCH a.position WHERE a.employee.employeeId=:employeeId AND a.department.departmentId IN :departments",countQuery="SELECT COUNT(a) FROM EmployeeAssignment a WHERE a.employee.employeeId=:employeeId AND a.department.departmentId IN :departments")
+    Page<EmployeeAssignment> findHistoryScoped(@Param("employeeId") Long employeeId,@Param("departments") Collection<Long> departments,Pageable pageable);
 }

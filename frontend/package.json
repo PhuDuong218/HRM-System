@@ -3,8 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "test:accounts": "node --test test-tools/accounts-workflow.test.cjs test-tools/accounts-i18n.test.cjs",
     "start": "ng serve --proxy-config proxy.conf.json",
     "build": "ng build",
+    "test": "node --test test-tools/report-format.test.cjs test-tools/report-service.test.cjs test-tools/preferences.test.cjs test-tools/overview.test.cjs test-tools/employment-api-error.test.cjs test-tools/leave-calendar-and-editor.test.cjs test-tools/toast.test.cjs test-tools/edit-form.test.cjs test-tools/action-dialog.test.cjs test-tools/allowance-dialog.test.cjs test-tools/resignation-review.test.cjs test-tools/exit-workflow.test.cjs",
     "test:reports": "node --test test-tools/report-format.test.cjs test-tools/report-service.test.cjs",
     "test:preferences": "node --test test-tools/preferences.test.cjs",
     "test:overview": "node --test test-tools/overview.test.cjs",
@@ -21,6 +23,7 @@
     "@angular/platform-browser": "20.3.34",
     "@angular/router": "20.3.34",
     "bootstrap": "5.3.8",
+    "cliui": "^9.0.1",
     "rxjs": "~7.8.2",
     "tslib": "^2.8.1",
     "zone.js": "~0.15.1"

@@ -61,6 +61,12 @@ public class EmployeeContactService {
                         "Không tìm thấy nhân viên: " + employeeId));
 
         Map<String, String> before = snapshot(employee);
+        EmployeeWriteRules.requireVersion(employee,request.getVersion());
+        request.setReason(EmployeeWriteRules.reason(request.getReason()));
+        EmployeeWriteRules.requiredIfPresent(request.hasEmail(),request.getEmail(),"Email");
+        EmployeeWriteRules.requiredIfPresent(request.hasAddress(),request.getAddress(),"Địa chỉ");
+        EmployeeWriteRules.requiredIfPresent(request.hasIdentityNumber(),request.getIdentityNumber(),"CCCD/CMND");
+        EmployeeWriteRules.identity(request.getIdentityNumber());
 
         // Tính dữ liệu dự kiến sau cập nhật để phát hiện request không đổi gì.
         Map<String, String> proposed = new LinkedHashMap<>(before);
@@ -83,11 +89,7 @@ public class EmployeeContactService {
         // Chụp dữ liệu thực tế sau khi service cập nhật.
         Map<String, String> after = snapshot(employee);
 
-        auditService.recordContactUpdate(
-                actorAccountId,
-                employeeId,
-                before,
-                after);
+        auditService.recordContactUpdate(actorAccountId,employeeId,before,after,request.getReason());
 
         return result;
     }

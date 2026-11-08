@@ -10,5 +10,6 @@ public record ContractCreateRequest(
     @Pattern(regexp = "[A-Za-z0-9/_-]+") String contractNumber,
     @NotNull @PastOrPresent LocalDate signedDate,
     @NotNull LocalDate startDate,
-    LocalDate endDate
+    LocalDate endDate,
+    com.hrm.enums.ProbationGroup probationGroup
 ) {}

@@ -22,6 +22,15 @@ import jakarta.persistence.LockModeType;
 @Repository
 public interface EmployeeRepository extends JpaRepository<Employee, Long> {
 
+    @Query("""
+            SELECT e FROM Employee e
+            WHERE e.employmentStatus = :status
+              AND (LOWER(e.employeeCode) LIKE :keyword ESCAPE '!' OR LOWER(e.fullName) LIKE :keyword ESCAPE '!')
+              AND NOT EXISTS (SELECT a.accountId FROM Account a WHERE a.employeeId = e.employeeId)
+            """)
+    Page<Employee> findWithoutAccount(@Param("keyword") String keyword,
+            @Param("status") EmploymentStatus status, Pageable pageable);
+
     // Kiem tra ma nhan vien da ton tai hay chua
     boolean existsByEmployeeCode(String employeeCode);
 
@@ -64,6 +73,14 @@ public interface EmployeeRepository extends JpaRepository<Employee, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT e FROM Employee e WHERE e.employeeId = :id")
     Optional<Employee> findByIdForUpdate(@Param("id") Long id);
+
+    @Query("""
+            select e from Employee e
+            where e.hireDate <= :to
+              and (e.terminationDate is null or e.terminationDate >= :from)
+            order by e.employeeId
+            """)
+    List<Employee> findEmployedDuring(@Param("from") LocalDate from, @Param("to") LocalDate to);
 
     // Tim kiem nhan vien co loc theo trang thai,
     // phong ban, chuc vu va thoi diem hieu luc

@@ -29,6 +29,15 @@ public class ContractSalaryTerm extends BaseEntity {
     @Column(name="document_reference", length=500)
     private String documentReference;
 
+    @Column(name="official_reference_salary",precision=19,scale=4)
+    private BigDecimal officialReferenceSalary;
+    @Enumerated(EnumType.STRING)
+    @Column(name="official_reference_pay_basis",length=10)
+    private PayBasis officialReferencePayBasis;
+    public BigDecimal getOfficialReferenceSalary(){return officialReferenceSalary;}
+    public void setOfficialReferenceSalary(BigDecimal value){officialReferenceSalary=value;}
+    public PayBasis getOfficialReferencePayBasis(){return officialReferencePayBasis;}
+    public void setOfficialReferencePayBasis(PayBasis value){officialReferencePayBasis=value;}
     public ContractSalaryTerm() {}
     public Long getSalaryTermId() { return salaryTermId; }
     public Contract getContract() { return contract; }

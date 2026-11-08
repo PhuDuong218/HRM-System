@@ -5,6 +5,15 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 
 public class EmployeeQualificationRequestDTO {
+    @jakarta.validation.constraints.PastOrPresent private java.time.LocalDate issuedDate;
+    private java.time.LocalDate expiryDate;
+    private boolean validityProvided;
+    public boolean hasValidityDates(){return validityProvided;}
+    public java.time.LocalDate getIssuedDate(){return issuedDate;}
+    public void setIssuedDate(java.time.LocalDate value){issuedDate=value;validityProvided=true;}
+    public java.time.LocalDate getExpiryDate(){return expiryDate;}
+    public void setExpiryDate(java.time.LocalDate value){expiryDate=value;validityProvided=true;}
+
     @NotNull(message = "Phai chon cap trinh do")
     private Long qualificationLevelId;
 

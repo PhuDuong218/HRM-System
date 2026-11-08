@@ -3,6 +3,8 @@ import { HttpClient, HttpParams } from "@angular/common/http";
 import { API_BASE_URL } from "./api.config";
 import {
   ContractCreateRequest,
+  ExpiringContractResponse,
+  EmployeeWithoutActiveContractResponse,
   ContractResponse,
   ContractStatus,
   ContractTypeResponse,
@@ -10,6 +12,10 @@ import {
   ContractTerminateRequest,
   PageResponse,
   ContractTypeRequest,
+  SalaryTermResponse,
+  SalaryTermRequest,
+  SalaryRateSegment,
+  SalaryTermChangeRequest,
 } from "../models/contract.model";
 
 @Injectable({ providedIn: "root" })
@@ -30,6 +36,18 @@ export class ContractService {
 
   get(id: number) {
     return this.http.get<ContractResponse>(`${API_BASE_URL}/contracts/${id}`);
+  }
+
+  expiring(days = 30, page = 0, size = 10) {
+    return this.http.get<PageResponse<ExpiringContractResponse>>(
+      `${API_BASE_URL}/contracts/expiring`, { params: { days, page, size } },
+    );
+  }
+
+  withoutActiveContract(page = 0, size = 10) {
+    return this.http.get<PageResponse<EmployeeWithoutActiveContractResponse>>(
+      `${API_BASE_URL}/employees/without-active-contract`, { params: { page, size } },
+    );
   }
 
   types() {
@@ -75,5 +93,54 @@ export class ContractService {
 
   deactivateType(id: number) {
     return this.http.delete<void>(`${API_BASE_URL}/contract-types/${id}`);
+  }
+
+  salaryTerms(contractId: number) {
+    return this.http.get<SalaryTermResponse[]>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms`,
+    );
+  }
+
+  createSalaryTerm(contractId: number, request: SalaryTermRequest) {
+    return this.http.post<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms`,
+      request,
+    );
+  }
+
+  salaryRates(employeeId: number, from: string, to: string) {
+    return this.http.get<SalaryRateSegment[]>(
+      `${API_BASE_URL}/employees/${employeeId}/salary-rates`,
+      { params: { from, to } },
+    );
+  }
+
+  updateSalaryTerm(
+    contractId: number,
+    salaryTermId: number,
+    request: SalaryTermRequest,
+  ) {
+    return this.http.put<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}`,
+      request,
+    );
+  }
+
+  deleteSalaryTerm(contractId: number, salaryTermId: number, reason: string) {
+    return this.http.delete<void>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}`,
+      { params: { reason } },
+    );
+  }
+
+  changeSalaryRate(
+    contractId: number,
+    salaryTermId: number,
+    request: SalaryTermChangeRequest,
+  ) {
+    return this.http.post<SalaryTermResponse>(
+      `${API_BASE_URL}/contracts/${contractId}/salary-terms/${salaryTermId}/change-rate`,
+      request,
+    );
   }
 }

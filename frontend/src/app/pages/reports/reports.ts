@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {Breadcrumb} from '../../shared/breadcrumb';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
@@ -6,11 +9,11 @@ import { ContractReport, EmployeeReport, GroupRow, PayrollReport, Report, Report
 import { formatMoney } from '../../services/report-format';
 
 interface ReportTab { id: ReportType; label: string; description: string; }
-interface EmployeeGroup { label: string; rows: GroupRow[]; }
+interface EmployeeGroup { label: string; description: string; rows: GroupRow[]; max: number; total: number; }
 
 @Component({
   selector: 'app-reports',
-  standalone: true,
+  standalone: true,imports:[SearchAssistDirective,HrmNotice,Breadcrumb],
   templateUrl: './reports.html',
   styleUrl: './reports.css'
 })
@@ -36,6 +39,7 @@ export class ReportsPage implements OnInit {
   workReport: WorkReport | null = null;
   payrollReport: PayrollReport | null = null;
   employeeGroups: EmployeeGroup[] = [];
+  employeeReportDate = '';
   loading = false;
   loadingHeight = 0;
   exporting = false;
@@ -73,6 +77,11 @@ export class ReportsPage implements OnInit {
 
     const type = this.selected;
     const filters = { ...this.filters, departmentId: this.filters.departmentId.trim() };
+    if (type === 'employees') {
+      this.employeeReportDate = new Intl.DateTimeFormat('vi-VN', {
+        timeZone: 'Asia/Ho_Chi_Minh', day: '2-digit', month: '2-digit', year: 'numeric'
+      }).format(new Date());
+    }
     this.loading = true;
     this.viewRequest = this.api.get(type, filters).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (result: Report) => {
@@ -80,10 +89,10 @@ export class ReportsPage implements OnInit {
         if (type === 'employees') {
           this.employeeReport = result as EmployeeReport;
           this.employeeGroups = [
-            { label: 'Theo phòng ban', rows: this.employeeReport.byDepartment },
-            { label: 'Theo chức vụ', rows: this.employeeReport.byPosition },
-            { label: 'Theo trạng thái', rows: this.employeeReport.byStatus },
-            { label: 'Theo trình độ', rows: this.employeeReport.byQualification }
+            this.employeeGroup('Theo phòng ban', 'Phân bổ đội ngũ', this.employeeReport.byDepartment),
+            this.employeeGroup('Theo chức vụ', 'Vai trò trong tổ chức', this.employeeReport.byPosition),
+            this.employeeGroup('Theo trạng thái', 'Tình trạng làm việc', this.employeeReport.byStatus),
+            this.employeeGroup('Theo trình độ', 'Trình độ chuyên môn chính', this.employeeReport.byQualification)
           ];
         } else if (type === 'contracts') {
           this.contractReport = result as ContractReport;
@@ -123,6 +132,27 @@ export class ReportsPage implements OnInit {
   }
 
   number(value: number): string { return this.formatter.format(value); }
+
+  get employeeTotal(): number {
+    return this.employeeReport?.byStatus.reduce((total, row) => total + row.employeeCount, 0) ?? 0;
+  }
+
+  employeeStatus(code: string): number {
+    return this.employeeReport?.byStatus.find(row => row.groupCode === code)?.employeeCount ?? 0;
+  }
+
+  employeeGroupName(row: GroupRow): string {
+    const name = row.groupName || row.groupCode || '—';
+    if (name === 'DANG_LAM') return 'Đang làm việc';
+    if (name === 'DA_NGHI') return 'Đã nghỉ việc';
+    return name;
+  }
+
+  private employeeGroup(label: string, description: string, rows: GroupRow[]): EmployeeGroup {
+    const sorted = [...rows].sort((a, b) => b.employeeCount - a.employeeCount);
+    return { label, description, rows: sorted, max: Math.max(0, ...sorted.map(row => row.employeeCount)),
+      total: sorted.reduce((sum, row) => sum + row.employeeCount, 0) };
+  }
 
   money(value: string): string { return formatMoney(value); }
 

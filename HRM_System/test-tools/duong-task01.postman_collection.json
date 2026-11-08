@@ -1,0 +1,313 @@
+{
+  "item": [
+    {
+      "name": "Kiểm tra sau chuẩn hóa 011 (chỉ đọc bản sao)",
+      "item": [
+        {
+          "name": "GET QD-KL-B",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employee-decisions/2"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Giữ số, loại và trạng thái quyết định\", () => { pm.expect(d.decisionNumber).to.eql(\"QD-KL-B\"); pm.expect(d.decisionType).to.eql(\"KY_LUAT\"); pm.expect(d.approvalStatus).to.eql(\"DA_DUYET\"); });",
+                  "pm.test(\"Kỷ luật không khấu trừ lương\", () => { pm.expect(d.payrollEffect).to.eql(\"NONE\"); pm.expect(d.amount).to.eql(null); pm.expect(d.applyDate).to.eql(null); });",
+                  "pm.test(\"Metadata theo giả định được duyệt\", () => { pm.expect(d.disciplineForm).to.eql(\"KHIEN_TRACH\"); pm.expect(d.violationDate).to.eql(\"2026-09-01\"); pm.expect(d.salaryIncreaseDelayMonths).to.eql(null); });",
+                  "pm.test(\"Lưu ghi chú dữ liệu cũ\", () => { pm.expect(d.content).to.include(\"[011:\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET TEST-QD-HRM105",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employee-decisions/4"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Giữ số, loại và trạng thái quyết định\", () => { pm.expect(d.decisionNumber).to.eql(\"TEST-QD-HRM105\"); pm.expect(d.decisionType).to.eql(\"KY_LUAT\"); pm.expect(d.approvalStatus).to.eql(\"CHO_DUYET\"); });",
+                  "pm.test(\"Kỷ luật không khấu trừ lương\", () => { pm.expect(d.payrollEffect).to.eql(\"NONE\"); pm.expect(d.amount).to.eql(null); pm.expect(d.applyDate).to.eql(null); });",
+                  "pm.test(\"Metadata theo giả định được duyệt\", () => { pm.expect(d.disciplineForm).to.eql(\"KHIEN_TRACH\"); pm.expect(d.violationDate).to.eql(\"2026-10-01\"); pm.expect(d.salaryIncreaseDelayMonths).to.eql(null); });",
+                  "pm.test(\"Lưu ghi chú dữ liệu cũ\", () => { pm.expect(d.content).to.include(\"[011:\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET TEST-QD-HRM106",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employee-decisions/5"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Giữ số, loại và trạng thái quyết định\", () => { pm.expect(d.decisionNumber).to.eql(\"TEST-QD-HRM106\"); pm.expect(d.decisionType).to.eql(\"KY_LUAT\"); pm.expect(d.approvalStatus).to.eql(\"DA_DUYET\"); });",
+                  "pm.test(\"Kỷ luật không khấu trừ lương\", () => { pm.expect(d.payrollEffect).to.eql(\"NONE\"); pm.expect(d.amount).to.eql(null); pm.expect(d.applyDate).to.eql(null); });",
+                  "pm.test(\"Metadata theo giả định được duyệt\", () => { pm.expect(d.disciplineForm).to.eql(\"KHIEN_TRACH\"); pm.expect(d.violationDate).to.eql(\"2026-10-01\"); pm.expect(d.salaryIncreaseDelayMonths).to.eql(null); });",
+                  "pm.test(\"Lưu ghi chú dữ liệu cũ\", () => { pm.expect(d.content).to.include(\"[011:\"); pm.expect(d.content).to.include(\"150000.0000\"); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "GET TEST-QD-HRM110",
+          "request": {
+            "method": "GET",
+            "url": "{{baseUrl}}/employee-decisions/7"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"HTTP 200\", () => pm.response.to.have.status(200));",
+                  "const d = pm.response.json();",
+                  "pm.test(\"Giữ số, loại và trạng thái quyết định\", () => { pm.expect(d.decisionNumber).to.eql(\"TEST-QD-HRM110\"); pm.expect(d.decisionType).to.eql(\"KY_LUAT\"); pm.expect(d.approvalStatus).to.eql(\"TU_CHOI\"); });",
+                  "pm.test(\"Kỷ luật không khấu trừ lương\", () => { pm.expect(d.payrollEffect).to.eql(\"NONE\"); pm.expect(d.amount).to.eql(null); pm.expect(d.applyDate).to.eql(null); });",
+                  "pm.test(\"Metadata theo giả định được duyệt\", () => { pm.expect(d.disciplineForm).to.eql(\"KHIEN_TRACH\"); pm.expect(d.violationDate).to.eql(\"2026-11-01\"); pm.expect(d.salaryIncreaseDelayMonths).to.eql(null); });",
+                  "pm.test(\"Lưu ghi chú dữ liệu cũ\", () => { pm.expect(d.content).to.include(\"[011:\"); pm.expect(d.content).to.include(\"500000.0000\"); });"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tạo kỷ luật khiển trách",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": null,\r\n  \"payrollEffect\": \"NONE\",\r\n  \"decisionType\": \"KY_LUAT\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": \"{{issuedDate}}\",\r\n  \"amount\": null,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": \"KHIEN_TRACH\",\r\n  \"salaryIncreaseDelayMonths\": null,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(201));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tạo kỷ luật kéo dài nâng lương 6 tháng",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": null,\r\n  \"payrollEffect\": \"NONE\",\r\n  \"decisionType\": \"KY_LUAT\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": \"{{issuedDate}}\",\r\n  \"amount\": null,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": \"KEO_DAI_NANG_LUONG\",\r\n  \"salaryIncreaseDelayMonths\": 6,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(201));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tạo khen thưởng",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": \"{{issuedDate}}\",\r\n  \"payrollEffect\": \"ADD\",\r\n  \"decisionType\": \"KHEN_THUONG\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": null,\r\n  \"amount\": 500000,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": null,\r\n  \"salaryIncreaseDelayMonths\": null,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(201));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Tạo bồi thường",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": \"{{issuedDate}}\",\r\n  \"payrollEffect\": \"DEDUCT\",\r\n  \"decisionType\": \"BOI_THUONG\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": null,\r\n  \"amount\": 100000,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": null,\r\n  \"salaryIncreaseDelayMonths\": null,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(201));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Từ chối kỷ luật trừ lương",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": \"{{issuedDate}}\",\r\n  \"payrollEffect\": \"DEDUCT\",\r\n  \"decisionType\": \"KY_LUAT\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": \"{{issuedDate}}\",\r\n  \"amount\": 100000,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": \"KHIEN_TRACH\",\r\n  \"salaryIncreaseDelayMonths\": null,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(400));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Từ chối kéo dài 7 tháng",
+      "request": {
+        "url": "{{baseUrl}}/employee-decisions",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\r\n  \"applyDate\": null,\r\n  \"payrollEffect\": \"NONE\",\r\n  \"decisionType\": \"KY_LUAT\",\r\n  \"reason\": \"Kiểm thử nhiệm vụ 1\",\r\n  \"violationDate\": \"{{issuedDate}}\",\r\n  \"amount\": null,\r\n  \"employeeId\": {{employeeId}},\r\n  \"issuedDate\": \"{{issuedDate}}\",\r\n  \"disciplineForm\": \"KEO_DAI_NANG_LUONG\",\r\n  \"salaryIncreaseDelayMonths\": 7,\r\n  \"content\": \"Duong task 1 Postman\",\r\n  \"decisionNumber\": \"QD_{{$timestamp}}_{{$randomInt}}\"\r\n}"
+        },
+        "method": "POST"
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"HTTP expected\", () => pm.response.to.have.status(400));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Đọc khoản theo kỳ (không ghi dữ liệu)",
+      "request": {
+        "url": "{{baseUrl}}/employees/{{employeeId}}/decision-payroll-items?periodId={{periodId}}",
+        "method": "GET"
+      }
+    }
+  ],
+  "info": {
+    "name": "Dương - Nhiệm vụ 1 - Quyết định",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+    "description": "Dùng backend kết nối bản sao hrm_task01_review đã nâng cấp schema 011. Folder kiểm tra sau chuẩn hóa chỉ GET; các POST khác ghi dữ liệu thử. Không lưu sẵn token. Chính sách lương UNCONFIRMED có thể làm API khoản theo kỳ trả 409; không tự bật policy."
+  },
+  "auth": {
+    "bearer": [
+      {
+        "key": "token",
+        "type": "string",
+        "value": "{{token}}"
+      }
+    ],
+    "type": "bearer"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:2005"
+    },
+    {
+      "key": "token",
+      "value": ""
+    },
+    {
+      "key": "employeeId",
+      "value": "1"
+    },
+    {
+      "key": "periodId",
+      "value": "1"
+    },
+    {
+      "key": "issuedDate",
+      "value": "2026-11-03"
+    }
+  ]
+}

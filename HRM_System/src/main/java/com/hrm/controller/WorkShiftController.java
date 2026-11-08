@@ -70,13 +70,13 @@ public class WorkShiftController {
 
     @PatchMapping("/{id}/deactivate")
     public ShiftView deactivate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
-            @Valid @RequestBody ReasonRequest body) {
+            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest body) {
         return management.setActive(actor, id, false, body.reason());
     }
 
     @PatchMapping("/{id}/activate")
     public ShiftView activate(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id,
-            @Valid @RequestBody ReasonRequest body) {
+            @Valid @RequestBody WorkShiftManagementWriteController.ReasonRequest body) {
         return management.setActive(actor, id, true, body.reason());
     }
 
@@ -86,4 +86,17 @@ public class WorkShiftController {
         shifts.deleteOrDeactivate(actor, id);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/capabilities")
+    public java.util.Map<String, Boolean> capabilities(@AuthenticationPrincipal AuthenticatedAccount actor) {
+        try {
+            permissions.requireManage(actor);
+            return java.util.Map.of("canManage", true);
+        } catch (org.springframework.web.server.ResponseStatusException denied) {
+            if (denied.getStatusCode().value() != 403) throw denied;
+            return java.util.Map.of("canManage", false);
+        }
+    }
+
+
 }

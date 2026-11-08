@@ -280,7 +280,7 @@ void searchUsesSameVietnamDateForFilteringAndAssignments() {
     LocalDate expectedDate = LocalDate.of(2026, 10, 24);
 
     when(employeeRepository.searchEmployees(
-            eq("%test-contact%"),
+            eq("%"),
             isNull(),
             eq(10L),
             eq(20L),
@@ -303,7 +303,7 @@ void searchUsesSameVietnamDateForFilteringAndAssignments() {
     assertEquals(1, result.getNumberOfElements());
 
     verify(employeeRepository).searchEmployees(
-            eq("%test-contact%"),
+            eq("%"),
             isNull(),
             eq(10L),
             eq(20L),

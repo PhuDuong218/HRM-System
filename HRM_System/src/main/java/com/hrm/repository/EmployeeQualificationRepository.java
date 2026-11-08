@@ -12,18 +12,21 @@ import org.springframework.data.repository.query.Param;
 import com.hrm.model.EmployeeQualification;
 
 public interface EmployeeQualificationRepository extends JpaRepository<EmployeeQualification, Long> {
+ @Query("SELECT q FROM EmployeeQualification q JOIN FETCH q.employee JOIN FETCH q.qualificationLevel WHERE q.isDeleted = false OR q.isDeleted IS NULL ORDER BY q.employeeQualificationId DESC")
+ List<EmployeeQualification> findAllVisibleWithDetails();
+
 
        @Query("SELECT q FROM EmployeeQualification q JOIN FETCH q.qualificationLevel " +
-                     "WHERE q.employee.employeeId = :employeeId AND q.isDeleted = false " +
+                     "WHERE q.employee.employeeId = :employeeId AND (q.isDeleted = false OR q.isDeleted IS NULL) " +
                      "ORDER BY q.isPrimary DESC, q.employeeQualificationId DESC")
        List<EmployeeQualification> findAllByEmployeeWithLevel(@Param("employeeId") Long employeeId);
 
        @Query("SELECT q FROM EmployeeQualification q JOIN FETCH q.qualificationLevel " +
-                     "WHERE q.employeeQualificationId = :id AND q.isDeleted = false")
+                     "WHERE q.employeeQualificationId = :id AND (q.isDeleted = false OR q.isDeleted IS NULL)")
        Optional<EmployeeQualification> findByIdWithLevel(@Param("id") Long id);
 
        @Query("SELECT q FROM EmployeeQualification q " +
-                     "WHERE q.employee.employeeId = :employeeId AND q.isPrimary = true AND q.isDeleted = false")
+                     "WHERE q.employee.employeeId = :employeeId AND q.isPrimary = true AND (q.isDeleted = false OR q.isDeleted IS NULL)")
        Optional<EmployeeQualification> findPrimaryByEmployeeId(@Param("employeeId") Long employeeId);
 
        @Query(value = """

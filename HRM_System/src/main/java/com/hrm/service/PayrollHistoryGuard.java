@@ -18,6 +18,16 @@ public class PayrollHistoryGuard {
     public void assertMutable(Long employeeId, LocalDate from, LocalDate to) {
         LocalDate upper = to == null ? LocalDate.of(9999, 12, 31) : to;
         if (from.isAfter(upper)) return;
+        long count = lockedPeriodCount(employeeId,from,to);
+        if (count > 0) {
+            throw new BusinessException(HttpStatus.CONFLICT,
+                    "Khoảng thay đổi giao kỳ lương đã chốt; dùng quy trình điều chỉnh");
+        }
+    }
+
+    public long lockedPeriodCount(Long employeeId,LocalDate from,LocalDate to) {
+        LocalDate upper=to==null?LocalDate.of(9999,12,31):to;
+        if(from.isAfter(upper))return 0;
         Long count = jdbc.queryForObject("""
             select count_big(*)
             from dbo.payroll_details d
@@ -26,9 +36,6 @@ public class PayrollHistoryGuard {
             where d.employee_id=? and b.status='DA_CHOT'
               and p.period_start<=? and p.period_end>=?
             """, Long.class, employeeId, Date.valueOf(upper), Date.valueOf(from));
-        if (count != null && count > 0) {
-            throw new BusinessException(HttpStatus.CONFLICT,
-                    "Khoảng thay đổi giao kỳ lương đã chốt; dùng quy trình điều chỉnh");
-        }
+        return count==null?0:count;
     }
 }

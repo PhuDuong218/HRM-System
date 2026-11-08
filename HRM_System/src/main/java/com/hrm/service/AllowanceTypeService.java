@@ -29,6 +29,7 @@ public class AllowanceTypeService {
         var t=new AllowanceType();
         t.setTypeCode(r.typeCode().trim()); t.setTypeName(r.typeName().trim());
         t.setDescription(r.description()); t.setIsActive(true); t.setCreatedAt(LocalDateTime.now(clock));
+        applyPayrollFlags(t, r);
         types.saveAndFlush(t);
         var after=dto(t);
         audit.record("allowance_types",t.getAllowanceTypeId(),"ALLOWANCE_TYPE_CREATE",r.reason().trim(),null,after);
@@ -41,6 +42,7 @@ public class AllowanceTypeService {
         var before=dto(t);
         t.setTypeName(r.typeName().trim()); t.setDescription(r.description());
         if (r.isActive()!=null) t.setIsActive(r.isActive());
+        applyPayrollFlags(t, r);
         t.setUpdatedAt(LocalDateTime.now(clock)); types.saveAndFlush(t);
         var after=dto(t);
         audit.record("allowance_types",id,"ALLOWANCE_TYPE_UPDATE",r.reason().trim(),before,after);
@@ -60,7 +62,13 @@ public class AllowanceTypeService {
         return types.findByIdForUpdate(id).orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND,"Không có loại phụ cấp"));
     }
     private AllowanceTypeResponse dto(AllowanceType t) {
-        return new AllowanceTypeResponse(t.getAllowanceTypeId(),t.getTypeCode(),t.getTypeName(),t.getDescription(),t.getIsActive());
+        return new AllowanceTypeResponse(t.getAllowanceTypeId(),t.getTypeCode(),t.getTypeName(),t.getDescription(),
+                t.getIsActive(),t.isTaxable(),t.isCountsForSocialInsurance());
+    }
+    private void applyPayrollFlags(AllowanceType type, AllowanceTypeRequest request) {
+        if (request.isTaxable() != null) type.setTaxable(request.isTaxable());
+        if (request.countsForSocialInsurance() != null)
+            type.setCountsForSocialInsurance(request.countsForSocialInsurance());
     }
     private BusinessException conflict(String m) { return new BusinessException(HttpStatus.CONFLICT,m); }
 }

@@ -41,6 +41,21 @@ public class EmployeeDecision extends BaseEntity {
     @Column(name = "apply_date")
     private LocalDate applyDate;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "discipline_form", length = 30)
+    private DisciplineForm disciplineForm;
+    @Column(name = "violation_date")
+    private LocalDate violationDate;
+    @Column(name = "salary_increase_delay_months")
+    private Integer salaryIncreaseDelayMonths;
+
+    public DisciplineForm getDisciplineForm() { return disciplineForm; }
+    public void setDisciplineForm(DisciplineForm value) { disciplineForm = value; }
+    public LocalDate getViolationDate() { return violationDate; }
+    public void setViolationDate(LocalDate value) { violationDate = value; }
+    public Integer getSalaryIncreaseDelayMonths() { return salaryIncreaseDelayMonths; }
+    public void setSalaryIncreaseDelayMonths(Integer value) { salaryIncreaseDelayMonths = value; }
+
     public EmployeeDecision() {
     }
 

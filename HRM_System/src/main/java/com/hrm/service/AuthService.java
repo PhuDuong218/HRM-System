@@ -51,6 +51,14 @@ public class AuthService {
     }
 
     public LoginResponse login(LoginRequest request) {
+        return login(request, false);
+    }
+
+    public LoginResponse loginWeb(LoginRequest request) {
+        return login(request, true);
+    }
+
+    private LoginResponse login(LoginRequest request, boolean webSession) {
         Account account = accountRepository.findByUsername(request.username())
                 .orElseThrow(() -> new BadCredentialsException(
                         "Tên đăng nhập hoặc mật khẩu không đúng"));
@@ -67,7 +75,9 @@ public class AuthService {
                     "Tên đăng nhập hoặc mật khẩu không đúng");
         }
 
-        String token = jwtService.issue(
+        String token = webSession ? jwtService.issueWeb(
+                account.getAccountId(), account.getEmployeeId(), account.getUsername(),
+                account.getRole().getRoleCode(), account.getTokenVersion()) : jwtService.issue(
                 account.getAccountId(),
                 account.getEmployeeId(),
                 account.getUsername(),
@@ -77,7 +87,25 @@ public class AuthService {
         return new LoginResponse(
                 token,
                 "Bearer",
-                jwtService.getExpirationSeconds());
+                webSession ? jwtService.getWebIdleSeconds() : jwtService.getExpirationSeconds());
+    }
+
+    public LoginResponse refreshWeb(AuthenticatedAccount account, String token) {
+        io.jsonwebtoken.Claims claims;
+        try {
+            claims = jwtService.parse(token);
+        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {
+            throw new BadCredentialsException("Phiên đăng nhập không hợp lệ", ex);
+        }
+        Integer version = claims.get("token_version", Integer.class);
+        Long accountId = claims.get("account_id", Long.class);
+        if (!Boolean.TRUE.equals(claims.get("web_session", Boolean.class)) || version == null
+                || !account.accountId().equals(accountId)) {
+            throw new BadCredentialsException("Phiên đăng nhập không hợp lệ");
+        }
+        String refreshed = jwtService.issueWeb(account.accountId(), account.employeeId(),
+                account.username(), account.roleCode(), version);
+        return new LoginResponse(refreshed, "Bearer", jwtService.getWebIdleSeconds());
     }
 
     public CurrentUserResponse currentUser(AuthenticatedAccount account) {
@@ -87,7 +115,7 @@ public class AuthService {
         var assignment = assignments.size() == 1 ? assignments.get(0) : null;
         return new CurrentUserResponse(
                 account.username(), account.roleCode(), employee.getEmployeeCode(), employee.getFullName(),
-                employee.getBirthDate(), employee.getEmail(), employee.getPhone(), employee.getAddress(),
+                employee.getBirthDate(), employee.getEmail(), employee.getPhone(), employee.getAddress(), employee.getIdentityNumber(),
                 employee.getHireDate(), employee.getEmploymentStatus() == null ? null : employee.getEmploymentStatus().name(),
                 assignment == null ? null : assignment.getDepartment().getDepartmentName(),
                 assignment == null ? null : assignment.getPosition().getPositionName());
@@ -95,10 +123,13 @@ public class AuthService {
 
     @Transactional
     public void logout(Long accountId) {
-        if (accountRepository.incrementTokenVersion(accountId) != 1) {
-            throw new IllegalStateException(
-                    "Không thể vô hiệu phiên đăng nhập");
-        }
+        // Serialize revocations and verify persistence through the versioned entity,
+        // rather than relying on a driver's bulk-update affected-row count.
+        Account account = accountRepository.findByIdForUpdate(accountId)
+                .orElseThrow(() -> new BadCredentialsException("Phiên đăng nhập không hợp lệ"));
+        account.revokeTokens();
+        account.setUpdatedAt(java.time.LocalDateTime.now(java.time.ZoneOffset.UTC));
+        accountRepository.saveAndFlush(account);
     }
 
     @Transactional
@@ -210,6 +241,9 @@ public class AuthService {
             String newPassword,
             String confirmPassword) {
 
+        if (newPassword.getBytes(java.nio.charset.StandardCharsets.UTF_8).length > 72) {
+            throw new IllegalArgumentException("Mật khẩu không được vượt quá 72 byte UTF-8");
+        }
         if (!newPassword.equals(confirmPassword)) {
             throw new IllegalArgumentException(
                     "Mật khẩu mới và xác nhận mật khẩu không khớp");

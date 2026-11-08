@@ -4,6 +4,6 @@ import java.time.LocalDate;
 
 public record CurrentUserResponse(
         String username, String role, String employeeCode, String fullName,
-        LocalDate birthDate, String email, String phone, String address,
+        LocalDate birthDate, String email, String phone, String address, String identityNumber,
         LocalDate hireDate, String employmentStatus, String departmentName, String positionName) {
 }

@@ -1,3 +1,9 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {Breadcrumb} from '../../shared/breadcrumb';
+import {Pagination} from '../../shared/pagination';
 import {PersonalCalendarComponent} from '../../shared/personal-calendar';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
@@ -25,8 +31,10 @@ interface ShiftLookup { text: string; selected: ShiftOption | null; error: strin
 const employeeLookup = (): EmployeeLookup => ({ text: '', selected: null, options: [], error: '', loading: false });
 const shiftLookup = (): ShiftLookup => ({ text: '', selected: null, error: '' });
 
-@Component({ selector: 'app-schedules', standalone: true, imports: [PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-schedules', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
 export class SchedulesPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
   private readonly url = `${API_BASE_URL}/management/schedule-workspace`;
@@ -49,12 +57,12 @@ export class SchedulesPage implements OnInit {
   detailFocusVersion=0;
   personal=false;templateBreaks:Array<{start:string;end:string}>=[];templateBreakError='';
   switchScheduleScope(personal:boolean):void {if(this.busy)return;this.personal=personal;this.closeDetails();this.filterEmployee=employeeLookup();this.departmentId='';this.load();}
-  saveTemplateBreaks():void {
+  async saveTemplateBreaks():Promise<void> {
     const option=this.formShift.selected;if(!option||this.busy)return;const shift=option.shift;const start=this.toMinute(shift.startTime);const duration=this.toMinute(shift.endTime)+shift.endDayOffset*1440-start;
     const offsets=this.templateBreaks.map(b=>{let a=this.toMinute(b.start)-start,z=this.toMinute(b.end)-start;if(shift.endDayOffset===1){if(a<0)a+=1440;if(z<=0)z+=1440;}return {startMinute:a,endMinute:z};}).sort((a,b)=>a.startMinute-b.startMinute);
     let previous=0;for(const b of offsets){if(!Number.isFinite(b.startMinute)||!Number.isFinite(b.endMinute)||b.startMinute<previous||b.endMinute<=b.startMinute||b.endMinute>duration){this.templateBreakError='Giờ nghỉ phải nằm trong ca, kết thúc sau bắt đầu và không chồng lấn.';return;}previous=b.endMinute;}
     if(!offsets.length||offsets.reduce((n,b)=>n+b.endMinute-b.startMinute,0)!==shift.breakMinutes){this.templateBreakError='Tổng các khoảng nghỉ phải bằng '+shift.breakMinutes+' phút của ca.';return;}
-    if(!window.confirm('Lưu giờ nghỉ chi tiết cho ca '+shift.shiftCode+'? Mẫu ca sẽ dùng giờ nghỉ này cho các lịch tạo mới.'))return;
+    if(!(await this.actionDialogInPage.confirm('Lưu giờ nghỉ chi tiết cho ca '+shift.shiftCode+'? Mẫu ca sẽ dùng giờ nghỉ này cho các lịch tạo mới.')))return;
     this.saving=true;this.templateBreakError='';this.http.put<Shift>(API_BASE_URL+'/management/shifts/'+shift.shiftId,{shift,breaks:offsets}).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({next:saved=>{const updated={shift:saved,breaksVerified:true};this.shifts=this.shifts.map(s=>s.shift.shiftId===saved.shiftId?updated:s);this.formShift.selected=updated;this.formShift.text=this.shiftLabel(updated);this.success='Đã bổ sung giờ nghỉ cho ca. Bạn có thể lưu lịch làm việc.';this.templateBreaks=[];},error:e=>this.templateBreakError=this.message(e)});
   }
   private toMinute(value:string):number {const match=value.match(/^(\d{2}):(\d{2})/);return match&&+match[1]<24&&+match[2]<60?+match[1]*60+(+match[2]):NaN;}
@@ -282,7 +290,7 @@ export class SchedulesPage implements OnInit {
     const shift = this.shifts.find(s => s.shift.shiftId === row.schedule.shiftId) ?? null;
     this.formShift = { text: shift ? this.shiftLabel(shift) : row.shiftLabel, selected: shift, error: shift ? '' : 'Ca của lịch không còn trong danh sách.' };
   }
-  submitForm(): void {
+  async submitForm(): Promise<void> {
     if (this.busy || !this.canManage || !['create', 'edit'].includes(this.mode)) return;
     if (this.mode === 'edit' && (this.stateLoading || this.stateError || this.scheduleState !== 'ACTIVE')) { this.formError = 'Lịch đã khóa sửa, đã hủy hoặc chưa xác minh được trạng thái; không thể lưu.'; return; }
     const employeeValid = this.validateEmployee(this.formEmployee, true), shiftValid = this.validateShift(this.formShift, true);
@@ -290,7 +298,7 @@ export class SchedulesPage implements OnInit {
     if (!this.formShift.selected.breaksVerified) { this.formError = 'Ca chưa có đủ giờ nghỉ chi tiết. Hãy bổ sung khoảng nghỉ tại Danh mục ca trước.'; return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(this.formDate) || this.formNote.length > 1000) { this.formError = 'Ngày làm hoặc ghi chú không hợp lệ.'; return; }
     const creating = this.mode === 'create';
-    if (!window.confirm(`${creating ? 'Thêm lịch làm việc' : 'Lưu thay đổi lịch'}?\n${this.formEmployee.text}\n${this.formShift.text}\nNgày: ${this.formDate}\nNghỉ: ${this.formBreakMinutes} phút`)) return;
+    if (!(await this.actionDialogInPage.confirm(`${creating ? 'Thêm lịch làm việc' : 'Lưu thay đổi lịch'}?\n${this.formEmployee.text}\n${this.formShift.text}\nNgày: ${this.formDate}\nNghỉ: ${this.formBreakMinutes} phút`))) return;
     const body = { employeeId: this.formEmployee.selected.employeeId, shiftId: this.formShift.selected.shift.shiftId, workDate: this.formDate, note: this.formNote.trim() };
     const request = creating ? this.http.post<Schedule>(`${this.url}/schedules`, body) : this.http.put<Schedule>(`${this.url}/schedules/${this.selected!.schedule.scheduleId}`, body);
     this.saving = true; this.formError = '';
@@ -313,7 +321,7 @@ export class SchedulesPage implements OnInit {
       this.stateReturnMode = this.mode === 'edit' ? 'edit' : 'view'; this.mode = action; this.actionReason = ''; this.formError = '';
     }
   }
-  submitStateAction(): void {
+  async submitStateAction(): Promise<void> {
     if (!this.selected || this.busy || !['lock', 'unlock', 'cancel'].includes(this.mode)) return;
     this.currentTime = Date.now();
     if (this.mode === 'lock' && !this.canLockSelected) { this.formError = 'Trạng thái không còn cho phép khóa sửa.'; return; }
@@ -322,7 +330,7 @@ export class SchedulesPage implements OnInit {
     const action = this.mode;
     const verb = action === 'cancel' ? 'Hủy lịch' : action === 'lock' ? 'Khóa sửa lịch' : 'Mở khóa sửa lịch';
     const explanation = action === 'cancel' ? 'Lịch sẽ mất hiệu lực, bản ghi vẫn được giữ trong lịch sử.' : action === 'lock' ? 'ADMIN/HR sẽ không thể sửa cho tới khi lịch được mở khóa. Các thay đổi chưa lưu không được lưu.' : 'Lịch được phép chỉnh sửa lại theo điều kiện nghiệp vụ.';
-    if (!window.confirm(`${verb} #${this.selected.schedule.scheduleId}?\n\n${explanation}\nLý do: ${reason}`)) return;
+    if (!(await this.actionDialogInPage.confirm(`${verb} #${this.selected.schedule.scheduleId}?\n\n${explanation}\nLý do: ${reason}`))) return;
     this.currentTime = Date.now();
     if (action === 'cancel' && !this.canCancelSelected) { this.formError = 'Lịch đã bắt đầu trong lúc chờ xác nhận, không được hủy.'; return; }
     this.saving = true;
@@ -356,10 +364,10 @@ export class SchedulesPage implements OnInit {
     this.http.get<ChangeDetail>(`${this.url}/requests/${row.requestId}`).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.requestLoading = false)).subscribe({ next: r => { this.requestDetail = r; this.requestMode = 'detail'; }, error: e => this.requestError = this.message(e) });
   }
   get canDecide(): boolean { return !!this.requestDetail && this.requestDetail.request.status === 'CHO_DUYET' && this.requestDetail.request.employeeId !== this.ownEmployeeId; }
-  decideRequest(approve: boolean): void {
+  async decideRequest(approve: boolean): Promise<void> {
     if (!this.canDecide || !this.requestDetail || this.requestBusy) return;
     const reason = this.rejectionReason.trim(); if (!approve && !reason) { this.requestError = 'Từ chối yêu cầu cần có lý do.'; return; }
-    if (!window.confirm(`${approve ? 'Duyệt' : 'Từ chối'} yêu cầu ${this.requestDetail.request.requestCode}?`)) return;
+    if (!(await this.actionDialogInPage.confirm(`${approve ? 'Duyệt' : 'Từ chối'} yêu cầu ${this.requestDetail.request.requestCode}?`))) return;
     const id = this.requestDetail.request.requestId; this.requestBusy = true; this.requestError = '';
     this.http.post<void>(`${this.url}/requests/${id}/decision`, { approve, rejectionReason: reason })
       .pipe(switchMap(() => this.http.get<ChangeDetail>(`${this.url}/requests/${id}`)), takeUntilDestroyed(this.destroyRef), finalize(() => this.requestBusy = false)).subscribe({
@@ -376,12 +384,12 @@ export class SchedulesPage implements OnInit {
       .pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.ownLoading = false)).subscribe({ next: r => { this.ownSchedules = r.items; this.ownPages = r.totalPages; }, error: e => this.requestError = this.message(e) });
   }
   ownGoPage(page: number): void { if (page >= 0 && page < this.ownPages && !this.ownLoading) { this.ownPage = page; this.ownScheduleId = ''; this.loadOwnSchedules(); } }
-  submitChange(): void {
+  async submitChange(): Promise<void> {
     if (this.requestBusy || !this.canSubmitOwn || !this.validateShift(this.changeShift, true) || !this.changeShift.selected) return;
     const id = Number(this.ownScheduleId);
     if (!this.ownSchedules.some(s => s.scheduleId === id) || !this.changeDate || !this.changeReason.trim() || this.changeReason.length > 1000) { this.requestError = 'Hãy chọn lịch của bạn, ngày mới và nhập lý do tối đa 1000 ký tự.'; return; }
     if (!this.changeShift.selected.breaksVerified) { this.requestError = 'Ca đề xuất chưa có đủ khoảng nghỉ chi tiết.'; return; }
-    if (!window.confirm('Gửi yêu cầu đổi lịch để chờ phê duyệt?')) return;
+    if (!(await this.actionDialogInPage.confirm('Gửi yêu cầu đổi lịch để chờ phê duyệt?'))) return;
     this.requestBusy = true; this.requestError = '';
     this.http.get<{ breaks: Array<{ startMinute: number; endMinute: number }> }>(`${API_BASE_URL}/management/shifts/${this.changeShift.selected.shift.shiftId}/details`).pipe(
       switchMap(detail => {

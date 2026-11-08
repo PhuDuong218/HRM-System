@@ -19,7 +19,7 @@ public class EmployeeStatisticsController {
     }
 
     @GetMapping("/employees")
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')")
+    @PreAuthorize("hasRole('ADMIN') and hasAuthority('REPORT_VIEW')")
     public EmployeeStatisticsResponse getEmployeeStatistics() {
         return statisticsService.getEmployeeStatistics();
     }

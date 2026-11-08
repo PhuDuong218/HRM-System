@@ -1,8 +1,11 @@
+import {SpringPage} from '../models/page.model';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Observable, timeout } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 export interface Employee {
+    version?: string;
+    gender?:string|null;
     employeeId: number;
     employeeCode: string;
     fullName: string;
@@ -19,13 +22,12 @@ export interface Employee {
     identityNumber?: string | null;
     terminationDate?: string | null;
 }
-export interface Page {
-    content: Employee[];
-    number: number;
-    totalPages: number;
-    totalElements: number;
-}
+export interface Page extends SpringPage<Employee> { number: number; }
+
 export interface EmployeeForm {
+    version?: string;
+    gender?:string|null;
+    reason?:string;
     privateFieldsEditable?: boolean;
     employeeCode: string;
     fullName: string;
@@ -54,10 +56,25 @@ export function errorMessage(e: unknown) { if (e instanceof HttpErrorResponse) {
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
     private http = inject(HttpClient);
-    list(admin: boolean, page: number, keyword: string, status: string, department: string): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
+    list(admin: boolean, page: number, keyword: string, status: string, department: string, position = ""): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}), ...(position ? { positionId: position } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
     detail(id: number) { return this.http.get<Employee>(API_BASE_URL + `/employees/${id}/detail`).pipe(timeout(15000)); }
+    audit(id:number,page=0){return this.http.get<{content:Record<string,unknown>[];number:number;totalPages:number}>(API_BASE_URL+'/g1/audit',{params:{targetTable:'employees',recordId:id,page,size:20}}).pipe(timeout(15000));}
+    all() { return this.http.get<Employee[]>(API_BASE_URL+'/employees').pipe(timeout(15000)); }
     choices(path: string) { return this.http.get<Record<string, unknown>[]>(API_BASE_URL + '/' + path).pipe(timeout(15000)); }
-    save(mode: string, id: number | undefined, f: EmployeeForm) { const common = { fullName: f.fullName.trim(), birthDate: f.birthDate || null, email: f.email || null, phone: f.phone || null, ...(f.privateFieldsEditable?{identityNumber:f.identityNumber||null}:{}) }; return mode === 'create' ? this.http.post<Employee>(API_BASE_URL + '/employees', { employeeCode:f.employeeCode,hireDate:f.hireDate,departmentId:f.departmentId,positionId:f.positionId,...common }) : mode === 'contact' ? this.http.patch<Employee>(API_BASE_URL + `/employees/${id}/contact`, { email: f.email, phone: f.phone }) : this.http.put<Employee>(API_BASE_URL + `/employees/${id}`, common); }
+    save(mode: string, id: number | undefined, f: EmployeeForm) {
+        const privateFields = mode === 'create' || f.privateFieldsEditable
+            ? { identityNumber:f.identityNumber.trim(), address:f.address.trim() } : {};
+        const contact = {email:f.privateFieldsEditable===false?undefined:f.email.trim()||null,
+            phone:f.privateFieldsEditable===false?undefined:f.phone.trim()||null,reason:f.reason?.trim()||null,
+            version:mode==='create'?undefined:f.version,...privateFields};
+        const common = { gender:f.gender||null, fullName:f.fullName.trim(), birthDate:f.birthDate||null,
+            ...contact };
+        return mode === 'create'
+            ? this.http.post<Employee>(API_BASE_URL+'/employees',{employeeCode:f.employeeCode,hireDate:f.hireDate,departmentId:f.departmentId,positionId:f.positionId,...common})
+            : mode === 'contact'
+                ? this.http.patch<Employee>(API_BASE_URL+`/employees/${id}/contact`,contact)
+                : this.http.put<Employee>(API_BASE_URL+`/employees/${id}`,common);
+    }
     rehire(id:number,request:{effectiveDate:string;departmentId:number;positionId:number;reason:string}) { return this.http.post<void>(API_BASE_URL+`/employees/${id}/rehire`,request).pipe(timeout(20000)); }
-    terminate(id: number) { return this.http.post<void>(API_BASE_URL + `/employees/${id}/terminate`, {}).pipe(timeout(20000)); }
+    terminate(id: number,decision:{reason:string;lastWorkingDate:string;decisionType:string;decisionNumber:string}) { return this.http.post<void>(API_BASE_URL + `/employees/${id}/termination-decisions`, decision).pipe(timeout(20000)); }
 }

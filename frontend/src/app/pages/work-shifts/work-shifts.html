@@ -1,3 +1,4 @@
+<app-breadcrumb variant="group"/>
 <div class="d-flex justify-content-between align-items-center mb-3">
   <h1 class="h3 mb-0">{{ "Quản lý ca làm việc" | translate }}</h1>
   <div class="d-flex gap-2">
@@ -5,8 +6,8 @@
     <button type="button" class="btn btn-primary" [disabled]="busy" (click)="openCreate()">{{ "Thêm mới" | translate }}</button>
   </div>
 </div>
-@if (error) { <div class="alert alert-warning" role="alert">{{ error }}</div> }
-@if (success) { <div class="alert alert-success" role="status">{{ success }}</div> }
+@if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning" role="alert">{{ error }}</div> }
+@if (success) { <div [hrmNotice]="success" noticeKind="success" class="alert alert-success" role="status">{{ success }}</div> }
 
 <section class="surface mb-3" aria-labelledby="shiftSearchTitle">
   <h2 id="shiftSearchTitle" class="h5 mb-3">{{ "Tìm kiếm ca làm việc" | translate }}</h2>
@@ -42,7 +43,7 @@
         </fieldset>
       </div>
     </div>
-    @if (filterError) { <div class="alert alert-warning mt-3 mb-0" role="alert">{{ filterError }}</div> }
+    @if (filterError) { <div [hrmNotice]="filterError" noticeKind="error" class="alert alert-warning mt-3 mb-0" role="alert">{{ filterError }}</div> }
     <div class="d-flex justify-content-between align-items-center mt-3">
       <span class="small text-muted" role="status" aria-live="polite">@if (!filterError) { Hiển thị {{ filteredRecords.length }} / {{ records.length }} ca }</span>
       <div class="d-flex gap-2">
@@ -89,9 +90,9 @@
           <h2 id="panelTitle" class="h5 mb-0">{{ panelTitle }}</h2>
           <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="busy" (click)="close()">{{ "Đóng" | translate }}</button>
         </div>
-        @if (panelError) { <div class="alert alert-warning" role="alert">{{ panelError }}</div> }
+        @if (panelError) { <div [hrmNotice]="panelError" noticeKind="error" class="alert alert-warning" role="alert">{{ panelError }}</div> }
         @if (detailsWarning && mode !== 'deactivate' && mode !== 'activate') {
-          <div class="alert alert-warning" role="alert">{{ detailsWarning }}</div>
+          <div [hrmNotice]="detailsWarning" noticeKind="error" class="alert alert-warning" role="alert">{{ detailsWarning }}</div>
           <button type="button" class="btn btn-outline-primary btn-sm mb-3" [disabled]="busy" (click)="retryDetails()">{{ "Tải lại khoảng nghỉ" | translate }}</button>
         }
         @if (detailLoading) {
@@ -141,12 +142,12 @@
             <section class="mt-4 border-top pt-3" aria-label="Lịch sử thao tác ca làm việc">
               <div class="d-flex justify-content-between align-items-center gap-2 mb-3"><h3 class="h6 mb-0">Lịch sử thao tác</h3><button type="button" class="btn btn-sm btn-outline-primary" (click)="loadHistory()" [disabled]="historyLoading">Tải lại lịch sử</button></div>
               @if(historyLoading){<p class="text-muted" role="status">Đang tải lịch sử…</p>}
-              @else if(historyError){<div class="alert alert-warning" role="alert">{{historyError}}</div>}
+              @else if(historyError){<div [hrmNotice]="historyError" noticeKind="error" class="alert alert-warning" role="alert">{{historyError}}</div>}
               @else { @for(h of history;track h.id){<article class="border rounded p-3 mb-2"><div class="d-flex justify-content-between flex-wrap gap-2"><strong>{{historyLabel(h.action)}}</strong><time class="small text-muted">{{h.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}} (UTC+7)</time></div><p class="small mb-1">Người thực hiện: <strong>{{h.actor}}</strong></p><p class="small mb-2 text-break" style="white-space:pre-line">Lý do: {{h.reason||'Không ghi nhận lý do'}}</p>@for(c of historyChanges(h);track c.label){<div class="small text-break mb-1"><strong>{{c.label}}:</strong> {{c.before}} → {{c.after}}</div>}</article>} @empty{<p class="small text-muted">Chưa có lịch sử thao tác được ghi nhận cho ca này.</p>} }
             </section>
           }
         } @else {
-          <form [formGroup]="form" (ngSubmit)="save()">
+          <form [hrmEditForm]="mode==='edit'" [formGroup]="form" (ngSubmit)="save()">
             <fieldset [disabled]="saving">
               <div class="mb-3">
                 <label for="shiftCode" class="form-label">{{ "Mã ca *" | translate }}</label>

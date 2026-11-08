@@ -10,6 +10,9 @@ import org.springframework.data.jpa.repository.*;
 import org.springframework.data.repository.query.Param;
 
 public interface EmployeeDecisionRepository extends JpaRepository<EmployeeDecision,Long> {
+    Page<EmployeeDecision> findByEmployee_EmployeeIdAndApprovalStatus(
+            Long employeeId, DecisionApprovalStatus approvalStatus, Pageable pageable);
+
     boolean existsByDecisionNumber(String number);
     @Query("select d.employee.employeeId from EmployeeDecision d where d.decisionId=:id")
     Optional<Long> findEmployeeIdById(@Param("id") Long id);
@@ -25,6 +28,16 @@ public interface EmployeeDecisionRepository extends JpaRepository<EmployeeDecisi
         """)
     Page<EmployeeDecision> search(@Param("employeeId") Long employeeId,
         @Param("status") DecisionApprovalStatus status, Pageable pageable);
+
+    @Query("""
+        select d from EmployeeDecision d
+        where (:employeeId is null or d.employee.employeeId=:employeeId)
+          and (:status is null or d.approvalStatus=:status)
+          and d.employee.employeeId in :allowedEmployeeIds
+        """)
+    Page<EmployeeDecision> searchScoped(@Param("employeeId") Long employeeId,
+        @Param("status") DecisionApprovalStatus status,
+        @Param("allowedEmployeeIds") List<Long> allowedEmployeeIds, Pageable pageable);
 
     @Query("""
         select d from EmployeeDecision d

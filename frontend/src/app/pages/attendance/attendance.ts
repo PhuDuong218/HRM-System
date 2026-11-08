@@ -1,3 +1,9 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {Breadcrumb} from '../../shared/breadcrumb';
+import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
 import {AttendanceActualBreaksComponent} from '../../shared/attendance-actual-breaks';
 import {PersonalCalendarComponent} from '../../shared/personal-calendar';
@@ -17,11 +23,13 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports: [AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })
 export class AttendancePage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
     readonly clockTiming = clockTiming;
     private readonly api = inject(AttendanceApiService);
     private readonly destroyRef = inject(DestroyRef);
@@ -228,18 +236,18 @@ export class AttendancePage implements OnInit {
         return { actualStart: this.result === 'VANG' ? null : start, actualEnd: this.result === 'VANG' ? null : end, actualBreakMinutes: this.result === 'VANG' ? 0 : this.breakMinutes, attendanceResult: this.result, correctionReason: this.reason.trim() };
     }
 
-    save(): void {
+    async save(): Promise<void> {
         if (this.saving || !this.detail) return; const row = this.detail.row;
-        if (this.mode === 'unconfirm') { if (!this.reason.trim() || this.reason.length > 1000) { this.actionError = 'Lý do bắt buộc, tối đa 1000 ký tự.'; return; } if (window.confirm('Hủy xác nhận bản ghi công này?')) this.mutate(this.api.verify(row.attendanceId!, false, this.reason.trim(), row.version), `Đã hủy xác nhận công ${this.employeeName(row)}.`, row); return; }
+        if (this.mode === 'unconfirm') { if (!this.reason.trim() || this.reason.length > 1000) { this.actionError = 'Lý do bắt buộc, tối đa 1000 ký tự.'; return; } if ((await this.actionDialogInPage.confirm('Hủy xác nhận bản ghi công này?'))) this.mutate(this.api.verify(row.attendanceId!, false, this.reason.trim(), row.version), `Đã hủy xác nhận công ${this.employeeName(row)}.`, row); return; }
         const data = this.formData(); if (!data) return;
-        if (!window.confirm(this.mode === 'proposal' ? 'Gửi yêu cầu điều chỉnh? Công gốc chỉ thay đổi sau khi được duyệt.' : this.mode === 'manual' ? 'Nhập bản ghi công chưa xác nhận cho lịch này?' : 'Lưu thay đổi công chưa xác nhận?')) return;
+        if (!(await this.actionDialogInPage.confirm(this.mode === 'proposal' ? 'Gửi yêu cầu điều chỉnh? Công gốc chỉ thay đổi sau khi được duyệt.' : this.mode === 'manual' ? 'Nhập bản ghi công chưa xác nhận cho lịch này?' : 'Lưu thay đổi công chưa xác nhận?'))) return;
         if (this.mode === 'proposal') this.mutate(this.api.submitRequest(row, data), 'Đã gửi yêu cầu điều chỉnh.', row);
         else if (this.mode === 'manual') this.mutate(this.api.manual(row, data), 'Đã nhập công, chờ xác nhận.', row);
         else if (this.mode === 'edit') this.mutate(this.api.correct(row.attendanceId!, data, row.version), `Đã sửa công ${this.employeeName(row)}.`, row);
     }
 
-    confirm(row: AttendanceRow): void { if (this.saving || !row.canConfirm) return; if (window.confirm(`Xác nhận công của ${row.employeeLabel}, ngày ${row.workDate}?`)) this.mutate(this.api.verify(row.attendanceId!, true, '', row.version), `Đã xác nhận công ${this.employeeName(row)}.`, row); }
-    clock(row: AttendanceRow, checkIn: boolean): void { if (this.saving || !(checkIn ? row.canCheckIn : row.canCheckOut)) return; if (window.confirm(`${checkIn ? 'Check-in' : 'Check-out'} ca ${row.shift}? Thời gian được ghi nhận từ máy chủ.`)) this.mutate(this.api.clock(row.scheduleId, checkIn), `Đã ${checkIn ? 'check-in' : 'check-out'}.`, row); }
+    async confirm(row: AttendanceRow): Promise<void> { if (this.saving || !row.canConfirm) return; if ((await this.actionDialogInPage.confirm(`Xác nhận công của ${row.employeeLabel}, ngày ${row.workDate}?`))) this.mutate(this.api.verify(row.attendanceId!, true, '', row.version), `Đã xác nhận công ${this.employeeName(row)}.`, row); }
+    async clock(row: AttendanceRow, checkIn: boolean): Promise<void> { if (this.saving || !(checkIn ? row.canCheckIn : row.canCheckOut)) return; if ((await this.actionDialogInPage.confirm(`${checkIn ? 'Check-in' : 'Check-out'} ca ${row.shift}? Thời gian được ghi nhận từ máy chủ.`))) this.mutate(this.api.clock(row.scheduleId, checkIn), `Đã ${checkIn ? 'check-in' : 'check-out'}.`, row); }
 
     private mutate(request: Observable<unknown>, success: string, row?: AttendanceRow, requestId?: number): void {
         this.saving = true; this.actionError = ''; this.error = '';
@@ -266,20 +274,20 @@ export class AttendancePage implements OnInit {
         this.api.request(id, this.requestsMine).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => { if (version !== this.requestVersion) return; this.requestDetail = d; if(this.detail?.row.scheduleId===d.current.row.scheduleId)this.detail=d.current; this.requestDetailLoading = false; this.acceptedStart=d.request.proposedStart ?? ''; this.adjustmentReason=''; this.acceptedEnd = d.request.proposedEnd ?? ''; this.decisionReason = ''; }, error: e => { if (version === this.requestVersion) { this.requestDetailLoading = false; this.actionError = this.api.message(e); } } });
     }
 
-    receive(): void { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if (window.confirm('Tiếp nhận yêu cầu này để xử lý?')) {if(this.requestStatus==='CHO_XU_LY')this.requestStatus='ACTIVE';this.mutate(this.api.receive(r.requestId), 'Đã tiếp nhận yêu cầu.', undefined, r.requestId);} }
+    async receive(): Promise<void> { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if ((await this.actionDialogInPage.confirm('Tiếp nhận yêu cầu này để xử lý?'))) {if(this.requestStatus==='CHO_XU_LY')this.requestStatus='ACTIVE';this.mutate(this.api.receive(r.requestId), 'Đã tiếp nhận yêu cầu.', undefined, r.requestId);} }
 
-    decide(approve: boolean): void {
+    async decide(approve: boolean): Promise<void> {
         const r = this.requestDetail?.request; if (!r?.canDecide || this.saving) return;
         const end = this.acceptedEnd || null;
         if (!approve && !this.decisionReason.trim() || this.decisionReason.length > 1000) { this.actionError = 'Từ chối hoặc duyệt giờ ra khác đề xuất phải nhập lý do, tối đa 1000 ký tự.'; return; }
         if(approve && ((this.acceptedStart||null)!==r.proposedStart || end!==r.proposedEnd) && !this.adjustmentReason.trim()){this.actionError='Nhập lý do điều chỉnh giờ riêng.';return;}
-        if (window.confirm(approve ? 'Chấp nhận và áp dụng điều chỉnh công?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.')) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim(), this.acceptedStart||null, this.adjustmentReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
+        if ((await this.actionDialogInPage.confirm(approve ? 'Chấp nhận và áp dụng điều chỉnh công?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.'))) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim(), this.acceptedStart||null, this.adjustmentReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
     }
-    markAbsent(row: AttendanceRow): void {
+    async markAbsent(row: AttendanceRow): Promise<void> {
         if(!row.canMarkAbsent || this.saving)return;
-        const reason=window.prompt('Lý do ghi nhận vắng sau khi đã hết hạn giải trình:');
+        const reason=(await this.actionDialogInPage.prompt('Lý do ghi nhận vắng sau khi đã hết hạn giải trình:'));
         if(!reason?.trim())return;
-        if(window.confirm('Ghi nhận vắng, không sinh giờ công? Bản ghi cần người độc lập xác nhận.')) this.mutate(this.api.markAbsent(row,reason.trim()),'Đã ghi nhận vắng, chờ xác nhận độc lập.');
+        if((await this.actionDialogInPage.confirm('Ghi nhận vắng, không sinh giờ công? Bản ghi cần người độc lập xác nhận.'))) this.mutate(this.api.markAbsent(row,reason.trim()),'Đã ghi nhận vắng, chờ xác nhận độc lập.');
     }
     openEntryRequest(row: AttendanceRow): void {
         if(!row.entryRequestId || this.saving)return;
@@ -289,9 +297,9 @@ export class AttendancePage implements OnInit {
         const row=this.detail?.row;if(!row||this.saving||!(side==='in'?row.canReviewCheckIn:row.canReviewCheckOut))return;
         this.reviewSide=side;this.reviewReason='';this.actionError='';
     }
-    saveClockReview(): void {
+    async saveClockReview(): Promise<void> {
         const row=this.detail?.row,side=this.reviewSide;if(!row||!side||this.saving)return;
         if(!this.reviewReason.trim()||this.reviewReason.length>1000){this.actionError='Nhập lý do đối soát, tối đa 1000 ký tự.';return;}
-        if(window.confirm(`Xác nhận đối soát check-${side}? Giờ đã đối soát sẽ bị khóa.`))this.mutate(this.api.reviewClock(row,side,this.reviewReason.trim()),`Đã đối soát check-${side} của ${this.employeeName(row)}.`,row);
+        if((await this.actionDialogInPage.confirm(`Xác nhận đối soát check-${side}? Giờ đã đối soát sẽ bị khóa.`)))this.mutate(this.api.reviewClock(row,side,this.reviewReason.trim()),`Đã đối soát check-${side} của ${this.employeeName(row)}.`,row);
     }
 }

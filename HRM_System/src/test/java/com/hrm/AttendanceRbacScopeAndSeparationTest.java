@@ -57,14 +57,13 @@ class AttendanceRbacScopeAndSeparationTest {
     }
 
     @Test
-    void hrCannotConfirmLastOwnCorrection() {
+    void hrCannotConfirmAttendanceTheyCorrectedEvenIfSomeoneElseEditedLater() {
         JdbcTemplate db = locked();
         when(db.query(contains("SELECT created_by"), any(org.springframework.jdbc.core.ResultSetExtractor.class),
                 eq(12L)))
                 .thenReturn(9L);
-        when(db.query(contains("ATTENDANCE_CORRECT"), any(org.springframework.jdbc.core.ResultSetExtractor.class),
-                eq("12")))
-                .thenReturn(5L);
+        when(db.queryForObject(contains("ATTENDANCE_CORRECT"), eq(Long.class), eq("12"), eq(5L)))
+                .thenReturn(1L);
         forbidden(() -> new AttendanceService(db, hr()).confirm(12L, 5L));
         verify(db, never()).update(anyString(), any(Object[].class));
     }

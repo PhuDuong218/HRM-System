@@ -14,6 +14,7 @@ import java.time.ZoneId;
 public class EmployeeStatisticsService {
 
     private final EmployeeStatisticsRepository repository;
+    @org.springframework.beans.factory.annotation.Autowired private HrScopedReportService hrReports;
 
     public EmployeeStatisticsService(EmployeeStatisticsRepository repository) {
         this.repository = repository;
@@ -24,6 +25,8 @@ public class EmployeeStatisticsService {
 
         LocalDate asOfDate = LocalDate.now(
                 ZoneId.of("Asia/Ho_Chi_Minh"));
+
+        if (PersonnelScopeService.isHr()) return hrReports.employees(asOfDate);
 
         return new EmployeeStatisticsResponse(
                 repository.countByDepartment(asOfDate),

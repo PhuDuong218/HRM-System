@@ -24,6 +24,7 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeQualificationService {
+    @org.springframework.beans.factory.annotation.Autowired private QualificationMetadata metadata;
 
     private final EmployeeQualificationRepository repository;
     private final EmployeeRepository employeeRepository;
@@ -53,6 +54,8 @@ public class EmployeeQualificationService {
     public EmployeeQualificationDTO addEmployeeQualification(Long employeeId, EmployeeQualificationRequestDTO request) {
         // Khoa dong Employee tranh 2 request dong thoi doi is_primary.
         Employee employee = requiredLockedEmployee(employeeId);
+        rejectDuplicate(employeeId,null,request);
+        boolean firstQualification = repository.findAllByEmployeeWithLevel(employeeId).isEmpty();
         QualificationLevel level = requiredActiveLevel(request.getQualificationLevelId());
         validateGraduationYear(request.getGraduationYear());
         EmployeeQualification q = new EmployeeQualification();
@@ -63,7 +66,8 @@ public class EmployeeQualificationService {
         q.setCreatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
         // Flush ban ghi moi truoc, sau do (neu can) chuyen primary.
         EmployeeQualification saved = repository.saveAndFlush(q);
-        if (Boolean.TRUE.equals(request.getIsPrimary())) {
+        if(metadata!=null)metadata.save(saved.getEmployeeQualificationId(),request);
+        if (firstQualification || Boolean.TRUE.equals(request.getIsPrimary())) {
             setPrimaryInternal(employeeId, saved);
         }
         return toDTO(saved);
@@ -75,6 +79,8 @@ public class EmployeeQualificationService {
         EmployeeQualification q = requiredQualification(id);
         Long employeeId = q.getEmployee().getEmployeeId();
         requiredLockedEmployee(employeeId);
+
+        rejectDuplicate(employeeId,id,request);
         QualificationLevel level = requiredActiveLevel(request.getQualificationLevelId());
         validateGraduationYear(request.getGraduationYear());
         q.setQualificationLevel(level);
@@ -83,9 +89,13 @@ public class EmployeeQualificationService {
         if (Boolean.TRUE.equals(request.getIsPrimary())) {
             setPrimaryInternal(employeeId, q);
         } else if (Boolean.FALSE.equals(request.getIsPrimary())) {
+            if(Boolean.TRUE.equals(q.getIsPrimary())) throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Hãy chọn bằng cấp khác làm trình độ chính thay vì bỏ chọn bằng cấp hiện tại.");
             q.setIsPrimary(false);
         }
-        return toDTO(repository.saveAndFlush(q));
+        repository.saveAndFlush(q);
+        if(metadata!=null)metadata.save(q.getEmployeeQualificationId(),request);
+        return toDTO(q);
     }
 
     @Transactional
@@ -109,6 +119,12 @@ public class EmployeeQualificationService {
 
         // Dong bo thao tac xoa voi cac thao tac chuyen trinh do chinh.
         requiredLockedEmployee(employeeId);
+
+        if (Boolean.TRUE.equals(qualification.getIsPrimary()) && repository.findAllByEmployeeWithLevel(employeeId).stream()
+                .anyMatch(other -> !other.getEmployeeQualificationId().equals(id))) {
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Hãy chọn bằng cấp khác làm trình độ chính trước khi gỡ bằng cấp này.");
+        }
 
         qualification.setIsDeleted(true);
         qualification.setDeletedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
@@ -148,6 +164,20 @@ public class EmployeeQualificationService {
         return value == null || value.isBlank() ? null : value.trim();
     }
 
+    private static String normalized(String value) {
+        return value==null?"":java.text.Normalizer.normalize(value.strip(),java.text.Normalizer.Form.NFC).toLowerCase(java.util.Locale.ROOT);
+    }
+    private void rejectDuplicate(Long employeeId,Long excludedId,EmployeeQualificationRequestDTO request) {
+        boolean duplicate=repository.findAllByEmployeeWithLevel(employeeId).stream().anyMatch(q->
+            (excludedId==null||!excludedId.equals(q.getEmployeeQualificationId()))
+            &&java.util.Objects.equals(q.getQualificationLevel().getQualificationLevelId(),request.getQualificationLevelId())
+            &&normalized(q.getMajor()).equals(normalized(request.getMajor()))
+            &&normalized(q.getInstitution()).equals(normalized(request.getInstitution()))
+            &&java.util.Objects.equals(q.getGraduationYear(),request.getGraduationYear())
+            &&normalized(q.getCertificateNumber()).equals(normalized(request.getCertificateNumber())));
+        if(duplicate)throw new ResponseStatusException(HttpStatus.CONFLICT,"Bằng cấp này đã tồn tại trong hồ sơ");
+    }
+
     private void validateGraduationYear(Integer year) {
         if (year != null && year > Year.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).getValue()) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
@@ -175,13 +205,18 @@ public class EmployeeQualificationService {
                 -> new ResourceNotFoundException("Khong tim thay trinh do cua nhan vien: " + id));
     }
 
+    @Transactional(readOnly=true)
+    public List<EmployeeQualificationDTO> searchRows() {
+        return repository.findAllVisibleWithDetails().stream().map(this::toDTO).toList();
+    }
     private EmployeeQualificationDTO toDTO(EmployeeQualification q) {
         QualificationLevel level = q.getQualificationLevel();
-        return new EmployeeQualificationDTO(
+        var result = new EmployeeQualificationDTO(
                 q.getEmployeeQualificationId(), q.getEmployee().getEmployeeId(),
                 level.getQualificationLevelId(), level.getLevelCode(), level.getLevelName(),
                 q.getMajor(), q.getInstitution(), q.getGraduationYear(),
                 q.getCertificateNumber(), q.getIsPrimary());
+        return metadata==null?result:metadata.enrich(result);
     }
 
     @Transactional(readOnly = true)

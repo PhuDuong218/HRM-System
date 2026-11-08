@@ -104,11 +104,6 @@ public class ConfirmedAttendancePeriodService {
         if (!mine && "HR".equals(role)) {
             query.append("""
                     AND EXISTS (
-                      SELECT 1 FROM dbo.accounts owner JOIN dbo.roles owner_role ON owner_role.role_id=owner.role_id
-                      WHERE owner.employee_id=a.employee_id AND owner.is_active=1
-                        AND owner_role.role_code='EMPLOYEE'
-                    )
-                    AND EXISTS (
                       SELECT 1 FROM dbo.employee_assignments ea
                       JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id
                       WHERE ea.employee_id=a.employee_id AND ea.effective_from<=a.work_date

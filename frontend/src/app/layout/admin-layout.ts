@@ -1,3 +1,10 @@
+import {SearchAssistDirective} from '../shared/search-assist.directive';
+import {ExitWorkflowBanner} from '../shared/exit-workflow-banner';
+import {HrmNotice} from '../shared/ui/notice';
+import {Breadcrumb} from '../shared/breadcrumb';
+import {ToastOutlet} from '../shared/ui/toast-outlet';
+import {HrmIcon} from '../shared/ui/icon';
+import {PendingEditorService} from '../services/pending-editor.service';
 import {TranslatePipe} from '../shared/translate.pipe';
 import { DatePipe } from '@angular/common';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -13,11 +20,12 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports: [DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports:[SearchAssistDirective,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })
 export class AdminLayout {
+  private pendingEditor=inject(PendingEditorService);
   @ViewChild('profileDialog') private profileDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('passwordDialog') private passwordDialog?: ElementRef<HTMLDialogElement>;
   @ViewChild('passwordForm') private passwordForm?: ElementRef<HTMLFormElement>;
@@ -29,7 +37,6 @@ export class AdminLayout {
   private theme = inject(ThemeService);
   showLoginSuccess = (this.router.getCurrentNavigation()?.extras.info as { showLoginSuccess?: boolean } | undefined)?.showLoginSuccess === true;
   loggingOut = false;
-  logoutError = '';
   profileLoading = false;
   profileError = '';
   passwordLoading = false;
@@ -42,7 +49,10 @@ export class AdminLayout {
 
   get menu():NavigationItem[]{
     const role=this.auth.profile()?.role||'';
-    return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:item.children.filter(child=>!child.roles||child.roles.includes(role))}:item);
+    if(!role)return [];
+    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'personnel',label:'Quản lý Nhân sự',children:[{path:'employees',label:'Nhân viên'}]},{id:'time',label:'Thời gian & Chấm công',children:[{path:'requests/head',label:'Quản lý đơn từ'}]}]:[];
+    const extra=this.auth.profile()?.departmentHead?[{path:'requests/head',label:'Duyệt cấp 1'}]:[];
+    return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:[...item.children.filter(child=>!child.roles||child.roles.includes(role)),...(item.id==='time'?extra:[])]}:item);
   }
   @ViewChild('mobilePanel') private mobilePanel?: ElementRef<HTMLElement>;
   @ViewChild('menuTrigger') private menuTrigger?: ElementRef<HTMLButtonElement>;
@@ -54,7 +64,7 @@ export class AdminLayout {
   closeMobileMenu(): void { this.menuOpen=false;this.menuTrigger?.nativeElement.focus(); }
   @HostListener('document:keydown.escape') closeMenuOnEscape(): void { this.closeFlyout(); if(this.menuOpen)this.closeMobileMenu(); }
   menuKeydown(event: KeyboardEvent): void {
-    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:800px)').matches)return;
+    if(!this.menuOpen||event.key!=='Tab'||!window.matchMedia('(max-width:1023px)').matches)return;
     const controls=Array.from(this.mobilePanel?.nativeElement.querySelectorAll<HTMLElement>('a[href],button:not(:disabled)')||[]).filter(x=>x.getClientRects().length>0);
     const first=controls[0],last=controls[controls.length-1];
     if(event.shiftKey&&document.activeElement===first){event.preventDefault();last?.focus();}
@@ -79,7 +89,7 @@ export class AdminLayout {
   }
 
   previewGroup(item: NavigationItem, event?: Event): void {
-    if (!this.sidebarCollapsed || !window.matchMedia('(min-width:801px)').matches) return;
+    if (!this.sidebarCollapsed || !window.matchMedia('(min-width:1024px)').matches) return;
     const rect = (event?.currentTarget as HTMLElement | null)?.getBoundingClientRect();
     this.flyoutTop = Math.max(12, Math.min(rect?.top ?? 100, window.innerHeight - 360));
     this.flyout = item;
@@ -94,6 +104,10 @@ export class AdminLayout {
   expandedGroups = new Set<string>();
 
   constructor() {
+    if (this.showLoginSuccess) {
+      const timer = setTimeout(() => this.showLoginSuccess = false, 5000);
+      this.destroyRef.onDestroy(() => clearTimeout(timer));
+    }
     this.refreshProfile();
     this.expandCurrentGroup();
     this.router.events.pipe(
@@ -184,7 +198,7 @@ export class AdminLayout {
   }
 
   toggleGroup(id: string, event?: Event): void {
-    if (this.sidebarCollapsed && window.matchMedia('(min-width:801px)').matches) {
+    if (this.sidebarCollapsed && window.matchMedia('(min-width:1024px)').matches) {
       const group = this.menu.find(item => item.id === id);
       if (group) this.previewGroup(group, event);
       return;
@@ -205,7 +219,6 @@ export class AdminLayout {
 
   confirmLogout(): void {
     if (this.loggingOut) return;
-    this.logoutError = '';
     this.logoutDialog?.nativeElement.showModal();
   }
 
@@ -220,13 +233,12 @@ export class AdminLayout {
   logout(): void {
     if (this.loggingOut) return;
     this.loggingOut = true;
-    this.logoutError = '';
     this.auth.logout().pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loggingOut = false)).subscribe({
-      next: () => {
+      next: loggedOut => {
+        if (!loggedOut) return;
         this.logoutDialog?.nativeElement.close();
         void this.router.navigateByUrl('/login');
-      },
-      error: () => this.logoutError = 'Không thể đăng xuất. Vui lòng kiểm tra kết nối và thử lại.'
+      }
     });
   }
 }

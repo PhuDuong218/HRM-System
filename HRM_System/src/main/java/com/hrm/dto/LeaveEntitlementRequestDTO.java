@@ -10,6 +10,11 @@ import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 
 public class LeaveEntitlementRequestDTO {
+    @jakarta.validation.constraints.Size(max = 1000, message = "Lý do không vượt quá 1000 ký tự")
+    private String reason;
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
 
     @NotNull(message = "ID nhân viên không được để trống")
     @Positive(message = "ID nhân viên phải lớn hơn 0")

@@ -17,8 +17,9 @@ import org.springframework.web.server.ResponseStatusException;
 public class G1AuditController {
     private final JdbcTemplate jdbc;
     private final DepartmentHeadAccessService access;
-    public G1AuditController(JdbcTemplate jdbc, DepartmentHeadAccessService access) {
-        this.jdbc=jdbc; this.access=access;
+    private final com.hrm.service.AuditReadPolicy policy;
+    public G1AuditController(JdbcTemplate jdbc, DepartmentHeadAccessService access, com.hrm.service.AuditReadPolicy policy) {
+        this.jdbc=jdbc; this.access=access; this.policy=policy;
     }
 
     public record Entry(Long auditId, Long actorAccountId, String occurredAt, String action,
@@ -27,9 +28,13 @@ public class G1AuditController {
     @GetMapping
     public Page<Entry> history(@RequestParam String targetTable, @RequestParam Long recordId,
             @RequestParam(defaultValue="0") int page, @RequestParam(defaultValue="10") int size, Principal principal) {
-        access.requireManager(principal);
+        access.requireReader(principal);
+        var actor=com.hrm.service.PersonnelScopeService.current();
+        if(actor!=null&&!Set.of("ADMIN","HR").contains(actor.roleCode())&&!"employees".equals(targetTable))
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Trưởng phòng chỉ được xem lịch sử hồ sơ nhân viên trong phòng");
         if (!Set.of("employees","departments","positions").contains(targetTable) || recordId<=0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Đối tượng audit G1 không hợp lệ");
+        policy.require(targetTable, recordId);
         Pageable paging=PagingUtils.create(page,size,Sort.by(Sort.Direction.DESC,"auditId"));
         String idColumn=switch(targetTable) { case "employees" -> "employee_id"; case "departments" -> "department_id"; default -> "position_id"; };
         // Both table and column are selected from a closed server-side whitelist.

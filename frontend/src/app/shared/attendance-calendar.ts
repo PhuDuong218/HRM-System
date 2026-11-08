@@ -1,3 +1,6 @@
+import {SearchAssistDirective} from './search-assist.directive';
+import {ActionDialogService} from './ui/action-dialog';
+import {HrmNotice} from './ui/notice';
 import {CommonModule} from '@angular/common';
 import {Component,DestroyRef,Input,OnInit,inject} from '@angular/core';
 import {FormsModule} from '@angular/forms';
@@ -15,8 +18,10 @@ interface LeaveType {leaveTypeId:number;typeCode:string;typeName:string;}
 interface OtSlot {row:OtRow;canCheckIn:boolean;canCheckOut:boolean;}
 interface Day {date:string;rows:AttendanceRow[];leaves:Leave[];ot:OtSlot[];outside:boolean;}
 type State='normal'|'late'|'absent'|'missing'|'maternity'|'leave'|'holiday'|'ot'|'empty';
-@Component({selector:'app-attendance-calendar',standalone:true,imports:[CommonModule,FormsModule,DetailFocusDirective],templateUrl:'./attendance-calendar.html',styleUrl:'./attendance-calendar.css'})
+@Component({selector:'app-attendance-calendar',standalone:true,imports:[SearchAssistDirective,HrmNotice,CommonModule,FormsModule,DetailFocusDirective],templateUrl:'./attendance-calendar.html',styleUrl:'./attendance-calendar.css'})
 export class AttendanceCalendarComponent implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
  @Input() initialMonth='';
  private api=inject(AttendanceApiService);private http=inject(HttpClient);private destroy=inject(DestroyRef);
  employeeOptions:Array<[number,string]>=[];lookupLoading=false;lookupError='';private lookupVersion=0;private lookupSubscription?:Subscription;
@@ -82,5 +87,5 @@ export class AttendanceCalendarComponent implements OnInit {
  close(){this.selected=null;this.detail=null;++this.detailVersion;this.detailLoading=false;this.proposal=false;}
  flash(message:string){this.notice=message;clearTimeout(this.timer);this.timer=setTimeout(()=>this.notice='',10000);}
  startProposal(){const r=this.detail?.row;if(!this.mine||!r?.canRequest||r.verificationStatus==='DA_XAC_NHAN')return;this.proposal=true;this.start=r.actualStart?.slice(0,16)||'';this.end=r.actualEnd?.slice(0,16)||'';this.rest=r.actualBreakMinutes;this.reason='';}
- async submit(){const r=this.detail?.row;if(!r?.canRequest||this.saving||!this.mine||r.verificationStatus==='DA_XAC_NHAN')return;if(!this.start||!this.end||this.end<=this.start||!Number.isInteger(this.rest)||this.rest<0||!this.reason.trim()){this.flash('Nhập giờ vào/ra hợp lệ, phút nghỉ và lý do.');return;}if(!window.confirm('Gửi yêu cầu bổ sung / giải trình công?'))return;this.saving=true;try{await firstValueFrom(this.api.submitRequest(r,{actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.rest,attendanceResult:'DI_LAM',correctionReason:this.reason.trim()}).pipe(takeUntilDestroyed(this.destroy)));this.saving=false;await this.load();this.flash('Đã gửi yêu cầu.');}catch(e){this.flash(this.api.message(e));}finally{this.saving=false;}}
+ async submit(){const r=this.detail?.row;if(!r?.canRequest||this.saving||!this.mine||r.verificationStatus==='DA_XAC_NHAN')return;if(!this.start||!this.end||this.end<=this.start||!Number.isInteger(this.rest)||this.rest<0||!this.reason.trim()){this.flash('Nhập giờ vào/ra hợp lệ, phút nghỉ và lý do.');return;}if(!(await this.actionDialogInPage.confirm('Gửi yêu cầu bổ sung / giải trình công?')))return;this.saving=true;try{await firstValueFrom(this.api.submitRequest(r,{actualStart:this.start,actualEnd:this.end,actualBreakMinutes:this.rest,attendanceResult:'DI_LAM',correctionReason:this.reason.trim()}).pipe(takeUntilDestroyed(this.destroy)));this.saving=false;await this.load();this.flash('Đã gửi yêu cầu.');}catch(e){this.flash(this.api.message(e));}finally{this.saving=false;}}
 }

@@ -20,10 +20,19 @@ export interface PayrollAmounts { grossPayroll: string; allowances: string; bonu
 export interface PayrollBatch { periodId: number; periodCode: string; periodStart: string; periodEndExclusive: string; batchId: number; versionNo: number; employeeCount: number; totals: PayrollAmounts; }
 export interface PayrollReport { fromDate: string; toDate: string; batchCount: number; payrollRecordCount: number; totals: PayrollAmounts; batches: PayrollBatch[]; }
 export type Report = EmployeeReport | ContractReport | WorkReport | PayrollReport;
+export interface HrOverview {
+  employees: EmployeeReport;
+  contracts: ContractReport;
+  work: WorkReport;
+}
 
 @Injectable({ providedIn: 'root' })
 export class ReportService {
   private http = inject(HttpClient);
+
+  getHrOverview() {
+    return this.http.get<HrOverview>(`${API_BASE_URL}/overview/hr`).pipe(timeout(15000));
+  }
 
   private params(type: ReportType, filters: ReportFilters): HttpParams {
     let params = new HttpParams();

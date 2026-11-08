@@ -22,20 +22,22 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class ContractService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
     private final ContractRepository contracts;
     private final ContractTypeRepository types;
     private final EmployeeRepository employees;
     private final ContractAuditService audit;
     private final PayrollHistoryGuard historyGuard;
+    private final ContractTermPolicy termPolicy;
 
     public ContractService(ContractRepository contracts, ContractTypeRepository types,
             EmployeeRepository employees, ContractAuditService audit,
-            PayrollHistoryGuard historyGuard) {
+            PayrollHistoryGuard historyGuard, ContractTermPolicy termPolicy) {
         this.contracts = contracts;
         this.types = types;
         this.employees = employees;
         this.audit = audit;
-        this.historyGuard = historyGuard;
+        this.historyGuard = historyGuard; this.termPolicy=termPolicy;
     }
 
     public ContractResponse getOne(Long id) {
@@ -59,7 +61,9 @@ public class ContractService {
                 .replace("_", "!_").replace("[", "![") + "%";
         var pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "startDate", "contractId"));
-        var result = contracts.search(employeeId, status, pattern, pageable);
+        var result = PersonnelScopeService.isHr()
+                ? contracts.searchScoped(employeeId, status, pattern, personnelScope.employees(), pageable)
+                : contracts.search(employeeId, status, pattern, pageable);
         return new PageResponse<>(result.getContent().stream().map(this::toResponse).toList(),
                 result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
@@ -97,8 +101,10 @@ public class ContractService {
                 request.startDate(), request.endDate()) > 0) {
             throw error(HttpStatus.CONFLICT, "Thời hạn chồng với hợp đồng đã có");
         }
+        termPolicy.validate(employee.getEmployeeId(),type,request);
         Contract entity = new Contract();
         entity.setEmployee(employee);
+        entity.setProbationGroup(request.probationGroup());
         entity.setContractType(type);
         entity.setContractNumber(number);
         entity.setSignedDate(request.signedDate());
@@ -127,7 +133,8 @@ public class ContractService {
                 c.getEmployee().getEmployeeCode(), c.getEmployee().getFullName(),
                 c.getContractType().getContractTypeId(), c.getContractType().getTypeName(),
                 c.getContractNumber(), c.getSignedDate(), c.getStartDate(),
-                c.getEndDate(), c.getStatus());
+                c.getEndDate(), c.getStatus(), c.getContractType().getTermKind(), c.getProbationGroup(),
+                c.getTerminationReasonType());
     }
 
     // JSON chỉ chứa ID, LocalDate và enum do hệ thống quản lý; không nối chuỗi

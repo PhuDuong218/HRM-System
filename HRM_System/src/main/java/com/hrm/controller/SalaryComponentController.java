@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/salary-components") // Gọi thử: http://localhost:2005/salary-components
+@RequestMapping({"/salary-components", "/api/salary-components"}) // Gọi thử: http://localhost:2005/salary-components
 public class SalaryComponentController {
 
     private final SalaryComponentService service;
