@@ -9,7 +9,7 @@
 
 ## 1. Tổng quan
 
-Phần Hợp đồng, Phụ cấp và Khen thưởng/Kỷ luật có [README module Dương](docs/README_MODULE_DUONG.md) với API, thứ tự migration, rollback và demo Postman.
+Phần Hợp đồng, Phụ cấp và Khen thưởng/Kỷ luật có [README đầy đủ của Dương](docs/README_DUONG.md) với API, quyền truy cập, nghiệp vụ, migration, cấu hình, cách chạy, kịch bản test và các điểm phối hợp. [Bản tra cứu nhanh](docs/README_MODULE_DUONG.md) có lệnh demo Postman.
 
 Hệ thống hướng tới quản lý hồ sơ nhân viên, phòng ban, chức vụ, lịch sử phân công và điều chuyển nhân viên; tiếp theo là hợp đồng, lịch làm việc, chấm công, nghỉ phép, tăng ca, phụ cấp, phân quyền và tính lương theo kỳ.
 
@@ -46,7 +46,8 @@ HRM_System/
 │           ├── application.properties          # Cấu hình chung (được commit)
 │           └── application-local.properties    # Cấu hình riêng (KHÔNG commit)
 ├── database/
-│   └── hrm_db.sql               # Script schema (cần đưa vào repo)
+│   ├── 000_create_hrm_test.sql  # Script tạo schema nền
+│   └── migrations/            # Thay đổi schema từng đợt
 ├── .mvn/wrapper/
 ├── .gitignore
 ├── pom.xml
@@ -55,7 +56,7 @@ HRM_System/
 └── README.md
 ```
 
-> `database/` và `application-local.properties` là các phần **cần tạo/bổ sung** khi chuẩn hóa repository. Chúng có thể chưa tồn tại trong bản clone hiện tại.
+> `database/` đã có script và migration. `application-local.properties` là cấu hình riêng máy, được Git bỏ qua và cần chuẩn bị khi clone dự án.
 
 ## 3. Chuẩn bị trên máy thành viên
 
