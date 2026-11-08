@@ -1,3 +1,4 @@
+import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
 import {SearchAssistDirective} from '../shared/search-assist.directive';
 import {ExitWorkflowBanner} from '../shared/exit-workflow-banner';
 import {HrmNotice} from '../shared/ui/notice';
@@ -20,7 +21,7 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports:[SearchAssistDirective,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports:[ReactiveFormsModule,SearchAssistDirective,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })
@@ -39,6 +40,35 @@ export class AdminLayout {
   loggingOut = false;
   profileLoading = false;
   profileError = '';
+  private profileVersion='';
+  profileEditing = false;
+  profileSaving = false;
+  profileMessage = '';
+  readonly contactForm = new FormGroup({
+    email:new FormControl('',{nonNullable:true,validators:[Validators.email,Validators.maxLength(254)]}),
+    phone:new FormControl('',{nonNullable:true,validators:[Validators.pattern('^(?:0[35789][0-9]{8})?$')]}),
+    address:new FormControl('',{nonNullable:true,validators:[Validators.maxLength(500)]})
+  });
+  editProfile(): void {
+    const p=this.auth.profile(); if(!p||this.profileSaving)return;
+    this.profileLoading=true;this.profileError='';this.profileMessage='';
+    this.auth.ownProfile().pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.profileLoading=false)).subscribe({next:details=>{
+      this.profileVersion=details.version;
+      this.contactForm.reset({email:details.email??'',phone:details.phone??'',address:details.address??''});this.profileEditing=true;
+    },error:()=>this.profileError='Không tải được phiên bản hồ sơ. Vui lòng thử lại.'});
+  }
+  cancelProfileEdit(): void {if(!this.profileSaving){this.profileEditing=false;this.profileError='';}}
+  saveProfile(): void {
+    if(this.profileSaving)return;
+    this.contactForm.markAllAsTouched();
+    if(this.contactForm.invalid){this.profileError='Kiểm tra email, số điện thoại 10 chữ số và địa chỉ tối đa 500 ký tự.';return;}
+    this.profileSaving=true;this.profileError='';
+    this.auth.updateProfile({...this.contactForm.getRawValue(),version:this.profileVersion,reason:'Người dùng tự cập nhật thông tin liên hệ'}).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.profileSaving=false)).subscribe({
+      next:()=>{this.profileEditing=false;this.profileMessage='Đã cập nhật hồ sơ cá nhân.';},
+      error:e=>{this.profileError=e instanceof HttpErrorResponse?(e.error?.loi_chi_tiet??e.error?.detail??'Không lưu được hồ sơ. Vui lòng thử lại.'):'Không lưu được hồ sơ.';}
+    });
+  }
+
   passwordLoading = false;
   passwordError = '';
   showCurrentPassword = false;
@@ -121,12 +151,13 @@ export class AdminLayout {
   }
 
   openProfile(): void {
+    this.profileEditing=false;this.profileMessage='';
     this.profileDialog?.nativeElement.showModal();
     this.refreshProfile();
   }
 
   closeProfile(): void {
-    this.profileDialog?.nativeElement.close();
+    if(!this.profileSaving)this.profileDialog?.nativeElement.close();
   }
 
   openPasswordDialog(): void {

@@ -47,7 +47,7 @@ public class EmployeeContactService {
 
     @Transactional
     public void updateOwnContact(com.hrm.security.AuthenticatedAccount actor, EmployeeContactPatchDTO request) {
-        if (actor == null || actor.employeeId() == null || !"EMPLOYEE".equals(actor.roleCode()))
+        if (actor == null || actor.employeeId() == null || !java.util.Set.of("ADMIN", "HR", "EMPLOYEE").contains(actor.roleCode()))
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN);
         if (request.getIdentityNumber() != null)
             throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Không được tự sửa CCCD");

@@ -1,3 +1,6 @@
+@if(kind==='requests'&&isHr){<div class="d-flex gap-2 mb-3"><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=false">Quản lý đơn trong phạm vi</button><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=true">Đơn nghỉ phép của tôi</button></div>@if(ownLeaveOpen){<app-my-leave-requests/>}}
+@if(kind==='entitlements'){<app-leave-quota/>}
+@if(showLegacyWorkspace){
 <hrm-feedback [error]="error" [success]="message"/>
 <app-page-header [title]="config.title">
  @if(kind==='assignments'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="startTransfer()">{{ 'Điều chuyển nhân viên' | translate }}</button>}
@@ -77,8 +80,10 @@
     <h3>{{ 'Sau thay đổi' | translate }}</h3><dl>@for(e of snapshot('afterDataJson');track e[0]){<dt>{{e[0]}}</dt><dd>{{e[1]}}</dd>}</dl>
    }
    @if(kind==='requests'){
-    @if(selected?.['requestType']==='NGHI_PHEP'&&selected?.['status']==='DA_DUYET'){
-     <label>{{'Lý do hủy đơn'|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label><button class="mt-3" hrmBtn="danger-outline" hrmSize="md" [disabled]="saving||!note.trim()" (click)="cancelApproved()">{{'Hủy đơn đã duyệt'|translate}}</button>
+    @if(selected?.['requestType']==='NGHI_PHEP'&&!selected?.['canCancelLeave']){<p class="small text-muted">{{selected?.['cancelLeaveBlocker']}}</p>}
+    @if(selected?.['withdrawnAt']){<p>Hủy bởi {{selected?.['withdrawnBy']}} · {{display('withdrawnAt',selected?.['withdrawnAt'])}}</p><p>Lý do hủy: {{selected?.['withdrawalReason']}}</p>}
+    @if(selected?.['requestType']==='NGHI_PHEP'&&selected?.['canCancelLeave']){
+     <label>{{'Lý do hủy đơn'|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label><button class="mt-3" hrmBtn="danger-outline" hrmSize="md" [disabled]="saving||!note.trim()" (click)="cancelApproved()">{{'Hủy đơn nghỉ phép'|translate}}</button>
     }
     @if(selected?.['approvalStage']){<p>{{'Cấp duyệt trưởng phòng'|translate}}: <strong>{{display('stageStatus',selected?.['approvalStage']['stageStatus'])}}</strong></p>}
     @if(selected?.['allocations']?.length){<h3>{{ 'Phân bổ giờ nghỉ' | translate }}</h3><div class="table-responsive"><table class="table"><thead><tr><th>{{ 'Lịch' | translate }}</th><th>{{ 'Giờ trừ' | translate }}</th></tr></thead><tbody>@for(a of selected?.['allocations'];track a['scheduleId']){<tr><td>{{a['scheduleId']}}</td><td>{{a['chargedHours']}}</td></tr>}</tbody></table></div>}
@@ -110,3 +115,5 @@
   }
  </section>
 </app-record-workspace>
+
+}

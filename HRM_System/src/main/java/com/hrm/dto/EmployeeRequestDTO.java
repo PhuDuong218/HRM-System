@@ -14,7 +14,6 @@ public class EmployeeRequestDTO {
     public String getGender(){return gender;}
     public void setGender(String value){gender=value;}
 
-    @NotBlank(message = "Mã nhân viên không được để trống")
     @Size(max = 50, message = "Mã nhân viên không vượt quá 50 ký tự")
     private String employeeCode;
 

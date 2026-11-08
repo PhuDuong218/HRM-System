@@ -12,6 +12,7 @@ public class LeaveRequestRules {
  public record Rules(int retroactiveDays,int minimumNoticeHours,BigDecimal maximumHours,int minimumServiceMonths,boolean evidenceRequired){
  public Rules(int retro,int notice,BigDecimal max){this(retro,notice,max,0,false);}
  }
+ @org.springframework.beans.factory.annotation.Autowired private MaternityLeavePolicy maternity;
  private final JdbcTemplate db;private final PayrollHistoryGuard payroll;private final PersonnelWorkflowSupport support;
  public LeaveRequestRules(JdbcTemplate db,PayrollHistoryGuard payroll,PersonnelWorkflowSupport support){this.db=db;this.payroll=payroll;this.support=support;}
  private boolean eligibility(){return db.queryForObject("SELECT CASE WHEN COL_LENGTH('dbo.personnel_leave_rules','minimum_service_months') IS NULL THEN 0 ELSE 1 END",Integer.class)==1;}
@@ -40,6 +41,7 @@ public class LeaveRequestRules {
  public String evidence(long request){if(!eligibility())return null;var rows=db.queryForList("SELECT evidence_reference FROM dbo.personnel_leave_evidence WHERE request_id=?",String.class,request);return rows.isEmpty()?null:rows.get(0);}
  public void validateTime(long employee,long type,LocalDateTime start,LocalDateTime end,LocalDateTime submitted){
   if(start==null||end==null||!start.isBefore(end))throw PersonnelWorkflowSupport.bad("Thời gian nghỉ phải kết thúc sau bắt đầu");
+  if(maternity!=null)maternity.validate(employee,type,start,end);
   Rules rules=get(type);LocalDateTime reference=submitted==null?support.localNow():submitted;
   if(start.isBefore(support.localNow())){
    if(start.isBefore(reference)&&(rules.retroactiveDays()==0||start.toLocalDate().isBefore(reference.toLocalDate().minusDays(rules.retroactiveDays()))))throw PersonnelWorkflowSupport.bad("Loại nghỉ không cho nộp bù hoặc vượt tối đa 7 ngày theo cấu hình");

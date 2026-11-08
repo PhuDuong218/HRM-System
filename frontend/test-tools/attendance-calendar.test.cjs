@@ -1,4 +1,5 @@
 const {test}=require('node:test'),assert=require('node:assert/strict'),fs=require('node:fs'),vm=require('node:vm'),ts=require('typescript'),rx=require('rxjs');
+function loadCalendar(){const exports={};const code=ts.transpileModule(fs.readFileSync("src/app/shared/vietnamese-calendar.ts","utf8"),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022}}).outputText;vm.runInNewContext(code,{exports,Date,Math});return exports;}
 function fixture(){
  const pending=new Map(),callbacks=[];class HttpClient{}class DestroyRef{}class AttendanceApiService{}
  const api={detail:id=>{const s=new rx.Subject();pending.set(id,s);return s;},message:e=>String(e)};
@@ -10,7 +11,7 @@ function fixture(){
  const tokens=new Map([[DestroyRef,{onDestroy:f=>callbacks.push(f)}],[AttendanceApiService,api],[HttpClient,http]]);
  const deco=()=>x=>x;const exports={};
  const code=ts.transpileModule(fs.readFileSync('src/app/shared/attendance-calendar.ts','utf8'),{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}}).outputText;
- vm.runInNewContext(code,{exports,require:n=>n==='@angular/core'?{Component:deco,Input:deco,inject:t=>tokens.get(t),DestroyRef}:n==='rxjs'?{...rx,timer:()=>rx.of(0)}:n==='@angular/common/http'?{HttpClient,HttpParams}:n.includes('api.config')?{API_BASE_URL:'/api'}:n.includes('attendance-api.service')?{AttendanceApiService}:n.includes('rxjs-interop')?{takeUntilDestroyed:()=>s=>s}:{},Intl,Date,Map,Set,Number,setTimeout,clearTimeout});
+ vm.runInNewContext(code,{exports,require:n=>n==='@angular/core'?{Component:deco,Input:deco,inject:t=>tokens.get(t),DestroyRef}:n==='rxjs'?{...rx,timer:()=>rx.of(0)}:n==='@angular/common/http'?{HttpClient,HttpParams}:n.includes('vietnamese-calendar')?loadCalendar():n.includes('api.config')?{API_BASE_URL:'/api'}:n.includes('attendance-api.service')?{AttendanceApiService}:n.includes('rxjs-interop')?{takeUntilDestroyed:()=>s=>s}:{},Intl,Date,Map,Set,Number,setTimeout,clearTimeout});
  const c=new exports.AttendanceCalendarComponent();c.employeeOptions=employees.map(e=>[e.employeeId,e.employeeCode+' - '+e.fullName]);c.employee='1';c.month='2026-11';c.anchor='2026-11-04';return {c,pending,callbacks,lookupRequests,deferLookup:()=>deferLookup=true};
 }
 const row=(id,date='2026-11-04')=>({scheduleId:id,employeeId:1,employeeLabel:'EMP001 — Trần Thị A',workDate:date,plannedStart:date+'T08:00:00',plannedEnd:date+'T17:00:00',actualStart:null,actualEnd:null,attendanceResult:null,anomalies:[]});

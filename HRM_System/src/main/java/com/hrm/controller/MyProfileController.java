@@ -15,10 +15,18 @@ import org.springframework.web.bind.annotation.*;
 public class MyProfileController {
     private final EmployeeContactService contacts;
     private final AuthService auth;
-    public MyProfileController(EmployeeContactService contacts, AuthService auth) {
+    private final com.hrm.service.EmployeeService employees;
+    public MyProfileController(EmployeeContactService contacts, AuthService auth, com.hrm.service.EmployeeService employees) {
         this.contacts = contacts;
         this.auth = auth;
+        this.employees = employees;
     }
+    @GetMapping
+    public com.hrm.dto.EmployeeDetailDTO get(@AuthenticationPrincipal AuthenticatedAccount actor) {
+        auth.currentUser(actor);
+        return employees.getEmployeeDetailById(actor.employeeId());
+    }
+
     @PutMapping
     @Transactional
     public CurrentUserResponse update(@AuthenticationPrincipal AuthenticatedAccount actor,

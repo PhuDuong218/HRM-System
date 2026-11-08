@@ -1,4 +1,9 @@
 {
+  "/api/leave-workspace": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/health": {
     "target": "http://localhost:2005",
     "secure": false,

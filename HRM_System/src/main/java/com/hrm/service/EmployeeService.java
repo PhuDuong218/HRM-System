@@ -54,6 +54,7 @@ public class EmployeeService {
             .thenComparing(EmployeeAssignment::getAssignmentId,
                     Comparator.nullsFirst(Comparator.naturalOrder()));
 
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
@@ -185,14 +186,6 @@ public class EmployeeService {
         validateHireDateForCreation(requestDTO.getHireDate());
         guard.lockTimeline();
 
-        if (requestDTO.getEmployeeCode() == null || requestDTO.getEmployeeCode().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã nhân viên không được để trống");
-        }
-        String employeeCode = requestDTO.getEmployeeCode().trim();
-        if (employeeRepository.existsByEmployeeCode(employeeCode)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã nhân viên đã tồn tại: " + employeeCode);
-        }
-
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phòng ban có ID: " + requestDTO.getDepartmentId()));
@@ -214,7 +207,7 @@ public class EmployeeService {
         }
 
         Employee employee = new Employee();
-        employee.setEmployeeCode(employeeCode);
+        employee.setEmployeeCode(employeeCodes.next(position.getPositionCode()));
         employee.setFullName(requestDTO.getFullName().trim());
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
@@ -233,7 +226,9 @@ public class EmployeeService {
         assignment.setCreatedAt(auditNow());
         employee.getAssignments().add(assignment);
 
-        return convertToDTO(employeeRepository.save(employee));
+        Employee saved=employeeRepository.saveAndFlush(employee);
+        employeeCodes.track(saved.getEmployeeId(),position.getPositionId());
+        return convertToDTO(saved);
     }
 
     @Transactional

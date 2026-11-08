@@ -1,3 +1,5 @@
+import {MyEmployment} from '../../shared/my-employment';
+import {AuthService} from '../../services/auth.service';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
@@ -34,11 +36,16 @@ type Action = 'approve' | 'reject';
 @Component({
   selector: 'app-decisions',
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[MyEmployment,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './decisions.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class DecisionsPage implements OnInit {
+ readonly auth=inject(AuthService);
+ mine=false;
+ get canViewMine(){return this.auth.profile()?.role==='HR';}
+ selectPersonal(value:string){if(value==='mine'&&this.canViewMine)this.mine=true;}
+
  private actionDialogInPage=inject(ActionDialogService);
 
   private api = inject(DecisionService);
@@ -200,6 +207,7 @@ export class DecisionsPage implements OnInit {
   }
 
   applyFilter(employee: string, status: string): void {
+    if(employee==='mine'&&this.canViewMine){this.mine=true;return;}
     const employeeId = Number(employee);
     this.filterEmployee = employee && Number.isInteger(employeeId) && employeeId > 0 ? employeeId : null;
     this.filterStatus = status as DecisionApprovalStatus | '';
@@ -283,7 +291,7 @@ export class DecisionsPage implements OnInit {
     const amountText = form.amount === null || form.amount === undefined ? '' : String(form.amount);
     const body: DecisionRequest = {
       employeeId: Number(form.employeeId),
-      decisionNumber: form.decisionNumber.trim(),
+      decisionNumber: this.editing ? form.decisionNumber.trim() : '',
       decisionType: form.decisionType,
       content: form.content.trim(),
       issuedDate: form.issuedDate,
@@ -310,7 +318,7 @@ export class DecisionsPage implements OnInit {
       this.error = 'Vui lòng chọn nhân viên.';
       return;
     }
-    if (!body.decisionNumber || !/^[A-Za-z0-9_-]+$/.test(body.decisionNumber) || body.decisionNumber.length > 50) {
+    if (this.editing && (!body.decisionNumber || !/^[A-Za-z0-9_-]+$/.test(body.decisionNumber) || body.decisionNumber.length > 50)) {
       this.error = 'Số quyết định chỉ gồm chữ không dấu, số, _ hoặc -, tối đa 50 ký tự.';
       return;
     }

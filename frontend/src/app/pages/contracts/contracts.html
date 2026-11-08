@@ -3,12 +3,13 @@
   <button
     type="button"
     class="btn btn-primary"
-    [disabled]="saving || typesLoading"
+    [hidden]="mine" [disabled]="saving || typesLoading"
     (click)="openCreate()"
   >
     {{language.t("Tạo hợp đồng")}}
   </button></app-page-header>
 
+@if(mine&&canViewMine){<app-my-employment kind="contracts" (back)="mine=false"/>} @else {
 @if (message) {
 <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{(message) | translate}}</div>
 }
@@ -45,10 +46,12 @@
         <select
           id="employee-id"
           #employee
+          (change)="selectPersonal(employee.value)"
           class="form-select"
           [disabled]="employeesLoading"
         >
           <option value="">{{language.t("Tất cả nhân viên")}}</option>
+          @if(canViewMine){<option value="mine">Hợp đồng của tôi</option>}
           @for (person of employees; track person.employeeId) {
           <option [value]="person.employeeId">
             {{person.employeeCode}} — {{person.fullName}}
@@ -965,3 +968,5 @@
   </div>
 </app-record-workspace>
 
+
+}

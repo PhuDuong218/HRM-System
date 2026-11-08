@@ -29,7 +29,7 @@ class ModuleHttpIntegrationTest {
         decisions=mock(EmployeeDecisionRepository.class);actors=mock(DecisionActorProvider.class);when(actors.requireManager()).thenReturn(new DecisionActor(20L,200L));
         pending=decision(3,DecisionPayrollEffect.NONE);when(decisions.findEmployeeIdById(3L)).thenReturn(Optional.of(1L));when(decisions.findByIdForUpdate(3L)).thenReturn(Optional.of(pending));when(decisions.findById(3L)).thenReturn(Optional.of(pending));
         when(decisions.saveAndFlush(any())).thenAnswer(x->{var d=(EmployeeDecision)x.getArgument(0);if(d.getDecisionId()==null)id(d,"decisionId",4);return d;});
-        var decisionService=new EmployeeDecisionService(decisions,employees,actors,mock(DecisionAuditService.class),mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK);
+        var decisionService=new EmployeeDecisionService(decisions,employees,actors,mock(DecisionAuditService.class),mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK,TestData.numbers());
         mvc=MockMvcBuilders.standaloneSetup(new ContractController(contractService,mock(ContractLifecycleService.class)),new EmployeeDecisionController(decisionService))
             .setControllerAdvice(new GlobalExceptionHandler()).build();
     }

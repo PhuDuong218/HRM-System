@@ -303,7 +303,7 @@ class ModuleRepositoryIntegrationTest {
     @Test void failedAuditRollsBackActualServiceInsertInPrivateDatabase(){
         var actors=mock(DecisionActorProvider.class);when(actors.requireManager()).thenReturn(new DecisionActor(20L,200L));
         var audit=mock(DecisionAuditService.class);doThrow(new IllegalStateException("synthetic audit failure")).when(audit).record(anyLong(),anyLong(),anyString(),anyString(),any(),any());
-        var service=new EmployeeDecisionService(decisions,employees,actors,audit,mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK);
+        var service=new EmployeeDecisionService(decisions,employees,actors,audit,mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK,TestData.numbers());
         var error=assertThrows(IllegalStateException.class,()->tx.execute(s->service.create(decisionRequest(DecisionPayrollEffect.NONE))));
         assertEquals("synthetic audit failure",error.getMessage());
         assertEquals(0,jdbc.queryForObject("select count(*) from dbo.employee_decisions",Integer.class));

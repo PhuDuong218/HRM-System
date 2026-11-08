@@ -48,8 +48,8 @@
       <div class="d-flex gap-2 mt-3"><button type="submit" class="btn btn-primary">{{ 'Tìm kiếm' | translate }}</button>@if (tab!=='other') { <button type="button" class="btn btn-outline-secondary" (click)="reset()">{{ 'Đặt lại' | translate }}</button> }</div>
     </fieldset></form>
   </section>
-  <div class="row g-3 align-items-start">
-    <div [ngClass]="panelOpen?'col-12 col-xl-6':'col-12'" style="min-width:0"><section class="surface">
+  <div class="row g-3 align-items-start ot-workspace" [class.ot-split-scroll]="panelOpen">
+    <div class="ot-list-column" [ngClass]="panelOpen?'col-12 col-xl-6':'col-12'" style="min-width:0"><section class="surface">
       <div class="ot-section-heading"><div><h2>{{ (tab==='employees'?'Danh sách nhân viên tăng ca':tab==='approval'?'Danh sách duyệt OT':tab==='actual'?'Đối soát và xác nhận thực tế':tab==='other'?'Yêu cầu hủy và xem xét phần vượt':'Đơn OT của tôi') | translate }} <span class="ot-count">{{ total }}</span></h2><p>{{ (tab==='employees'?'Mỗi nhân viên một dòng; chọn chi tiết để xem các đơn liên quan.':tab==='other'?'Đơn gốc giữ hiệu lực trong khi yêu cầu hủy đang chờ xét.':'Chọn đơn trong danh sách để xem và xử lý theo thẩm quyền.') | translate }}</p></div><div class="d-flex gap-2">@if (tab==='mine' && context.canRegister) { <button type="button" class="btn btn-primary btn-sm" [disabled]="busy" (click)="create()">{{ 'Đăng ký OT' | translate }}</button> }<button type="button" class="btn btn-outline-primary btn-sm" [disabled]="busy" (click)="tab==='other'?loadInbox():load()">{{ 'Tải lại' | translate }}</button></div></div>
       @if (loading) { <p class="small text-muted" role="status">{{ 'Đang tải dữ liệu...' | translate }}</p> }
       <div class="table-responsive" [class.ot-cards-container]="panelOpen"><table class="table table-hover align-middle ot-table" [class.ot-record-cards]="panelOpen">

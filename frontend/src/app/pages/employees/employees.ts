@@ -60,7 +60,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     auditPage=0;
     auditPages=0;
     auditText(row:Record<string,unknown>,key:string){return String(row[key]??'');}
-    auditAction(row:Record<string,unknown>){const action=this.auditText(row,'action');return ({EMPLOYEE_CREATE:'Thêm nhân viên',EMPLOYEE_CONTACT_UPDATE:'Sửa liên hệ',EMPLOYEE_UPDATE:'Sửa hồ sơ',EMPLOYEE_TRANSFER:'Điều chuyển nhân viên',EMPLOYEE_TERMINATE:'Thôi việc',EMPLOYEE_REHIRE:'Tiếp nhận lại'} as Record<string,string>)[action]||action;}
+    auditAction(row:Record<string,unknown>){const action=this.auditText(row,'action');return ({EMPLOYEE_CREATE:'Thêm nhân viên',EMPLOYEE_CONTACT_UPDATE:'Sửa liên hệ',EMPLOYEE_UPDATE:'Sửa hồ sơ',EMPLOYEE_TRANSFER:'Điều chuyển nhân viên',EMPLOYEE_POSITION_CODE_CHANGED:'Đổi chức vụ và mã nhân viên',EMPLOYEE_TERMINATE:'Thôi việc',EMPLOYEE_REHIRE:'Tiếp nhận lại'} as Record<string,string>)[action]||action;}
     loadAudit(page=0){if(!this.selected||this.auditLoading)return;this.auditOpen=true;this.auditError='';this.auditLoading=true;
         this.auditRequest?.unsubscribe();this.auditRequest=this.api.audit(this.selected.employeeId,page).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.auditLoading=false)).subscribe({next:r=>{this.auditRows=r.content;this.auditPage=r.number;this.auditPages=r.totalPages;},error:e=>this.auditError=errorMessage(e)});}
     rows: Employee[] = [];

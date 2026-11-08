@@ -1,3 +1,5 @@
+import {MyEmployment} from '../../shared/my-employment';
+import {AuthService} from '../../services/auth.service';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActivatedRoute} from '@angular/router';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
@@ -50,11 +52,16 @@ type SalaryTermDraft = {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
+  imports:[MyEmployment,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
 export class ContractsPage implements OnInit {
+ readonly auth=inject(AuthService);
+ mine=false;
+ get canViewMine(){return this.auth.profile()?.role==='HR';}
+ selectPersonal(value:string){if(value==='mine'&&this.canViewMine)this.mine=true;}
+
  private actionDialogInPage=inject(ActionDialogService);
 
   @ViewChild("createFormPanel") private createFormPanel?: ElementRef<HTMLElement>;

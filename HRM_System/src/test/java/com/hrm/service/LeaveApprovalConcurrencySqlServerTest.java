@@ -18,8 +18,8 @@ import static org.junit.jupiter.api.Assertions.*;
 class LeaveApprovalConcurrencySqlServerTest {
  @Autowired JdbcTemplate db;@Autowired EmployeeRequestService requests;@Autowired PersonnelWorkflowSupport support;@Autowired PlatformTransactionManager transactions;
  String tag;long employee,admin,type,entitlement;java.security.Principal actor,worker;LocalDate day;
- @BeforeEach void fixture(){
-  assertEquals("hrm_test",db.queryForObject("SELECT DB_NAME()",String.class));tag="QA_RACE_"+UUID.randomUUID().toString().substring(0,8);day=support.today().plusDays(3);
+ @BeforeEach void fixture()throws Exception{
+  assertEquals("hrm_test",db.queryForObject("SELECT DB_NAME()",String.class));db.execute(java.nio.file.Files.readString(java.nio.file.Path.of("database/migrations/022_leave_request_numbers.sql")));tag="QA_RACE_"+UUID.randomUUID().toString().substring(0,8);day=support.today().plusDays(3);
   new TransactionTemplate(transactions).executeWithoutResult(tx->{
    db.update("INSERT dbo.departments(department_code,department_name) VALUES(?,?)",tag,tag);long dept=db.queryForObject("SELECT department_id FROM dbo.departments WHERE department_code=?",Long.class,tag);
    db.update("INSERT dbo.positions(position_code,position_name) VALUES(?,?)",tag,tag);long position=db.queryForObject("SELECT position_id FROM dbo.positions WHERE position_code=?",Long.class,tag);

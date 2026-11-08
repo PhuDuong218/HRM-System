@@ -80,7 +80,7 @@ public final class PostmanDemoServer {
         when(decisions.findPayrollCandidates(anyLong(),any(),any(),any(),any())).thenAnswer(x->state.values().stream().filter(d->d.getEmployee().getEmployeeId().equals(x.getArgument(0))&&d.getApprovalStatus()==x.getArgument(1)&&d.getPayrollEffect()!=DecisionPayrollEffect.NONE&&d.getApplyDate()!=null&&!d.getApplyDate().isBefore(x.getArgument(3))&&!d.getApplyDate().isAfter(x.getArgument(4))).sorted(Comparator.comparing(EmployeeDecision::getDecisionId)).toList());
         DecisionActorProvider actors=()->new DecisionActor(20L,200L);
         var policy=new DecisionPayrollPolicy("TEST-ONLY-v1");
-        var decisionService=new EmployeeDecisionService(decisions,employees,actors,mock(DecisionAuditService.class),mock(PayrollHistoryGuard.class),policy,CLOCK);
+        var decisionService=new EmployeeDecisionService(decisions,employees,actors,mock(DecisionAuditService.class),mock(PayrollHistoryGuard.class),policy,CLOCK,TestData.numbers());
         var jdbc=mock(JdbcTemplate.class);when(jdbc.queryForObject(anyString(),eq(Long.class),any(),any(),any())).thenReturn(0L);
         var payroll=new DecisionPayrollService(employees,decisions,periods,policy,jdbc);
         return MockMvcBuilders.standaloneSetup(new ContractTypeController(new ContractTypeService(typeRepo,mock(BusinessAuditService.class),CLOCK)),

@@ -128,6 +128,14 @@ export class AuthService {
     });
   }
 
+  ownProfile() {return this.http.get<{email:string|null;phone:string|null;address:string|null;version:string}>(`${API_BASE_URL}/me/profile`);}
+
+  updateProfile(contact: {email:string; phone:string; address:string;version:string;reason:string}) {
+    return this.http.put<CurrentUser>(`${API_BASE_URL}/me/profile`, contact).pipe(
+      tap(profile => this.currentUser.set({...this.currentUser(), ...profile}))
+    );
+  }
+
   logout() {
     return defer(() => {
       const session = this.session();

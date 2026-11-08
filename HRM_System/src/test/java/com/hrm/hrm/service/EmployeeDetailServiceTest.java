@@ -42,6 +42,8 @@ import com.hrm.model.EmployeeAssignment;
 class EmployeeDetailServiceTest {
 
     @Mock
+    private com.hrm.service.EmployeeCodeService employeeCodes;
+    @Mock
     private EmployeeRepository employeeRepository;
 
     @Mock
@@ -136,18 +138,21 @@ private Clock businessClock = Clock.fixed(
         when(positionRepository.findById(20L))
                 .thenReturn(Optional.of(position));
 
-        when(employeeRepository.save(any(Employee.class)))
+        when(employeeCodes.next("CHUYEN_VIEN")).thenReturn("TVV00001");
+        when(employeeRepository.saveAndFlush(any(Employee.class)))
                 .thenAnswer(invocation -> {
                     Employee saved = invocation.getArgument(0);
                     saved.setEmployeeId(100L);
                     return saved;
                 });
 
+        org.springframework.test.util.ReflectionTestUtils.setField(employeeService,"employeeCodes",employeeCodes);
         employeeService.addEmployee(request);
 
         ArgumentCaptor<Employee> captor = ArgumentCaptor.forClass(Employee.class);
 
-        verify(employeeRepository).save(captor.capture());
+        verify(employeeRepository).saveAndFlush(captor.capture());
+        verify(employeeCodes).track(100L,20L);
 
         Employee savedEmployee = captor.getValue();
 
