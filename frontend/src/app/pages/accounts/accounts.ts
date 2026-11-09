@@ -62,7 +62,6 @@ export class AccountsPage implements OnInit {
   actionMessage = '';
   resetPassword = '';
   resetConfirm = '';
-  editUsername = '';
   editRoleId = 0;
   editPermissionName = '';
   editPermissionDescription = '';
@@ -311,7 +310,6 @@ export class AccountsPage implements OnInit {
     this.actionMessage = '';
     this.resetPassword = this.resetConfirm = '';
     if (mode === 'account-edit' && this.selectedAccount) {
-      this.editUsername = this.selectedAccount.username;
       this.editRoleId = this.selectedAccount.roleId;
       this.cancelScopeEdit();
     }
@@ -356,10 +354,6 @@ export class AccountsPage implements OnInit {
   saveAccountIdentity(): void {
     if (this.saving || !this.selectedAccount) return;
     const account = this.selectedAccount;
-    const username = this.editUsername.trim();
-    if (!/^[A-Za-z0-9][A-Za-z0-9._@-]{0,99}$/.test(username)) {
-      this.actionError = 'Tên đăng nhập phải bắt đầu bằng chữ hoặc số và chỉ chứa chữ, số, dấu chấm, gạch dưới, @ hoặc gạch nối.'; return;
-    }
     if (!this.roles.some(role => role.roleId === this.editRoleId && this.isSystemRole(role))) {
       this.actionError = 'Vui lòng chọn vai trò hợp lệ.'; return;
     }
@@ -369,7 +363,7 @@ export class AccountsPage implements OnInit {
     if (this.scopeChanged && !this.scopeOptions.some(item => item.active && this.scopeSelected.has(item.departmentId))) {
       this.actionError = 'Vui lòng chọn ít nhất một phòng ban đang hoạt động.'; return;
     }
-    const identityChanged = username !== account.username || this.editRoleId !== account.roleId;
+    const identityChanged = this.editRoleId !== account.roleId;
     if (!identityChanged && !this.scopeChanged) {
       this.actionError = 'Thông tin tài khoản chưa thay đổi.'; return;
     }
@@ -377,7 +371,7 @@ export class AccountsPage implements OnInit {
     this.saving = true;
     this.actionError = '';
     this.api.editIdentity(account.accountId, {
-      expectedUsername: account.username, expectedRoleId: account.roleId, username, roleId: this.editRoleId,
+      expectedUsername: account.username, expectedRoleId: account.roleId, username: account.username, roleId: this.editRoleId,
       ...(this.scopeChanged ? { expectedDepartmentIds: this.scopeExpected, departmentIds: [...this.scopeSelected] } : {})
     }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
       next: updated => {

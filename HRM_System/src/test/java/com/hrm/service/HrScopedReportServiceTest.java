@@ -75,12 +75,14 @@ public class HrScopedReportServiceTest {
     }
 
     @Test void payrollDoesNotIncludeAnotherDepartmentOrMixedPeriod() {
-        db.update("INSERT INTO dbo.payroll_periods VALUES (1,'P',DATE '2025-01-01',DATE '2025-02-02')");
+        db.update("INSERT INTO dbo.payroll_periods VALUES (1,'P',DATE '2025-01-01',DATE '2025-02-01')");
         db.update("INSERT INTO dbo.payroll_batches VALUES (1,1,1,'DA_CHOT',1,CURRENT_TIMESTAMP)");
         db.update("INSERT INTO dbo.payroll_details VALUES (1,1,201),(2,1,202),(3,1,203)");
         db.update("INSERT INTO dbo.payroll_lines VALUES (1,'ADD','LUONG',100),(2,'ADD','LUONG',200),(3,'ADD','LUONG',300)");
         var result=reports.payroll(LocalDate.of(2025,1,1),LocalDate.of(2025,2,1));
         assertEquals(1,result.payrollRecordCount()); assertEquals(0,result.totals().grossPayroll().compareTo(new java.math.BigDecimal("100")));
+        assertEquals(0,reports.payroll(LocalDate.of(2025,1,1),LocalDate.of(2025,1,31)).batchCount());
+        assertEquals(LocalDate.of(2025,2,1),result.batches().get(0).periodEnd());
     }
 
     @Test void revokingScopeRemovesWorkAndContractResults() {

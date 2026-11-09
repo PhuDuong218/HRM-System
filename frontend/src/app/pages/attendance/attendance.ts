@@ -14,7 +14,7 @@ import {RowViewDirective} from '../../shared/row-view.directive';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Observable, Subscription, finalize, timer } from 'rxjs';
 import { AttendanceApiService, AttendanceContext, AttendanceRow, AttendanceDetail, AttendanceRequest, RequestDetail, RecordFilter, Stats, Correction } from './attendance-api.service';
@@ -33,6 +33,10 @@ export class AttendancePage implements OnInit {
     readonly clockTiming = clockTiming;
     private readonly api = inject(AttendanceApiService);
     private readonly destroyRef = inject(DestroyRef);
+    private readonly route = inject(ActivatedRoute, { optional: true });
+    private readonly router = inject(Router, { optional: true });
+    pendingQueue = false;
+    private pendingRouteValue: string | null | undefined;
     context: AttendanceContext | null = null;
     tab: 'mine' | 'manage' | 'requests' = 'manage';
     loading = false; saving = false; detailLoading = false; todayLoading = false; feedback = '';
@@ -118,7 +122,9 @@ export class AttendancePage implements OnInit {
         this.api.context().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
             next: context => {
                 this.context = context; this.tab = context.manage ? 'manage' : 'mine'; this.requestsMine = !context.manage;
-                this.loading = false; this.search();
+                this.loading = false;
+                if (this.route) this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params => this.applyPendingRoute(params.get('pending')));
+                else this.search();
                 if (context.manage) this.api.departments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => this.departments = d, error: e => this.error = this.api.message(e) });
             }, error: e => { this.loading = false; this.error = this.api.message(e); },
         });
@@ -152,8 +158,26 @@ export class AttendancePage implements OnInit {
     }
     switchTab(tab: 'mine' | 'manage' | 'requests'): void {
         if (this.busy || !this.context || tab === 'mine' && !this.context.mine || tab === 'manage' && !this.context.manage) return;
+        this.exitPendingQueue(false);
         this.closeOwnRequest();this.tab = tab; this.closeDetail(); this.requestDetail = null; ++this.requestVersion; ++this.todayVersion; this.error = ''; this.stats = null;
         if (tab === 'requests') this.loadRequests(); else this.search();
+    }
+
+    private applyPendingRoute(value: string | null): void {
+        if (value === this.pendingRouteValue) return;
+        this.pendingRouteValue = value;
+        const wasPending = this.pendingQueue;
+        this.pendingQueue = value === 'unconfirmed' && !!this.context?.manage;
+        if (this.pendingQueue) { this.tab = 'manage'; this.q = ''; this.departmentId = ''; this.anomaly = ''; this.verification = 'CHUA_XAC_NHAN'; }
+        else if (wasPending) { this.tab = 'manage'; this.verification = ''; }
+        this.closeDetail(); this.search();
+    }
+
+    exitPendingQueue(reload = true): void {
+        if (!this.pendingQueue || this.saving) return;
+        this.pendingQueue = false; this.pendingRouteValue = null; this.verification = '';
+        if (this.route && this.router) void this.router.navigate([], { relativeTo: this.route, queryParams: { pending: null }, queryParamsHandling: 'merge', replaceUrl: true });
+        if (reload) this.search();
     }
 
     private validRange(from: string, to: string): boolean { return !!from && !!to && from <= to && (Date.parse(to) - Date.parse(from)) / 86400000 <= 366; }
@@ -167,7 +191,7 @@ export class AttendancePage implements OnInit {
 
     search(): void {
         if (this.saving || !this.context) return;
-        if (!this.validRange(this.from, this.to)) { this.error = 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.'; return; }
+        if (!this.pendingQueue && !this.validRange(this.from, this.to)) { this.error = 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.'; return; }
         if (/^-\d+(\.\d+)?$/.test(this.q.trim())) { this.error = 'Mã hoặc tên nhân viên không hợp lệ, không được nhập số âm.'; return; }
         this.applied = { mine: this.tab === 'mine', from: this.from, to: this.to, q: this.tab === 'mine' ? '' : this.q.trim(), departmentId: this.tab === 'mine' ? '' : this.departmentId, verification: this.verification, anomaly: this.anomaly, page: 0 };
         this.loadRecords(0); if (this.tab === 'mine') this.loadToday();
@@ -178,7 +202,7 @@ export class AttendancePage implements OnInit {
         const version = ++this.recordsVersion;
         this.recordsSubscription?.unsubscribe();
         this.loading = true; this.error = '';
-        this.recordsSubscription = this.api.records({ ...this.applied, page }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { if (version === this.recordsVersion) this.loading = false; })).subscribe({
+        this.recordsSubscription = (this.pendingQueue ? this.api.pendingRecords(page) : this.api.records({ ...this.applied, page })).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { if (version === this.recordsVersion) this.loading = false; })).subscribe({
             next: r => { if (version !== this.recordsVersion) return; this.rows = r.items; this.page = r.page; this.total = r.totalElements; this.pages = r.totalPages; this.stats = r.stats; },
             error: e => { if (version !== this.recordsVersion) return; this.rows = []; this.total = 0; this.pages = 0; this.stats = null; this.error = this.api.message(e); },
         });

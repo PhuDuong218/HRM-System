@@ -11,8 +11,9 @@ import {RowViewDirective} from '../../shared/row-view.directive';
 import { CommonModule } from '@angular/common';
 import { Component, DestroyRef, ElementRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute, Router } from '@angular/router';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Observable, finalize } from 'rxjs';
+import { Observable, Subscription, finalize } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDetail, OtFilter, OtBreak, OtWorkflow, OtRegistration, OtActual, OtWindow } from './overtime-api.service';
 
@@ -22,6 +23,8 @@ export class OvertimePage implements OnInit {
 
     readonly clockTiming = clockTiming;
   private readonly api=inject(OvertimeApiService);private readonly destroyRef=inject(DestroyRef);
+  private readonly route=inject(ActivatedRoute,{optional:true});private readonly router=inject(Router,{optional:true});
+  pendingQueue:'approval'|'actual'|''='';private pendingRouteValue:string|null|undefined;private listRequest?:Subscription;
   private readonly host=inject(ElementRef) as ElementRef<HTMLElement>;
   private alignSelected(key:string){
     requestAnimationFrame(()=>{
@@ -67,7 +70,20 @@ export class OvertimePage implements OnInit {
   private detailVersion=0;private employeeVersion=0;
   get busy(){return this.loading||this.saving;}
   get panelOpen(){return this.detailLoading||this.detail!==null||this.mode==='create'||this.selectedEmployee!==null||this.selectedWorkflow!==null;}
-  ngOnInit(){this.loading=true;this.api.context().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:c=>{this.context=c;this.tab=c.manage?'employees':'mine';this.inboxMine=!c.manage;this.loading=false;this.search();if(c.manage)this.api.departments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:d=>this.departments=d,error:e=>this.error=this.api.message(e)});},error:e=>{this.loading=false;this.error=this.api.message(e);}});}
+  ngOnInit(){this.loading=true;this.api.context().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:c=>{this.context=c;this.tab=c.manage?'employees':'mine';this.inboxMine=!c.manage;this.loading=false;if(this.route)this.route.queryParamMap.pipe(takeUntilDestroyed(this.destroyRef)).subscribe(params=>this.applyPendingRoute(params.get('pending')));else this.search();if(c.manage)this.api.departments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:d=>this.departments=d,error:e=>this.error=this.api.message(e)});},error:e=>{this.loading=false;this.error=this.api.message(e);}});}
+  private applyPendingRoute(value:string|null){
+    if(value===this.pendingRouteValue)return;this.pendingRouteValue=value;
+    const wasPending=!!this.pendingQueue;this.listRequest?.unsubscribe();this.loading=false;
+    this.pendingQueue=this.context?.manage&&(value==='approval'||value==='actual')?value:'';
+    if(this.pendingQueue){this.tab=this.pendingQueue;this.q='';this.departmentId='';this.registration='';this.status=this.pendingQueue==='approval'?'CHO_DUYET':'DA_DUYET';this.actual=this.pendingQueue==='actual'?'UNFINISHED':'';}
+    else if(wasPending){this.tab='employees';this.status='';this.actual='';}
+    this.search();
+  }
+  exitPendingQueue(reload=true){
+    if(!this.pendingQueue||this.saving)return;this.pendingQueue='';this.pendingRouteValue=null;
+    if(this.route&&this.router)void this.router.navigate([],{relativeTo:this.route,queryParams:{pending:null},queryParamsHandling:'merge',replaceUrl:true});
+    if(reload){this.status=this.tab==='approval'?'CHO_DUYET':'DA_DUYET';this.actual=this.tab==='actual'?'UNFINISHED':'';this.search();}
+  }
   date(offset=0){const d=new Date();d.setDate(d.getDate()+offset);return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
   time(value:string|null|undefined){return value?value.replace('T',' ').slice(0,16):'—';}
   utc(value:string|null|undefined){return value?new Intl.DateTimeFormat('vi-VN',{dateStyle:'short',timeStyle:'short',timeZone:'Asia/Ho_Chi_Minh'}).format(new Date(value.endsWith('Z')?value:value+'Z')):'—';}
@@ -91,12 +107,12 @@ export class OvertimePage implements OnInit {
   }
   actualLabel(r:OtRow){return r.ot.confirmedBy?'Đã xác nhận':r.ot.actualStart?(r.ot.actualEnd?'Cần xác nhận':'Đã check-in'):r.ot.status==='DA_DUYET'?'Cần ghi nhận':'Chưa ghi nhận';}
   retroactive(r:OtRow){return Date.parse(r.submittedAt.endsWith('Z')?r.submittedAt:r.submittedAt+'Z')>Date.parse(r.ot.requestedStart+'+07:00');}
-  switchTab(tab:OtTab){if(this.busy||!this.context||tab==='mine'&&!this.context.mine||['employees','approval','actual'].includes(tab)&&!this.context.manage)return;this.tab=tab;this.closePanel();this.error='';this.stats=null;this.status=tab==='approval'?'CHO_DUYET':tab==='actual'?'DA_DUYET':'';this.actual=tab==='actual'?'UNFINISHED':'';if(tab==='other')this.searchInbox();else this.search();}
+  switchTab(tab:OtTab){if(this.busy||!this.context||tab==='mine'&&!this.context.mine||['employees','approval','actual'].includes(tab)&&!this.context.manage)return;this.exitPendingQueue(false);this.tab=tab;this.closePanel();this.error='';this.stats=null;this.status=tab==='approval'?'CHO_DUYET':tab==='actual'?'DA_DUYET':'';this.actual=tab==='actual'?'UNFINISHED':'';if(tab==='other')this.searchInbox();else this.search();}
   private range(){if(!this.from||!this.to||this.from>this.to||(Date.parse(this.to)-Date.parse(this.from))/86400000>366){this.error='Khoảng ngày phải hợp lệ và không quá 366 ngày.';return false;}return true;}
-  search(){if(this.busy||!this.context||!this.range())return;if(/^-\d+(\.\d+)?$/.test(this.q.trim())){this.error='Mã hoặc tên nhân viên không hợp lệ.';return;}this.applied={mine:this.tab==='mine',from:this.from,to:this.to,q:this.tab==='mine'?'':this.q.trim(),departmentId:this.tab==='mine'?'':this.departmentId,status:this.status,actual:this.actual,registration:this.registration,page:0};this.closePanel();this.load(0);}
+  search(){if(this.busy||!this.context||!this.pendingQueue&&!this.range())return;if(/^-\d+(\.\d+)?$/.test(this.q.trim())){this.error='Mã hoặc tên nhân viên không hợp lệ.';return;}this.applied={mine:this.tab==='mine',from:this.from,to:this.to,q:this.tab==='mine'?'':this.q.trim(),departmentId:this.tab==='mine'?'':this.departmentId,status:this.status,actual:this.actual,registration:this.registration,page:0};this.closePanel();this.load(0);}
   load(page=this.page){if(!this.applied||this.saving||this.loading)return;this.loading=true;this.error='';const done=()=>this.loading=false;
-    if(this.tab==='employees')this.api.employees({...this.applied,page}).pipe(takeUntilDestroyed(this.destroyRef),finalize(done)).subscribe({next:r=>{this.employees=r.items;if(this.selectedEmployee)this.selectedEmployee=r.items.find(e=>e.employeeId===this.selectedEmployee!.employeeId)??this.selectedEmployee;this.page=r.page;this.pages=r.totalPages;this.total=r.totalElements;this.stats=r.stats??null;},error:e=>{this.employees=[];this.stats=null;this.error=this.api.message(e);}});
-    else this.api.search({...this.applied,page}).pipe(takeUntilDestroyed(this.destroyRef),finalize(done)).subscribe({next:r=>{this.rows=r.items;this.page=r.page;this.pages=r.totalPages;this.total=r.totalElements;this.stats=r.stats??null;},error:e=>{this.rows=[];this.stats=null;this.error=this.api.message(e);}});
+    if(this.tab==='employees')this.listRequest=this.api.employees({...this.applied,page}).pipe(takeUntilDestroyed(this.destroyRef),finalize(done)).subscribe({next:r=>{this.employees=r.items;if(this.selectedEmployee)this.selectedEmployee=r.items.find(e=>e.employeeId===this.selectedEmployee!.employeeId)??this.selectedEmployee;this.page=r.page;this.pages=r.totalPages;this.total=r.totalElements;this.stats=r.stats??null;},error:e=>{this.employees=[];this.stats=null;this.error=this.api.message(e);}});
+    else this.listRequest=(this.pendingQueue?this.api.pending(this.pendingQueue,page):this.api.search({...this.applied,page})).pipe(takeUntilDestroyed(this.destroyRef),finalize(done)).subscribe({next:r=>{this.rows=r.items;this.page=r.page;this.pages=r.totalPages;this.total=r.totalElements;this.stats=r.stats??null;},error:e=>{this.rows=[];this.stats=null;this.error=this.api.message(e);}});
   }
   reset(){if(this.busy)return;this.from=this.date(-30);this.to=this.date(30);this.q='';this.departmentId='';this.status=this.tab==='approval'?'CHO_DUYET':this.tab==='actual'?'DA_DUYET':'';this.actual=this.tab==='actual'?'UNFINISHED':'';this.registration='';this.search();}
   pagination(total:number,current:number):Array<number|'...'>{if(total<=4)return Array.from({length:Math.max(0,total)},(_,i)=>i);const result:Array<number|'...'>=[];for(const p of [...new Set([0,current-1,current,current+1,total-1])].filter(p=>p>=0&&p<total).sort((a,b)=>a-b)){const prev=result[result.length-1];if(typeof prev==='number'&&p-prev>1)result.push('...');result.push(p);}return result;}

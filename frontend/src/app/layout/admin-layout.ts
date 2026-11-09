@@ -268,7 +268,7 @@ export class AdminLayout {
       next: loggedOut => {
         if (!loggedOut) return;
         this.logoutDialog?.nativeElement.close();
-        void this.router.navigateByUrl('/login');
+        void this.router.navigateByUrl('/login', { replaceUrl: true });
       }
     });
   }

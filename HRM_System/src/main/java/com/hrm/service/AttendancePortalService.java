@@ -171,6 +171,24 @@ public class AttendancePortalService {
           mine&&id==null&&AttendanceClockPolicy.checkIn(ps,pe,now()).allowed(),mine&&ai!=null&&ao==null&&"CHUA_XAC_NHAN".equals(verification)&&AttendanceClockPolicy.checkOut(ps,pe,ai,now()).allowed(),rs.getBytes("attendance_version")==null?null:Base64.getEncoder().encodeToString(rs.getBytes("attendance_version")),rs.getString("entered_by_label"),rs.getString("updated_by_label"),rs.getString("confirmed_by_label"),inReviewed,outReviewed,reviewAccess&&ai!=null&&!inReviewed,reviewAccess&&ao!=null&&!outReviewed,rs.getString("check_in_reviewer"),rs.getObject("check_in_reviewed_at",LocalDateTime.class),rs.getString("check_out_reviewer"),rs.getObject("check_out_reviewed_at",LocalDateTime.class));
     }
     private void range(LocalDate from,LocalDate to,int page){if(from==null||to==null||to.isBefore(from)||to.isAfter(from.plusDays(366))||page<0||page>100000)throw error(HttpStatus.BAD_REQUEST,"Khoảng ngày tối đa 366 ngày, phân trang phải hợp lệ.");}
+    private Scope pendingScope(AuthenticatedAccount p) {
+        Scope scoped=scope(actor(p),false);
+        return new Scope(FROM+scoped.sql()+" AND ar.verification_status='CHUA_XAC_NHAN'",scoped.args());
+    }
+    @Transactional(value="scheduleTransactionManager",readOnly=true)
+    public long pendingCount(AuthenticatedAccount p) {
+        var pending=pendingScope(p);
+        return db.queryForObject("SELECT COUNT_BIG(*) "+pending.sql(),Long.class,pending.args().toArray());
+    }
+    @Transactional(value="scheduleTransactionManager",readOnly=true)
+    public Search pending(AuthenticatedAccount p,int page) {
+        if(page<0||page>100000)throw error(HttpStatus.BAD_REQUEST,"Phân trang không hợp lệ.");
+        var a=actor(p);var pending=pendingScope(p);
+        long total=db.queryForObject("SELECT COUNT_BIG(*) "+pending.sql(),Long.class,pending.args().toArray());
+        var args=new ArrayList<Object>(pending.args());args.add(page*20);args.add(20);
+        var rows=db.query(FIELDS+pending.sql()+" ORDER BY s.work_date,s.schedule_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",(rs,n)->map(rs,a,false),args.toArray());
+        return new Search(rows,page,20,total,(int)((total+19)/20),null);
+    }
     @Transactional(value="scheduleTransactionManager",readOnly=true)
     public Search search(AuthenticatedAccount p,boolean mine,LocalDate from,LocalDate to,String q,Long department,String verification,String anomaly,int page){
         Actor a=actor(p);range(from,to,page);Scope scope=scope(a,mine);

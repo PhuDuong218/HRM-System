@@ -76,6 +76,25 @@ public class OvertimeWorkspaceService {
         return new Row(o,rs.getString("employee_code"),rs.getString("full_name"),rs.getString("department_name"),perms.roleOfEmployee(o.employeeId()),rs.getString("work_content"),rs.getString("requested_break_status"),rs.getObject("submitted_at",LocalDateTime.class),rs.getObject("approved_at",LocalDateTime.class),rs.getString("approver"),rs.getString("confirmer"),Base64.getEncoder().encodeToString(rs.getBytes("row_version")),requested,o.status().equals("DA_DUYET")?requested:null,actual,valid,excess,warning,caps);
     }
     private static final String FIELDS="SELECT o.*,e.employee_code,e.full_name,dep.department_name,ap.username approver,cf.username confirmer,COALESCE((SELECT MAX(h.occurred_at) FROM dbo.audit_logs h WHERE h.target_table='overtime_requests' AND h.target_record_key=CONVERT(varchar(30),o.overtime_id) AND h.action='OT_APPROVE'),CASE WHEN o.status='DA_DUYET' THEN o.processed_at END) approved_at ";
+    private Scope pendingScope(AuthenticatedAccount p,String kind) {
+        String condition=switch(kind){case "approval"->"o.status='CHO_DUYET'";case "actual"->"o.status='DA_DUYET' AND o.confirmed_by IS NULL";default->throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Loại danh sách chờ không hợp lệ.");};
+        var scoped=scope(p,false);
+        return new Scope(FROM+scoped.sql()+" AND "+condition,scoped.args());
+    }
+    @Transactional(readOnly=true)
+    public long pendingCount(AuthenticatedAccount p,String kind) {
+        var pending=pendingScope(p,kind);
+        return db.queryForObject("SELECT COUNT_BIG(*) "+pending.sql(),Long.class,pending.args().toArray());
+    }
+    @Transactional(readOnly=true)
+    public Search pending(AuthenticatedAccount p,String kind,int page) {
+        if(page<0||page>100000)throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Phân trang không hợp lệ.");
+        var pending=pendingScope(p,kind);
+        long total=db.queryForObject("SELECT COUNT_BIG(*) "+pending.sql(),Long.class,pending.args().toArray());
+        var args=new ArrayList<Object>(pending.args());args.add(page*20);args.add(20);
+        var rows=db.query(FIELDS+pending.sql()+" ORDER BY o.requested_start,o.overtime_id OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",(rs,n)->row(rs,p),args.toArray());
+        return new Search(rows,page,(int)((total+19)/20),total,null);
+    }
     private List<Row> all(AuthenticatedAccount p,Filter f){var filter=filter(p,f);return db.query(FIELDS+FROM+filter.sql()+" ORDER BY o.submitted_at DESC,o.overtime_id DESC",(rs,n)->row(rs,p),filter.args().toArray());}
     private Stats stats(List<Row> rows){return new Stats(rows.stream().map(r->r.ot().employeeId()).distinct().count(),rows.stream().filter(r->r.ot().status().equals("CHO_DUYET")).count(),rows.stream().filter(r->r.ot().status().equals("DA_DUYET")).count(),rows.stream().filter(r->r.ot().status().equals("TU_CHOI")).count(),rows.stream().filter(this::needsAction).count(),rows.stream().filter(r->r.validMinutes()!=null).mapToLong(Row::validMinutes).sum(),rows.stream().filter(r->r.ot().confirmedBy()!=null&&r.validMinutes()==null).count());}
     private boolean needsAction(Row r){return r.ot().status().equals("CHO_DUYET")||r.ot().status().equals("DA_DUYET")&&r.ot().confirmedBy()==null;}

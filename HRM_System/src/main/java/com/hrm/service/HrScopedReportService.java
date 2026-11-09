@@ -119,9 +119,9 @@ public class HrScopedReportService {
             WHERE pp.period_start>=? AND pp.period_end<=? AND pb.status='DA_CHOT' AND pb.locked_by IS NOT NULL AND pb.locked_at IS NOT NULL
               AND NOT EXISTS(SELECT 1 FROM dbo.payroll_batches newer WHERE newer.period_id=pb.period_id AND newer.status='DA_CHOT' AND newer.locked_by IS NOT NULL AND newer.locked_at IS NOT NULL AND newer.version_no>pb.version_no)
               AND EXISTS(SELECT 1 FROM dbo.employee_assignments ea WHERE ea.employee_id=pd.employee_id
-                  AND ea.effective_from<=pp.period_start AND (ea.effective_to IS NULL OR ea.effective_to>=pp.period_end) AND
+                  AND ea.effective_from<=pp.period_start AND (ea.effective_to IS NULL OR ea.effective_to>pp.period_end) AND
             """+GRANT+") GROUP BY pp.period_id,pp.period_code,pp.period_start,pp.period_end,pb.batch_id,pb.version_no ORDER BY pp.period_start,pp.period_id",
-            (rs,n)->new BatchSummary(rs.getLong(1),rs.getString(2),rs.getDate(3).toLocalDate(),rs.getDate(4).toLocalDate(),rs.getLong(5),rs.getInt(6),rs.getLong(7),amounts(rs.getBigDecimal(8),rs.getBigDecimal(9),rs.getBigDecimal(10),rs.getBigDecimal(11))),from,to.plusDays(1),hr);
+            (rs,n)->new BatchSummary(rs.getLong(1),rs.getString(2),rs.getDate(3).toLocalDate(),rs.getDate(4).toLocalDate(),rs.getLong(5),rs.getInt(6),rs.getLong(7),amounts(rs.getBigDecimal(8),rs.getBigDecimal(9),rs.getBigDecimal(10),rs.getBigDecimal(11))),from,to,hr);
         BigDecimal gross=BigDecimal.ZERO,allowances=BigDecimal.ZERO,bonuses=BigDecimal.ZERO,deductions=BigDecimal.ZERO;long count=0;
         for(var batch:batches){var a=batch.totals();gross=gross.add(a.grossPayroll());allowances=allowances.add(a.allowances());bonuses=bonuses.add(a.bonuses());deductions=deductions.add(a.deductions());count+=batch.employeeCount();}
         return new PayrollStatisticsResponse(from,to,batches.size(),count,amounts(gross,allowances,bonuses,deductions),List.copyOf(batches));

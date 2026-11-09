@@ -110,11 +110,19 @@ Lỗi 401/403 phải đối chiếu Security thật. Lỗi kết nối: kiểm t
 
 Proxy chỉ phục vụ phát triển local; bản production cần reverse proxy /api hoặc cấu hình URL API và CORS phù hợp. Chưa có hướng dẫn deploy production trong bản này.
 
+### Chờ xử lý trên Tổng quan
+
+Trang `/overview` có bốn ô: Công chưa xác nhận, Nghỉ phép chờ duyệt, OT chờ duyệt và OT chưa hoàn tất. API `GET /api/overview/pending` trả số đang chờ trên toàn bộ thời gian, gồm cả tháng trước, theo quyền và phạm vi của từng chức năng nguồn. Số 0, không có quyền và lỗi tải là các trạng thái riêng. Nhóm này tải độc lập với các biểu đồ và không yêu cầu quyền REPORT_VIEW.
+
+Bấm ô mở `/attendance?pending=unconfirmed`, `/requests?pending=leave`, `/overtime?pending=approval` hoặc `/overtime?pending=actual`. Công và OT dùng danh sách chờ phân trang trên toàn bộ thời gian; chọn Xem theo bộ lọc thông thường để trở về bộ lọc ngày của nguồn. Đơn nghỉ dùng bộ lọc CHO_DUYET + NGHI_PHEP sẵn có, loại đơn đã rút/hủy theo nguồn. Các nút xử lý vẫn kiểm tra thẩm quyền tại chức năng gốc. Chạy `npm run test:overview` để kiểm tra API, lỗi/quyền, điều hướng và phân trang; khởi động lại backend để nhận các endpoint mới, không cần migration.
+
 ### Báo cáo
 
-Trang `/reports` kết nối các API báo cáo nhân sự, hợp đồng, công và quỹ lương; có bộ lọc theo API và xuất XLSX với bộ lọc của báo cáo đang hiển thị. Khởi động lại `npm start` sau khi sửa proxy. ADMIN/HR cần quyền `REPORT_VIEW`; báo cáo lương cần thêm `PAYROLL_VIEW`. Các quyền này chưa có trong seed SQL gốc. Việc lọc báo cáo theo phạm vi phòng ban của HR chưa được backend thực hiện; cần xử lý và kiểm thử trước khi dùng với dữ liệu thực.
+Trang `/reports` dành cho ADMIN có quyền `REPORT_VIEW`, kết nối các API báo cáo nhân sự, hợp đồng, công và quỹ lương; báo cáo lương cần thêm `PAYROLL_VIEW`. Bộ lọc phòng ban và xuất XLSX sử dụng các API báo cáo tương ứng. Khởi động lại `npm start` sau khi sửa proxy.
 
 Quỹ lương chỉ gồm các kỳ nằm trọn trong khoảng lọc và bảng lương đã chốt. Frontend giữ chính xác các chữ số thập phân của số tiền từ JSON; các phép tính lương vẫn do backend thực hiện. Chạy `npm run test:reports` để kiểm tra request, bộ lọc, quyền và định dạng tiền.
+
+Phần giao diện phác thảo đã được ghép vào `reports.html`, `reports.css` và `reports.ts`, dùng dữ liệu API thật. Xem [cấu trúc mã và thiết kế theo chức năng nguồn](src/app/pages/reports/README.md) ngay cạnh component báo cáo.
 
 ## 7. Phát triển nhân viên từ đâu?
 

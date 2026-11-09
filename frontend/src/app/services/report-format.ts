@@ -1,8 +1,8 @@
 import type { PayrollReport } from './report.service';
 
 // Quote monetary JSON numbers before parsing to preserve SQL decimal digits.
-export function parsePayrollReport(source: string): PayrollReport {
-  const amounts = new Set(['grossPayroll', 'allowances', 'bonuses', 'deductions', 'netPayroll']);
+export function parsePayrollReport<T = PayrollReport>(source: string): T {
+  const amounts = new Set(['grossPayroll', 'allowances', 'bonuses', 'deductions', 'netPayroll', 'amount']);
   let result = '';
   let index = 0;
   while (index < source.length) {
@@ -22,7 +22,7 @@ export function parsePayrollReport(source: string): PayrollReport {
       index += match[0].length;
     }
   }
-  return JSON.parse(result) as PayrollReport;
+  return JSON.parse(result) as T;
 }
 
 // Group the integer part without converting the decimal to a JavaScript number.
@@ -40,4 +40,21 @@ export function formatMoney(value: string): string {
   else { whole = digits.slice(0, point); fraction = digits.slice(point); }
   whole = whole.replace(/^0+(?=\d)/, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.');
   return match[1] + whole + (fraction ? ',' + fraction : '');
+}
+
+// Sum report amounts exactly; never round money through JavaScript Number.
+export function sumMoney(values: readonly string[]): string {
+  const parts = values.map(value => {
+    if (!/^-?\d+(?:\.\d+)?(?:[eE][+-]?\d+)?$/.test(value)) throw new Error('Invalid report amount');
+    const decimal = formatMoney(value).replace(/\./g, '').replace(',', '.');
+    const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(decimal);
+    if (!match) throw new Error('Invalid report amount');
+    const fraction = match[3] ?? '';
+    return { coefficient: BigInt(match[1] + match[2] + fraction), scale: fraction.length };
+  });
+  const scale = parts.reduce((max, part) => Math.max(max, part.scale), 0);
+  const total = parts.reduce((sum, part) => sum + part.coefficient * 10n ** BigInt(scale - part.scale), 0n);
+  const digits = (total < 0n ? -total : total).toString().padStart(scale + 1, '0');
+  const amount = scale ? `${digits.slice(0, -scale)}.${digits.slice(-scale)}` : digits;
+  return (total < 0n ? '-' : '') + amount;
 }

@@ -20,6 +20,7 @@ public class AttendancePortalController {
     @GetMapping("/context") public Object context(@AuthenticationPrincipal AuthenticatedAccount a){return service.context(a);}
     @GetMapping("/calendar-policy") public Object calendarPolicy(@AuthenticationPrincipal AuthenticatedAccount a){return service.calendarInfo(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
+    @GetMapping("/pending") public Object pending(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="0") int page){return service.pending(a,page);}
     @GetMapping("/records") public Object records(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="false") boolean mine,
       @RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,
       @RequestParam(required=false) String verification,@RequestParam(required=false) String anomaly,@RequestParam(defaultValue="0") int page){return service.search(a,mine,from,to,q,departmentId,verification,anomaly,page);}

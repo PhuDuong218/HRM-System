@@ -193,7 +193,7 @@
       <form [hrmEditForm]="true" [hrmEditReady]="!hrDepartmentsLoading" id="edit-account-form" (ngSubmit)="saveAccountIdentity()" novalidate>
         <fieldset class="dialog-grid" [disabled]="saving">
           <div class="detail-wide edit-account-owner"><span>{{ 'Nhân viên sở hữu tài khoản' | translate }}</span><strong>{{ (selectedAccount?.fullName || 'Chưa có thông tin') | translate }}</strong><small>{{ (selectedAccount?.employeeCode || 'Chưa có mã nhân viên') | translate }}</small></div>
-          <div><label class="form-label" for="edit-username">{{ 'Tên đăng nhập' | translate }}</label><input id="edit-username" name="username" class="form-control" maxlength="100" [(ngModel)]="editUsername" required></div>
+          <div><label class="form-label" for="edit-username">{{ 'Tên đăng nhập' | translate }}</label><input id="edit-username" class="form-control" [value]="selectedAccount?.username || ''" readonly></div>
           <div><label class="form-label" for="edit-role">{{ 'Vai trò' | translate }}</label><select id="edit-role" name="roleId" class="form-select" [(ngModel)]="editRoleId" (ngModelChange)="onEditRoleChange()" [disabled]="!!selectedAccount && isOwnAccount(selectedAccount)">@for (item of roles; track item.roleId) { @if (isSystemRole(item)) { <option [ngValue]="item.roleId" [disabled]="item.roleCode === 'ADMIN' && selectedAccount?.roleCode !== 'ADMIN'">{{ item.roleName }} ({{ item.roleCode }})</option> } }</select></div>
           @if (editRoleIsHr) {
             <div class="detail-wide">
@@ -217,7 +217,7 @@
           }
         </fieldset>
         @if (selectedAccount && isOwnAccount(selectedAccount)) { <p class="small muted mt-3 mb-0">{{ 'Không thể đổi vai trò của tài khoản đang sử dụng.' | translate }}</p> }
-        <p class="small muted mt-3 mb-0">{{ 'Thay đổi tên đăng nhập hoặc vai trò sẽ thu hồi các phiên đăng nhập cũ.' | translate }}</p>
+        <p class="small muted mt-3 mb-0">{{ 'Thay đổi vai trò sẽ thu hồi các phiên đăng nhập cũ.' | translate }}</p>
         @if (actionError) { <p [hrmNotice]="actionError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ actionError }}</p> }
       </form>
     } @else if (dialogMode === 'account-reset' && selectedAccount; as account) {

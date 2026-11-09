@@ -21,7 +21,7 @@ public class PayrollStatisticsService {
             + " and hasAuthority('REPORT_VIEW') and hasAuthority('PAYROLL_VIEW')";
 
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(4);
-    private static final LocalDate LAST_REPORT_DATE = LocalDate.of(9999, 12, 30);
+    private static final LocalDate LAST_REPORT_DATE = LocalDate.of(9999, 12, 31);
 
     private final PayrollStatisticsRepository repository;
     @org.springframework.beans.factory.annotation.Autowired private HrScopedReportService hrReports;
@@ -39,14 +39,14 @@ public class PayrollStatisticsService {
         if (fromDate.isAfter(toDate)) {
             throw new IllegalArgumentException("fromDate không được sau toDate");
         }
-        // The exclusive end must also fit SQL Server's date range.
+        // Match the stored first/last dates used by payroll closing; do not shift the last day.
         if (fromDate.getYear() < 1 || toDate.isAfter(LAST_REPORT_DATE)) {
-            throw new IllegalArgumentException("Kỳ báo cáo phải nằm từ 0001-01-01 đến 9999-12-30");
+            throw new IllegalArgumentException("Kỳ báo cáo phải nằm từ 0001-01-01 đến 9999-12-31");
         }
 
         if (PersonnelScopeService.isHr()) return hrReports.payroll(fromDate, toDate);
 
-        List<PayrollStatisticsRow> rows = repository.summarizeFinalizedBatches(fromDate, toDate.plusDays(1));
+        List<PayrollStatisticsRow> rows = repository.summarizeFinalizedBatches(fromDate, toDate);
         List<BatchSummary> batches = new ArrayList<>();
         long payrollRecordCount = 0;
         Amounts totals = amounts(ZERO, ZERO, ZERO, ZERO);
@@ -56,7 +56,7 @@ public class PayrollStatisticsService {
                     row.getGrossPayroll(), row.getAllowances(), row.getBonuses(), row.getDeductions());
             long employeeCount = row.getEmployeeCount();
             batches.add(new BatchSummary(
-                    row.getPeriodId(), row.getPeriodCode(), row.getPeriodStart(), row.getPeriodEndExclusive(),
+                    row.getPeriodId(), row.getPeriodCode(), row.getPeriodStart(), row.getPeriodEnd(),
                     row.getBatchId(), row.getVersionNo(), employeeCount, batchTotals));
             payrollRecordCount += employeeCount;
             totals = amounts(

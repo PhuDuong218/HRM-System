@@ -7,12 +7,25 @@
   </app-page-header>
 
   @if (isHr) { <p>{{ language.t('Số liệu chỉ bao gồm các phòng ban bạn được phân công quản lý.') }}</p> }
-  <section class="metric-grid" [attr.aria-label]="language.t('Chỉ số nổi bật')">
-    <article class="metric-card"><span>{{ language.t('Tổng hồ sơ nhân sự') }}</span><strong>{{ employeeReport ? number(totalEmployees) : '—' }}</strong><small>{{ language.t('Bao gồm cả nhân viên đã nghỉ') }}</small></article>
-    <article class="metric-card"><span>{{ language.t('Đang làm việc') }}</span><strong>{{ employeeReport ? number(activeEmployees) : '—' }}</strong><small>{{ language.t('Theo trạng thái hồ sơ') }}</small></article>
-    <article class="metric-card"><span>{{ language.t('Hợp đồng hiệu lực') }}</span><strong>{{ contracts ? number(contracts.effectiveCount) : '—' }}</strong><small>{{ language.t('Tại ngày báo cáo') }}</small></article>
-    <article class="metric-card metric-accent"><span>{{ language.t('Hợp đồng sắp hết hạn') }}</span><strong>{{ contracts ? number(contracts.expiringCount) : '—' }}</strong><small>{{ language.t('Trong 30 ngày tới') }}</small></article>
-  </section>
+  @if (isAdmin || isHr) {
+    <section class="pending-section" aria-labelledby="pending-title" [attr.aria-busy]="pendingState === 'loading'">
+      <div class="pending-heading"><h2 id="pending-title">{{ language.t('Chờ xử lý') }}</h2><p>{{ language.t('Hiện tại · Tất cả thời gian') }}</p></div>
+      @if (pendingState === 'error') { <p [hrmNotice]="pendingError" noticeKind="error" class="error" role="alert">{{ language.t(pendingError) }}</p> }
+      <div class="metric-grid pending-grid">
+        @for (card of pendingCards; track card.key) {
+          @if (pendingItem(card.key); as item) {
+            @if (item.state === 'READY') {
+              <a class="metric-card pending-card" [class.has-pending]="item.count! > 0" [routerLink]="card.route" [queryParams]="card.query" [attr.aria-label]="language.t(card.label) + ': ' + number(item.count!)"><span>{{ language.t(card.label) }} <i aria-hidden="true">↗</i></span><strong>{{ number(item.count!) }}</strong><small>{{ language.t(card.description) }}</small></a>
+            } @else {
+              <article class="metric-card pending-card pending-unavailable"><span>{{ language.t(card.label) }}</span><strong>—</strong><small>{{ language.t(item.state === 'DENIED' ? 'Không có quyền xem' : 'Không tải được số liệu') }}</small></article>
+            }
+          } @else {
+            <article class="metric-card pending-card"><span>{{ language.t(card.label) }}</span><strong>—</strong><small role="status">{{ language.t(pendingState === 'loading' ? 'Đang tải…' : 'Không tải được số liệu') }}</small></article>
+          }
+        }
+      </div>
+    </section>
+  }
 
   <section class="chart-grid" [attr.aria-label]="language.t('Biểu đồ tổng quan')">
     <article class="chart-card chart-wide">

@@ -76,19 +76,29 @@ public class EmployeeRequestService {
         return list(mine,status,type,page,size,p,null);
     }
     public Page<Map<String,Object>> list(boolean mine,String status,String type,int page,int size,Principal p,Long employeeId) {
-        var actor=mine?access.actor(p):access.manager(p);
-        if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI","DA_HUY").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
-        if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
+        var filter=listScope(mine,status,type,p,employeeId);
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
-        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
-        if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
-        var args=new ArrayList<Object>(Arrays.asList(mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0));
-        if(!mine && employeeId!=null){where+=" AND r.employee_id=?";args.add(employeeId);}
+        String where=filter.where();var args=new ArrayList<Object>(filter.args());
         long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,args.toArray());
         args.add(pageable.getOffset());args.add(pageable.getPageSize());
         var rows=jdbc.queryForList(SELECT+where+" ORDER BY r.submitted_at DESC,r.request_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",args.toArray());
         for(var row:rows)cancellationInfo(row,p);
         return new PageImpl<>(rows,pageable,total);
+    }
+    private record ListScope(String where,List<Object> args) {}
+    private ListScope listScope(boolean mine,String status,String type,Principal p,Long employeeId) {
+        var actor=mine?access.actor(p):access.manager(p);
+        if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI","DA_HUY").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
+        if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
+        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
+        var args=new ArrayList<Object>(Arrays.asList(mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0));
+        if(!mine && employeeId!=null){where+=" AND r.employee_id=?";args.add(employeeId);}
+        return new ListScope(where,args);
+    }
+    public long pendingLeaveCount(Principal p) {
+        var filter=listScope(false,"CHO_DUYET","NGHI_PHEP",p,null);
+        return jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+filter.where(),Long.class,filter.args().toArray());
     }
     private long header(long employee,String type,String reason,long actor) {
         return header(employee,type,reason,actor,"REQ-"+UUID.randomUUID());

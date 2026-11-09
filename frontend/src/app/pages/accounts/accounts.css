@@ -2,7 +2,8 @@
 .heading-actions { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 8px; }
 .section-nav { display: flex; flex-wrap: wrap; gap: 8px; margin: -4px 0 20px; }
 .section-nav button { border: 1px solid #dce5ef; border-radius: 8px; background: #fff; color: #526c86; padding: 10px 16px; font-size: 13px; font-weight: 600; }
-.section-nav button.current { background: #e8f1fb; border-color: #b6cfe8; color: #004581; }
+.section-nav button.current { background: #07558e; border-color: #07558e; color: #fff; font-weight: 700; }
+.section-nav button:focus-visible { outline: 3px solid #8ab8e5; outline-offset: 2px; }
 .account-list { container-type: inline-size; min-width: 0; }
 .account-list .table-responsive { max-width: 100%; overflow-x: auto; }
 .account-list .accounts-table-wrap { overflow:visible; max-height:none; }
@@ -77,7 +78,7 @@
 :host-context([data-bs-theme='dark']) .scope-confirm { border-color:#78643e; background:#463a25; color:#f3d59a; }
 .detail-grid + .detail-label { margin-top: 22px; }
 :host-context([data-bs-theme='dark']) .section-nav button { background: #1c2a3c; border-color: #506580; color: #c2d0e2; }
-:host-context([data-bs-theme='dark']) .section-nav button.current { background: #34557e; border-color: #7195c0; color: #fff; }
+:host-context([data-bs-theme='dark']) .section-nav button.current { background: #86bff0; border-color: #86bff0; color: #102d48; }
 :host-context([data-bs-theme='dark']) .filters .form-label, :host-context([data-bs-theme='dark']) .account-username { color: #d4e6fa; }
 :host-context([data-bs-theme='dark']) .account-list .table tr.is-selected > td { color:#173f76; }
 :host-context([data-bs-theme='dark']) .row-actions .btn-outline-danger { --bs-btn-color: #f5b1a9; --bs-btn-border-color: #bc7771; --bs-btn-hover-bg: #773e3b; --bs-btn-hover-border-color: #d99a94; --bs-btn-hover-color: #fff; --bs-btn-disabled-color: #c88f89; --bs-btn-disabled-border-color: #8a5c58; }

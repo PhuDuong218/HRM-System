@@ -11,6 +11,7 @@ interface LoginResponse {
 }
 
 interface Session {
+  sessionId: string;
   accessToken: string;
   username: string;
   expiresAt: number;
@@ -62,6 +63,8 @@ export class AuthService {
   private router = inject(Router);
   private zone = inject(NgZone);
   private destroyRef = inject(DestroyRef);
+  private storedSession: string | null = null;
+  private storageAvailable = true;
   private session = signal<Session | null>(this.restoreSession());
   private currentUser = signal<CurrentUser | null>(null);
   private expirationTimer: ReturnType<typeof setTimeout> | null = null;
@@ -86,6 +89,18 @@ export class AuthService {
       const recheck = () => this.checkExpiration();
       window.addEventListener('focus', recheck);
       this.destroyRef.onDestroy(() => window.removeEventListener('focus', recheck));
+      const sharedSessionChanged = (event: StorageEvent) => {
+        if (event.key === SESSION_KEY || event.key === null) this.zone.run(() => this.checkExpiration());
+      };
+      window.addEventListener('storage', sharedSessionChanged);
+      this.destroyRef.onDestroy(() => window.removeEventListener('storage', sharedSessionChanged));
+      // A restored document can contain UI from a login that has since ended.
+      // Reload this entry so bootstrap and route guards use current session storage.
+      const restorePage = (event: PageTransitionEvent) => {
+        if (event.persisted) window.location.reload();
+      };
+      window.addEventListener('pageshow', restorePage);
+      this.destroyRef.onDestroy(() => window.removeEventListener('pageshow', restorePage));
     }
     this.destroyRef.onDestroy(() => { this.cancelExpiration(); this.cancelRefresh(); });
   }
@@ -107,6 +122,7 @@ export class AuthService {
           throw new ManagementAccessDeniedError();
         }
         const session: Session = {
+          sessionId: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random()}`,
           accessToken: response.accessToken,
           username,
           expiresAt: requestStartedAt + response.expiresInSeconds * 1000,
@@ -118,7 +134,7 @@ export class AuthService {
         this.lastRefreshAt = requestStartedAt;
         this.currentUser.set(null);
         this.session.set(session);
-        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* Keep the session in memory. */ }
+        this.persistSession(session);
         this.sessionNotice.set('');
         this.scheduleExpiration();
       }),
@@ -144,7 +160,7 @@ export class AuthService {
         catchError(() => of(void 0)),
         map(() => {
           // Do not clear a newer session if this request finishes after another login.
-          if (this.session() !== null && this.session() !== session) return false;
+          if (this.synchronizeSession() || this.session() !== session) return false;
           this.clear();
           return true;
         })
@@ -188,14 +204,18 @@ export class AuthService {
   }
 
   loadCurrentUser() {
-    const token = this.token();
+    const session = this.session();
     return forkJoin({user:this.http.get<CurrentUser>(`${API_BASE_URL}/auth/me`),
       capabilities:this.http.get<{departmentHead:boolean}>(`${API_BASE_URL}/employee-requests/capabilities`)}).pipe(
       timeout(15000),
       map(({user,capabilities})=>({...user,departmentHead:capabilities.departmentHead})),
       tap(user=>{
+        // Ignore even successful responses from a previous login or a logged-out page.
+        if (!session || this.session() !== session || !this.token()) {
+          throw new Error('Phiên đăng nhập đã thay đổi.');
+        }
         if(!['ADMIN','HR'].includes(user.role)&&!user.departmentHead){this.clear();throw new ManagementAccessDeniedError();}
-        if(token&&token===this.token())this.currentUser.set(user);
+        this.currentUser.set(user);
       })
     );
   }
@@ -205,10 +225,13 @@ export class AuthService {
     this.cancelRefresh();
     this.session.set(null);
     this.currentUser.set(null);
-    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage is optional. */ }
+    this.storedSession = null;
+    try { localStorage.removeItem(SESSION_KEY); } catch { this.storageAvailable = false; }
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Remove legacy tab-only sessions. */ }
   }
 
   invalidateSession(token: string | null): void {
+    this.synchronizeSession();
     if (token && this.session()?.accessToken === token) {
       this.endInvalidSession('Phiên đăng nhập không còn hợp lệ. Vui lòng đăng nhập lại.');
     }
@@ -230,6 +253,7 @@ export class AuthService {
   }
 
   private checkExpiration(): void {
+    this.synchronizeSession();
     const session = this.session();
     if (session && session.lastActivityAt + session.idleTimeoutMs <= Date.now()) {
       this.endInvalidSession('Phiên đăng nhập đã hết hạn do không hoạt động. Vui lòng đăng nhập lại.');
@@ -244,7 +268,7 @@ export class AuthService {
     if (!session || (typeof document !== 'undefined' && document.hidden)) return;
     const now = Date.now();
     session.lastActivityAt = now;
-    try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* Storage is optional. */ }
+    this.persistSession(session);
     this.scheduleExpiration();
     this.scheduleRefresh();
   }
@@ -270,6 +294,7 @@ export class AuthService {
     this.refreshRequest = this.http.post<LoginResponse>(`${API_BASE_URL}/auth/web/refresh`, {}).pipe(timeout(15000)).subscribe({
       next: response => {
         this.refreshRequest = undefined;
+        this.synchronizeSession();
         if (this.session() !== session) return;
         if (!response.accessToken || !managementRole(response.accessToken) ||
             response.tokenType?.toLowerCase() !== 'bearer' ||
@@ -280,7 +305,7 @@ export class AuthService {
         session.accessToken = response.accessToken;
         session.expiresAt = startedAt + response.expiresInSeconds * 1000;
         session.idleTimeoutMs = response.expiresInSeconds * 1000;
-        try { sessionStorage.setItem(SESSION_KEY, JSON.stringify(session)); } catch { /* Storage is optional. */ }
+        this.persistSession(session);
         this.scheduleExpiration();
         if (session.lastActivityAt > startedAt) this.scheduleRefresh();
       },
@@ -315,9 +340,58 @@ export class AuthService {
   }
 
   private restoreSession(): Session | null {
+    // Retire the old tab-only copy so it cannot revive a signed-out session later.
+    try { sessionStorage.removeItem(SESSION_KEY); } catch { /* Storage is optional. */ }
     try {
-      const saved = sessionStorage.getItem(SESSION_KEY);
-      if (!saved) return null;
+      this.storedSession = localStorage.getItem(SESSION_KEY);
+      const session = this.parseSession(this.storedSession);
+      if (this.storedSession && !session) {
+        localStorage.removeItem(SESSION_KEY);
+        this.storedSession = null;
+      }
+      return session;
+    } catch { this.storageAvailable = false; return null; }
+  }
+
+  private persistSession(session: Session): void {
+    try {
+      const saved = JSON.stringify(session);
+      localStorage.setItem(SESSION_KEY, saved);
+      this.storedSession = saved;
+      this.storageAvailable = true;
+    } catch { this.storageAvailable = false; /* Keep the session in memory. */ }
+  }
+
+  private synchronizeSession(): boolean {
+    if (!this.storageAvailable) return false;
+    let saved: string | null;
+    try { saved = localStorage.getItem(SESSION_KEY); } catch { return false; }
+    if (saved === this.storedSession) return false;
+    this.storedSession = saved;
+    const shared = this.parseSession(saved);
+    const current = this.session();
+    if (shared && current && shared.sessionId === current.sessionId) {
+      // Activity and token renewal in another tab belong to the same login.
+      if (shared.accessToken !== current.accessToken) this.cancelRefresh();
+      Object.assign(current, shared, { lastActivityAt: Math.max(current.lastActivityAt, shared.lastActivityAt) });
+      this.scheduleExpiration();
+      return false;
+    }
+    if (!shared && !current) return false;
+    this.cancelExpiration();
+    this.cancelRefresh();
+    this.session.set(null);
+    this.currentUser.set(null);
+    this.sessionNotice.set('');
+    // Recreate the page with the new identity and permissions, without adding history.
+    // Do not let a form left open under the previous account use the new token.
+    if (typeof window !== 'undefined') this.zone.run(() => window.location.reload());
+    return true;
+  }
+
+  private parseSession(saved: string | null): Session | null {
+    if (!saved) return null;
+    try {
       const session: unknown = JSON.parse(saved);
       if (session && typeof session === 'object' &&
           'accessToken' in session && typeof session.accessToken === 'string' && session.accessToken &&
@@ -326,11 +400,11 @@ export class AuthService {
           'lastActivityAt' in session && typeof session.lastActivityAt === 'number' && Number.isFinite(session.lastActivityAt) &&
           managementRole(session.accessToken)) {
         const restored = session as Session;
+        if (typeof restored.sessionId !== 'string' || !restored.sessionId) restored.sessionId = restored.accessToken;
         if (!Number.isFinite(restored.idleTimeoutMs) || restored.idleTimeoutMs <= 0) restored.idleTimeoutMs = 600_000;
         return restored;
       }
-      sessionStorage.removeItem(SESSION_KEY);
-    } catch { /* Storage is optional. */ }
+    } catch { /* Ignore invalid stored values. */ }
     return null;
   }
 }
