@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import { TranslatePipe } from '../../shared/translate.pipe';
@@ -48,7 +48,7 @@ const shiftValidator: ValidatorFn = (control: AbstractControl): ValidationErrors
 
 @Component({
   selector: 'app-work-shifts', standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,DetailFocusDirective,RowViewDirective,CommonModule, ReactiveFormsModule, TranslatePipe],
   templateUrl: './work-shifts.html', styleUrl: '../work-module.css',
 })
 export class WorkShiftsPage implements OnInit {

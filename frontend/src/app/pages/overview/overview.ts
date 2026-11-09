@@ -1,5 +1,5 @@
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {HrmButton} from '../../shared/ui/button';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
@@ -14,7 +14,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
 
 @Component({
-  selector: 'app-overview', standalone: true, imports:[HrmNotice,Breadcrumb,HrmButton,RouterLink],
+  selector: 'app-overview', standalone: true, imports:[HrmNotice,PageHeader,HrmButton,RouterLink],
   templateUrl: './overview.html', styleUrl: './overview.css'
 })
 export class OverviewPage implements OnInit {

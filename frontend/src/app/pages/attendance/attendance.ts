@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
 import {AttendanceActualBreaksComponent} from '../../shared/attendance-actual-breaks';
@@ -23,7 +23,7 @@ import { TranslatePipe } from '../../shared/translate.pipe';
 @Component({
     selector: 'app-attendance',
     standalone: true,
-    imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
+    imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,Pagination,AttendanceActualBreaksComponent,PersonalCalendarComponent,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective, CommonModule, FormsModule, RouterLink, TranslatePipe],
     templateUrl: './attendance.html',
     styleUrls: ['../work-module.css', './attendance.css']
 })

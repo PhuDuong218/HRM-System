@@ -1,5 +1,5 @@
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,7 +8,7 @@ import { PayrollService } from '../../services/payroll.service';
 @Component({
   selector: 'app-payslips',
   standalone: true,
-  imports:[HrmNotice,Breadcrumb,CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,PageHeader,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payslips.html',
   styleUrl: './payslips.css'
 })

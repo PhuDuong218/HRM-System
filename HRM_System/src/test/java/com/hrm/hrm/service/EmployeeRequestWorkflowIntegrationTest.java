@@ -253,7 +253,7 @@ class EmployeeRequestWorkflowIntegrationTest {
         var level=catalogs.write(admin,"qualification_levels",null,"QUALIFICATION_LEVEL_CREATE",()->levels.addQualificationLevel(levelRequest),QualificationLevelDTO::qualificationLevelId);
         var q=new EmployeeQualificationRequestDTO();q.setQualificationLevelId(level.qualificationLevelId());q.setGraduationYear(2020);q.setIsPrimary(false);
         var first=catalogs.qualification(admin,employee,null,"EMPLOYEE_QUALIFICATION_CREATE",()->qualifications.addEmployeeQualification(employee,q),EmployeeQualificationDTO::employeeQualificationId);
-        assertTrue(first.isPrimary());q.setIsPrimary(true);
+        assertTrue(first.isPrimary());q.setIsPrimary(true);q.setGraduationYear(2021);
         var second=catalogs.qualification(admin,employee,null,"EMPLOYEE_QUALIFICATION_CREATE",()->qualifications.addEmployeeQualification(employee,q),EmployeeQualificationDTO::employeeQualificationId);
         assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.employee_qualifications WHERE employee_id=? AND is_primary=1",Integer.class,employee));
         assertFalse(qualifications.getEmployeeQualificationById(first.employeeQualificationId()).isPrimary());

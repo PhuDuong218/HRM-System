@@ -20,10 +20,10 @@ import {CatalogService,CatalogRow} from '../../services/catalog.service';
 import {errorMessage} from '../../services/employee.service';
 import {AuthService} from '../../services/auth.service';
 const catalogs={
- departments:{path:'departments',title:'Danh mục phòng ban',id:'departmentId',code:'departmentCode',name:'departmentName',paid:false},
- positions:{path:'positions',title:'Chức vụ',id:'positionId',code:'positionCode',name:'positionName',paid:false},
- qualifications:{path:'qualification-levels',title:'Danh mục trình độ',id:'qualificationLevelId',code:'levelCode',name:'levelName',paid:false},
- leaveTypes:{path:'leave-types',title:'Loại nghỉ phép',id:'leaveTypeId',code:'typeCode',name:'typeName',paid:true}
+ departments:{description:'Quản lý mã, tên và trạng thái sử dụng của các phòng ban.',path:'departments',title:'Danh mục phòng ban',id:'departmentId',code:'departmentCode',name:'departmentName',paid:false},
+ positions:{description:'Quản lý danh sách chức vụ dùng khi phân công nhân viên.',path:'positions',title:'Chức vụ',id:'positionId',code:'positionCode',name:'positionName',paid:false},
+ qualifications:{description:'Thiết lập các cấp trình độ dùng trong hồ sơ bằng cấp.',path:'qualification-levels',title:'Danh mục trình độ',id:'qualificationLevelId',code:'levelCode',name:'levelName',paid:false},
+ leaveTypes:{description:'Thiết lập loại nghỉ, điều kiện áp dụng và chính sách trừ quỹ phép.',path:'leave-types',title:'Loại nghỉ phép',id:'leaveTypeId',code:'typeCode',name:'typeName',paid:true}
 };
 @Component({standalone:true,imports:[SearchAssistDirective,EditFormDirective,HrmNotice,RowViewDirective,StatusBadge,Feedback,HrmButton,LeaveWorkflowGuide,PageHeader,Pagination,FormsModule,RecordWorkspace,TranslatePipe],templateUrl:'./catalog.html'})
 export class CatalogPage extends ManagementPageBase {

@@ -1,5 +1,4 @@
-<app-breadcrumb variant="group"/>
-<h1 class="h3">{{ "Lịch làm việc và phân công" | translate }}</h1>
+<app-page-header variant="directory" title="Lịch làm việc và phân công" description="Sắp xếp ca làm việc và tra cứu lịch theo nhân viên hoặc phòng ban." />
 @if(canSubmitOwn){<nav class="d-flex gap-2 mb-3" aria-label="Phạm vi lịch làm việc"><button class="btn" [class.btn-primary]="!personal" [class.btn-outline-primary]="personal" [disabled]="busy" (click)="switchScheduleScope(false)">Lịch nhân viên</button><button class="btn" [class.btn-primary]="personal" [class.btn-outline-primary]="!personal" [disabled]="busy" (click)="switchScheduleScope(true)">Lịch làm việc của tôi</button></nav>}
 @if(personal){<div class="alert alert-info small">Lịch làm việc cá nhân của bạn. Xem ca và lịch OT tại đây; vào Chấm công → Công của tôi để check-in/check-out công thường.</div>}
 @if (lookupError) {

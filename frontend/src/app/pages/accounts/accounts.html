@@ -1,6 +1,4 @@
-<app-breadcrumb variant="group"/>
-<h1>{{ 'Tài khoản và phân quyền' | translate }}</h1><p class="page-description">{{'Một ADMIN quản trị hệ thống; nhiều HR có thể quản lý nhiều phòng ban theo phạm vi được cấp.'|translate}}</p>
-<p class="page-description">{{ 'Quản lý tài khoản, vai trò và quyền truy cập của nhân viên.' | translate }}</p>
+<app-page-header variant="directory" title="Tài khoản và phân quyền" description="Quản lý tài khoản, vai trò và quyền truy cập của nhân viên." />
 @if (message) { <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message }}</div> }
 
 <nav class="section-nav" [attr.aria-label]="'Nhóm quản lý' | translate">

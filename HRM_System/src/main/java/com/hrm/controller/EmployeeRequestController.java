@@ -30,7 +30,8 @@ public class EmployeeRequestController {
             @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){return service.list(true,status,type,page,size,p);}
     @GetMapping
     public Page<Map<String,Object>> list(@RequestParam(required=false) String status,@RequestParam(required=false) String type,
-            @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){return service.list(false,status,type,page,size,p);}
+            @RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p,
+            @RequestParam(required=false) Long employeeId){return service.list(false,status,type,page,size,p,employeeId);}
     @GetMapping("/{id}") public Map<String,Object> detail(@PathVariable long id,Principal p){return service.detail(id,p);}
     @GetMapping("/{id}/resignation-readiness")
     public com.hrm.dto.ResignationReadinessDTO resignationReadiness(@PathVariable long id,@RequestParam(required=false) java.time.LocalDate lastWorkingDate,Principal p){return service.resignationReadiness(id,lastWorkingDate,p);}

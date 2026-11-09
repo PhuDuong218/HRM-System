@@ -1,7 +1,4 @@
-<div class="mb-4">
-  <app-breadcrumb variant="group"/>
-  <h1 class="mb-0">{{ "Phụ cấp" | translate }}</h1>
-</div>
+<app-page-header variant="directory" title="Phụ cấp" description="Quản lý loại phụ cấp và thời hạn áp dụng cho từng nhân viên." />
 
 @if (message) { <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message | translate }}</div> }
 @if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">{{ error | translate }}</div> }

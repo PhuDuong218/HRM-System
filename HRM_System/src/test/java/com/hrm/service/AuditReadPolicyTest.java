@@ -1,6 +1,7 @@
 package com.hrm.service;
 
 import com.hrm.controller.G1AuditController;
+import com.hrm.controller.AuditLogController;
 import com.hrm.controller.PersonnelAuditController;
 import com.hrm.security.AuthenticatedAccount;
 import java.util.*;
@@ -58,5 +59,43 @@ class AuditReadPolicyTest {
         var policy=new AuditReadPolicy(mock(PersonnelScopeService.class));
         assertTrue(policy.snapshot("employees","12","{\"address\":\"own-home\"}").contains("own-home"));
         assertFalse(policy.snapshot("employees","13","invalid private-home").contains("private-home"));
+    }
+
+    @Test void hrCannotUseLegacyEndpointForSharedCatalogHistory() {
+        var actor=new AuthenticatedAccount(1L,12L,"hr","HR");
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor,"",List.of()));
+        var db=mock(JdbcTemplate.class);
+        var controller=new G1AuditController(db,mock(DepartmentHeadAccessService.class),
+            new AuditReadPolicy(mock(PersonnelScopeService.class)));
+        assertEquals(HttpStatus.FORBIDDEN,assertThrows(ResponseStatusException.class,
+            ()->controller.history("positions",1L,0,10,()->"hr")).getStatusCode());
+        verifyNoInteractions(db);
+    }
+
+    @Test void adminSeesPrivateFieldsButNeverCredentialsInHistoricSnapshots() {
+        var actor=new AuthenticatedAccount(1L,12L,"admin","ADMIN");
+        SecurityContextHolder.getContext().setAuthentication(new UsernamePasswordAuthenticationToken(actor,"",List.of()));
+        var result=new AuditReadPolicy(mock(PersonnelScopeService.class)).snapshot("accounts","1",
+            "{\"address\":\"allowed-home\",\"password_hash\":\"hidden-hash\",\"nested\":{\"accessToken\":\"hidden-token\"}}");
+        assertTrue(result.contains("allowed-home"));
+        assertFalse(result.contains("hidden-hash"));
+        assertFalse(result.contains("hidden-token"));
+    }
+
+    @Test void hrScopeIsAppliedToBothCountAndPageEvenWithoutFilters() {
+        var db=mock(JdbcTemplate.class);
+        var access=mock(PersonnelAccessService.class);
+        var scope=mock(PersonnelScopeService.class);
+        var policy=new AuditReadPolicy(scope);
+        java.security.Principal principal=()->"hr";
+        when(access.manager(principal)).thenReturn(new PersonnelAccessService.Actor(2L,12L,"HR"));
+        when(scope.employees()).thenReturn(List.of(48L));
+        when(scope.departments()).thenReturn(List.of(10L));
+        String predicate=policy.hrFeedPredicate();
+        when(db.queryForObject(eq("SELECT COUNT_BIG(*) FROM dbo.audit_logs a WHERE "+predicate),
+            eq(Long.class),any(Object[].class))).thenReturn(0L);
+        var page=new AuditLogController(db,access,policy).search(null,null,null,null,null,null,0,10,principal);
+        assertEquals(0,page.getTotalElements());
+        verify(db).queryForList(contains(" WHERE "+predicate+" ORDER BY"),eq(0L),eq(10));
     }
 }

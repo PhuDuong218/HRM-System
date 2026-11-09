@@ -1,7 +1,4 @@
-<app-breadcrumb variant="group"/>
-<h1>{{ "Chấm công và đối chiếu" | translate }}</h1>
-
-<p class="page-description">{{ "Ghi nhận, đối soát và xác nhận giờ làm việc theo quyền quản lý." | translate }}</p>
+<app-page-header variant="directory" title="Chấm công và đối chiếu" description="Ghi nhận, đối soát và xác nhận giờ làm việc theo quyền quản lý." />
 
 @if (context) {
 
@@ -147,7 +144,7 @@
 
                 @if (tab==='manage') {
 
-                <div class="col-md-3"><label for="attendanceEmployee" class="form-label">{{ "Mã hoặc tên nhân viên" | translate }}</label><input id="attendanceEmployee" name="q" class="form-control" [(ngModel)]="q"
+                <div class="col-md-3"><label for="attendanceEmployee" class="form-label">{{ "Mã hoặc tên nhân viên" | translate }}</label><input hrmEmployeeSearch id="attendanceEmployee" name="q" class="form-control" [(ngModel)]="q"
                         maxlength="200" placeholder="Nhập một phần mã/tên: tr, th, tran, a..."></div>
 
                 <div class="col-md-3"><label for="attendanceDepartment" class="form-label">{{ "Phòng ban" | translate }}</label><select

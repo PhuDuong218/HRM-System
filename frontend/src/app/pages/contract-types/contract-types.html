@@ -1,15 +1,11 @@
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-  <div>
-    <app-breadcrumb variant="group"/>
-    <h1 class="mb-0">{{ "Loại hợp đồng" | translate }}</h1>
-  </div>
+<app-page-header variant="directory" title="Loại hợp đồng" description="Quản lý loại hợp đồng và điều kiện áp dụng.">
 
   <button type="button"
           class="btn btn-primary"
           [disabled]="loading || saving"
           (click)="openCreate()">
     {{ " Thêm loại hợp đồng " | translate }}</button>
-</div>
+</app-page-header>
 
 @if (message) {
   <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">

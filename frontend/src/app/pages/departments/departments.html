@@ -1,5 +1,5 @@
 <hrm-feedback [error]="error" [success]="message"/>
-<app-page-header eyebrow="HRM" [title]="&quot;Phòng ban và trưởng phòng&quot; | translate" [description]="&quot;Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.&quot; | translate"><a hrmBtn="secondary" hrmSize="md" routerLink="/department-catalog">{{ "Thêm / sửa phòng ban" | translate }}</a></app-page-header>
+<app-page-header variant="directory" [resultCount]="total" [busy]="loading" eyebrow="HRM" [title]="&quot;Phòng ban và trưởng phòng&quot; | translate" [description]="&quot;Bổ nhiệm người đứng đầu, thay người và tra cứu lịch sử đảm nhiệm.&quot; | translate"><a hrmBtn="secondary" hrmSize="md" routerLink="/department-catalog">{{ "Thêm / sửa phòng ban" | translate }}</a></app-page-header>
 
 
 <app-record-workspace [open]="!!selected" [busy]="saving" (dismiss)="clearSelection()"><section recordList class="surface mb-4">

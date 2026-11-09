@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {Pagination} from '../../shared/pagination';
 import { clockTiming } from '../../shared/clock-timing';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
@@ -16,7 +16,7 @@ import { Observable, finalize } from 'rxjs';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { OvertimeApiService, OtTab, OtContext, OtRow, OtStats, OtEmployee, OtDetail, OtFilter, OtBreak, OtWorkflow, OtRegistration, OtActual, OtWindow } from './overtime-api.service';
 
-@Component({selector:'app-overtime',standalone:true,imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
+@Component({selector:'app-overtime',standalone:true,imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,Pagination,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule,TranslatePipe],templateUrl:'./overtime.html',styleUrls:['../work-module.css','./overtime.css']})
 export class OvertimePage implements OnInit {
  private actionDialogInPage=inject(ActionDialogService);
 

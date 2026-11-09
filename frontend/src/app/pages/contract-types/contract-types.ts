@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -20,7 +20,7 @@ import { employmentApiError } from '../../shared/employment-api-error';
 @Component({
   selector: 'app-contract-types',
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,FormsModule,TranslatePipe],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule,TranslatePipe],
   templateUrl: './contract-types.html'
 })
 export class ContractTypesPage implements OnInit {

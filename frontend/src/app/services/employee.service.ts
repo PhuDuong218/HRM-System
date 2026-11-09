@@ -1,7 +1,7 @@
 import {SpringPage} from '../models/page.model';
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
-import { Observable, timeout } from 'rxjs';
+import { Observable, map, timeout } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 export interface Employee {
     version?: string;
@@ -56,6 +56,13 @@ export function errorMessage(e: unknown) { if (e instanceof HttpErrorResponse) {
 @Injectable({ providedIn: 'root' })
 export class EmployeeService {
     private http = inject(HttpClient);
+    suggest(keyword: string): Observable<Pick<Employee, 'employeeCode' | 'fullName'>[]> {
+        return this.list(true, 0, keyword, '', '').pipe(
+            map(result => (Array.isArray(result) ? result : result.content)
+                .map(({ employeeCode, fullName }) => ({ employeeCode, fullName })))
+        );
+    }
+
     list(admin: boolean, page: number, keyword: string, status: string, department: string, position = ""): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}), ...(position ? { positionId: position } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
     detail(id: number) { return this.http.get<Employee>(API_BASE_URL + `/employees/${id}/detail`).pipe(timeout(15000)); }
     audit(id:number,page=0){return this.http.get<{content:Record<string,unknown>[];number:number;totalPages:number}>(API_BASE_URL+'/g1/audit',{params:{targetTable:'employees',recordId:id,page,size:20}}).pipe(timeout(15000));}

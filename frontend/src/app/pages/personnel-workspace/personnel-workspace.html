@@ -1,17 +1,20 @@
 <hrm-feedback [error]="error" [success]="message"/>
-<app-page-header [title]="config.title">
+<app-page-header variant="directory" [resultCount]="total" [busy]="loading" [title]="config.title" [description]="config.description">
  @if(kind==='assignments'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="startTransfer()">{{ 'Điều chuyển nhân viên' | translate }}</button>}
  @if(kind==='certificates'||kind==='entitlements'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving||(kind==='certificates'&&!employeeId)" (click)="open(null)">{{ 'Thêm mới' | translate }}</button>}
  @if(kind==='requests'&&admin){<button hrmBtn="danger-outline" hrmSize="md" [disabled]="saving" (click)="execute()">{{ 'Thực thi nghỉ việc đến hạn' | translate }}</button>}
 </app-page-header>
 @if(kind==='requests'||kind==='entitlements'){<app-leave-workflow-guide [stage]="kind==='requests'?'requests':'balances'"/>}
+@if(kind==='audit'){
+ <p class="page-description">{{(admin?'Nhật ký đã ghi trên toàn hệ thống.':'Nhật ký của phòng ban và nhân viên trong phạm vi bạn đang phụ trách.') | translate}}</p>
+}
 
 
 @if(lookupError){<p [hrmNotice]="lookupError" noticeKind="error" class="alert alert-warning">{{lookupError | translate}} <button hrmBtn="secondary" hrmSize="sm" (click)="loadOptions()">{{ 'Tải lại lựa chọn' | translate }}</button></p>}
 <app-record-workspace [open]="!!mode" [busy]="saving" (dismiss)="close()">
  <section recordList class="surface">
  <div class="filter-bar">
-  @if(kind==='assignments'||kind==='certificates'||kind==='entitlements'){
+  @if(kind==='assignments'||kind==='certificates'||kind==='entitlements'||kind==='requests'){
    <label>{{ 'Nhân viên' | translate }}<select class="form-select" [(ngModel)]="employeeId" [disabled]="saving">
     <option [ngValue]="null">{{ 'Tất cả nhân viên' | translate }}</option>
     @for(e of options['employees'];track e['id']){<option [ngValue]="e['id']">{{e['label']}}</option>}
@@ -22,14 +25,13 @@
    <label>{{ 'Loại đơn' | translate }}<select class="form-select" [(ngModel)]="requestType" [disabled]="saving"><option value="">{{ 'Tất cả' | translate }}</option><option value="NGHI_PHEP">{{ 'Nghỉ phép' | translate }}</option><option value="NGHI_VIEC">{{ 'Nghỉ việc' | translate }}</option></select></label>
   }
   @if(kind==='audit'){
-   <label>{{ 'Đối tượng' | translate }}<select class="form-select" [(ngModel)]="table" [disabled]="saving" (change)="recordId=null">@for(t of tables;track t[0]){<option [value]="t[0]">{{t[1] | translate}}</option>}</select></label>
+   <label>{{ 'Đối tượng' | translate }}<select class="form-select" [(ngModel)]="table" [disabled]="saving" (change)="recordId=null"><option value="">{{ "Tất cả" | translate }}</option>@for(t of auditTables;track t[0]){<option [value]="t[0]">{{t[1] | translate}}</option>}</select></label>
    @if(table==='employees'){
-    <label>{{ 'Nhân viên' | translate }}<select class="form-select" [(ngModel)]="recordId" [disabled]="saving"><option [ngValue]="null">{{ 'Chọn nhân viên' | translate }}</option>@for(e of options['employees'];track e['id']){<option [ngValue]="e['id']">{{e['label']}}</option>}</select></label>
+    <label>{{ 'Nhân viên' | translate }}<select class="form-select" [(ngModel)]="recordId" [disabled]="saving"><option [ngValue]="null">{{ 'Tất cả nhân viên' | translate }}</option>@for(e of options['employees'];track e['id']){<option [ngValue]="e['id']">{{e['label']}}</option>}</select></label>
    }@else{<label>{{ 'ID bản ghi' | translate }}<input class="form-control" type="number" min="1" [(ngModel)]="recordId" [disabled]="saving"></label>}
-   @if(admin){
-    <label class="d-flex align-items-center gap-2"><input type="checkbox" [(ngModel)]="advancedAudit" [disabled]="saving">{{ 'Tra cứu mở rộng (ADMIN)' | translate }}</label>
-    @if(advancedAudit){<label>{{ 'ID tài khoản thực hiện' | translate }}<input class="form-control" type="number" min="1" [(ngModel)]="actorId"></label><label>{{ 'Từ thời điểm UTC' | translate }}<input class="form-control" type="datetime-local" [(ngModel)]="fromUtc"></label><label>{{ 'Đến trước thời điểm UTC' | translate }}<input class="form-control" type="datetime-local" [(ngModel)]="toUtc"></label>}
-   }
+   <label>{{ 'ID tài khoản thực hiện' | translate }}<input class="form-control" type="number" min="1" [(ngModel)]="actorId"></label>
+   <label>{{ 'Từ thời điểm UTC' | translate }}<input class="form-control" type="datetime-local" [(ngModel)]="fromUtc"></label>
+   <label>{{ 'Đến trước thời điểm UTC' | translate }}<input class="form-control" type="datetime-local" [(ngModel)]="toUtc"></label>
   }
 
   @if(kind==='assignments'||kind==='certificates'){
@@ -46,7 +48,7 @@
   <label>{{ 'Năm tốt nghiệp từ'  | translate }}<input type="number" min="1900" max="9999" class="form-control" [(ngModel)]="yearFrom"></label>
   <label>{{ 'Năm tốt nghiệp đến' | translate }}<input type="number" min="1900" max="9999" class="form-control" [(ngModel)]="yearTo"></label>
   }}<div class="filter-actions">
-   <button hrmBtn="primary" hrmSize="md" [disabled]="(kind==='audit'&&!advancedAudit&&(!recordId||recordId<1))||loading||saving" (click)="filter()">{{ 'Tìm kiếm' | translate }}</button>
+   <button hrmBtn="primary" hrmSize="md" [disabled]="loading||saving" (click)="filter()">{{ 'Tìm kiếm' | translate }}</button>
    <button hrmBtn="secondary" hrmSize="md" [disabled]="loading||saving" (click)="resetFilters()">{{ (kind==='audit'?'Xóa lọc':'Xem tất cả') | translate }}</button>
   </div>
  </div>
@@ -56,14 +58,14 @@
   @if(loading){<p role="status">{{ 'Đang tải dữ liệu…' | translate }}</p>}
   <div class="table-responsive"><table class="table align-middle">
    <thead><tr>@for(c of config.columns;track c){<th>{{(labels[c]||c) | translate}}</th>}<th>{{ 'Thao tác' | translate }}</th></tr></thead>
-   <tbody>@for(row of rows;track row[config.id]){<tr (appRowView)="open(row)" [rowViewDisabled]="saving||loading" [class.selected]="selected?.[config.id]===row[config.id]">@for(c of config.columns;track c){<td [attr.data-label]="(labels[c]||c) | translate">@if(c==='status'){<hrm-status-badge [code]="displayCode(row[c])" [label]="display(c,row[c])"/>}@else{ {{display(c,row[c]) | translate}} }</td>}<td [attr.data-label]="'Thao tác' | translate"><button hrmBtn="secondary" hrmSize="sm" [disabled]="saving" (click)="open(row)">{{ 'Chi tiết' | translate }}</button></td></tr>}@empty{<tr><td [attr.colspan]="config.columns.length+1">{{(loading?'Đang tải…':kind==='audit'&&!recordId?'Chọn đối tượng và ID bản ghi để xem lịch sử.':'Không có dữ liệu phù hợp. Hãy đổi bộ lọc hoặc tải lại.') | translate}}</td></tr>}</tbody>
+   <tbody>@for(row of rows;track row[config.id]){<tr (appRowView)="open(row)" [rowViewDisabled]="saving||loading" [class.selected]="selected?.[config.id]===row[config.id]">@for(c of config.columns;track c){<td [attr.data-label]="(labels[c]||c) | translate">@if(c==='actorName'){ {{auditActor(row)}} }@else if(c==='status'){<hrm-status-badge [code]="displayCode(row[c])" [label]="display(c,row[c])"/>}@else{ {{display(c,row[c]) | translate}} }</td>}<td [attr.data-label]="'Thao tác' | translate"><button hrmBtn="secondary" hrmSize="sm" [disabled]="saving" (click)="open(row)">{{ 'Chi tiết' | translate }}</button></td></tr>}@empty{<tr><td [attr.colspan]="config.columns.length+1">{{(loading?'Đang tải…':'Không có dữ liệu phù hợp. Hãy đổi bộ lọc hoặc tải lại.') | translate}}</td></tr>}</tbody>
   </table></div>
   <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" />
  </section>
  <section recordDetail class="surface">@if(kind==='certificates'&&mode==='detail'){<label>{{"Lý do thay đổi"|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label>}
   <h2>{{(mode==='edit'?(selected?'Cập nhật':'Thêm mới'):'Chi tiết') | translate}} {{config.title.toLowerCase() | translate}}</h2>
   @if(mode==='detail'){
-   <dl class="detail-grid">@for(entry of detailEntries();track entry[0]){<dt>{{labels[entry[0]] | translate}}</dt><dd>{{display(entry[0],entry[1]) | translate}}</dd>}</dl>
+   <dl class="detail-grid">@if(kind==="audit" && selected){<dt>{{ "Người thực hiện" | translate }}</dt><dd>{{auditActor(selected)}}</dd>}@for(entry of detailEntries();track entry[0]){@if(entry[0]!=="actorName"){<dt>{{labels[entry[0]] | translate}}</dt><dd>{{display(entry[0],entry[1]) | translate}}</dd>}}</dl>
    @if(kind==='certificates'&&primarySelected){<p class="primary-indicator">{{ 'Đang là trình độ chính' | translate }}</p><p class="selection-note">{{ 'Muốn thay đổi, hãy mở bằng cấp khác và chọn làm trình độ chính. Hệ thống giữ tối đa một trình độ chính cho mỗi nhân viên.' | translate }}</p>}
    @if(kind==='certificates'||kind==='entitlements'||kind==='assignments'){
     <div class="detail-actions">

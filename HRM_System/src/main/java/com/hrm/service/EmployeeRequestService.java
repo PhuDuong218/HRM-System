@@ -54,7 +54,13 @@ public class EmployeeRequestService {
         return rows.get(0);
     }
     public Map<String,Object> detail(long id,Principal p) {
-        access.actor(p);var row=required(id);if(approvalStages==null||!approvalStages.canRead(number(row,"employeeId"),p))access.ownerOrManager(p,number(row,"employeeId"));
+        var actor=access.actor(p);
+        var row=required(id);
+        long employee=number(row,"employeeId");
+        if(actor.employeeId()!=employee && (approvalStages==null||!approvalStages.canRead(employee,p))){
+            access.manager(p);
+            if("HR".equals(actor.role())) personnelScope.managedEmployee(employee);
+        }
         if(approvalStages!=null)row.put("approvalStage",approvalStages.stage(id));
         if(leaveRules!=null)row.put("evidenceReference",leaveRules.evidence(id));
         if(notice!=null&&"NGHI_VIEC".equals(row.get("requestType")))row.put("noticeWarning",notice.warning(number(row,"employeeId"),Instant.parse(row.get("submittedAt").toString()).atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate(),LocalDate.parse(row.get("requestedLastWorkingDate").toString())));
@@ -63,15 +69,19 @@ public class EmployeeRequestService {
         return row;
     }
     public Page<Map<String,Object>> list(boolean mine,String status,String type,int page,int size,Principal p) {
+        return list(mine,status,type,page,size,p,null);
+    }
+    public Page<Map<String,Object>> list(boolean mine,String status,String type,int page,int size,Principal p,Long employeeId) {
         var actor=mine?access.actor(p):access.manager(p);
         if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI","DA_HUY").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
         if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
         String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.status='DA_DUYET' AND r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
         if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
-        Object[] params={mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0};
-        long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,params);
-        var args=new ArrayList<Object>(Arrays.asList(params));args.add((long)page*size);args.add(size);
+        var args=new ArrayList<Object>(Arrays.asList(mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0));
+        if(!mine && employeeId!=null){where+=" AND r.employee_id=?";args.add(employeeId);}
+        long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,args.toArray());
+        args.add(pageable.getOffset());args.add(pageable.getPageSize());
         var rows=jdbc.queryForList(SELECT+where+" ORDER BY r.submitted_at DESC,r.request_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",args.toArray());
         return new PageImpl<>(rows,pageable,total);
     }
@@ -116,7 +126,9 @@ public class EmployeeRequestService {
         if(!"DANG_LAM".equals(rows.get(0))) throw PersonnelWorkflowSupport.conflict("Nhân viên đã nghỉ việc");
     }
     private void pending(Map<String,Object> row,PersonnelAccessService.Actor actor) {
-        if(number(row,"employeeId")==actor.employeeId()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự duyệt/từ chối đơn");
+        long employee=number(row,"employeeId");
+        if("HR".equals(actor.role())) personnelScope.managedEmployee(employee);
+        if(employee==actor.employeeId()) throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự duyệt/từ chối đơn");
         if(!"CHO_DUYET".equals(row.get("status"))||row.get("withdrawnAt")!=null) throw PersonnelWorkflowSupport.conflict("Đơn đã được xử lý hoặc đã rút");
     }
     @Transactional
@@ -143,6 +155,7 @@ public class EmployeeRequestService {
             if(input.approvedLastWorkingDate()!=null) throw PersonnelWorkflowSupport.bad("Đơn phép không có ngày nghỉ việc");
             long type=number(before,"leaveTypeId");
             var start=LocalDateTime.parse(before.get("leaveStart").toString());var end=LocalDateTime.parse(before.get("leaveEnd").toString());
+            if(leaveRules!=null) leaveRules.eligibility(employee,type,leaveRules.evidence(id),start.toLocalDate());
             var charges=validateLeave(employee,type,start,end,id);
             for(var c:charges) jdbc.update("INSERT dbo.g2_leave_allocations(request_id,schedule_id,entitlement_id,charged_hours) VALUES(?,?,?,?)",
                 id,c.schedule(),c.entitlement(),c.hours());

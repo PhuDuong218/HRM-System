@@ -1,6 +1,6 @@
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {RowViewDirective} from '../../shared/row-view.directive';
 import {Pagination} from '../../shared/pagination';
 import { Component, OnInit, inject } from '@angular/core';
@@ -12,7 +12,7 @@ import { PayrollPeriod, PayrollBatch, PayrollDetailView } from '../../models/pay
 @Component({
   selector: 'app-payroll',
   standalone: true,
-  imports:[HrmNotice,Breadcrumb,RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,PageHeader,RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payroll.html',
   styleUrl: './payroll.css'
 })

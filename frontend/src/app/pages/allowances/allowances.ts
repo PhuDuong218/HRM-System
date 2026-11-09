@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { employmentApiError } from '../../shared/employment-api-error';
@@ -30,7 +30,7 @@ type AssignMode = 'create' | 'edit' | 'change' | 'end';
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })

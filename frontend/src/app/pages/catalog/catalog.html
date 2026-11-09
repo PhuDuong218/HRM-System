@@ -1,5 +1,5 @@
 <hrm-feedback [error]="error" [success]="message"/>
-<app-page-header [title]="config.title"><button hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="open(null)">{{ "Thêm mới" | translate }}</button></app-page-header>
+<app-page-header variant="directory" [resultCount]="total" [busy]="loading" [title]="config.title" [description]="config.description"><button hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="open(null)">{{ "Thêm mới" | translate }}</button></app-page-header>
 @if(config.paid){<app-leave-workflow-guide stage="types"/>}
 
 <app-record-workspace [open]="!!mode" [busy]="saving" (dismiss)="close()">

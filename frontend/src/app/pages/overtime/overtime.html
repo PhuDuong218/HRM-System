@@ -1,7 +1,6 @@
-<header class="ot-header">
-  <div><app-breadcrumb variant="group"/><h1>{{ 'Quản lý tăng ca và xác nhận OT' | translate }}</h1><p>{{ 'Theo dõi đăng ký, phê duyệt và giờ tăng ca thực tế trong cùng một không gian.' | translate }}</p></div>
+<app-page-header variant="directory" title="Quản lý tăng ca và xác nhận OT" description="Theo dõi đăng ký, phê duyệt và giờ tăng ca thực tế.">
   @if (context) { <span class="ot-scope">{{ (context.role==='ADMIN'?'Toàn trung tâm':context.manage?'Theo phạm vi được giao':'OT cá nhân') | translate }}</span> }
-</header>
+</app-page-header>
 @if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning" role="alert">{{ error }}</div> }
 @if (actionError && !panelOpen) { <div [hrmNotice]="actionError" noticeKind="error" class="alert alert-warning" role="alert">{{ actionError }}</div> }
 @if (feedback) { <div [hrmNotice]="feedback" noticeKind="success" class="alert alert-success" role="status">{{ feedback }}</div> }
@@ -37,7 +36,7 @@
           @if (context.mine && context.manage) { <div class="col-md-4"><label for="inboxScope" class="form-label">{{ 'Phạm vi yêu cầu' | translate }}</label><select id="inboxScope" name="mine" class="form-select" [(ngModel)]="inboxMine"><option [ngValue]="false">{{ 'Cần xử lý trong phạm vi' | translate }}</option><option [ngValue]="true">{{ 'Yêu cầu của tôi' | translate }}</option></select></div> }
         } @else {
           @if (tab!=='mine') {
-            <div class="col-md-3"><label for="otEmployee" class="form-label">{{ 'Mã hoặc tên nhân viên' | translate }}</label><input id="otEmployee" name="q" class="form-control" maxlength="200" [(ngModel)]="q" placeholder="Ví dụ: tr, tran, EMP..."></div>
+            <div class="col-md-3"><label for="otEmployee" class="form-label">{{ 'Mã hoặc tên nhân viên' | translate }}</label><input hrmEmployeeSearch id="otEmployee" name="q" class="form-control" maxlength="200" [(ngModel)]="q" placeholder="Ví dụ: tr, tran, EMP..."></div>
             <div class="col-md-3"><label for="otDepartment" class="form-label">{{ 'Phòng ban' | translate }}</label><select id="otDepartment" name="department" class="form-select" [(ngModel)]="departmentId"><option value="">{{ 'Tất cả trong phạm vi' | translate }}</option>@for (d of departments; track d.departmentId) { <option [value]="d.departmentId">{{ d.departmentName }}</option> }</select></div>
           }
           <div class="col-md-3"><label for="otStatus" class="form-label">{{ 'Trạng thái OT' | translate }}</label><select id="otStatus" name="status" class="form-select" [(ngModel)]="status"><option value="">{{ 'Tất cả' | translate }}</option><option value="CHO_DUYET">{{ 'Chờ duyệt' | translate }}</option><option value="DA_DUYET">{{ 'Đã duyệt' | translate }}</option><option value="TU_CHOI">{{ 'Từ chối' | translate }}</option><option value="DA_HUY">{{ 'Đã hủy' | translate }}</option></select></div>

@@ -1,11 +1,7 @@
-<app-breadcrumb variant="group"/>
-<div class="d-flex justify-content-between align-items-center mb-3">
-  <h1 class="h3 mb-0">{{ "Quản lý ca làm việc" | translate }}</h1>
-  <div class="d-flex gap-2">
+<app-page-header variant="directory" title="Quản lý ca làm việc" description="Thiết lập khung giờ và quy tắc cho các ca làm việc.">
     <button type="button" class="btn btn-outline-primary" [disabled]="busy" (click)="load()">{{ loading ? 'Đang tải...' : 'Làm mới' }}</button>
     <button type="button" class="btn btn-primary" [disabled]="busy" (click)="openCreate()">{{ "Thêm mới" | translate }}</button>
-  </div>
-</div>
+  </app-page-header>
 @if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-warning" role="alert">{{ error }}</div> }
 @if (success) { <div [hrmNotice]="success" noticeKind="success" class="alert alert-success" role="status">{{ success }}</div> }
 

@@ -9,6 +9,14 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class LeaveEntitlementRouteScopeTest {
+ @Test void readingByIdAlsoChecksOwnersScope(){
+  var data=mock(LeaveEntitlementService.class);var scope=mock(PersonnelScopeService.class);
+  var controller=new LeaveEntitlementController(data,mock(PersonnelAccessService.class),mock(PersonnelCatalogService.class));
+  ReflectionTestUtils.setField(controller,"scope",scope);
+  when(data.getById(9L)).thenReturn(new com.hrm.dto.LeaveEntitlementDTO(9L,41L,null,1L,null,null,null,null));
+  doThrow(new ResponseStatusException(HttpStatus.FORBIDDEN)).when(scope).employee(41L,true);
+  assertEquals(HttpStatus.FORBIDDEN,assertThrows(ResponseStatusException.class,()->controller.getById(9L,()->"hr")).getStatusCode());
+ }
  @Test void hrCannotReadAnotherDepartmentsEntitlements(){
   var data=mock(LeaveEntitlementService.class);var scope=mock(PersonnelScopeService.class);
   var controller=new LeaveEntitlementController(data,mock(PersonnelAccessService.class),mock(PersonnelCatalogService.class));

@@ -44,6 +44,7 @@ public class RequestApprovalStages {
   if("LEGACY".equals(status)||"SKIPPED".equals(status))return null;
   if("PENDING".equals(status)){
    long current=department(employee);
+   if(((Number)stage.get("departmentId")).longValue()!=current)return "Nhân viên đã đổi phòng; cần rút và nộp lại đơn để trưởng phòng mới xử lý";
    long heads=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_assignments a JOIN dbo.positions p ON p.position_id=a.position_id JOIN dbo.employees e ON e.employee_id=a.employee_id WHERE a.department_id=? AND p.position_code='TRUONG_PHONG' AND e.employment_status='DANG_LAM' AND a.effective_from<=? AND (a.effective_to IS NULL OR a.effective_to>?)",Long.class,current,support.today(),support.today());
    if(heads==0)return null;
   }
@@ -56,6 +57,7 @@ public class RequestApprovalStages {
   if("LEGACY".equals(status)||"SKIPPED".equals(status))return;
   if("PENDING".equals(status)&&actor!=null){
    long current=department(employee);
+   if(((Number)stage.get("departmentId")).longValue()!=current)throw conflict("Nhân viên đã đổi phòng; người nộp cần rút và nộp lại đơn để trưởng phòng mới xử lý");
    long heads=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_assignments a JOIN dbo.positions p ON p.position_id=a.position_id JOIN dbo.employees e ON e.employee_id=a.employee_id WHERE a.department_id=? AND p.position_code='TRUONG_PHONG' AND e.employment_status='DANG_LAM' AND a.effective_from<=? AND (a.effective_to IS NULL OR a.effective_to>?)",Long.class,current,support.today(),support.today());
    if(heads==0){db.update("UPDATE dbo.personnel_request_approval_stages SET stage_status='SKIPPED',decided_by=?,decided_at=SYSUTCDATETIME(),note=? WHERE request_id=?",actor,"Không còn trưởng phòng hiện tại; chuyển HR/ADMIN duyệt cuối",request);support.audit(actor,"REQUEST_HEAD_SKIP","employee_requests",request,"Nhiệm kỳ trưởng phòng không còn hiệu lực",stage,stage(request));return;}
   }

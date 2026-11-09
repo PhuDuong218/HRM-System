@@ -23,7 +23,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
   private selectionChanged = new Subject<void>();
   rows: Department[] = []; selected: Department | null = null;
   heads: Head[] = []; candidates: Assignment[] = []; positions: Position[] = [];
-  page = 0; pages = 0; historyPage = 0; historyPages = 0; candidatePage = 0; candidatePages = 0;
+  page = 0; pages = 0; total = 0; historyPage = 0; historyPages = 0; candidatePage = 0; candidatePages = 0;
   candidateTotal = 0;
 
   positionsLoading = false; positionsError = '';
@@ -44,7 +44,7 @@ export class DepartmentsPage extends ManagementPageBase implements OnInit, OnDes
     this.loading = true; this.error = '';
     this.api.list(page).pipe(takeUntil(this.destroyed)).subscribe({
       next: result => {
-        this.rows = result.content; this.pages = result.totalPages; this.page = page; this.loading = false;
+        this.rows = result.content; this.pages = result.totalPages; this.total = result.totalElements; this.page = page; this.loading = false;
         const current = this.selected;
         if (current) {
           this.selected = this.rows.find(d => d.departmentId === current.departmentId) ?? null;

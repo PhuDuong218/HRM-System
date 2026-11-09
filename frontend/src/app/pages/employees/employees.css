@@ -4,3 +4,21 @@
 .field-feedback{font-weight:400;line-height:1.5}
 .editor .is-invalid{border:1px solid #b42318;background-image:none}
 .editor .is-invalid:focus{box-shadow:0 0 0 3px rgb(180 35 24 / 15%)}
+
+.employee-directory .employee-filters { grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr)); }
+
+.employee-identity, .employee-profile { display: flex; gap: 12px; align-items: center; min-width: 0; }
+.employee-avatar {
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.5rem;
+  height: 2.5rem;
+  border-radius: 12px;
+  background: var(--bs-primary-bg-subtle, #e2effb);
+  color: var(--bs-primary-text-emphasis, #004581);
+  font-weight: 700;
+}
+
+.employee-profile { padding: 16px; margin-bottom: 16px; border-radius: 12px; background: var(--bs-tertiary-bg, #eef4fa); }
+.employee-profile h3 { margin: 0 0 4px; overflow-wrap: anywhere; }
+.employee-profile p { margin: 0; color: var(--bs-secondary-color); }

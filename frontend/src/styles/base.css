@@ -1,4 +1,6 @@
 body{background:var(--hrm-canvas);color:var(--hrm-text);font-family:var(--hrm-font);font-size:var(--hrm-font-md);line-height:var(--hrm-leading)}
+:where(button,input,select,textarea,optgroup){font-family:inherit}
+pre,code,kbd,samp{font-family:var(--hrm-font)}
 *,*::before,*::after{box-sizing:border-box}
 app-admin-layout :is(h1,.h3){font-size:var(--hrm-font-title);line-height:1.333;font-weight:600;letter-spacing:normal}
 app-admin-layout h2{font-size:var(--hrm-font-section);line-height:1.444;font-weight:600}

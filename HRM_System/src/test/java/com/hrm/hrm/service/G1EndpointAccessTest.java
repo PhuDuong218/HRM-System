@@ -43,6 +43,7 @@ class G1EndpointAccessTest {
         security.register(MethodSecurity.class);
         security.registerBean(PositionService.class,()->positions);
         security.registerBean(DepartmentHeadAccessService.class,()->access);
+        security.registerBean(PersonnelScopeService.class,()->mock(PersonnelScopeService.class));
         security.registerBean(CatalogAuditService.class,()->catalogs);
         security.registerBean(PositionController.class,()->new PositionController(positions,access,catalogs));
         security.refresh();
@@ -67,6 +68,7 @@ class G1EndpointAccessTest {
 
     @Test void anonymousCannotReadOrWriteAnyG1CatalogOrAssignment() throws Exception {
         when(access.requireManager(null)).thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        when(access.requireReader(null)).thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         for(var request:requests()) mvc.perform(request).andExpect(status().isUnauthorized());
         verifyNoInteractions(departments,positions,catalogs,assignments,transfers,jdbc);
     }
@@ -75,6 +77,7 @@ class G1EndpointAccessTest {
         org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
             new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("employee-test","",List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_EMPLOYEE"))));
         when(access.requireManager(employee)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+        when(access.requireReader(employee)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
         for(var request:requests()) mvc.perform(request.principal(employee)).andExpect(status().isForbidden());
         verifyNoInteractions(departments,positions,catalogs,assignments,transfers,jdbc);
     }

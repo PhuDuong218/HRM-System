@@ -2,7 +2,7 @@ import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
-import {Breadcrumb} from '../../shared/breadcrumb';
+import {PageHeader} from '../../shared/page-header';
 import {Pagination} from '../../shared/pagination';
 import {PersonalCalendarComponent} from '../../shared/personal-calendar';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
@@ -31,7 +31,7 @@ interface ShiftLookup { text: string; selected: ShiftOption | null; error: strin
 const employeeLookup = (): EmployeeLookup => ({ text: '', selected: null, options: [], error: '', loading: false });
 const shiftLookup = (): ShiftLookup => ({ text: '', selected: null, error: '' });
 
-@Component({ selector: 'app-schedules', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,Breadcrumb,Pagination,PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
+@Component({ selector: 'app-schedules', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,Pagination,PersonalCalendarComponent,DetailFocusDirective,RowViewDirective,OvertimeCalendarComponent, CommonModule, FormsModule, TranslatePipe], templateUrl: './schedules.html', styleUrl: '../work-module.css' })
 export class SchedulesPage implements OnInit {
  private actionDialogInPage=inject(ActionDialogService);
 
