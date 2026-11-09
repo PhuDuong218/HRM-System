@@ -111,9 +111,10 @@
                   <td [attr.data-label]="'Trạng thái' | translate">{{ statusLabels[row.approvalStatus] | translate }}</td>
                   <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                     @if (row.approvalStatus === 'CHO_DUYET') {
-                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving"
+                      @if(row.reviewBlocker){<p class="small text-muted mb-2">{{row.reviewBlocker}}</p>}
+                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'approve')">{{ "Duyệt" | translate }}</button>
-                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving"
+                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'reject')">{{ "Từ chối" | translate }}</button>
                       <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving"
                               (click)="openEdit(row)">{{ "Sửa" | translate }}</button>
@@ -289,9 +290,10 @@
           <dt class="col-sm-5">{{ "Thời điểm xử lý" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedAt || '—' }}</dd>
         </dl>
         @if (decision.approvalStatus === 'CHO_DUYET') {
+          @if(decision.reviewBlocker){<p class="alert alert-info">{{decision.reviewBlocker}}</p>}
           <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-success" [disabled]="saving" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
-            <button type="button" class="btn btn-outline-danger" [disabled]="saving" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
+            <button type="button" class="btn btn-outline-success" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
             <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="openEdit(decision)">{{ "Sửa" | translate }}</button>
             <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Xóa" | translate }}</button>
           </div>

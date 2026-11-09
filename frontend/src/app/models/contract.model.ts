@@ -52,7 +52,7 @@ export interface ContractCreateRequest {
   probationGroup?: ProbationGroup | null;
   employeeId: number;
   contractTypeId: number;
-  contractNumber: string;
+  contractNumber?: string;
   signedDate: string;
   startDate: string;
   endDate: string | null;

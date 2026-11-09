@@ -175,6 +175,8 @@ export class DecisionsPage implements OnInit {
   }
 
   private fail(error: HttpErrorResponse, fallback: string): string {
+    const detail=error.error?.loi_chi_tiet??error.error?.detail;
+    if(error.status===403&&typeof detail==='string'&&detail.trim())return detail;
     return employmentApiError(error, fallback);
   }
 
@@ -393,6 +395,7 @@ export class DecisionsPage implements OnInit {
 
   openAction(row: DecisionResponse, mode: Action): void {
     if (this.saving || row.approvalStatus !== 'CHO_DUYET') return;
+    if(row.reviewBlocker){this.error=row.reviewBlocker;return;}
     this.actionTarget = row;
     this.actionMode = mode;
     this.actionReason = '';
@@ -410,6 +413,7 @@ export class DecisionsPage implements OnInit {
   submitAction(): void {
     const target = this.actionTarget;
     if (!target || this.saving) return;
+    if(target.reviewBlocker){this.error=target.reviewBlocker;return;}
     const reason = this.actionReason.trim();
     if (!reason) {
       this.error = 'Vui lòng nhập lý do.';

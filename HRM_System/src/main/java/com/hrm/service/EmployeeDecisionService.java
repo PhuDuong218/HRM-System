@@ -124,9 +124,8 @@ public class EmployeeDecisionService {
         var actor = actors.requireManager();
         var d = lock(id);
         pending(d);
-        if (Objects.equals(actor.accountId(), d.getIssuedBy()) ||
-                Objects.equals(actor.employeeId(), d.getEmployee().getEmployeeId()))
-            throw error(HttpStatus.FORBIDDEN, "Không tự xử lý quyết định do mình ban hành hoặc áp dụng cho mình");
+        String blocker=reviewBlocker(d,actor);
+        if(blocker!=null)throw error(HttpStatus.FORBIDDEN,blocker);
         DecisionRules.validate(d.getDecisionType(), d.getPayrollEffect(), d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
         if (approve && d.getPayrollEffect() != DecisionPayrollEffect.NONE) {
             policy.requireConfirmed();
@@ -197,11 +196,17 @@ public class EmployeeDecisionService {
             throw error(HttpStatus.CONFLICT, "Chỉ sửa/xóa/xử lý quyết định đang CHO_DUYET");
     }
 
+    private String reviewBlocker(EmployeeDecision d,DecisionActor actor){
+        if(d.getApprovalStatus()!=DecisionApprovalStatus.CHO_DUYET)return "Quyết định đã xử lý";
+        if(Objects.equals(actor.accountId(),d.getIssuedBy()))return "Bạn là người ban hành quyết định này. Cần tài khoản ADMIN/HR khác có thẩm quyền duyệt hoặc từ chối.";
+        if(Objects.equals(actor.employeeId(),d.getEmployee().getEmployeeId()))return "Quyết định áp dụng cho chính bạn. Cần người xử lý độc lập.";
+        return null;
+    }
     private DecisionResponse dto(EmployeeDecision d) {
         return new DecisionResponse(d.getDecisionId(), d.getEmployee().getEmployeeId(), d.getDecisionNumber(),
                 d.getDecisionType(), d.getContent(), d.getIssuedDate(), d.getIssuedBy(), d.getApprovalStatus(),
                 d.getApprovedBy(), d.getApprovedAt(), d.getPayrollEffect(), d.getAmount(), d.getApplyDate(),
-                d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
+                d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths(),reviewBlocker(d,actors.requireManager()));
     }
 
     private BusinessException error(HttpStatus s, String m) {
