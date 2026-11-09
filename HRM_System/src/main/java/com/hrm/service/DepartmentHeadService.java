@@ -20,6 +20,8 @@ import com.hrm.util.PagingUtils;
 @Service
 @Transactional(readOnly=true)
 public class DepartmentHeadService {
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
+    @org.springframework.beans.factory.annotation.Autowired private com.hrm.repository.EmployeeRepository employees;
     private final JdbcTemplate jdbc;
     private final AssignmentGuardService guard;
     private final DepartmentHeadAccessService access;
@@ -145,11 +147,13 @@ public class DepartmentHeadService {
     }
 
     private void change(Assignment old, Long position, LocalDate date, Long actor) {
+        employeeCodes.track(old.employeeId(),old.positionId());
         jdbc.update("UPDATE dbo.employee_assignments SET effective_to=?,updated_at=SYSUTCDATETIME(),updated_by=? WHERE assignment_id=?",date,actor,old.id());
         jdbc.update("""
             INSERT dbo.employee_assignments(employee_id,department_id,position_id,effective_from,created_by)
             VALUES (?,?,?,?,?)
             """,old.employeeId(),old.departmentId(),position,date,actor);
+        employeeCodes.sync(employees.findByIdForUpdate(old.employeeId()).orElseThrow(),actor,"Thay đổi chức vụ trưởng phòng");
     }
 
     private void requireDepartment(Long id, boolean active) {

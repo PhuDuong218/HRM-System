@@ -18,6 +18,7 @@ const labels: Readonly<Record<string, string>> = {
   EMPLOYEE_SUPPLEMENT_UPDATE: 'Cập nhật thông tin bổ sung của nhân viên',
   EMPLOYEE_ASSIGNMENT_REPAIR: 'Đối chiếu phân công',
   EMPLOYEE_TRANSFER: 'Điều chuyển nhân viên',
+  EMPLOYEE_POSITION_CODE_CHANGED: 'Đổi chức vụ và mã nhân viên',
   EMPLOYEE_REHIRE: 'Tiếp nhận lại nhân viên',
   EMPLOYEE_TERMINATE: 'Xử lý nghỉ việc',
   EMPLOYEE_TERMINATION_DECISION: 'Lập quyết định thôi việc',

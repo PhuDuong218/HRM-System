@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 
 public record DecisionRequest(
         @NotNull @Positive Long employeeId,
-        @NotBlank @Size(max = 50) @Pattern(regexp = "[A-Za-z0-9_-]+") String decisionNumber,
+        @Size(max = 50) @Pattern(regexp = "[A-Za-z0-9_-]*") String decisionNumber,
         @NotNull DecisionType decisionType,
         @NotBlank @Size(max = 2000) String content,
         @NotNull @PastOrPresent LocalDate issuedDate,

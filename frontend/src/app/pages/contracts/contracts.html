@@ -3,12 +3,13 @@
   <button
     type="button"
     class="btn btn-primary"
-    [disabled]="saving || typesLoading"
+    [hidden]="mine" [disabled]="saving || typesLoading"
     (click)="openCreate()"
   >
     {{language.t("Tạo hợp đồng")}}
   </button></app-page-header>
 
+@if(mine&&canViewMine){<app-my-employment kind="contracts" (back)="mine=false"/>} @else {
 @if (message) {
 <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{(message) | translate}}</div>
 }
@@ -45,10 +46,12 @@
         <select
           id="employee-id"
           #employee
+          (change)="selectPersonal(employee.value)"
           class="form-select"
           [disabled]="employeesLoading"
         >
           <option value="">{{language.t("Tất cả nhân viên")}}</option>
+          @if(canViewMine){<option value="mine">Hợp đồng của tôi</option>}
           @for (person of employees; track person.employeeId) {
           <option [value]="person.employeeId">
             {{person.employeeCode}} — {{person.fullName}}
@@ -214,7 +217,7 @@
               {{language.t("Loại hợp đồng")}}
             </label>
             <select
-              id="create-type" #createTypeRef (change)="createSelectedKind = contractKind(createTypeRef.value)"
+              id="create-type" #createTypeRef (change)="createSelectedKind = contractKind(createTypeRef.value); syncContractEnd(createTypeRef.form)"
               name="contractTypeId"
               required
               class="form-select"
@@ -235,15 +238,7 @@
             <label for="create-number" class="form-label">
               {{language.t("Số hợp đồng")}}
             </label>
-            <input
-              id="create-number"
-              name="contractNumber"
-              maxlength="50"
-              pattern="[A-Za-z0-9\/_\-]+"
-              required
-              class="form-control"
-              [disabled]="saving"
-            />
+            <input id="create-number" class="form-control" readonly [value]="numberPreview(createTypeRef.value)" aria-label="Số hợp đồng được hệ thống cấp khi lưu" />
           </div>
 
           <div class="col-md-6">
@@ -265,7 +260,7 @@
               {{language.t("Ngày bắt đầu")}}
             </label>
             <input
-              id="create-start"
+              id="create-start" #createStartRef (input)="syncContractEnd(createStartRef.form)"
               name="startDate"
               type="date"
               required
@@ -284,10 +279,10 @@
               type="date"
               class="form-control"
               [disabled]="saving"
-            />
+             [readOnly]="createSelectedKind==='XAC_DINH'||createSelectedKind==='KHONG_XAC_DINH'" />
 
             <div class="form-text">
-              {{language.t("Để trống nếu không xác định thời hạn.")}}
+              Tự tính theo số tháng của loại hợp đồng xác định thời hạn; để trống với loại không xác định thời hạn.
             </div>
           </div>
 
@@ -759,14 +754,7 @@
             <label for="renew-number" class="form-label">
               {{language.t("Số hợp đồng mới")}}
             </label>
-            <input
-              id="renew-number"
-              name="contractNumber"
-              class="form-control"
-              maxlength="50"
-              required
-              [disabled]="saving"
-            />
+            <input id="renew-number" class="form-control" readonly [value]="numberPreview(renewTypeRef.value)" aria-label="Số hợp đồng được hệ thống cấp khi lưu" />
           </div>
 
           <div class="col-md-6">
@@ -774,7 +762,7 @@
               {{language.t("Loại hợp đồng mới")}}
             </label>
             <select
-              id="renew-type" #renewTypeRef (change)="renewSelectedKind = contractKind(renewTypeRef.value)"
+              id="renew-type" #renewTypeRef (change)="renewSelectedKind = contractKind(renewTypeRef.value); syncContractEnd(renewTypeRef.form)"
               name="contractTypeId"
               class="form-select"
               required
@@ -809,7 +797,7 @@
               {{language.t("Ngày bắt đầu mới")}}
             </label>
             <input
-              id="renew-start"
+              id="renew-start" #renewStartRef (input)="syncContractEnd(renewStartRef.form)"
               name="startDate"
               type="date"
               class="form-control"
@@ -828,9 +816,9 @@
               type="date"
               class="form-control"
               [disabled]="saving"
-            />
+             [readOnly]="renewSelectedKind==='XAC_DINH'||renewSelectedKind==='KHONG_XAC_DINH'" />
             <small
-              >{{language.t("Để trống nếu không xác định thời hạn.")}}</small
+              >Tự tính theo số tháng của loại hợp đồng xác định thời hạn; để trống với loại không xác định thời hạn.</small
             >
           </div>
 
@@ -965,3 +953,5 @@
   </div>
 </app-record-workspace>
 
+
+}

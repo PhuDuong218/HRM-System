@@ -43,7 +43,7 @@ class EmployeeRequestWorkflowIntegrationTest {
     Principal admin,worker,stranger;
     @BeforeEach void setup() throws Exception {
         assertEquals("hrm_test",jdbc.queryForObject("SELECT DB_NAME()",String.class));
-        for(String migration:List.of("005_request_approval_stages.sql","006_leave_request_rules.sql","007_qualification_validity_and_rank.sql","008_direct_termination_decisions.sql","009_leave_eligibility_and_accrual.sql","010_leave_cancellation_schedule_guard.sql","011_employee_optional_gender.sql","012_schedule_breaks_for_partial_leave.sql","013_leave_accrual_department_scope.sql"))jdbc.execute(java.nio.file.Files.readString(java.nio.file.Path.of("database/migrations/"+migration)));
+        for(String migration:List.of("005_request_approval_stages.sql","006_leave_request_rules.sql","007_qualification_validity_and_rank.sql","008_direct_termination_decisions.sql","009_leave_eligibility_and_accrual.sql","010_leave_cancellation_schedule_guard.sql","011_employee_optional_gender.sql","012_schedule_breaks_for_partial_leave.sql","013_leave_accrual_department_scope.sql","022_leave_request_numbers.sql"))jdbc.execute(java.nio.file.Files.readString(java.nio.file.Path.of("database/migrations/"+migration)));
         now.set(Instant.parse("2026-11-10T02:00:00Z"));
         when(clock.instant()).thenAnswer(i->now.get());when(clock.getZone()).thenReturn(ZoneId.of("Asia/Ho_Chi_Minh"));
         when(clock.withZone(any())).thenAnswer(i->Clock.fixed(now.get(),i.getArgument(0)));

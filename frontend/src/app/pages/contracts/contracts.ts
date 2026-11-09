@@ -1,3 +1,5 @@
+import {MyEmployment} from '../../shared/my-employment';
+import {AuthService} from '../../services/auth.service';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActivatedRoute} from '@angular/router';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
@@ -50,11 +52,16 @@ type SalaryTermDraft = {
 @Component({
   selector: "app-contracts",
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
+  imports:[MyEmployment,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,Pagination, RecordWorkspace, DecimalPipe, TranslatePipe, ContractWarnings],
   styleUrl: "./contracts.css",
   templateUrl: "./contracts.html",
 })
 export class ContractsPage implements OnInit {
+ readonly auth=inject(AuthService);
+ mine=false;
+ get canViewMine(){return this.auth.profile()?.role==='HR';}
+ selectPersonal(value:string){if(value==='mine'&&this.canViewMine)this.mine=true;}
+
  private actionDialogInPage=inject(ActionDialogService);
 
   @ViewChild("createFormPanel") private createFormPanel?: ElementRef<HTMLElement>;
@@ -248,6 +255,22 @@ export class ContractsPage implements OnInit {
   typesLoading = false;
   createSelectedKind = '';
   renewSelectedKind = '';
+  numberPreview(value:string):string {const type=[...this.activeTypes,...this.renewTypes].find(t=>t.contractTypeId===Number(value));return type?type.typeCode.toUpperCase()+'-… (tự cấp khi lưu)':'Tự cấp sau khi chọn loại hợp đồng';}
+  syncContractEnd(form:HTMLFormElement|null):void {
+    if(!form)return;
+    const typeInput=form.elements.namedItem('contractTypeId') as HTMLSelectElement|null;
+    const startInput=form.elements.namedItem('startDate') as HTMLInputElement|null;
+    const endInput=form.elements.namedItem('endDate') as HTMLInputElement|null;
+    const type=[...this.activeTypes,...this.renewTypes].find(t=>t.contractTypeId===Number(typeInput?.value));
+    if(!endInput)return;
+    if(type?.termKind==='XAC_DINH'&&type.maxMonths&&startInput?.value){
+      const [year,month,day]=startInput.value.split('-').map(Number);
+      const target=new Date(0);target.setUTCHours(0,0,0,0);target.setUTCFullYear(year,month-1+type.maxMonths,1);
+      const last=new Date(target);last.setUTCMonth(last.getUTCMonth()+1,0);
+      target.setUTCDate(Math.min(day,last.getUTCDate()));target.setUTCDate(target.getUTCDate()-1);
+      endInput.value=target.toISOString().slice(0,10);
+    }else{endInput.value='';}
+  }
   contractKind(value: string): string {
     return [...this.activeTypes,...this.renewTypes].find(t=>t.contractTypeId===Number(value))?.termKind ?? '';
   }
@@ -335,6 +358,7 @@ export class ContractsPage implements OnInit {
     this.focusPanel(() => this.createFormPanel);
     this.createError = "";
     this.message = "";
+    this.createSelectedKind = '';
     this.activeTypes = [];
     this.typesLoading = true;
 
@@ -376,7 +400,6 @@ export class ContractsPage implements OnInit {
 
     const employeeId = Number(value("employeeId"));
     const contractTypeId = Number(value("contractTypeId"));
-    const contractNumber = value("contractNumber");
     const signedDate = value("signedDate");
     const startDate = value("startDate");
     const endDate = value("endDate") || null;
@@ -394,10 +417,6 @@ export class ContractsPage implements OnInit {
       return;
     }
 
-    if (!contractNumber) {
-      this.createError = "Vui lòng nhập số hợp đồng.";
-      return;
-    }
 
     // Chuỗi YYYY-MM-DD có thể so sánh trực tiếp theo thứ tự ngày.
     if (endDate && endDate < startDate) {
@@ -409,7 +428,7 @@ export class ContractsPage implements OnInit {
       employeeId,
       contractTypeId,
       probationGroup: (value("probationGroup") || null) as ContractCreateRequest["probationGroup"],
-      contractNumber,
+
       signedDate,
       startDate,
       endDate,
@@ -519,7 +538,6 @@ export class ContractsPage implements OnInit {
     const value = (name: string) => String(data.get(name) ?? "").trim();
 
     const contractTypeId = Number(value("contractTypeId"));
-    const contractNumber = value("contractNumber");
     const signedDate = value("signedDate");
     const startDate = value("startDate");
     const endDate = value("endDate") || null;
@@ -535,8 +553,8 @@ export class ContractsPage implements OnInit {
       return;
     }
 
-    if (!contractNumber || !reason) {
-      this.lifecycleError = "Cần nhập số hợp đồng mới và lý do gia hạn.";
+    if (!reason) {
+      this.lifecycleError = "Cần nhập lý do gia hạn.";
       return;
     }
 
@@ -556,7 +574,7 @@ export class ContractsPage implements OnInit {
         employeeId: old.employeeId,
         contractTypeId,
         probationGroup: (value("probationGroup") || null) as ContractCreateRequest["probationGroup"],
-        contractNumber,
+
         signedDate,
         startDate,
         endDate,

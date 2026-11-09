@@ -7,7 +7,6 @@ export function employeeFormErrors(form: EmployeeForm, mode: string, today: stri
     const day = (value: string) => /^\d{4}-\d{2}-\d{2}$/.test(value) &&
         !Number.isNaN(Date.parse(value)) && new Date(value).toISOString().slice(0, 10) === value;
     if (mode === 'create') {
-        if (!text(form.employeeCode) || text(form.employeeCode).length > 50) errors['employeeCode'] = 'Mã nhân viên là bắt buộc, tối đa 50 ký tự.';
         if (!form.hireDate || !day(form.hireDate) || form.hireDate > today) errors['hireDate'] = 'Chọn ngày vào làm hợp lệ, không ở tương lai.';
         if (!form.departmentId || form.departmentId <= 0) errors['departmentId'] = 'Chọn phòng ban hoạt động.';
         if (!form.positionId || form.positionId <= 0) errors['positionId'] = 'Chọn chức vụ hoạt động.';

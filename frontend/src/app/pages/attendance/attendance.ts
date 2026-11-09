@@ -41,6 +41,8 @@ export class AttendancePage implements OnInit {
     from = this.date(-30); to = this.date(); q = ''; departmentId = ''; verification = ''; anomaly = '';
     page = 0; total = 0; pages = 0; stats: Stats | null = null;
     private applied: RecordFilter | null = null;
+    private recordsSubscription?: Subscription;
+    private recordsVersion = 0;
     mode: 'view' | 'manual' | 'edit' | 'proposal' | 'unconfirm' = 'view';
     actualStart = ''; actualEnd = ''; breakMinutes = 0; result = 'DI_LAM'; reason = '';
     requestRows: AttendanceRequest[] = []; requestDetail: RequestDetail | null = null;
@@ -69,7 +71,7 @@ export class AttendancePage implements OnInit {
     get pendingNotifications(): number { return this.notificationQueue.length; }
 
     constructor() {
-        this.destroyRef.onDestroy(() => { this.notificationTimer?.unsubscribe(); this.errorTimer?.unsubscribe(); this.actionErrorTimer?.unsubscribe(); this.notificationQueue = []; });
+        this.destroyRef.onDestroy(() => { this.recordsVersion++; this.recordsSubscription?.unsubscribe(); this.notificationTimer?.unsubscribe(); this.errorTimer?.unsubscribe(); this.actionErrorTimer?.unsubscribe(); this.notificationQueue = []; });
     }
 
     private notify(message: string): void {
@@ -156,8 +158,15 @@ export class AttendancePage implements OnInit {
 
     private validRange(from: string, to: string): boolean { return !!from && !!to && from <= to && (Date.parse(to) - Date.parse(from)) / 86400000 <= 366; }
 
+    clockReviewLabel(row: AttendanceRow, checkIn: boolean): string {
+        const side = checkIn ? 'check-in' : 'check-out';
+        if (!(checkIn ? row.actualStart : row.actualEnd)) return 'Chưa ' + side;
+        if (row.verificationStatus === 'DA_XAC_NHAN') return 'Đã xác nhận ' + side + ' trong công';
+        return (checkIn ? row.checkInReviewed : row.checkOutReviewed) ? 'Đã đối soát ' + side : 'Chờ đối soát ' + side;
+    }
+
     search(): void {
-        if (this.busy || !this.context) return;
+        if (this.saving || !this.context) return;
         if (!this.validRange(this.from, this.to)) { this.error = 'Chọn khoảng ngày hợp lệ, tối đa 366 ngày.'; return; }
         if (/^-\d+(\.\d+)?$/.test(this.q.trim())) { this.error = 'Mã hoặc tên nhân viên không hợp lệ, không được nhập số âm.'; return; }
         this.applied = { mine: this.tab === 'mine', from: this.from, to: this.to, q: this.tab === 'mine' ? '' : this.q.trim(), departmentId: this.tab === 'mine' ? '' : this.departmentId, verification: this.verification, anomaly: this.anomaly, page: 0 };
@@ -165,11 +174,13 @@ export class AttendancePage implements OnInit {
     }
 
     loadRecords(page = this.page): void {
-        if (!this.applied || this.saving || this.loading) return;
+        if (!this.applied || this.saving) return;
+        const version = ++this.recordsVersion;
+        this.recordsSubscription?.unsubscribe();
         this.loading = true; this.error = '';
-        this.api.records({ ...this.applied, page }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false)).subscribe({
-            next: r => { this.rows = r.items; this.page = r.page; this.total = r.totalElements; this.pages = r.totalPages; this.stats = r.stats; },
-            error: e => { this.rows = []; this.total = 0; this.pages = 0; this.stats = null; this.error = this.api.message(e); },
+        this.recordsSubscription = this.api.records({ ...this.applied, page }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => { if (version === this.recordsVersion) this.loading = false; })).subscribe({
+            next: r => { if (version !== this.recordsVersion) return; this.rows = r.items; this.page = r.page; this.total = r.totalElements; this.pages = r.totalPages; this.stats = r.stats; },
+            error: e => { if (version !== this.recordsVersion) return; this.rows = []; this.total = 0; this.pages = 0; this.stats = null; this.error = this.api.message(e); },
         });
     }
 

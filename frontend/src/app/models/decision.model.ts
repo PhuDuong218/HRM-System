@@ -12,6 +12,7 @@ export interface DecisionPageResponse<T> {
 }
 
 export interface DecisionResponse {
+  reviewBlocker?: string|null;
   decisionId: number;
   employeeId: number;
   decisionNumber: string;

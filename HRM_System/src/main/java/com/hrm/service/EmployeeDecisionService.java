@@ -23,10 +23,11 @@ public class EmployeeDecisionService {
     private final PayrollHistoryGuard history;
     private final DecisionPayrollPolicy policy;
     private final Clock clock;
+    private final DecisionNumberService numbers;
 
     public EmployeeDecisionService(EmployeeDecisionRepository decisions, EmployeeRepository employees,
             DecisionActorProvider actors, DecisionAuditService audit, PayrollHistoryGuard history,
-            DecisionPayrollPolicy policy, Clock clock) {
+            DecisionPayrollPolicy policy, Clock clock, DecisionNumberService numbers) {
         this.decisions = decisions;
         this.employees = employees;
         this.actors = actors;
@@ -34,6 +35,7 @@ public class EmployeeDecisionService {
         this.history = history;
         this.policy = policy;
         this.clock = clock;
+        this.numbers = numbers;
     }
 
     public DecisionResponse get(Long id) {
@@ -58,11 +60,13 @@ public class EmployeeDecisionService {
         var actor = actors.requireManager();
         var employee = lockEmployee(r.employeeId());
         validate(r);
-        if (decisions.existsByDecisionNumber(r.decisionNumber().trim()))
+        String number=numbers.next(r.decisionType());
+        if (decisions.existsByDecisionNumber(number))
             throw error(HttpStatus.CONFLICT, "Số quyết định đã tồn tại");
         var d = new EmployeeDecision();
         d.setEmployee(employee);
         copy(d, r);
+        d.setDecisionNumber(number);
         d.setIssuedBy(actor.accountId());
         d.setApprovalStatus(DecisionApprovalStatus.CHO_DUYET);
         d.setCreatedAt(LocalDateTime.now(clock));
@@ -80,8 +84,10 @@ public class EmployeeDecisionService {
         pending(d);
         validate(r);
         if (!d.getEmployee().getEmployeeId().equals(r.employeeId())
-                || !d.getDecisionNumber().equals(r.decisionNumber().trim()))
+                || r.decisionNumber()==null || !d.getDecisionNumber().equals(r.decisionNumber().trim()))
             throw error(HttpStatus.CONFLICT, "Không đổi nhân viên hoặc số quyết định sau khi tạo");
+        if(d.getDecisionNumber().matches("(?:KT|KL|BT)-[0-9]+") && d.getDecisionType()!=r.decisionType())
+            throw error(HttpStatus.CONFLICT,"Không đổi loại quyết định đã được cấp số tự động");
         var before = dto(d);
         copy(d, r);
         touch(d, actor);
@@ -118,9 +124,8 @@ public class EmployeeDecisionService {
         var actor = actors.requireManager();
         var d = lock(id);
         pending(d);
-        if (Objects.equals(actor.accountId(), d.getIssuedBy()) ||
-                Objects.equals(actor.employeeId(), d.getEmployee().getEmployeeId()))
-            throw error(HttpStatus.FORBIDDEN, "Không tự xử lý quyết định do mình ban hành hoặc áp dụng cho mình");
+        String blocker=reviewBlocker(d,actor);
+        if(blocker!=null)throw error(HttpStatus.FORBIDDEN,blocker);
         DecisionRules.validate(d.getDecisionType(), d.getPayrollEffect(), d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
         if (approve && d.getPayrollEffect() != DecisionPayrollEffect.NONE) {
             policy.requireConfirmed();
@@ -153,7 +158,7 @@ public class EmployeeDecisionService {
     }
 
     private void copy(EmployeeDecision d, DecisionRequest r) {
-        d.setDecisionNumber(r.decisionNumber().trim());
+
         d.setDecisionType(r.decisionType());
         d.setDisciplineForm(r.disciplineForm());
         d.setViolationDate(r.violationDate());
@@ -191,11 +196,17 @@ public class EmployeeDecisionService {
             throw error(HttpStatus.CONFLICT, "Chỉ sửa/xóa/xử lý quyết định đang CHO_DUYET");
     }
 
+    private String reviewBlocker(EmployeeDecision d,DecisionActor actor){
+        if(d.getApprovalStatus()!=DecisionApprovalStatus.CHO_DUYET)return "Quyết định đã xử lý";
+        if(Objects.equals(actor.accountId(),d.getIssuedBy()))return "Bạn là người ban hành quyết định này. Cần tài khoản ADMIN/HR khác có thẩm quyền duyệt hoặc từ chối.";
+        if(Objects.equals(actor.employeeId(),d.getEmployee().getEmployeeId()))return "Quyết định áp dụng cho chính bạn. Cần người xử lý độc lập.";
+        return null;
+    }
     private DecisionResponse dto(EmployeeDecision d) {
         return new DecisionResponse(d.getDecisionId(), d.getEmployee().getEmployeeId(), d.getDecisionNumber(),
                 d.getDecisionType(), d.getContent(), d.getIssuedDate(), d.getIssuedBy(), d.getApprovalStatus(),
                 d.getApprovedBy(), d.getApprovedAt(), d.getPayrollEffect(), d.getAmount(), d.getApplyDate(),
-                d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths());
+                d.getDisciplineForm(), d.getViolationDate(), d.getSalaryIncreaseDelayMonths(),reviewBlocker(d,actors.requireManager()));
     }
 
     private BusinessException error(HttpStatus s, String m) {

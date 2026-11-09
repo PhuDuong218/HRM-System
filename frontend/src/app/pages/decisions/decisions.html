@@ -1,5 +1,6 @@
 <app-page-header variant="directory" title="Khen thưởng / Kỷ luật" description="Ghi nhận và theo dõi các quyết định khen thưởng, kỷ luật."/>
 
+@if(mine&&canViewMine){<app-my-employment kind="decisions" (back)="mine=false"/>} @else {
 @if (message) {
   <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message | translate }}</div>
 }
@@ -40,6 +41,7 @@
                     [disabled]="employeesLoading || loading"
                     (change)="applyFilter(fEmp.value, fStatus.value)">
               <option value="">{{ "Tất cả" | translate }}</option>
+              @if(canViewMine){<option value="mine">Khen thưởng / Kỷ luật của tôi</option>}
               @for (employee of employees; track employee.employeeId) {
                 <option [value]="employee.employeeId">{{ employeeLabel(employee) }}</option>
               }
@@ -109,9 +111,10 @@
                   <td [attr.data-label]="'Trạng thái' | translate">{{ statusLabels[row.approvalStatus] | translate }}</td>
                   <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                     @if (row.approvalStatus === 'CHO_DUYET') {
-                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving"
+                      @if(row.reviewBlocker){<p class="small text-muted mb-2">{{row.reviewBlocker}}</p>}
+                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'approve')">{{ "Duyệt" | translate }}</button>
-                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving"
+                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'reject')">{{ "Từ chối" | translate }}</button>
                       <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving"
                               (click)="openEdit(row)">{{ "Sửa" | translate }}</button>
@@ -154,9 +157,8 @@
           </div>
           <div class="col-12">
             <label class="form-label" for="d-no">{{ "Số quyết định" | translate }}</label>
-            <input id="d-no" name="decisionNumber" class="form-control" maxlength="50" required
-                   pattern="[A-Za-z0-9_-]+" [(ngModel)]="form.decisionNumber" [disabled]="saving || !!editing">
-            <div class="form-text">{{ "Chỉ dùng chữ không dấu, số, dấu gạch dưới hoặc dấu gạch ngang. Mã không đổi sau khi tạo." | translate }}</div>
+            <input id="d-no" class="form-control" readonly [value]="editing ? form.decisionNumber : (form.decisionType==='KHEN_THUONG'?'KT':form.decisionType==='KY_LUAT'?'KL':'BT')+'-… (tự động khi lưu)'" aria-describedby="decision-number-help">
+            <div class="form-text" id="decision-number-help">Số được cấp tự động khi lưu: KT cho khen thưởng, KL cho kỷ luật, BT cho bồi thường. Không đổi số sau khi tạo.</div>
           </div>
           <div class="col-12">
             <label class="form-label" for="d-issued">{{ "Ngày ban hành" | translate }}</label>
@@ -166,7 +168,7 @@
           <div class="col-12">
             <label class="form-label" for="d-type">{{ "Loại quyết định" | translate }}</label>
             <select id="d-type" name="decisionType" class="form-select" required
-                    [(ngModel)]="form.decisionType" (ngModelChange)="onTypeChange()" [disabled]="saving">
+                    [(ngModel)]="form.decisionType" (ngModelChange)="onTypeChange()" [disabled]="saving || !!editing">
               @for (type of types; track type) {
                 <option [ngValue]="type">{{ typeLabels[type] | translate }}</option>
               }
@@ -288,9 +290,10 @@
           <dt class="col-sm-5">{{ "Thời điểm xử lý" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedAt || '—' }}</dd>
         </dl>
         @if (decision.approvalStatus === 'CHO_DUYET') {
+          @if(decision.reviewBlocker){<p class="alert alert-info">{{decision.reviewBlocker}}</p>}
           <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-success" [disabled]="saving" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
-            <button type="button" class="btn btn-outline-danger" [disabled]="saving" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
+            <button type="button" class="btn btn-outline-success" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
             <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="openEdit(decision)">{{ "Sửa" | translate }}</button>
             <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Xóa" | translate }}</button>
           </div>
@@ -412,4 +415,6 @@
       </dl>
     }
   </section>
+}
+
 }
