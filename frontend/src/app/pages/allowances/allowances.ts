@@ -1,3 +1,4 @@
+import { RowViewDirective } from '../../shared/row-view.directive';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
@@ -30,7 +31,7 @@ type AssignMode = 'create' | 'edit' | 'change' | 'end';
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[RowViewDirective,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
@@ -56,6 +57,7 @@ export class AllowancesPage implements OnInit {
   // ===== Loại phụ cấp =====
   types: AllowanceTypeResponse[] = [];
   typesLoading = false;
+  selectedType: AllowanceTypeResponse | null = null;
   showTypeForm = false;
   editingType: AllowanceTypeResponse | null = null;
   typeForm: AllowanceTypeRequest = this.emptyType();
@@ -115,6 +117,7 @@ export class AllowancesPage implements OnInit {
   setTab(tab: Tab): void {
     if (this.saving) return;
     if (tab !== this.tab) {
+      this.selectedType = null;
       this.showTypeForm = false;
       this.showAssignForm = false;
       this.editingType = null;
@@ -133,6 +136,7 @@ export class AllowancesPage implements OnInit {
 
   closeWorkspace(): void {
     if (this.saving) return;
+    this.selectedType = null;
     this.showTypeForm = false;
     this.showAssignForm = false;
     this.editingType = null;
@@ -154,7 +158,11 @@ export class AllowancesPage implements OnInit {
     this.typesLoading = true;
     this.error = '';
     this.api.types().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: rows => { this.types = rows; this.typesLoading = false; },
+      next: rows => {
+        this.types = rows;
+        if (this.selectedType) this.selectedType = rows.find(t => t.allowanceTypeId === this.selectedType!.allowanceTypeId) ?? null;
+        this.typesLoading = false;
+      },
       error: (e: HttpErrorResponse) => {
         this.typesLoading = false;
         this.error = this.fail(e, 'Không tải được danh mục loại phụ cấp.');
@@ -162,8 +170,17 @@ export class AllowancesPage implements OnInit {
     });
   }
 
+  openTypeDetail(row: AllowanceTypeResponse): void {
+    if (this.saving) return;
+    this.selectedType = row;
+    this.showTypeForm = false;
+    this.editingType = null;
+    this.error = '';
+  }
+
   openCreateType(): void {
     if (this.saving) return;
+    this.selectedType = null;
     this.editingType = null;
     this.typeForm = this.emptyType();
     this.error = ''; this.message = '';
@@ -172,6 +189,7 @@ export class AllowancesPage implements OnInit {
 
   openEditType(row: AllowanceTypeResponse): void {
     if (this.saving) return;
+    this.selectedType = null;
     this.editingType = row;
     this.typeForm = {
       typeCode: row.typeCode, typeName: row.typeName,

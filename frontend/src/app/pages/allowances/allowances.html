@@ -11,7 +11,7 @@
 
 <!-- ================= TAB 1: LOẠI PHỤ CẤP ================= -->
 @if (tab === 'types') {
-  <app-record-workspace [open]="showTypeForm" [busy]="saving" (dismiss)="closeWorkspace()">
+  <app-record-workspace [open]="showTypeForm || !!selectedType" [busy]="saving" (dismiss)="closeWorkspace()">
       <section recordList class="surface module-list">
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
       <h2 class="mb-0">{{ "Danh sách loại phụ cấp" | translate }}</h2>
@@ -30,16 +30,19 @@
           <thead><tr>
             <th>{{ "Mã" | translate }}</th><th>{{ "Tên" | translate }}</th><th>{{ "Mô tả" | translate }}</th>
             <th>{{ "Chịu thuế" | translate }}</th><th>{{ "Tính đóng BHXH" | translate }}</th>
-            <th>{{ "Trạng thái" | translate }}</th><th></th>
+            <th>{{ "Trạng thái" | translate }}</th><th>{{ "Thao tác" | translate }}</th>
           </tr></thead>
           <tbody>
             @for (t of types; track t.allowanceTypeId) {
-              <tr [class.selected-row]="showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId" [appSelectedRowScroll]="showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId ? 'edit' : null">
+              <tr (appRowView)="openTypeDetail(t)" [rowViewDisabled]="saving"
+                  [class.selected-row]="(showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId) || selectedType?.allowanceTypeId === t.allowanceTypeId"
+                  [appSelectedRowScroll]="selectedType?.allowanceTypeId === t.allowanceTypeId ? 'view' : showTypeForm && editingType?.allowanceTypeId === t.allowanceTypeId ? 'edit' : null">
                 <td [attr.data-label]="'Mã' | translate">{{ t.typeCode }}</td><td [attr.data-label]="'Tên' | translate">{{ t.typeName }}</td><td [attr.data-label]="'Mô tả' | translate">{{ t.description || '—' }}</td>
                 <td [attr.data-label]="'Chịu thuế' | translate">{{ (t.isTaxable ? 'Có' : 'Không') | translate }}</td>
                 <td [attr.data-label]="'Tính đóng BHXH' | translate">{{ (t.countsForSocialInsurance ? 'Có' : 'Không') | translate }}</td>
                 <td [attr.data-label]="'Trạng thái' | translate">{{ (t.isActive ? 'Đang dùng' : 'Ngừng dùng') | translate }}</td>
                 <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
+                  <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving" (click)="openTypeDetail(t)">{{ "Xem chi tiết" | translate }}</button>
                   <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving" (click)="openEditType(t)">{{ "Sửa" | translate }}</button>
                   @if (t.isActive) {
                     <button type="button" class="btn btn-sm btn-outline-danger" [disabled]="saving" (click)="deactivateType(t)">{{ "Ngừng dùng" | translate }}</button>
@@ -53,6 +56,26 @@
     }
   </section>
     <div recordDetail class="allowance-form-panel">
+      @if (selectedType; as detail) {
+        <section class="surface allowance-form-card">
+          <h2>{{ "Chi tiết loại phụ cấp" | translate }}</h2>
+          <dl class="row g-3">
+            <dt class="col-5">{{ "Mã" | translate }}</dt><dd class="col-7">{{ detail.typeCode }}</dd>
+            <dt class="col-5">{{ "Tên" | translate }}</dt><dd class="col-7">{{ detail.typeName }}</dd>
+            <dt class="col-5">{{ "Mô tả" | translate }}</dt><dd class="col-7" style="white-space: pre-wrap; overflow-wrap: anywhere">{{ detail.description || '—' }}</dd>
+            <dt class="col-5">{{ "Chịu thuế" | translate }}</dt><dd class="col-7">{{ (detail.isTaxable ? 'Có' : 'Không') | translate }}</dd>
+            <dt class="col-5">{{ "Tính đóng BHXH" | translate }}</dt><dd class="col-7">{{ (detail.countsForSocialInsurance ? 'Có' : 'Không') | translate }}</dd>
+            <dt class="col-5">{{ "Trạng thái" | translate }}</dt><dd class="col-7">{{ (detail.isActive ? 'Đang dùng' : 'Ngừng dùng') | translate }}</dd>
+          </dl>
+          <div class="d-flex gap-2 flex-wrap">
+            <button type="button" class="btn btn-primary" [disabled]="saving" (click)="openEditType(detail)">{{ "Sửa" | translate }}</button>
+            @if (detail.isActive) {
+              <button type="button" class="btn btn-outline-danger" [disabled]="saving" (click)="deactivateType(detail)">{{ "Ngừng dùng" | translate }}</button>
+            }
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="closeWorkspace()">{{ "Đóng" | translate }}</button>
+          </div>
+        </section>
+      }
       @if (showTypeForm) {
         <section class="surface allowance-form-card">
       <h2>{{ (editingType ? 'Sửa loại phụ cấp' : 'Thêm loại phụ cấp') | translate }}</h2>
