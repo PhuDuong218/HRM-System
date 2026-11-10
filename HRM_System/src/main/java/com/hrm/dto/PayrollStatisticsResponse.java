@@ -25,7 +25,7 @@ public record PayrollStatisticsResponse(
             Long periodId,
             String periodCode,
             LocalDate periodStart,
-            LocalDate periodEndExclusive,
+            LocalDate periodEnd,
             Long batchId,
             Integer versionNo,
             long employeeCount,

@@ -15,7 +15,7 @@ export interface Stats { waiting: number; confirmed: number; missing: number; re
 export interface Audit { action: string; actor: string; occurredAt: string; reason: string | null; }
 export interface AttendanceDetail { row: AttendanceRow; breaks: Array<{ start: string; end: string }>; audit: Audit[]; periodLocked: boolean; requests?: AttendanceRequest[]; }
 export interface Page<T> { items: T[]; page: number; size: number; totalElements: number; totalPages: number; }
-export interface AttendanceSearch extends Page<AttendanceRow> { stats: Stats; }
+export interface AttendanceSearch extends Page<AttendanceRow> { stats: Stats | null; }
 export interface AttendanceRequest {
   requestId: number; requestCode: string; requestType: string; status: string; attendanceId: number; scheduleId: number;
   employeeLabel: string; workDate: string; originalStart: string | null; originalEnd: string | null; originalBreakMinutes: number;
@@ -37,6 +37,7 @@ export class AttendanceApiService {
   context() { return this.http.get<AttendanceContext>(`${this.url}/context`); }
   departments() { return this.http.get<Array<{departmentId: number; departmentName: string}>>(`${this.url}/departments`); }
   records(filter: RecordFilter) { return this.http.get<AttendanceSearch>(`${this.url}/records`, { params: this.params(filter) }); }
+  pendingRecords(page: number) { return this.http.get<AttendanceSearch>(`${this.url}/pending`, { params: this.params({ page }) }); }
   detail(id: number, mine: boolean) { return this.http.get<AttendanceDetail>(`${this.url}/schedules/${id}`, { params: this.params({mine}) }); }
   manual(row: AttendanceRow, data: Correction) { return this.http.post<unknown>(`${this.url}/manual`, { ...data, employeeId: row.employeeId, scheduleId: row.scheduleId, workDate: row.workDate }); }
   correct(id: number, data: Correction, expectedVersion: string | null) { return this.http.put<unknown>(`${this.url}/records/${id}`, {correction:data, expectedVersion}); }

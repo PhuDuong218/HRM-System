@@ -130,6 +130,9 @@
 
     <h2 class="h5">{{ tab==='mine'?'Tra cứu công cá nhân':'Tìm kiếm và lọc công' }}</h2>
 
+    @if (pendingQueue) {
+      <div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-3"><strong>{{ 'Công chưa xác nhận · Tất cả thời gian' | translate }}</strong><button type="button" class="btn btn-outline-secondary btn-sm" [disabled]="busy" (click)="exitPendingQueue()">{{ 'Xem theo bộ lọc thông thường' | translate }}</button></div>
+    } @else {
     <form data-hrm-filter (ngSubmit)="search()">
 
         <fieldset [disabled]="busy">
@@ -179,6 +182,7 @@
         </fieldset>
 
     </form>
+    }
 
 </section>
 

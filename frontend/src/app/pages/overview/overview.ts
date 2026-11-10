@@ -9,7 +9,7 @@ import { RouterLink } from '@angular/router';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
-import { ContractReport, EmployeeReport, GroupRow, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
+import { ContractReport, EmployeeReport, GroupRow, PendingItem, PendingOverview, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
@@ -24,6 +24,7 @@ export class OverviewPage implements OnInit {
   private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
   private requests = new Subscription();
+  private pendingRequest?: Subscription;
   private readonly colors = ['#2c78ba', '#71bca9', '#e9b969', '#a28ac7', '#dc8f81', '#80a3c5'];
 
   today = '';
@@ -40,12 +41,23 @@ export class OverviewPage implements OnInit {
   workError = '';
   isHr = false;
   isAdmin = false;
+  pending: PendingOverview | null = null;
+  pendingState: LoadState = 'loading';
+  pendingError = '';
+  readonly pendingCards = [
+    { key: 'attendance', label: 'Công chưa xác nhận', description: 'Bản ghi công', route: '/attendance', query: { pending: 'unconfirmed' } },
+    { key: 'leave', label: 'Nghỉ phép chờ duyệt', description: 'Đơn chờ duyệt theo quy trình', route: '/requests', query: { pending: 'leave' } },
+    { key: 'overtimeApproval', label: 'OT chờ duyệt', description: 'Đơn đăng ký tăng ca', route: '/overtime', query: { pending: 'approval' } },
+    { key: 'overtimeActual', label: 'OT chưa hoàn tất', description: 'Chờ ghi nhận / xác nhận thực tế', route: '/overtime', query: { pending: 'actual' } }
+  ] as const;
 
   ngOnInit(): void { this.load(); }
 
   load(): void {
     this.requests.unsubscribe();
     this.requests = new Subscription();
+    this.pending = null; this.pendingState = 'loading'; this.pendingError = '';
+    this.isHr = this.isAdmin = false;
     this.today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
     this.fromDate = `${this.today.slice(0, 8)}01`;
     this.filters = { fromDate: this.fromDate, toDate: this.today, reportDate: this.today, expiringWithinDays: 30, departmentId: '' };
@@ -57,11 +69,37 @@ export class OverviewPage implements OnInit {
         this.isHr = profile.role === 'HR';
         this.isAdmin = profile.role === 'ADMIN';
         if (profile.role !== 'ADMIN' && profile.role !== 'HR') { this.failAll('Bạn chưa có quyền xem số liệu tổng quan.'); return; }
+        this.loadPending();
         if (this.isHr) this.loadHrOverview();
         else this.loadReports();
       },
       error: error => this.failAll(this.errorMessage(error))
     }));
+  }
+
+  loadPending(): void {
+    if (!this.isHr && !this.isAdmin) return;
+    this.pendingRequest?.unsubscribe();
+    this.pending = null; this.pendingState = 'loading'; this.pendingError = '';
+    this.pendingRequest = this.api.getPendingOverview().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: result => {
+        const data = { ...result };
+        for (const card of this.pendingCards) {
+          const item = result?.[card.key];
+          const valid = item && (item.state === 'READY'
+            ? Number.isSafeInteger(item.count) && item.count! >= 0
+            : ['DENIED', 'ERROR'].includes(item.state) && item.count === null);
+          data[card.key] = valid ? item : { count: null, state: 'ERROR' };
+        }
+        this.pending = data; this.pendingState = 'ready';
+      },
+      error: error => { this.pendingError = this.errorMessage(error); this.pendingState = 'error'; }
+    });
+    this.requests.add(this.pendingRequest);
+  }
+
+  pendingItem(key: 'attendance' | 'leave' | 'overtimeApproval' | 'overtimeActual'): PendingItem | null {
+    return this.pending?.[key] ?? null;
   }
 
   private loadHrOverview(): void {
@@ -117,7 +155,7 @@ export class OverviewPage implements OnInit {
     }));
   }
 
-  get loading(): boolean { return [this.employeeState, this.contractState, this.workState].includes('loading'); }
+  get loading(): boolean { return [this.employeeState, this.contractState, this.workState, ...(this.isAdmin || this.isHr ? [this.pendingState] : [])].includes('loading'); }
   get departments(): GroupRow[] { return [...(this.employeeReport?.byDepartment || [])].sort((a, b) => b.employeeCount - a.employeeCount); }
   get departmentMax(): number { return this.axisMax(this.departments.reduce((max, row) => Math.max(max, row.employeeCount), 0)); }
   get statusItems(): StatusItem[] {

@@ -30,6 +30,7 @@ public class ReportExportService {
     private final PayrollStatisticsService payrollStatistics;
     private final ReportExcelWriter excelWriter;
     private final AuditLogRepository auditLogs;
+    @org.springframework.beans.factory.annotation.Autowired private ReportDepartmentService departmentReports;
 
     public ReportExportService(
             EmployeeStatisticsService employeeStatistics,
@@ -52,6 +53,13 @@ public class ReportExportService {
         EmployeeStatisticsResponse report = employeeStatistics.getEmployeeStatistics();
         return completeExport(actor, "employees-report.xlsx", excelWriter.employees(report, "HR".equals(actor.roleCode())),
                 "EMPLOYEES", "employees", "filters=none");
+    }
+
+    @PreAuthorize(VIEW_AUTHORIZATION)
+    public ReportExportFile exportEmployeeMonitoring(LocalDate fromDate,LocalDate toDate,Long departmentId) {
+        var actor=currentActor(); var movements=departmentReports.movements(fromDate,toDate,departmentId);
+        var report=departmentId==null?employeeStatistics.getEmployeeStatistics():departmentReports.employees(departmentId);
+        return completeExport(actor,"employees-report.xlsx",excelWriter.employees(report,false,departmentId,fromDate,toDate,movements),"EMPLOYEES","employees",periodFilters(fromDate,toDate)+"; departmentId="+(departmentId==null?"ALL":departmentId));
     }
 
     @PreAuthorize(VIEW_AUTHORIZATION)
@@ -78,6 +86,12 @@ public class ReportExportService {
                 "WORK", "attendance_records", periodFilters(report.fromDate(), report.toDate()));
     }
 
+    @PreAuthorize(VIEW_AUTHORIZATION)
+    public ReportExportFile exportWorkForDepartment(LocalDate fromDate, LocalDate toDate,long departmentId) {
+        var actor=currentActor(); var report=departmentReports.work(fromDate,toDate,departmentId);
+        return completeExport(actor,"work-report.xlsx",excelWriter.work(report,false,departmentId),"WORK","attendance_records",periodFilters(fromDate,toDate)+"; departmentId="+departmentId);
+    }
+
     @PreAuthorize(PayrollStatisticsService.VIEW_AUTHORIZATION)
     public ReportExportFile exportPayroll(LocalDate fromDate, LocalDate toDate) {
         AuthenticatedAccount actor = currentActor();
@@ -85,6 +99,12 @@ public class ReportExportService {
         return completeExport(actor, "payroll-report.xlsx", excelWriter.payroll(report, "HR".equals(actor.roleCode())),
                 "PAYROLL", "payroll_batches", periodFilters(report.fromDate(), report.toDate())
                         + "; batchSelection=LATEST_FINALIZED_PER_PERIOD");
+    }
+
+    @PreAuthorize(PayrollStatisticsService.VIEW_AUTHORIZATION)
+    public ReportExportFile exportPayrollForDepartment(LocalDate fromDate, LocalDate toDate,long departmentId) {
+        var actor=currentActor(); var report=departmentReports.payroll(fromDate,toDate,departmentId);
+        return completeExport(actor,"payroll-report.xlsx",excelWriter.payroll(report,false,departmentId),"PAYROLL","payroll_batches",periodFilters(fromDate,toDate)+"; departmentId="+departmentId+"; batchSelection=LATEST_FINALIZED_PER_PERIOD");
     }
 
     private ReportExportFile completeExport(

@@ -8,7 +8,7 @@ export interface OtActions { edit:boolean; cancel:boolean; cancelRequest:boolean
 export interface OtRow { ot:Ot; employeeCode:string; fullName:string; department:string|null; role:string|null; workContent:string|null; plannedBreakStatus:string; submittedAt:string; approvedAt:string|null; approver:string|null; confirmer:string|null; version:string; requestedMinutes:number|null; approvedMinutes:number|null; actualMinutes:number|null; validMinutes:number|null; overflowMinutes:number|null; warning:string; actions:OtActions; }
 export interface OtStats { employees:number; pending:number; approved:number; rejected:number; needsAction:number; validMinutes:number; unresolved:number; }
 export interface OtEmployee { employeeId:number; employeeCode:string; fullName:string; department:string; requests:number; pending:number; approved:number; approvedMinutes:number; validMinutes:number; unresolved:number; needsAction:number; requestTimes:Array<{overtimeId:number;requestCode:string;submittedAt:string;approvedAt:string|null}>; }
-export interface OtPage<T> { items:T[]; page:number; totalPages:number; totalElements:number; stats?:OtStats; }
+export interface OtPage<T> { items:T[]; page:number; totalPages:number; totalElements:number; stats?:OtStats|null; }
 export interface OtBreak { breakStart:string; breakEnd:string; }
 export interface OtDay { day:string; requestedMinutes:number|null; actualMinutes:number|null; recognizedMinutes:number|null; regularMinutes:number|null; }
 export interface OtSchedule { schedule_id:number; planned_start:string; planned_end:string; planned_break_minutes:number; break_detail_status:string; shift_code:string|null; shift_name:string|null; }
@@ -26,6 +26,7 @@ export class OvertimeApiService {
   context(){return this.http.get<OtContext>(`${this.url}/context`);}
   departments(){return this.http.get<Array<{departmentId:number;departmentName:string}>>(`${this.url}/departments`);}
   search(f:OtFilter){return this.http.get<OtPage<OtRow>>(`${this.url}/requests`,{params:this.params(f)});}
+  pending(kind:'approval'|'actual',page:number){return this.http.get<OtPage<OtRow>>(`${this.url}/pending`,{params:this.params({kind,page})});}
   employees(f:OtFilter){return this.http.get<OtPage<OtEmployee>>(`${this.url}/employees`,{params:this.params(f)});}
   detail(id:number){return this.http.get<OtDetail>(`${this.url}/requests/${id}`);}
   register(body:OtRegistration){return this.http.post<Ot>(`${this.url}/requests`,body);}

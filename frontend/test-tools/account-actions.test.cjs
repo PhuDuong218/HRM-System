@@ -44,7 +44,6 @@ test('password reset and status change send validated requests and refresh state
     assert.equal(page.saving, false);
     page.backToDetail();
     page.showDetailAction('account-edit');
-    page.editUsername = 'new.employee';
     page.editRoleId = 2;
     page.editHrDepartments();
     http.expectOne('/api/admin/hr-scopes/account/3/department-options').flush([
@@ -53,10 +52,10 @@ test('password reset and status change send validated requests and refresh state
     page.toggleScopeDepartment(4, true);
     page.saveAccountIdentity();
     const edit = http.expectOne('/api/admin/accounts/3/identity');
-    assert.deepEqual(edit.request.body, { expectedUsername: 'employee', expectedRoleId: 3, username: 'new.employee', roleId: 2,
+    assert.deepEqual(edit.request.body, { expectedUsername: 'employee', expectedRoleId: 3, username: 'employee', roleId: 2,
       expectedDepartmentIds: [], departmentIds: [4] });
-    edit.flush({ ...account, username: 'new.employee', roleId: 2, roleCode: 'HR', active: false });
-    assert.equal(page.selectedAccount.username, 'new.employee');
+    edit.flush({ ...account, roleId: 2, roleCode: 'HR', active: false });
+    assert.equal(page.selectedAccount.username, 'employee');
     assert.equal(page.dialogMode, 'account-view');
     http.expectOne('/api/admin/hr-scopes/account/3/active-departments').flush([{ departmentId: 4, departmentName: 'Đào tạo' }]);
     http.expectOne(req => req.method === 'GET' && req.url === '/api/admin/accounts').flush({ items: [], page: 0, totalPages: 0, totalElements: 0 });
@@ -67,10 +66,10 @@ test('password reset and status change send validated requests and refresh state
     page.openDialog('account-view', self);
     http.expectOne('/api/admin/accounts/1/contact').flush({ email: null, phone: null });
     page.showDetailAction('account-edit');
-    page.editUsername = 'admin.new';
     page.saveAccountIdentity();
-    http.expectOne('/api/admin/accounts/1/identity').flush({ ...self, username: 'admin.new' });
-    assert.deepEqual(visits, ['cleared', '/login']);
+    http.expectNone('/api/admin/accounts/1/identity');
+    assert.match(page.actionError, /chưa thay đổi/);
+    assert.deepEqual(visits, []);
     http.verify(); injector.destroy();
   } finally { fs.unlinkSync(output); }
 });
