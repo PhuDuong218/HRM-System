@@ -11,6 +11,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** Derived head authority is restricted to requests, never granted as global HR authority. */
 @Service
 public class RequestApprovalStages {
+ @org.springframework.beans.factory.annotation.Autowired(required=false) private WorkflowNotifications notifications;
  private final JdbcTemplate db;
  private final PersonnelAccessService access;
  private final PersonnelWorkflowSupport support;
@@ -82,7 +83,7 @@ public class RequestApprovalStages {
   if(!"PENDING".equals(beforeStage.get("stageStatus")))throw conflict("Cấp 1 đã được xử lý hoặc đơn chuyển thẳng HR/ADMIN");
   db.update("UPDATE dbo.personnel_request_approval_stages SET stage_status=?,department_id=?,decided_by=?,decided_at=SYSUTCDATETIME(),note=? WHERE request_id=? AND stage_status='PENDING'",approve?"APPROVED":"REJECTED",department(employee),actor.accountId(),note,request);
   if(!approve)db.update("UPDATE dbo.employee_requests SET status='TU_CHOI',processed_by=?,processed_at=SYSUTCDATETIME(),rejection_reason=?,updated_by=?,updated_at=SYSUTCDATETIME() WHERE request_id=?",actor.accountId(),note,actor.accountId(),request);
-  support.audit(actor.accountId(),approve?"REQUEST_HEAD_APPROVE":"REQUEST_HEAD_REJECT","employee_requests",request,note,beforeStage,stage(request));return stage(request);
+  support.audit(actor.accountId(),approve?"REQUEST_HEAD_APPROVE":"REQUEST_HEAD_REJECT","employee_requests",request,note,beforeStage,stage(request));if(notifications!=null)notifications.request(request,approve?"HEAD_APPROVED":"HEAD_REJECTED",actor.accountId());return stage(request);
  }
  public org.springframework.data.domain.Page<Map<String,Object>> queue(Principal p,int page,int size){
   var actor=access.actor(p);var departments=departments(actor.employeeId());

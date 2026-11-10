@@ -76,6 +76,7 @@
         <button data-hrm-preference type="button" class="theme-toggle" (click)="toggleTheme()" [attr.aria-label]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.title]="(darkMode ? 'Chuyển sang giao diện sáng' : 'Chuyển sang giao diện tối') | translate" [attr.aria-pressed]="darkMode">
           <hrm-icon [name]="darkMode?'sun':'moon'"/>
         </button>
+        <app-notification-bell />
         <div class="profile-anchor">
           <button type="button" class="profile-trigger" (click)="openProfile()" aria-haspopup="dialog" aria-controls="profile-dialog" [attr.aria-label]="language.t('Hồ sơ cá nhân') + ': ' + auth.displayName()" [attr.title]="auth.displayName()">
             <span class="profile-avatar" aria-hidden="true">{{ auth.displayName().charAt(0).toUpperCase() }}</span>

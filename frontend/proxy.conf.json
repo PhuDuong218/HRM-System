@@ -54,6 +54,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/notifications": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api": {
     "target": "http://localhost:2005",
     "secure": false,

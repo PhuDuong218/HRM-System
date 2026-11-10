@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** Attendance page API. All identities, scopes, clocks and action eligibility are server-owned. */
 @Service
 public class AttendancePortalService {
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private AttendanceNotifications notifications;
     public record Context(String role, boolean mine, boolean manage, LocalDateTime serverNow,
             int checkoutRequestDays, int correctionRequestDays) {}
     public record Row(long scheduleId, Long attendanceId, long employeeId, String employeeLabel,
@@ -248,7 +249,7 @@ public class AttendancePortalService {
     @Transactional("scheduleTransactionManager")
     public AttendanceSelfClockService.ClockEvent clock(AuthenticatedAccount p,long scheduleId,boolean checkIn){Actor a=actor(p);if(a.role().equals("ADMIN"))throw error(HttpStatus.FORBIDDEN,"ADMIN không chấm công cá nhân.");var d=detail(p,true,scheduleId);employeeLock(d.row().employeeId());writable(d.row().workDate());return checkIn?selfClock.checkIn(a.id(),scheduleId):selfClock.checkOut(a.id(),scheduleId);}
     private LocalDateTime deadline(LocalDate date,String type){return date.plusDays(!type.equals("CONFIRMED_CORRECTION")?checkoutDays:correctionDays).atTime(23,59,59);}
-    private void audit(long actor,long id,String action,String why){db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason) VALUES(?,?,'attendance_portal_requests',?,?)",actor,action,Long.toString(id),why);}
+    private void audit(long actor,long id,String action,String why){db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason) VALUES(?,?,'attendance_portal_requests',?,?)",actor,action,Long.toString(id),why);if(notifications!=null){String event=switch(action){case "ATTENDANCE_REQUEST_SUBMITTED"->"SUBMITTED";case "ATTENDANCE_REQUEST_RECEIVED"->"RECEIVED";case "ATTENDANCE_REQUEST_APPROVED"->"APPROVED";case "ATTENDANCE_REQUEST_REJECTED"->"REJECTED";default->null;};if(event!=null)notifications.publish(id,event,actor);}}
     private Scope requestScope(Actor a,boolean mine){return scope(a,mine);}
     private static final String REQUEST_FROM="""
       FROM dbo.attendance_portal_requests r LEFT JOIN dbo.attendance_records ar ON ar.attendance_id=r.attendance_id

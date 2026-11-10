@@ -18,6 +18,8 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly=true)
 public class EmployeeRequestService {
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private WorkflowNotifications notifications;
+    private void notifyRequest(long id,String action,long actor){if(notifications!=null)notifications.request(id,action,actor);}
     @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
     @org.springframework.beans.factory.annotation.Autowired private EmploymentExitGuard exitGuard;
     @org.springframework.beans.factory.annotation.Autowired private ResignationNoticeAdvice notice;
@@ -110,7 +112,7 @@ public class EmployeeRequestService {
         if(leaveRules!=null)leaveRules.evidence(id,input.evidenceReference());
         jdbc.update("INSERT dbo.leave_request_details(request_id,leave_type_id,leave_start,leave_end,created_by) VALUES(?,?,?,?,?)",
             id,input.leaveTypeId(),input.leaveStart(),input.leaveEnd(),actor.accountId());
-        var result=required(id);support.audit(actor.accountId(),"LEAVE_REQUEST_CREATE","employee_requests",id,input.reason(),null,result);return result;
+        var result=required(id);support.audit(actor.accountId(),"LEAVE_REQUEST_CREATE","employee_requests",id,input.reason(),null,result);notifyRequest(id,"SUBMITTED",actor.accountId());return result;
     }
     @Transactional
     public Map<String,Object> resign(Resignation input,Principal p) {
@@ -125,7 +127,7 @@ public class EmployeeRequestService {
         if(duplicate>0) throw PersonnelWorkflowSupport.conflict("Đã có đơn nghỉ việc chờ duyệt hoặc chờ hiệu lực");
         long id=header(actor.employeeId(),"NGHI_VIEC",input.reason(),actor.accountId());
         jdbc.update("INSERT dbo.resignation_request_details(request_id,requested_last_working_date,created_by) VALUES(?,?,?)",id,input.requestedLastWorkingDate(),actor.accountId());
-        var result=required(id);support.audit(actor.accountId(),"RESIGNATION_REQUEST_CREATE","employee_requests",id,input.reason(),null,result);return result;
+        var result=required(id);support.audit(actor.accountId(),"RESIGNATION_REQUEST_CREATE","employee_requests",id,input.reason(),null,result);notifyRequest(id,"SUBMITTED",actor.accountId());return result;
     }
     private void lockEmployee(long employee) {
         var rows=jdbc.queryForList("SELECT employment_status FROM dbo.employees WITH(UPDLOCK,HOLDLOCK) WHERE employee_id=?",String.class,employee);
@@ -151,7 +153,7 @@ public class EmployeeRequestService {
     public Map<String,Object> reject(long id,Rejection input,Principal p) {
         var actor=access.approver(p);support.lock();var before=required(id);pending(before,actor);
         process(id,"TU_CHOI",actor.accountId(),input.reason().trim());
-        var after=required(id);support.audit(actor.accountId(),"REQUEST_REJECT","employee_requests",id,input.reason(),before,after);return after;
+        var after=required(id);support.audit(actor.accountId(),"REQUEST_REJECT","employee_requests",id,input.reason(),before,after);notifyRequest(id,"REJECTED",actor.accountId());return after;
     }
     @Transactional
     public Map<String,Object> approve(long id,Decision input,Principal p) {
@@ -174,7 +176,7 @@ public class EmployeeRequestService {
             jdbc.update("UPDATE dbo.resignation_request_details SET approved_last_working_date=?,updated_at=?,updated_by=? WHERE request_id=?",last,support.utc(),actor.accountId(),id);
         }
         process(id,"DA_DUYET",actor.accountId(),null);
-        var after=required(id);support.audit(actor.accountId(),"REQUEST_APPROVE","employee_requests",id,input.note(),before,after);return after;
+        var after=required(id);support.audit(actor.accountId(),"REQUEST_APPROVE","employee_requests",id,input.note(),before,after);notifyRequest(id,"APPROVED",actor.accountId());return after;
     }
     public com.hrm.dto.ResignationReadinessDTO resignationReadiness(long id,LocalDate proposed,Principal p){
         var actor=access.approver(p);var row=required(id);long employee=number(row,"employeeId");

@@ -34,6 +34,7 @@ public class EmployeeActivity extends AppCompatActivity {
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private HrmApplication session;
     private HrmApi api;
+    private MobileNotifications notifications;
     private LinearLayout body;
     private BottomNavigationView navigation;
     private View loading;
@@ -95,13 +96,17 @@ public class EmployeeActivity extends AppCompatActivity {
             if (!writing)
                 render();
         });
+        notifications=new MobileNotifications(this,api,session,findViewById(R.id.employeeBell),findViewById(R.id.employeeNotificationBadge));
         render();
     }
 
     @Override protected void onResume(){
         super.onResume();
+        if(notifications!=null)notifications.start();
         if(body!=null && api!=null && session!=null && session.token()!=null && !writing && pendingReads==0)render();
     }
+
+    @Override protected void onPause(){if(notifications!=null)notifications.stop();super.onPause();}
 
     private int dp(float n) {
         return (int) (n * getResources().getDisplayMetrics().density + .5f);
@@ -444,7 +449,7 @@ public class EmployeeActivity extends AppCompatActivity {
         body.removeAllViews();
         body.setPadding(dp(16), dp(16), dp(16), dp(16));
         findViewById(R.id.employeeHeader)
-                .setVisibility((section.equals("schedule") || section.equals("attendance")) ? View.GONE : View.VISIBLE);
+                .setVisibility(View.VISIBLE);
         loading.setVisibility(View.GONE);
         ((NestedScrollView) findViewById(R.id.employeeScroll)).scrollTo(0, 0);
         switch (section) {
@@ -1396,6 +1401,58 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
+
+    private void ownResignations() {
+        LinearLayout create=card("Đơn xin nghỉ việc của tôi");
+        create.addView(text("Gửi đề nghị để trưởng phòng và HR/ADMIN xử lý theo thẩm quyền. Nộp hoặc duyệt đơn chưa đồng nghĩa nghỉ việc ngay; cần hoàn tất bàn giao và đến ngày hiệu lực.",13,MUTED,false));
+        button(create,"Nộp đơn xin nghỉ việc",true,this::resignationForm);
+        fetch("/employee-requests/mine?type=NGHI_VIEC&page="+page+"&size=10",data->{
+            JSONArray rows=data.optJSONArray("content");
+            if(rows==null||rows.length()==0)card("Chưa có đơn nghỉ việc").addView(text("Đơn đã gửi và kết quả xử lý sẽ hiển thị tại đây.",13,MUTED,false));
+            else for(int i=0;i<rows.length();i++){
+                JSONObject r=rows.getJSONObject(i);LinearLayout box=card(str(r,"requestCode"));
+                badge(box,!str(r,"withdrawnAt").isEmpty()?"Đã rút đơn":label(str(r,"status")),str(r,"status"));
+                line(box,"Ngày làm cuối đề nghị",str(r,"requestedLastWorkingDate"));
+                line(box,"Ngày làm cuối được duyệt",str(r,"approvedLastWorkingDate"));
+                line(box,"Ngày gửi",utc(str(r,"submittedAt")));line(box,"Lý do",str(r,"reason"));
+                button(box,"Chi tiết và lịch sử",false,()->fetch("/employee-requests/"+r.optLong("requestId"),detail->{
+                    StringBuilder message=new StringBuilder("Trạng thái: ").append(!str(detail,"withdrawnAt").isEmpty()?"Đã rút đơn":label(str(detail,"status")))
+                        .append("\nNgày làm cuối đề nghị: ").append(str(detail,"requestedLastWorkingDate"))
+                        .append("\nNgày làm cuối được duyệt: ").append(str(detail,"approvedLastWorkingDate"))
+                        .append("\nNgày gửi: ").append(utc(str(detail,"submittedAt")))
+                        .append("\nNgày xử lý: ").append(utc(str(detail,"processedAt")))
+                        .append("\nLý do: ").append(str(detail,"reason"))
+                        .append("\nLý do từ chối: ").append(str(detail,"rejectionReason"))
+                        .append("\nLưu ý báo trước: ").append(str(detail,"noticeWarning"));
+                    JSONArray history=detail.optJSONArray("history");
+                    if(history!=null)for(int n=0;n<history.length();n++){JSONObject h=history.getJSONObject(n);message.append("\n\n").append(utc(str(h,"occurredAt"))).append(" · ").append(str(h,"actor")).append("\n").append(resignationAction(str(h,"action"))).append("\n").append(str(h,"reason"));}
+                    new MaterialAlertDialogBuilder(this).setTitle(str(detail,"requestCode")).setMessage(message).setPositiveButton("Đóng",null).show();
+                }));
+                if("CHO_DUYET".equals(str(r,"status"))&&str(r,"withdrawnAt").isEmpty())button(box,"Rút đơn",false,()->{
+                    LinearLayout form=form();TextInputEditText reason=input(form,"Lý do rút đơn *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+                    dialog("Rút đơn xin nghỉ việc",form,"Tiếp tục",d->{if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}write("/employee-requests/"+r.optLong("requestId")+"/withdraw","POST",json("reason",value(reason)),"Xác nhận rút đơn xin nghỉ việc?",d);});
+                });
+            }
+            pages(data);
+        });
+    }
+    private String resignationAction(String action){
+        switch(action){case "RESIGNATION_REQUEST_CREATE":return "Nộp đơn nghỉ việc";case "REQUEST_HEAD_APPROVE":return "Duyệt cấp 1";case "REQUEST_HEAD_REJECT":return "Từ chối cấp 1";case "REQUEST_APPROVE":return "Duyệt cuối";case "REQUEST_REJECT":return "Từ chối đơn";case "REQUEST_WITHDRAW":return "Rút đơn";case "RESIGNATION_EXECUTE":return "Áp dụng nghỉ việc";default:return action;}
+    }
+    private void resignationForm(){
+        LinearLayout box=form();box.addView(text("Chọn ngày làm việc cuối cùng đề nghị. Hệ thống kiểm tra thời hạn báo trước và các nghĩa vụ bàn giao khi duyệt.",13,MUTED,false));
+        final LocalDate[] last={today().plusDays(30)};
+        TextInputEditText date=input(box,"Ngày làm việc cuối đề nghị *",last[0].format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),InputType.TYPE_NULL);
+        date.setFocusable(false);date.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.drawable.ic_menu_my_calendar,0);
+        date.setOnClickListener(v->pickDate(last[0],chosen->{last[0]=chosen;date.setText(chosen.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));}));
+        TextInputEditText reason=input(box,"Lý do xin nghỉ việc *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        dialog("Nộp đơn xin nghỉ việc",box,"Gửi đơn",d->{
+            if(last[0].isBefore(today())){date.setError("Ngày làm cuối không được ở quá khứ");date.requestFocus();return;}
+            if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}
+            write("/employee-requests/resignation","POST",json("requestedLastWorkingDate",last[0].toString(),"reason",value(reason)),"Xác nhận gửi đơn xin nghỉ việc với ngày làm cuối "+last[0].format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))+"?",d);
+        });
+    }
+
     private void ownLeaveRequests() {
         LinearLayout create=card("Nghỉ phép của tôi");
         create.addView(text("Nghỉ phép năm trừ quỹ giờ khi được duyệt. Nghỉ ốm và thai sản theo chính sách riêng, không trừ phép năm. Đơn được chuyển theo quy trình duyệt của trung tâm.",12,MUTED,false));
@@ -1444,8 +1501,9 @@ public class EmployeeActivity extends AppCompatActivity {
 
     private void requests() {
         title("Đơn của tôi", "Theo dõi đề nghị cá nhân và kết quả xử lý.");
-        tabs(new String[] { "Điều chỉnh công", "Đơn OT", "Bổ sung công OT", "Nghỉ phép" },
-                new String[] { "regular", "ot", "supplement", "leave" });
+        tabs(new String[] { "Điều chỉnh công", "Đơn OT", "Bổ sung công OT", "Nghỉ phép", "Nghỉ việc" },
+                new String[] { "regular", "ot", "supplement", "leave", "resignation" });
+        if(category.equals("resignation")){ownResignations();return;}
         if(category.equals("leave")){ownLeaveRequests();return;}
         range();
         if (category.equals("ot")) {
@@ -2092,6 +2150,7 @@ public class EmployeeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         ++generation;
+        if(notifications!=null)notifications.destroy();
         executor.shutdownNow();
         super.onDestroy();
     }

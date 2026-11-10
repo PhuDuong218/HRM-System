@@ -1,3 +1,4 @@
+import {SeniorityReport} from '../../shared/seniority-report';
 import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
 import {HrmButton} from '../../shared/ui/button';
@@ -14,7 +15,7 @@ type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
 
 @Component({
-  selector: 'app-overview', standalone: true, imports:[HrmNotice,PageHeader,HrmButton,RouterLink],
+  selector: 'app-overview', standalone: true, imports:[SeniorityReport,HrmNotice,PageHeader,HrmButton,RouterLink],
   templateUrl: './overview.html', styleUrl: './overview.css'
 })
 export class OverviewPage implements OnInit {

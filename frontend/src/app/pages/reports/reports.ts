@@ -1,3 +1,4 @@
+import {SeniorityReport} from '../../shared/seniority-report';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
@@ -13,7 +14,7 @@ interface EmployeeGroup { label: string; description: string; rows: GroupRow[]; 
 
 @Component({
   selector: 'app-reports',
-  standalone: true,imports:[SearchAssistDirective,HrmNotice,PageHeader],
+  standalone: true,imports:[SeniorityReport,SearchAssistDirective,HrmNotice,PageHeader],
   templateUrl: './reports.html',
   styleUrl: './reports.css'
 })
