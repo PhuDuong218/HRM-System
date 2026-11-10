@@ -63,24 +63,26 @@ public class WorkflowRequestQueryService {
             rs.getString(6), rs.getObject(7, java.time.LocalDateTime.class), rs.getObject(8, Long.class),
             rs.getObject(9, Long.class));
 
-    private static String scopeClause(Actor a) {
+    private static String scopeClause(Actor a, String requestType) {
         if ("ADMIN".equals(a.role()))
             return "";
         if ("EMPLOYEE".equals(a.role()))
             return " AND r.employee_id=?";
-        // HR can see their own requests and employees belonging to an active HR scope.
-        return """
+        // A request can be submitted before or after an employee's transfer. Authorize
+        // against the work date being changed, not the date the request was submitted.
+        String workDate = "DOI_LICH".equals(requestType)
+                ? "(SELECT CAST(d.original_start AS date) FROM dbo.schedule_change_request_details d WHERE d.request_id=r.request_id)"
+                : "(SELECT ar.work_date FROM dbo.attendance_correction_request_details d JOIN dbo.attendance_records ar ON ar.attendance_id=d.attendance_id AND ar.employee_id=r.employee_id WHERE d.request_id=r.request_id)";
+        return " " + """
                 AND (r.employee_id=? OR (
-                    EXISTS (SELECT 1 FROM dbo.accounts target JOIN dbo.roles tr ON tr.role_id=target.role_id
-                            WHERE target.employee_id=r.employee_id AND target.is_active=1 AND tr.role_code='EMPLOYEE')
-                    AND EXISTS (SELECT 1 FROM dbo.employee_assignments ea
+                    EXISTS (SELECT 1 FROM dbo.employee_assignments ea
                         JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id
-                        WHERE ea.employee_id=r.employee_id AND ea.effective_from<=CAST(r.submitted_at AS date)
-                          AND (ea.effective_to IS NULL OR ea.effective_to>CAST(r.submitted_at AS date))
+                        WHERE ea.employee_id=r.employee_id AND ea.effective_from<=%s
+                          AND (ea.effective_to IS NULL OR ea.effective_to>%s)
                           AND hs.hr_account_id=? AND hs.revoked_at IS NULL
                           AND hs.effective_from<=SYSUTCDATETIME()
                           AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME()) ) ))
-                """;
+                """.formatted(workDate, workDate);
     }
 
     private static void addScopeArgs(Actor a, List<Object> args) {
@@ -116,7 +118,7 @@ public class WorkflowRequestQueryService {
             where.append(" AND r.employee_id=?");
             args.add(employeeId);
         }
-        where.append(scopeClause(a));
+        where.append(scopeClause(a, requestType));
         addScopeArgs(a, args);
         Long total = db.queryForObject("SELECT COUNT_BIG(*)" + where, Long.class, args.toArray());
         List<Object> paged = new ArrayList<>(args);
@@ -148,7 +150,7 @@ public class WorkflowRequestQueryService {
         List<Object> args = new ArrayList<>();
         args.add(id);
         args.add(requestType);
-        where.append(scopeClause(a));
+        where.append(scopeClause(a, requestType));
         addScopeArgs(a, args);
         List<RequestSummary> rows = db.query("SELECT " + FIELDS + where, MAPPER, args.toArray());
         if (rows.size() != 1)

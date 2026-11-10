@@ -148,4 +148,15 @@ public class LeaveTypeService {
                 leaveType.getIsActive()
         );
     }
+
+    @Transactional(readOnly = true)
+    public Page<LeaveTypeDTO> searchLeaveTypes(String keyword, Boolean active, int page, int size) {
+        if ((keyword == null || keyword.isBlank()) && active == null) return getLeaveTypesPage(page, size);
+        PagingUtils.create(page, size, Sort.unsorted());
+        var rows = leaveTypeRepository.findAll(Sort.by(Sort.Direction.DESC, "leaveTypeId"))
+                .stream().filter(row -> active == null || active.equals(row.getIsActive()))
+                .filter(row -> com.hrm.util.PersonnelSearch.matches(keyword, row.getTypeCode(), row.getTypeName()))
+                .map(this::toDTO).toList();
+        return com.hrm.util.PersonnelSearch.page(rows, page, size);
+    }
 }

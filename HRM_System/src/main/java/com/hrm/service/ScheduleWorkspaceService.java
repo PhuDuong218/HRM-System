@@ -67,8 +67,6 @@ public class ScheduleWorkspaceService {
         List<Object> args=new ArrayList<>(List.of(on,term));
         if ("HR".equals(actor.roleCode())) {
             sql.append("""
-                    AND EXISTS(SELECT 1 FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id
-                               WHERE a.employee_id=e.employee_id AND a.is_active=1 AND r.role_code='EMPLOYEE')
                     AND EXISTS(SELECT 1 FROM dbo.employee_assignments ea
                         JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id
                         WHERE ea.employee_id=e.employee_id AND ea.effective_from<=?

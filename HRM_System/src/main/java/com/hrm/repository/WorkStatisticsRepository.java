@@ -37,7 +37,7 @@ public interface WorkStatisticsRepository
            from employee_requests er
            join leave_request_details ld on ld.request_id = er.request_id
           where er.request_type = 'NGHI_PHEP'
-            and er.status = 'DA_DUYET'
+            and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
             and ld.leave_start < dateadd(day, 1, :toDate)
             and ld.leave_end >= :fromDate) as approvedLeaveRequests,
         (select coalesce(sum(cast(datediff(minute,
@@ -48,7 +48,7 @@ public interface WorkStatisticsRepository
            from employee_requests er
            join leave_request_details ld on ld.request_id = er.request_id
           where er.request_type = 'NGHI_PHEP'
-            and er.status = 'DA_DUYET'
+            and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
             and ld.leave_start < dateadd(day, 1, :toDate)
             and ld.leave_end >= :fromDate) as approvedLeaveHours,
         (select count(orq.overtime_id)
@@ -89,6 +89,22 @@ public interface WorkStatisticsRepository
       @Param("fromDate") LocalDate fromDate,
       @Param("toDate") LocalDate toDate);
 
+  @Query(value = "SELECT COL_LENGTH('dbo.attendance_records', 'invalidated_at')", nativeQuery = true)
+  Integer attendanceInvalidationColumnLength();
+
+  @Query(value = """
+      select
+        coalesce(sum(cast(case when ar.attendance_result = 'DI_LAM' then 1 else 0 end as bigint)), 0) as confirmedWorkDays,
+        coalesce(sum(cast(case when ar.attendance_result = 'VANG' then 1 else 0 end as bigint)), 0) as confirmedAbsentDays
+      from attendance_records ar
+      where ar.work_date between :fromDate and :toDate
+        and ar.verification_status = 'DA_XAC_NHAN'
+        and ar.confirmed_by is not null and ar.confirmed_at is not null
+        and ar.invalidated_at is null
+      """, nativeQuery = true)
+  Optional<WorkStatisticsRow> summarizeValidAttendance(
+      @Param("fromDate") LocalDate fromDate, @Param("toDate") LocalDate toDate);
+
   // Lay cac khoang nghi phep duoc duyet
   @Query(value = """
       select ld.leave_start as startsAt,
@@ -97,7 +113,7 @@ public interface WorkStatisticsRepository
       join leave_request_details ld
         on ld.request_id = er.request_id
       where er.request_type = 'NGHI_PHEP'
-        and er.status = 'DA_DUYET'
+        and er.status = 'DA_DUYET' and not exists(select 1 from employee_request_withdrawals w where w.request_id=er.request_id)
         and ld.leave_end > ld.leave_start
         and ld.leave_start < :endExclusive
         and ld.leave_end > :startInclusive

@@ -1,3 +1,8 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {PageHeader} from '../../shared/page-header';
 import {TranslatePipe} from '../../shared/translate.pipe';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
@@ -15,10 +20,12 @@ import { employmentApiError } from '../../shared/employment-api-error';
 @Component({
   selector: 'app-contract-types',
   standalone: true,
-  imports: [FormsModule,TranslatePipe],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule,TranslatePipe],
   templateUrl: './contract-types.html'
 })
 export class ContractTypesPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   readonly termKindLabels = contractTermKindLabels;
   private api = inject(ContractService);
   private destroyRef = inject(DestroyRef);
@@ -172,13 +179,11 @@ export class ContractTypesPage implements OnInit {
       });
   }
 
-  deactivate(row: ContractTypeResponse): void {
+  async deactivate(row: ContractTypeResponse): Promise<void> {
     if (this.saving || this.loading || !row.isActive) return;
 
-    const confirmed = window.confirm(
-      `Ngừng sử dụng loại "${row.typeName}"? ` +
-      'Các hợp đồng trong lịch sử vẫn được giữ lại.'
-    );
+    const confirmed = (await this.actionDialogInPage.confirm(`Ngừng sử dụng loại "${row.typeName}"? ` +
+      'Các hợp đồng trong lịch sử vẫn được giữ lại.'));
 
     if (!confirmed) return;
 

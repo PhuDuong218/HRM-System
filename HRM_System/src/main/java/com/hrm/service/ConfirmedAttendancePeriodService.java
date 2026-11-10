@@ -28,16 +28,20 @@ public class ConfirmedAttendancePeriodService {
     }
 
     private final JdbcTemplate db;
+    private final AttendanceActualBreakService actualBreaks;
 
-    public ConfirmedAttendancePeriodService(JdbcTemplate db) {
+    public ConfirmedAttendancePeriodService(JdbcTemplate db,AttendanceActualBreakService actualBreaks) {
+        this.actualBreaks=actualBreaks;
         this.db = db;
     }
 
+    @org.springframework.transaction.annotation.Transactional(value="scheduleTransactionManager",readOnly=true)
     public PeriodSummary summarize(AuthenticatedAccount principal, LocalDate from, LocalDate to,
             Long employeeFilter) {
         return summarizeInternal(principal, from, to, employeeFilter, false);
     }
 
+    @org.springframework.transaction.annotation.Transactional(value="scheduleTransactionManager",readOnly=true)
     public PeriodSummary summarizeMine(AuthenticatedAccount principal, LocalDate from, LocalDate to) {
         return summarizeInternal(principal, from, to, null, true);
     }
@@ -82,26 +86,23 @@ public class ConfirmedAttendancePeriodService {
                         JOIN dbo.departments d ON d.department_id=ea.department_id
                         WHERE ea.employee_id=a.employee_id AND ea.effective_from<=a.work_date
                           AND (ea.effective_to IS NULL OR ea.effective_to>a.work_date)
-                        ORDER BY ea.effective_from DESC,ea.department_id) department_name
+                        ORDER BY ea.effective_from DESC,ea.department_id) department_name,a.attendance_id
                 FROM dbo.attendance_records a JOIN dbo.employees e ON e.employee_id=a.employee_id
-                WHERE a.work_date BETWEEN ? AND ?
+                WHERE (a.work_date BETWEEN ? AND ? OR (a.actual_start<? AND a.actual_end>?))
                   AND a.verification_status='DA_XAC_NHAN'
                   AND a.invalidated_at IS NULL
                 """);
         List<Object> parameters = new ArrayList<>();
         parameters.add(from);
         parameters.add(to);
+        parameters.add(to.plusDays(1).atStartOfDay());
+        parameters.add(from.atStartOfDay());
         if (employeeFilter != null) {
             query.append(" AND a.employee_id=?");
             parameters.add(employeeFilter);
         }
         if (!mine && "HR".equals(role)) {
             query.append("""
-                    AND EXISTS (
-                      SELECT 1 FROM dbo.accounts owner JOIN dbo.roles owner_role ON owner_role.role_id=owner.role_id
-                      WHERE owner.employee_id=a.employee_id AND owner.is_active=1
-                        AND owner_role.role_code='EMPLOYEE'
-                    )
                     AND EXISTS (
                       SELECT 1 FROM dbo.employee_assignments ea
                       JOIN dbo.hr_department_scopes hs ON hs.department_id=ea.department_id
@@ -116,11 +117,11 @@ public class ConfirmedAttendancePeriodService {
         }
         query.append(" ORDER BY a.employee_id,a.work_date,a.actual_start");
         record Line(long employeeId, LocalDate date, String result, LocalDateTime start,
-                LocalDateTime end, Integer breaks, String code, String name, String department) {
+                LocalDateTime end, Integer breaks, String code, String name, String department,long attendanceId) {
         }
         var rows = db.query(query.toString(), (rs, n) -> new Line(rs.getLong(1), rs.getDate(2).toLocalDate(),
                 rs.getString(3), rs.getObject(4, LocalDateTime.class), rs.getObject(5, LocalDateTime.class),
-                rs.getObject(6, Integer.class), rs.getString(7), rs.getString(8), rs.getString(9)),
+                rs.getObject(6, Integer.class), rs.getString(7), rs.getString(8), rs.getString(9),rs.getLong(10)),
                 parameters.toArray());
         record Key(long employee, LocalDate date) {
         }
@@ -128,30 +129,19 @@ public class ConfirmedAttendancePeriodService {
             long present, absent, net, unresolved; String code, name, department;
         }
         java.util.Map<Key, Total> totals = new java.util.LinkedHashMap<>();
+        var verifiedBreaks=actualBreaks.verifiedMany(rows.stream().map(line->new AttendanceActualBreakService.Source(line.attendanceId(),line.start(),line.end(),line.breaks())).toList());
         for (Line line : rows) {
-            var t = totals.computeIfAbsent(new Key(line.employeeId(), line.date()), k -> new Total());
-            t.code=line.code(); t.name=line.name(); t.department=line.department();
-            if ("VANG".equals(line.result())) {
-                t.absent++;
-                continue;
-            }
-            if (!"DI_LAM".equals(line.result())) {
-                t.unresolved++;
-                continue;
-            }
-            t.present++;
-            if (line.start() == null || line.end() == null || !line.end().isAfter(line.start())
-                    || line.breaks() == null || line.breaks() < 0
-                    || !line.start().toLocalDate().equals(line.end().minusNanos(1).toLocalDate())) {
-                t.unresolved++;
-                continue;
-            }
-            long minutes = ChronoUnit.MINUTES.between(line.start(), line.end()) - line.breaks();
-            if (minutes < 0) {
-                t.unresolved++;
-                continue;
-            }
-            t.net += minutes;
+            java.util.function.Function<LocalDate,Total> at=day->{var t=totals.computeIfAbsent(new Key(line.employeeId(),day),k->new Total());t.code=line.code();t.name=line.name();t.department=line.department();return t;};
+            boolean anchored=!line.date().isBefore(from)&&!line.date().isAfter(to);
+            LocalDate unresolvedDay=anchored?line.date():line.start()==null?from:line.start().toLocalDate().isBefore(from)?from:line.start().toLocalDate();
+            if("VANG".equals(line.result())){if(anchored)at.apply(line.date()).absent++;continue;}
+            if(!"DI_LAM".equals(line.result())){at.apply(unresolvedDay).unresolved++;continue;}
+            if(anchored)at.apply(line.date()).present++;
+            try {
+                var details=verifiedBreaks.get(line.attendanceId());
+                var allocation=AttendanceDayAllocation.allocate(line.start(),line.end(),line.breaks(),details);
+                allocation.forEach((day,minutes)->{if(!day.isBefore(from)&&!day.isAfter(to))at.apply(day).net+=minutes;});
+            } catch(ResponseStatusException ex) {at.apply(unresolvedDay).unresolved++;}
         }
         List<EmployeeDay> days = new ArrayList<>();
         long net = 0, unresolved = 0;

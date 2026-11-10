@@ -10,3 +10,9 @@
 /qa_local_backup/
 /frontend/GIAO_DIEN_NHAN_SU.md
 /frontend/KIEM_TRA.md
+git add .gitignore
+git diff --cached --name-status
+/qa_fix/
+/qa_review_20261107/
+/qa_tester/
+/qa_ui/

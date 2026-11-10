@@ -28,6 +28,12 @@ export class DecisionService {
     return this.http.get<DecisionResponse>(API_BASE_URL + '/employee-decisions/' + id);
   }
 
+  rewardLevels() {
+    return this.http.get<{ code: string; label: string; amount: number }[]>(
+      API_BASE_URL + '/employee-decisions/reward-levels',
+    );
+  }
+
   create(body: DecisionRequest) {
     return this.http.post<DecisionResponse>(API_BASE_URL + '/employee-decisions', body);
   }

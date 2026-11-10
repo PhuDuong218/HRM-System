@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
@@ -28,6 +29,17 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@Valid @RequestBody LoginRequest request) {
         return ResponseEntity.ok(authService.login(request));
+    }
+
+    @PostMapping("/web/login")
+    public ResponseEntity<LoginResponse> loginWeb(@Valid @RequestBody LoginRequest request) {
+        return ResponseEntity.ok(authService.loginWeb(request));
+    }
+
+    @PostMapping("/web/refresh")
+    public ResponseEntity<LoginResponse> refreshWeb(@AuthenticationPrincipal AuthenticatedAccount account,
+                                                    @RequestHeader("Authorization") String authorization) {
+        return ResponseEntity.ok(authService.refreshWeb(account, authorization.substring(7)));
     }
 
     @GetMapping("/me")

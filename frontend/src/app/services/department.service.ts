@@ -15,8 +15,9 @@ export interface Assignment {
   employeeId: number; employeeCode: string; employeeName: string; effectiveFrom: string;
 }
 export interface Position { positionId: number; positionCode: string; positionName: string; isActive: boolean; }
-export interface SpringPage<T> { content: T[]; totalPages: number; totalElements: number; }
-export interface Page<T> { items: T[]; totalPages: number; totalElements: number; }
+import {SpringPage} from '../models/page.model';
+export type {SpringPage} from '../models/page.model';
+export type Page<T> = import('../models/page.model').ItemPage<T>;
 
 @Injectable({ providedIn: 'root' })
 export class DepartmentService {

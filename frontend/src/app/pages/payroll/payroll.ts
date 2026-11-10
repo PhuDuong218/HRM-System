@@ -1,3 +1,8 @@
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {HrmNotice} from '../../shared/ui/notice';
+import {PageHeader} from '../../shared/page-header';
+import {RowViewDirective} from '../../shared/row-view.directive';
+import {Pagination} from '../../shared/pagination';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -8,11 +13,13 @@ import { PayrollPeriod, PayrollBatch, PayrollDetailView } from '../../models/pay
 @Component({
   selector: 'app-payroll',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,PageHeader,RowViewDirective,Pagination,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payroll.html',
   styleUrl: './payroll.css'
 })
 export class PayrollPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private payrollService = inject(PayrollService);
   private deptService = inject(DepartmentService);
 
@@ -212,8 +219,12 @@ export class PayrollPage implements OnInit {
     });
   }
 
-  lock(): void {
-    if (!this.currentBatch?.batchId || !confirm('Xác nhận CHỐT bảng lương thành bất biến?')) return;
+  async lock(): Promise<void> {
+    if (!this.currentBatch?.batchId) {
+      this.errorMessage = 'Không xác định được đợt lương cần chốt.';
+      return;
+    }
+    if (!(await this.actionDialogInPage.confirm('Bạn có chắc chắn muốn CHỐT bảng lương? Số liệu sau khi chốt sẽ trở thành bất biến theo quy định kế toán.'))) return;
     this.loading = true;
     this.payrollService.lockBatch(this.currentBatch.batchId).subscribe({
       next: (b) => { this.currentBatch = b; this.actionMessage = 'Bảng lương đã được CHỐT thành công!'; this.loading = false; },
@@ -231,7 +242,11 @@ export class PayrollPage implements OnInit {
   }
 
   submitAdjustment(): void {
-    if (!this.adjustmentReasonInput.trim() || !this.currentBatch?.batchId) return;
+    if (!this.adjustmentReasonInput.trim()) {
+      this.errorMessage = 'Vui lòng điền lý do điều chỉnh.';
+      return;
+    }
+    if (!this.currentBatch?.batchId) return;
     this.loading = true;
     this.payrollService.createAdjustment(this.currentBatch.batchId, this.adjustmentReasonInput).subscribe({
       next: (b) => {
@@ -254,7 +269,7 @@ export class PayrollPage implements OnInit {
         const w = window.open('', '_blank');
         if (w) { w.document.write(html); w.document.close(); }
       },
-      error: () => alert('Chưa tìm thấy phiếu lương hợp lệ để in.')
+      error: () => this.errorMessage = 'Chưa tìm thấy phiếu lương hợp lệ để in.'
     });
   }
 

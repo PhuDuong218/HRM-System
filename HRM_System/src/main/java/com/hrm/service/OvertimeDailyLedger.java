@@ -25,40 +25,19 @@ public class OvertimeDailyLedger {
                 (rs, n) -> new ActualInterval(rs.getObject(1, LocalDateTime.class),
                         rs.getObject(2, LocalDateTime.class)),
                 otId);
-        long detailTotal = 0;
-        LocalDateTime previous = null;
-        for (var b : breaks) {
-            if (b.start() == null || b.end() == null || !b.end().isAfter(b.start()) || b.start().isBefore(start) || b.end().isAfter(end) || (previous != null && b.start().isBefore(previous)))
-                throw invalid("Invalid or overlapping OT break intervals");
-            detailTotal += Duration.between(b.start(), b.end()).toMinutes();
-            previous = b.end();
-        }
-        if (!breaks.isEmpty() && detailTotal != totalBreak)
+        var actual = new OvertimeTimeMath.Span(start,end);
+        var rests = breaks.stream().map(b -> new OvertimeTimeMath.Span(b.start(),b.end())).toList();
+        Duration exact = OvertimeTimeMath.breaks(actual,rests);
+        if (!rests.isEmpty() && !OvertimeTimeMath.aggregateMatches(rests,totalBreak,exact))
             throw invalid("OT break details disagree with aggregate minutes");
-        if (breaks.isEmpty() && totalBreak > 0 && !start.toLocalDate().equals(end.minusNanos(1).toLocalDate()))
-            throw invalid("Cross-day OT with breaks requires detailed intervals");
-        Map<LocalDate, Long> answer = new LinkedHashMap<>();
-        for (LocalDate day = start.toLocalDate(); day.atStartOfDay().isBefore(end); day = day.plusDays(1)) {
-            var lo = day.atStartOfDay();
-            var hi = day.plusDays(1).atStartOfDay();
-            var segmentStart = max(start, lo);
-            var segmentEnd = min(end, hi);
-            if (!segmentEnd.isAfter(segmentStart))
-                continue;
-            long minutes = Duration.between(segmentStart, segmentEnd).toMinutes();
-            if (breaks.isEmpty())
-                minutes -= totalBreak;
-            else
-                for (var b : breaks) {
-                    var a = max(segmentStart, b.start());
-                    var z = min(segmentEnd, b.end());
-                    if (z.isAfter(a))
-                        minutes -= Duration.between(a, z).toMinutes();
-                }
-            if (minutes < 0)
-                throw invalid("OT breaks exceed actual minutes on calendar day");
-            answer.put(day, minutes);
+        if (rests.isEmpty() && totalBreak>0) {
+            if (!start.toLocalDate().equals(end.minusNanos(1).toLocalDate()))
+                throw invalid("Cross-day OT with breaks requires detailed intervals");
+            Duration net = Duration.between(start,end).minusMinutes(totalBreak);
+            if(net.isNegative()) throw invalid("OT breaks exceed actual duration");
+            return Map.of(start.toLocalDate(),net.toMinutes());
         }
+        var answer = OvertimeTimeMath.net(List.of(actual),rests);
         return answer;
     }
 

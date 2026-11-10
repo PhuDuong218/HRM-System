@@ -5,6 +5,8 @@
 
 **Đăng nhập và tài khoản thử nghiệm:** Xem [hướng dẫn mở khóa và đặt mật khẩu tài khoản](database/README_TAI_KHOAN.md). Dự án đã có API đăng nhập và xác thực JWT; API phòng ban yêu cầu ADMIN/HR có quyền `DEPARTMENT_MANAGE`.
 
+**Quên mật khẩu:** Xem [cấu hình SMTP và cơ sở dữ liệu](database/PASSWORD_RECOVERY.md).
+
 **API quản trị tài khoản, vai trò và quyền:** Xem [hợp đồng API và hướng dẫn migration](API_TAI_KHOAN_PHAN_QUYEN.md).
 
 ## 1. Tổng quan
@@ -19,7 +21,7 @@ Hệ thống hướng tới quản lý hồ sơ nhân viên, phòng ban, chức 
 
 | Thành phần | Công nghệ |
 |---|---|
-| Ngôn ngữ | Java 25 (theo `pom.xml`; thống nhất JDK 25 trong nhóm) |
+| Ngôn ngữ | Java 21 (theo `pom.xml`; thống nhất JDK 21 trong nhóm) |
 | Backend | Spring Boot 4.1.1, Spring Web MVC |
 | Truy cập CSDL | Spring Data JPA / Hibernate |
 | Cơ sở dữ liệu | Microsoft SQL Server (`hrm_db`) |
@@ -61,7 +63,7 @@ HRM_System/
 ## 3. Chuẩn bị trên máy thành viên
 
 1. **Git** — tải và cập nhật source code.
-2. **JDK 25** — kiểm tra bằng `java -version`. Nếu cài nhiều JDK, đặt `JAVA_HOME` trỏ đến JDK 25.
+2. **JDK 21** — kiểm tra bằng `java -version`. Nếu cài nhiều JDK, đặt `JAVA_HOME` trỏ đến JDK 21.
 3. **VS Code + Extension Pack for Java** hoặc IntelliJ IDEA.
 4. **SQL Server Database Engine** — nếu dùng database cục bộ; bảo đảm SQL Server đang chạy và cho phép kết nối TCP/IP.
 5. **SQL Server Management Studio (SSMS)** — để tạo/import và kiểm tra database.
@@ -160,6 +162,8 @@ spring.datasource.driver-class-name=com.microsoft.sqlserver.jdbc.SQLServerDriver
 ```
 
 Thay mật khẩu, tên tài khoản, host/cổng theo SQL Server trên **máy của bạn**. `encrypt=false` chỉ là ví dụ dành cho môi trường phát triển cục bộ; nếu dùng server chung, cần cấu hình kết nối bảo mật theo môi trường thực tế.
+
+Để kiểm thử thời gian phiên web, đặt `app.security.web-idle-seconds=30` trong `application-local.properties`, khởi động lại backend và đăng nhập lại. Giá trị tính bằng giây; bỏ dòng này hoặc đặt `600` để dùng thời gian mặc định 10 phút. Cấu hình này không thay đổi thời hạn phiên di động.
 
 Để thành viên mới biết phải tạo file nào, nhóm nên commit thêm **`src/main/resources/application-local.properties.example`** với nội dung tương tự nhưng mật khẩu là `YOUR_PASSWORD`. Mỗi người copy file mẫu thành `application-local.properties` và sửa thông tin riêng.
 
@@ -272,7 +276,7 @@ Luồng trả về: `SQL Server → Repository (Model/Entity) → Service (chuy�
 
 | Hiện tượng | Cách kiểm tra |
 |---|---|
-| `java` không nhận diện | Kiểm tra JDK 25, `JAVA_HOME`, `PATH`; mở lại terminal |
+| `java` không nhận diện | Kiểm tra JDK 21, `JAVA_HOME`, `PATH`; mở lại terminal |
 | Maven Wrapper lỗi | Kiểm tra `mvnw.cmd`, `.mvn/wrapper/`, Internet lần đầu |
 | `Login failed for user` | Kiểm tra SQL Authentication, username/password trong file local |
 | `Connection refused` / timeout | Kiểm tra SQL Server service, TCP/IP, cổng 1433 hoặc cổng thực tế |

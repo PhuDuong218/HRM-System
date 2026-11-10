@@ -7,7 +7,7 @@ import jakarta.validation.constraints.*;
 
 public record DecisionRequest(
         @NotNull @Positive Long employeeId,
-        @NotBlank @Size(max = 50) @Pattern(regexp = "[A-Za-z0-9_-]+") String decisionNumber,
+        @Size(max = 50) @Pattern(regexp = "[A-Za-z0-9_-]*") String decisionNumber,
         @NotNull DecisionType decisionType,
         @NotBlank @Size(max = 2000) String content,
         @NotNull @PastOrPresent LocalDate issuedDate,
@@ -17,5 +17,12 @@ public record DecisionRequest(
         @NotBlank @Size(max = 500) String reason,
         DisciplineForm disciplineForm,
         LocalDate violationDate,
-        @Min(1) @Max(6) Integer salaryIncreaseDelayMonths) {
+        @Min(1) @Max(6) Integer salaryIncreaseDelayMonths,
+        @Size(max = 30) String rewardCode) {
+    public DecisionRequest(Long employeeId, String decisionNumber, DecisionType decisionType, String content,
+            LocalDate issuedDate, DecisionPayrollEffect payrollEffect, BigDecimal amount, LocalDate applyDate,
+            String reason, DisciplineForm disciplineForm, LocalDate violationDate, Integer salaryIncreaseDelayMonths) {
+        this(employeeId, decisionNumber, decisionType, content, issuedDate, payrollEffect, amount, applyDate,
+                reason, disciplineForm, violationDate, salaryIncreaseDelayMonths, null);
+    }
 }

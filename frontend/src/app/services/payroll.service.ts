@@ -57,8 +57,9 @@ export class PayrollService {
   }
 
   // 9. Danh sách phiếu lương cá nhân
-  getMyPayslips(employeeId: number = 1): Observable<any[]> {
-    return this.http.get<any[]>(`${API_BASE_URL}/payslips/my-payslips?employeeId=${employeeId}`);
+  getMyPayslips(): Observable<any[]> {
+    // The server resolves the employee from the authenticated session.
+    return this.http.get<any[]>(`${API_BASE_URL}/payslips/my-payslips`);
   }
 
   // 10. Xem chi tiết 1 phiếu lương

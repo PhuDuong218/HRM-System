@@ -1,3 +1,5 @@
+import {HrmNotice} from '../../shared/ui/notice';
+import {PageHeader} from '../../shared/page-header';
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -6,7 +8,7 @@ import { PayrollService } from '../../services/payroll.service';
 @Component({
   selector: 'app-payslips',
   standalone: true,
-  imports: [CommonModule, FormsModule, DecimalPipe],
+  imports:[HrmNotice,PageHeader,CommonModule, FormsModule, DecimalPipe],
   templateUrl: './payslips.html',
   styleUrl: './payslips.css'
 })
@@ -25,7 +27,8 @@ export class PayslipsPage implements OnInit {
   loadMyPayslips(): void {
     this.loading = true;
     this.errorMessage = '';
-    this.payrollService.getMyPayslips(1).subscribe({
+    this.selectedPayslip = null;
+    this.payrollService.getMyPayslips().subscribe({
       next: (data) => {
         this.payslips = data || [];
         if (this.payslips.length > 0) {
@@ -33,8 +36,11 @@ export class PayslipsPage implements OnInit {
         }
         this.loading = false;
       },
-      error: () => {
-        this.errorMessage = 'Chưa có phiếu lương nào được công bố cho tài khoản của bạn.';
+      error: (error) => {
+        this.payslips = [];
+        this.errorMessage = error.status === 0 ? 'Không thể kết nối máy chủ. Vui lòng thử lại.'
+          : error.status === 403 ? 'Bạn không có quyền xem phiếu lương này.'
+          : error.error?.loi_chi_tiet || 'Không tải được phiếu lương. Vui lòng thử lại.';
         this.loading = false;
       }
     });
@@ -58,7 +64,7 @@ export class PayslipsPage implements OnInit {
           printWin.document.close();
         }
       },
-      error: () => alert('Không thể tải bản in phiếu lương.')
+      error: () => this.errorMessage = 'Không thể tải bản in phiếu lương.'
     });
   }
 }

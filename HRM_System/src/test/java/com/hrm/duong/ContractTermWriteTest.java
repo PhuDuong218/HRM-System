@@ -22,6 +22,7 @@ class ContractTermWriteTest {
   when(types.findById(2L)).thenReturn(Optional.of(contractType()));
   when(repo.saveAndFlush(any())).thenAnswer(x->{var c=(Contract)x.getArgument(0);if(c.getContractId()==null)id(c,"contractId",9);return c;});
   create=new ContractService(repo,types,employees,mock(ContractAuditService.class),guard,new ContractTermPolicy(repo,30,180,60,30,6));
+  var numbers=mock(ContractNumberService.class);ReflectionTestUtils.setField(create,"numbers",numbers);when(numbers.next("CT_TEST")).thenReturn("CT_TEST-000001");
   lifecycle=new ContractLifecycleService(repo,employees,create,mock(BusinessAuditService.class),guard,CLOCK);
   ReflectionTestUtils.setField(lifecycle,"em",mock(EntityManager.class));
   first=contract(3,TODAY.minusDays(40),TODAY.minusDays(21));second=contract(4,TODAY.minusDays(20),TODAY.plusDays(10));

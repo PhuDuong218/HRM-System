@@ -17,13 +17,14 @@ import java.util.List;
 @Service
 public class PayrollStatisticsService {
 
-    public static final String VIEW_AUTHORIZATION = "hasAnyRole('ADMIN','HR')"
+    public static final String VIEW_AUTHORIZATION = "hasRole('ADMIN')"
             + " and hasAuthority('REPORT_VIEW') and hasAuthority('PAYROLL_VIEW')";
 
     private static final BigDecimal ZERO = BigDecimal.ZERO.setScale(4);
     private static final LocalDate LAST_REPORT_DATE = LocalDate.of(9999, 12, 30);
 
     private final PayrollStatisticsRepository repository;
+    @org.springframework.beans.factory.annotation.Autowired private HrScopedReportService hrReports;
 
     public PayrollStatisticsService(PayrollStatisticsRepository repository) {
         this.repository = repository;
@@ -42,6 +43,8 @@ public class PayrollStatisticsService {
         if (fromDate.getYear() < 1 || toDate.isAfter(LAST_REPORT_DATE)) {
             throw new IllegalArgumentException("Kỳ báo cáo phải nằm từ 0001-01-01 đến 9999-12-30");
         }
+
+        if (PersonnelScopeService.isHr()) return hrReports.payroll(fromDate, toDate);
 
         List<PayrollStatisticsRow> rows = repository.summarizeFinalizedBatches(fromDate, toDate.plusDays(1));
         List<BatchSummary> batches = new ArrayList<>();

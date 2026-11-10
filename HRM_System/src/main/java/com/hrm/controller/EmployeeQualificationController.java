@@ -13,10 +13,11 @@ public class EmployeeQualificationController {
     private final EmployeeQualificationService service;
     private final PersonnelAccessService access;
     private final PersonnelCatalogService writes;
-    public EmployeeQualificationController(EmployeeQualificationService service,PersonnelAccessService access,PersonnelCatalogService writes){this.service=service;this.access=access;this.writes=writes;}
+    private final PersonnelScopeService scope;
+    public EmployeeQualificationController(EmployeeQualificationService service,PersonnelAccessService access,PersonnelCatalogService writes,PersonnelScopeService scope){this.service=service;this.access=access;this.writes=writes;this.scope=scope;}
     @GetMapping("/employees/{employeeId}/qualifications")
-    public Page<EmployeeQualificationDTO> getEmployeeQualificationsByEmployeeId(@PathVariable Long employeeId,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){access.ownerOrManager(p,employeeId);return service.getQualificationsPage(employeeId,page,size);}
-    @GetMapping("/employee-qualifications/{id}") public EmployeeQualificationDTO getEmployeeQualificationById(@PathVariable Long id,Principal p){access.actor(p);var result=service.getEmployeeQualificationById(id);access.ownerOrManager(p,result.employeeId());return result;}
+    public Page<EmployeeQualificationDTO> getEmployeeQualificationsByEmployeeId(@PathVariable Long employeeId,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size,Principal p){access.ownerOrManager(p,employeeId);scope.employee(employeeId,true);return service.getQualificationsPage(employeeId,page,size);}
+    @GetMapping("/employee-qualifications/{id}") public EmployeeQualificationDTO getEmployeeQualificationById(@PathVariable Long id,Principal p){access.actor(p);var result=service.getEmployeeQualificationById(id);access.ownerOrManager(p,result.employeeId());scope.employee(result.employeeId(),true);return result;}
     @PostMapping("/employees/{employeeId}/qualifications") @ResponseStatus(HttpStatus.CREATED)
     public EmployeeQualificationDTO addEmployeeQualification(@PathVariable Long employeeId,@Valid @RequestBody EmployeeQualificationRequestDTO request,Principal p){return writes.qualification(p,employeeId,null,"EMPLOYEE_QUALIFICATION_CREATE",()->service.addEmployeeQualification(employeeId,request),EmployeeQualificationDTO::employeeQualificationId);}
     @PutMapping("/employee-qualifications/{id}") public EmployeeQualificationDTO updateEmployeeQualification(@PathVariable Long id,@Valid @RequestBody EmployeeQualificationRequestDTO request,Principal p){return writes.qualification(p,null,id,"EMPLOYEE_QUALIFICATION_UPDATE",()->service.updateEmployeeQualification(id,request),EmployeeQualificationDTO::employeeQualificationId);}

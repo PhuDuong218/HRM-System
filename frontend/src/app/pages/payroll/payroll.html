@@ -1,6 +1,7 @@
 <p class="eyebrow">HRM CENTER</p>
 <h1>Quản lý & Thống kê Tiền lương</h1>
 <p class="page-description">Vận hành đợt lương, đối soát số liệu đa chiều, tra cứu lịch sử nhân viên và chi phí phòng ban.</p>
+<app-page-header variant="directory" title="Quản lý Tiền lương" description="Tính lương, đối soát số liệu và phát hành phiếu lương." />
 
 <!-- THANH CHUYỂN ĐỔI CHẾ ĐỘ XEM -->
 <nav class="d-flex gap-2 mb-4">
@@ -63,8 +64,12 @@
     </div>
   </div>
 
-  @if (actionMessage) { <div class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div> }
-  @if (errorMessage) { <div class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div> }
+  @if (actionMessage) {
+    <div [hrmNotice]="actionMessage" noticeKind="success" class="alert alert-success mt-3 mb-0 py-2">{{ actionMessage }}</div>
+  }
+  @if (errorMessage) {
+    <div [hrmNotice]="errorMessage" noticeKind="error" class="alert alert-danger mt-3 mb-0 py-2">{{ errorMessage }}</div>
+  }
 </section>
 
 <!-- 4 THẺ THỐNG KÊ QUỸ LƯƠNG -->
@@ -202,6 +207,57 @@
     }
   </section>
 }
+<!-- BẢNG ĐỐI SOÁT CHI TIẾT NHÂN VIÊN -->
+<section class="surface">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h2 class="mb-0">Bảng đối soát chi tiết theo nhân viên</h2>
+    <span class="badge text-bg-light">{{ details.length }} bản ghi</span>
+  </div>
+
+  <div class="table-responsive">
+    <table class="table align-middle">
+      <thead>
+        <tr>
+          <th>Mã NV</th>
+          <th>Tổng thu nhập (Gross)</th>
+          <th>Khấu trừ (Bảo hiểm & Thuế)</th>
+          <th>Thực nhận (Net)</th>
+          <th class="text-end">Thao tác</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (item of pagedDetails; track item.payrollDetailId) {
+          <tr (appRowView)="viewDetail(item)" [rowViewDisabled]="loading">
+            <td class="fw-bold">NV-00{{ item.employeeId }}</td>
+            <td class="text-dark-blue fw-semibold">{{ item.totalGross | number:'1.0-0' }} đ</td>
+            <td class="text-muted">{{ item.totalDeduction | number:'1.0-0' }} đ</td>
+            <td class="text-dark-blue fw-bold">{{ item.netSalary | number:'1.0-0' }} đ</td>
+            <td class="text-end">
+              <button class="btn btn-action me-2" (click)="viewDetail(item)">
+                Chi tiết
+              </button>
+              <button class="btn btn-action" (click)="printPayslip(item)">
+                In phiếu
+              </button>
+            </td>
+          </tr>
+        } @empty {
+          <tr>
+            <td colspan="5" class="text-center py-5">
+              <h3 class="text-muted">Chưa có dữ liệu bảng lương</h3>
+              <p class="muted mb-0">Bấm nút "⚡ Tính tự động" để nạp số liệu từ CSDL.</p>
+            </td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  <!-- PHÂN TRANG THEO CHUẨN TRANG HỢP ĐỒNG -->
+  @if (details.length > 0) {
+    <app-pagination [page]="currentPage-1" [pages]="totalPages" [busy]="loading" (pageChange)="currentPage=$event+1"/>
+  }
+</section>
 
 <!-- KHUNG TRƯỢT CHI TIẾT (DRAWER) -->
 @if (isDrawerOpen && selectedDetail) {

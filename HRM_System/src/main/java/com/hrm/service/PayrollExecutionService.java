@@ -25,6 +25,8 @@ import java.util.List;
 
 @Service
 public class PayrollExecutionService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private PayrollReadinessGuard readiness;
 
     private final PayrollBatchRepository batchRepository;
     private final PayrollPeriodRepository periodRepository;
@@ -58,7 +60,11 @@ public class PayrollExecutionService {
      */
     @Transactional
     public String calculateBatch(Long batchId) {
-        PayrollBatch batch = batchRepository.findById(batchId)
+        if (salaryProvider.isSynthetic() || attendanceProvider.isSynthetic()) {
+            throw new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Nguồn tính lương đang là dữ liệu mẫu. Chưa được tính/chốt từ nguồn này; cần kết nối dữ liệu hợp đồng và công thực tế.");
+        }
+        PayrollBatch batch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương với ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.NHAP) {
@@ -67,6 +73,8 @@ public class PayrollExecutionService {
 
         PayrollPeriod period = periodRepository.findById(batch.getPeriodId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kỳ lương ID: " + batch.getPeriodId()));
+
+        readiness.requireReady(batch.getPeriodId());
 
         // 1. Xóa các dữ liệu tính toán cũ của đợt này nếu có (để tính lại sạch sẽ)
         List<PayrollDetail> oldDetails = detailRepository.findByBatchId(batchId);
@@ -123,18 +131,16 @@ public class PayrollExecutionService {
      * Tự sinh chuỗi JSON chuẩn thuần Java để lưu vào cột NVARCHAR(MAX) của SQL Server
      */
     private String buildSnapshotJson(EmployeeSalaryProfileDTO profile, AttendanceSummaryDTO attendance) {
-        StringBuilder sb = new StringBuilder();
-        sb.append("{");
-        sb.append("\"employeeId\":").append(profile.getEmployeeId()).append(",");
-        sb.append("\"employeeCode\":\"").append(profile.getEmployeeCode() != null ? profile.getEmployeeCode() : "").append("\",");
-        sb.append("\"fullName\":\"").append(profile.getFullName() != null ? profile.getFullName() : "").append("\",");
-        sb.append("\"baseSalary\":").append(profile.getBaseSalary() != null ? profile.getBaseSalary().toPlainString() : "0").append(",");
-        sb.append("\"standardWorkDays\":").append(attendance.getStandardWorkDays() != null ? attendance.getStandardWorkDays().toPlainString() : "0").append(",");
-        sb.append("\"actualWorkDays\":").append(attendance.getActualWorkDays() != null ? attendance.getActualWorkDays().toPlainString() : "0").append(",");
-        sb.append("\"overtimeHours\":").append(attendance.getOvertimeHours() != null ? attendance.getOvertimeHours().toPlainString() : "0").append(",");
-        sb.append("\"paidLeaveDays\":").append(attendance.getPaidLeaveDays() != null ? attendance.getPaidLeaveDays().toPlainString() : "0").append(",");
-        sb.append("\"calculatedAt\":\"").append(LocalDateTime.now()).append("\"");
-        sb.append("}");
-        return sb.toString();
+        var values = new java.util.LinkedHashMap<String,Object>();
+        values.put("employeeId",profile.getEmployeeId());
+        values.put("employeeCode",profile.getEmployeeCode()==null?"":profile.getEmployeeCode());
+        values.put("fullName",profile.getFullName()==null?"":profile.getFullName());
+        values.put("baseSalary",profile.getBaseSalary()==null?java.math.BigDecimal.ZERO:profile.getBaseSalary());
+        values.put("standardWorkDays",attendance.getStandardWorkDays()==null?java.math.BigDecimal.ZERO:attendance.getStandardWorkDays());
+        values.put("actualWorkDays",attendance.getActualWorkDays()==null?java.math.BigDecimal.ZERO:attendance.getActualWorkDays());
+        values.put("overtimeHours",attendance.getOvertimeHours()==null?java.math.BigDecimal.ZERO:attendance.getOvertimeHours());
+        values.put("paidLeaveDays",attendance.getPaidLeaveDays()==null?java.math.BigDecimal.ZERO:attendance.getPaidLeaveDays());
+        values.put("calculatedAt",LocalDateTime.now().toString());
+        return tools.jackson.databind.json.JsonMapper.builder().build().writeValueAsString(values);
     }
 }

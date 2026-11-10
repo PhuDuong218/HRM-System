@@ -5,8 +5,8 @@ package com.hrm.service;
  * Matrix (confirmed with the business owner):
  * - EMPLOYEE: may only submit own OT and view own OT; never
  * approves/records/confirms.
- * - HR: handles OT of EMPLOYEE accounts inside its department scope; never own
- * OT, never other HR.
+ * - HR: may view OT in its department scope, including other HR; handles only
+ * EMPLOYEE OT and never handles its own OT.
  * - ADMIN: administrator only, does not clock in or register OT.
  * - ADMIN: may manage EMPLOYEE/HR requests globally, including both approval
  * and confirmation.
@@ -68,6 +68,6 @@ public final class OvertimeAuthorizationRules {
             return true;
         if ("ADMIN".equals(actorRole))
             return true;
-        return "HR".equals(actorRole) && "EMPLOYEE".equals(applicantRole) && withinHrScope;
+        return "HR".equals(actorRole) && withinHrScope;
     }
 }

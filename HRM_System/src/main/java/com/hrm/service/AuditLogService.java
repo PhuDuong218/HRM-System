@@ -39,15 +39,22 @@ public class AuditLogService {
     }
     @Transactional(propagation=Propagation.MANDATORY)
     public void record(AuditEvent event) {
+        String reason=event.reason();
+        var attributes=org.springframework.web.context.request.RequestContextHolder.getRequestAttributes();
+        if(attributes instanceof org.springframework.web.context.request.ServletRequestAttributes web){
+            String encoded=web.getRequest().getHeader("X-Change-Reason");
+            if(encoded!=null){try{reason=new String(Base64.getDecoder().decode(encoded),java.nio.charset.StandardCharsets.UTF_8);}catch(IllegalArgumentException ex){throw PersonnelWorkflowSupport.bad("Lý do thay đổi chưa hợp lệ");}
+                if(reason.isBlank()||reason.length()>1000)throw PersonnelWorkflowSupport.bad("Lý do bắt buộc, tối đa 1000 ký tự");}
+        }
         if(event.actorAccountId()!=null&&event.actorAccountId()<=0)throw new IllegalArgumentException("Invalid audit actor");
         if(event.action()==null||!event.action().matches("[A-Z][A-Z0-9_]{0,99}")||event.targetTable()==null
             ||!event.targetTable().matches("[a-z][a-z0-9_]{0,127}")||event.targetRecordKey()==null||event.targetRecordKey().isBlank()||event.targetRecordKey().length()>100)
             throw new IllegalArgumentException("Invalid audit target/action");
-        if(event.reason()!=null&&event.reason().length()>1000)throw new IllegalArgumentException("Audit reason exceeds 1000 characters");
+        if(reason!=null&&reason.length()>1000)throw new IllegalArgumentException("Audit reason exceeds 1000 characters");
         jdbc.update("""
             INSERT dbo.audit_logs(actor_account_id,occurred_at,action,target_table,target_record_key,reason,before_data_json,after_data_json,correlation_id)
             VALUES(?,?,?,?,?,?,?,?,?)
             """,event.actorAccountId(),LocalDateTime.now(clock.withZone(ZoneOffset.UTC)),event.action(),event.targetTable(),event.targetRecordKey(),
-            event.reason(),safeJson(event.before()),safeJson(event.after()),com.hrm.util.AuditCorrelation.current());
+            reason,safeJson(event.before()),safeJson(event.after()),com.hrm.util.AuditCorrelation.current());
     }
 }

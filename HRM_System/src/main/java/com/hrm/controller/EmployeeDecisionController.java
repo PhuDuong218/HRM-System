@@ -29,6 +29,11 @@ public class EmployeeDecisionController {
         return service.get(id);
     }
 
+    @GetMapping("/reward-levels")
+    public java.util.List<DecisionPayrollPolicy.RewardLevel> rewardLevels() {
+        return service.rewardLevels();
+    }
+
     @GetMapping
     public PageResponse<DecisionResponse> list(@RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) DecisionApprovalStatus status,

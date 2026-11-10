@@ -42,12 +42,31 @@ public class EmployeeContactService {
         // ID tài khoản được xác định từ đăng nhập phía server.
         Long actorAccountId = accessService.requireManager(principal);
 
+        return updateContact(employeeId, request, actorAccountId);
+    }
+
+    @Transactional
+    public void updateOwnContact(com.hrm.security.AuthenticatedAccount actor, EmployeeContactPatchDTO request) {
+        if (actor == null || actor.employeeId() == null || !java.util.Set.of("ADMIN", "HR", "EMPLOYEE").contains(actor.roleCode()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN);
+        if (request.getIdentityNumber() != null)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Không được tự sửa CCCD");
+        updateContact(actor.employeeId(), request, actor.accountId());
+    }
+
+    private EmployeeDetailDTO updateContact(Long employeeId, EmployeeContactPatchDTO request, Long actorAccountId) {
         Employee employee = employeeRepository
                 .findByIdForUpdate(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy nhân viên: " + employeeId));
 
         Map<String, String> before = snapshot(employee);
+        EmployeeWriteRules.requireVersion(employee,request.getVersion());
+        request.setReason(EmployeeWriteRules.reason(request.getReason()));
+        EmployeeWriteRules.requiredIfPresent(request.hasEmail(),request.getEmail(),"Email");
+        EmployeeWriteRules.requiredIfPresent(request.hasAddress(),request.getAddress(),"Địa chỉ");
+        EmployeeWriteRules.requiredIfPresent(request.hasIdentityNumber(),request.getIdentityNumber(),"CCCD/CMND");
+        EmployeeWriteRules.identity(request.getIdentityNumber());
 
         // Tính dữ liệu dự kiến sau cập nhật để phát hiện request không đổi gì.
         Map<String, String> proposed = new LinkedHashMap<>(before);
@@ -70,11 +89,7 @@ public class EmployeeContactService {
         // Chụp dữ liệu thực tế sau khi service cập nhật.
         Map<String, String> after = snapshot(employee);
 
-        auditService.recordContactUpdate(
-                actorAccountId,
-                employeeId,
-                before,
-                after);
+        auditService.recordContactUpdate(actorAccountId,employeeId,before,after,request.getReason());
 
         return result;
     }

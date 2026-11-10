@@ -5,6 +5,11 @@ import jakarta.validation.constraints.Size;
 
 // PUT yeu cau day du ma + ten; ma khong duoc doi sau khi tao.
 public class QualificationLevelRequestDTO {
+    @jakarta.validation.constraints.Min(0) @jakarta.validation.constraints.Max(1000)
+    private Integer rankOrder;
+    public Integer getRankOrder(){return rankOrder;}
+    public void setRankOrder(Integer value){rankOrder=value;}
+
     @NotBlank(message = "Ma trinh do khong duoc de trong")
     @Size(max = 50)
     private String levelCode;

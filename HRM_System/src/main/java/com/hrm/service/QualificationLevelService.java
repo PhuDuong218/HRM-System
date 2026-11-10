@@ -20,6 +20,7 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class QualificationLevelService {
+    @org.springframework.beans.factory.annotation.Autowired private QualificationMetadata metadata;
     private final QualificationLevelRepository repository;
 
     public QualificationLevelService(QualificationLevelRepository repository) {
@@ -48,7 +49,9 @@ public class QualificationLevelService {
         level.setDescription(request.getDescription());
         level.setIsActive(true);
         level.setCreatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
-        return toDTO(repository.saveAndFlush(level));
+        repository.saveAndFlush(level);
+        if(metadata!=null)metadata.rank(level.getQualificationLevelId(),request.getRankOrder());
+        return toDTO(level);
     }
 
     @Transactional
@@ -62,7 +65,9 @@ public class QualificationLevelService {
         level.setDescription(request.getDescription());
         if (request.getIsActive() != null) level.setIsActive(request.getIsActive());
         level.setUpdatedAt(LocalDateTime.now(java.time.ZoneOffset.UTC));
-        return toDTO(repository.saveAndFlush(level));
+        repository.saveAndFlush(level);
+        if(metadata!=null)metadata.rank(level.getQualificationLevelId(),request.getRankOrder());
+        return toDTO(level);
     }
 
     @Transactional
@@ -80,7 +85,7 @@ public class QualificationLevelService {
 
     private QualificationLevelDTO toDTO(QualificationLevel level) {
         return new QualificationLevelDTO(level.getQualificationLevelId(), level.getLevelCode(),
-                level.getLevelName(), level.getDescription(), level.getIsActive());
+                level.getLevelName(), level.getDescription(), level.getIsActive(),metadata==null?null:metadata.rank(level.getQualificationLevelId()));
     }
 
     @Transactional(readOnly = true)
@@ -98,4 +103,15 @@ public class QualificationLevelService {
             )
     ).map(this::toDTO);
 }
+
+    @Transactional(readOnly = true)
+    public Page<QualificationLevelDTO> searchLevels(String keyword, Boolean active, int page, int size) {
+        if ((keyword == null || keyword.isBlank()) && active == null) return getLevelsPage(page, size);
+        PagingUtils.create(page, size, Sort.unsorted());
+        var rows = repository.findAll(Sort.by(Sort.Direction.DESC, "qualificationLevelId"))
+                .stream().filter(row -> active == null || active.equals(row.getIsActive()))
+                .filter(row -> com.hrm.util.PersonnelSearch.matches(keyword, row.getLevelCode(), row.getLevelName()))
+                .map(this::toDTO).toList();
+        return com.hrm.util.PersonnelSearch.page(rows, page, size);
+    }
 }

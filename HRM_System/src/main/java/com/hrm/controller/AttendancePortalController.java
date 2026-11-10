@@ -14,12 +14,17 @@ import org.springframework.web.bind.annotation.*;
 public class AttendancePortalController {
     private final AttendancePortalService service;
     public AttendancePortalController(AttendancePortalService service){this.service=service;}
+    @org.springframework.beans.factory.annotation.Autowired private com.hrm.service.AttendanceClockReviewService clockReview;
+    @PostMapping("/records/{id}/review-check-in") public Object reviewIn(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return clockReview.review(a,id,true,body.expectedVersion(),body.reason());}
+    @PostMapping("/records/{id}/review-check-out") public Object reviewOut(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return clockReview.review(a,id,false,body.expectedVersion(),body.reason());}
     @GetMapping("/context") public Object context(@AuthenticationPrincipal AuthenticatedAccount a){return service.context(a);}
+    @GetMapping("/calendar-policy") public Object calendarPolicy(@AuthenticationPrincipal AuthenticatedAccount a){return service.calendarInfo(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
     @GetMapping("/records") public Object records(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="false") boolean mine,
       @RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,
       @RequestParam(required=false) String verification,@RequestParam(required=false) String anomaly,@RequestParam(defaultValue="0") int page){return service.search(a,mine,from,to,q,departmentId,verification,anomaly,page);}
     @GetMapping("/schedules/{id}") public Object detail(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestParam(defaultValue="false") boolean mine){return service.detail(a,mine,id);}
+    @PostMapping("/schedules/{id}/absence") public Object absence(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestBody VersionCommand body){return service.markAbsent(a,id,body.reason());}
     @PostMapping("/manual") public Object manual(@AuthenticationPrincipal AuthenticatedAccount a,@Valid @RequestBody AttendanceInput body){return service.manual(a,body);}
     @PutMapping("/records/{id}") public Object correct(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody CorrectionCommand body){return service.correctVersioned(a,id,body.correction(),body.expectedVersion());}
     @PostMapping("/records/{id}/confirm") public Object confirm(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@Valid @RequestBody VersionCommand body){return service.verifyVersioned(a,id,true,null,body.expectedVersion());}

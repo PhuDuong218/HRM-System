@@ -22,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 @Transactional(readOnly = true)
 public class ContractService {
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+    @org.springframework.beans.factory.annotation.Autowired private ContractNumberService numbers;
     private final ContractRepository contracts;
     private final ContractTypeRepository types;
     private final EmployeeRepository employees;
@@ -60,7 +62,9 @@ public class ContractService {
                 .replace("_", "!_").replace("[", "![") + "%";
         var pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "startDate", "contractId"));
-        var result = contracts.search(employeeId, status, pattern, pageable);
+        var result = PersonnelScopeService.isHr()
+                ? contracts.searchScoped(employeeId, status, pattern, personnelScope.employees(), pageable)
+                : contracts.search(employeeId, status, pattern, pageable);
         return new PageResponse<>(result.getContent().stream().map(this::toResponse).toList(),
                 result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
@@ -69,6 +73,7 @@ public class ContractService {
     @Transactional
     public ContractResponse create(ContractCreateRequest request) {
         Employee employee = lockEmployee(request.employeeId());
+        request = prepare(request);
 
         historyGuard.assertMutable(request.employeeId(), request.startDate(), request.endDate());
 
@@ -76,6 +81,11 @@ public class ContractService {
         audit.record("CONTRACT_CREATE", saved.getContractId(),
                 "Ghi nhận hợp đồng đã ký", null, snapshot(saved));
         return toResponse(saved);
+    }
+
+    public ContractCreateRequest prepare(ContractCreateRequest request){
+        ContractType type=types.findById(request.contractTypeId()).orElseThrow(()->error(HttpStatus.NOT_FOUND,"Không tìm thấy loại hợp đồng"));
+        return new ContractCreateRequest(request.employeeId(),request.contractTypeId(),null,request.signedDate(),request.startDate(),ContractGeneratedFields.endDate(type.getTermKind(),type.getMaxMonths(),request.startDate(),request.endDate()),request.probationGroup());
     }
 
     private Contract createRecord(Employee employee, ContractCreateRequest request) {
@@ -90,15 +100,13 @@ public class ContractService {
         if (!Boolean.TRUE.equals(type.getIsActive())) {
             throw error(HttpStatus.CONFLICT, "Loại hợp đồng đã ngừng sử dụng");
         }
-        String number = request.contractNumber().trim();
-        if (contracts.existsByContractNumber(number)) {
-            throw error(HttpStatus.CONFLICT, "Số hợp đồng đã tồn tại");
-        }
         if (contracts.countOverlapping(employee.getEmployeeId(),
                 request.startDate(), request.endDate()) > 0) {
             throw error(HttpStatus.CONFLICT, "Thời hạn chồng với hợp đồng đã có");
         }
         termPolicy.validate(employee.getEmployeeId(),type,request);
+        String number = numbers.next(type.getTypeCode());
+        if(contracts.existsByContractNumber(number))throw error(HttpStatus.CONFLICT,"Số hợp đồng đã tồn tại; cần kiểm tra bộ cấp số");
         Contract entity = new Contract();
         entity.setEmployee(employee);
         entity.setProbationGroup(request.probationGroup());

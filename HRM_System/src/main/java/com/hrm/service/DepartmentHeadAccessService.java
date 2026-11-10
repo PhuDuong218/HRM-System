@@ -15,6 +15,20 @@ public class DepartmentHeadAccessService {
     private final JdbcTemplate jdbc;
     public DepartmentHeadAccessService(JdbcTemplate jdbc) { this.jdbc = jdbc; }
 
+    @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
+    public boolean canReadPersonnel(Principal principal) {
+        if(principal==null)return false;
+        var actor=PersonnelScopeService.current();
+        if(actor==null||!actor.username().equals(principal.getName()))return false;
+        if(personnelScope.isCurrentHead())return true;
+        try {requireManager(principal);return true;}catch(ResponseStatusException denied){return false;}
+    }
+    public Long requireReader(Principal principal) {
+        var actor=PersonnelScopeService.current();
+        if(actor!=null&&principal!=null&&actor.username().equals(principal.getName())&&personnelScope.isCurrentHead())return actor.accountId();
+        return requireManager(principal);
+    }
+
     public Long requireManager(Principal principal) {
         if (principal == null) {
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Cần đăng nhập để quản lý nhân sự");

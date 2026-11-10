@@ -55,6 +55,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(authorize -> authorize
                         .requestMatchers(
                                 "/api/auth/login",
+                                "/api/auth/web/login",
+                                "/api/auth/forgot-password",
+                                "/api/auth/verify-recovery-code",
+                                "/api/auth/reset-forgotten-password",
                                 "/api/health",
                                 "/hello")
                         .permitAll()

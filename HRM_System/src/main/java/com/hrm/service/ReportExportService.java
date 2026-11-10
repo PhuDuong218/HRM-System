@@ -22,7 +22,7 @@ import java.time.LocalDate;
 @Transactional
 public class ReportExportService {
 
-    public static final String VIEW_AUTHORIZATION = "hasAnyRole('ADMIN','HR') and hasAuthority('REPORT_VIEW')";
+    public static final String VIEW_AUTHORIZATION = "hasRole('ADMIN') and hasAuthority('REPORT_VIEW')";
 
     private final EmployeeStatisticsService employeeStatistics;
     private final ContractStatisticsService contractStatistics;
@@ -50,7 +50,7 @@ public class ReportExportService {
     public ReportExportFile exportEmployees() {
         AuthenticatedAccount actor = currentActor();
         EmployeeStatisticsResponse report = employeeStatistics.getEmployeeStatistics();
-        return completeExport(actor, "employees-report.xlsx", excelWriter.employees(report),
+        return completeExport(actor, "employees-report.xlsx", excelWriter.employees(report, "HR".equals(actor.roleCode())),
                 "EMPLOYEES", "employees", "filters=none");
     }
 
@@ -66,7 +66,7 @@ public class ReportExportService {
                 + "; reportDate=" + report.reportDate()
                 + "; expiringWithinDays=" + report.expiringWithinDays()
                 + "; departmentId=" + (report.departmentId() == null ? "ALL" : report.departmentId());
-        return completeExport(actor, "contracts-report.xlsx", excelWriter.contracts(report),
+        return completeExport(actor, "contracts-report.xlsx", excelWriter.contracts(report, "HR".equals(actor.roleCode())),
                 "CONTRACTS", "contracts", filters);
     }
 
@@ -74,7 +74,7 @@ public class ReportExportService {
     public ReportExportFile exportWork(LocalDate fromDate, LocalDate toDate) {
         AuthenticatedAccount actor = currentActor();
         WorkStatisticsResponse report = workStatistics.summarize(fromDate, toDate);
-        return completeExport(actor, "work-report.xlsx", excelWriter.work(report),
+        return completeExport(actor, "work-report.xlsx", excelWriter.work(report, "HR".equals(actor.roleCode())),
                 "WORK", "attendance_records", periodFilters(report.fromDate(), report.toDate()));
     }
 
@@ -82,7 +82,7 @@ public class ReportExportService {
     public ReportExportFile exportPayroll(LocalDate fromDate, LocalDate toDate) {
         AuthenticatedAccount actor = currentActor();
         PayrollStatisticsResponse report = payrollStatistics.summarize(fromDate, toDate);
-        return completeExport(actor, "payroll-report.xlsx", excelWriter.payroll(report),
+        return completeExport(actor, "payroll-report.xlsx", excelWriter.payroll(report, "HR".equals(actor.roleCode())),
                 "PAYROLL", "payroll_batches", periodFilters(report.fromDate(), report.toDate())
                         + "; batchSelection=LATEST_FINALIZED_PER_PERIOD");
     }

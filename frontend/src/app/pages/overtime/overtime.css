@@ -32,3 +32,11 @@
 
 [data-ot-key]{scroll-margin-top:96px}
 @media(min-width:1200px){.ot-detail-column{position:sticky;top:96px;align-self:flex-start}}
+/* The list and detail own their scroll position when shown side by side. */
+@media(min-width:1200px){
+ .ot-workspace.ot-split-scroll{align-items:stretch!important;scroll-margin-top:96px}
+ .ot-split-scroll>.ot-list-column,.ot-split-scroll>.ot-detail-column{position:static;min-height:0;align-self:stretch}
+ .ot-split-scroll>.ot-list-column>.surface,.ot-split-scroll>.ot-detail-column>.surface{height:calc(100dvh - 128px);max-height:calc(100dvh - 128px);overflow-y:auto;overscroll-behavior-y:contain;scrollbar-gutter:stable;min-height:0}
+ .ot-split-scroll .ot-panel{position:relative}
+}
+@media(max-width:1199.98px){.ot-workspace>.ot-detail-column{position:static}.ot-workspace>.ot-list-column>.surface,.ot-workspace>.ot-detail-column>.surface{height:auto;max-height:none;overflow-y:visible}}

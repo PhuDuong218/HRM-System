@@ -6,6 +6,5 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @Configuration
 @EnableScheduling
-@ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true")
 public class ScheduleChangeSchedulingConfig {
 }

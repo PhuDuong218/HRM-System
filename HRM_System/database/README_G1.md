@@ -19,3 +19,7 @@ Không có bước DROP/TRUNCATE hoặc cập nhật hàng loạt dữ liệu c�
 Các tài khoản seed của SQL gốc có thể đang khóa và mật khẩu mẫu không dùng để đăng nhập thật. Server Postman G1 tạo hai actor test riêng, bật khi server chạy và khóa khi dừng. Nó không mở khóa các tài khoản mẫu/cá nhân của nhóm.
 
 Schema bổ sung của các module ngoài G1 (ví dụ cột xóa mềm bằng cấp) cần migration riêng khi bàn giao module đó; không dùng kết quả G1 để khẳng định các module ngoài phạm vi đã tái tạo đầy đủ.
+
+## Phạm vi quản lý phòng ban của HR
+
+`migrations/010_hr_department_scopes.sql` tạo bảng lưu phạm vi HR trên database đang được chọn, khi bảng chưa tồn tại. Script không tự chạy, không cấp phạm vi hay thay đổi tài khoản. Nếu bảng đã tồn tại, script dừng để người quản trị đối chiếu cấu trúc; không chạy lại script khởi tạo trên database đã có dữ liệu. ADMIN phân công phòng ban qua ứng dụng sau khi schema đã sẵn sàng.

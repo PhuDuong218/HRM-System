@@ -1,0 +1,19 @@
+package com.hrm.service;
+import java.security.Principal;
+import java.util.List;
+import org.junit.jupiter.api.Test;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.web.server.ResponseStatusException;
+import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.Mockito.*;
+class NotificationServiceTest {
+ @org.junit.jupiter.api.BeforeEach void transaction(){org.springframework.transaction.support.TransactionSynchronizationManager.setActualTransactionActive(true);}
+ @org.junit.jupiter.api.AfterEach void clearTransaction(){org.springframework.transaction.support.TransactionSynchronizationManager.clear();}
+ @Test void anotherAccountsNotificationIsNotFoundAndCannotBeMarked(){var db=mock(JdbcTemplate.class);var access=mock(PersonnelAccessService.class);var publisher=mock(NotificationPublisher.class);Principal p=()->"one";when(publisher.enabled()).thenReturn(true);when(access.actor(p)).thenReturn(new PersonnelAccessService.Actor(12,2,"EMPLOYEE"));var service=new NotificationService(db,access,publisher,mock(EmployeeRequestService.class));assertEquals(404,assertThrows(ResponseStatusException.class,()->service.read(99,p)).getStatusCode().value());verify(db).queryForList(contains("notification_id=? AND recipient_id=?"),eq(Long.class),eq(99L),eq(12L));verify(db,never()).update(anyString(),any(Object[].class));}
+ @Test void readAllUsesActorAndSnapshot(){var db=mock(JdbcTemplate.class);var access=mock(PersonnelAccessService.class);var publisher=mock(NotificationPublisher.class);Principal p=()->"one";when(publisher.enabled()).thenReturn(true);when(access.actor(p)).thenReturn(new PersonnelAccessService.Actor(12,2,"HR"));new NotificationService(db,access,publisher,mock(EmployeeRequestService.class)).readAll(25,p);verify(db).update(contains("recipient_id=? AND notification_id<=? AND is_read=0"),eq(12L),eq(25L));}
+ @Test void targetCannotBypassCurrentRecordAuthorization(){var db=mock(JdbcTemplate.class);var access=mock(PersonnelAccessService.class);var publisher=mock(NotificationPublisher.class);var requests=mock(EmployeeRequestService.class);Principal p=()->"one";when(publisher.enabled()).thenReturn(true);when(access.actor(p)).thenReturn(new PersonnelAccessService.Actor(12,2,"HR"));when(db.queryForList(anyString(),eq(99L),eq(12L))).thenReturn(List.of(java.util.Map.of("reference_type","employee_requests","reference_id",8L)));when(requests.detail(8,p)).thenThrow(new org.springframework.security.access.AccessDeniedException("scope revoked"));assertThrows(org.springframework.security.access.AccessDeniedException.class,()->new NotificationService(db,access,publisher,requests).target(99,p));}
+ @Test void publisherRemovesActorAndDuplicateRecipients(){var db=mock(JdbcTemplate.class);new NotificationPublisher(db,true).enqueue("key",2L,"REQUEST_SUBMITTED","Title","Message","employee_requests",3,List.of(2L,4L,4L));verify(db,times(1)).update(contains("INSERT dbo.NotificationOutboxRecipients"),anyString(),eq(4L));verify(db,times(2)).update(anyString(),any(Object[].class));}
+ @Test void replayedEventDoesNotCreateMoreNotifications(){var db=mock(JdbcTemplate.class);when(db.queryForList(anyString(),eq(String.class),eq("key"))).thenReturn(List.of("existing"));new NotificationPublisher(db,true).enqueue("key",2L,"REQUEST_SUBMITTED","Title","Message","employee_requests",3,List.of(4L));verify(db,never()).update(anyString(),any(Object[].class));}
+ @Test void disabledPublisherDoesNotReadOrWriteSchema(){var db=mock(JdbcTemplate.class);new NotificationPublisher(db,false).enqueue("key",2L,"REQUEST_SUBMITTED","Title","Message","employee_requests",3,List.of(4L));verifyNoInteractions(db);}
+ @Test void deliveryChecksStatusUnderLockBeforeWriting(){var db=mock(JdbcTemplate.class);new NotificationDelivery(db).deliver("done");verify(db).queryForList(contains("UPDLOCK,READPAST,READCOMMITTEDLOCK"),eq("done"));verify(db,never()).update(anyString(),any(Object[].class));}
+}

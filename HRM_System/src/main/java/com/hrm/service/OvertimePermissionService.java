@@ -20,8 +20,8 @@ public class OvertimePermissionService {
     }
 
     /**
-     * SQL predicate: target employee is an EMPLOYEE-role account inside the
-     * effective department scope of the HR account bound to the single '?'.
+     * SQL predicate for viewing work in the effective department scope of the
+     * HR account bound to the single '?'. Mutations have separate checks.
      */
     public static String hrScopeExistsSql(String employeeIdExpr, String dateExpr) {
         return "(EXISTS (SELECT 1 FROM dbo.employee_assignments ea "
@@ -29,11 +29,7 @@ public class OvertimePermissionService {
                 + "WHERE ea.employee_id=" + employeeIdExpr + " AND hs.hr_account_id=? "
                 + "AND ea.effective_from<=" + dateExpr
                 + " AND (ea.effective_to IS NULL OR ea.effective_to>" + dateExpr + ") "
-                + "AND CONVERT(date,hs.effective_from)<=" + dateExpr
-                + " AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>" + dateExpr + ") "
-                + "AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME() AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())) "
-                + "AND EXISTS (SELECT 1 FROM dbo.accounts ta JOIN dbo.roles tr ON tr.role_id=ta.role_id "
-                + "WHERE ta.employee_id=" + employeeIdExpr + " AND ta.is_active=1 AND tr.role_code='EMPLOYEE') AND NOT EXISTS(SELECT 1 FROM dbo.accounts ha JOIN dbo.roles hr ON hr.role_id=ha.role_id WHERE ha.employee_id="+employeeIdExpr+" AND ha.is_active=1 AND hr.role_code IN ('HR','ADMIN')))";
+                + "AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME() AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())))";
     }
 
     public record VerifiedActor(long accountId, Long employeeId, String roleCode) {
@@ -174,7 +170,7 @@ public class OvertimePermissionService {
         if ("ADMIN".equals(actor.roleCode())) {
             if(confirming && java.util.Objects.equals(approver,actor.accountId())){
                 Long admins=db.queryForObject("SELECT COUNT_BIG(*) FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id WHERE a.is_active=1 AND r.role_code='ADMIN'",Long.class);
-                if(!"HR".equals(targetRole)||admins==null||admins!=1L)deny();
+                if(admins==null||admins!=1L)deny();
                 return actor;
             }
             // ADMIN manages other employees' OT; ADMIN never registers or accrues OT.
@@ -209,11 +205,9 @@ public class OvertimePermissionService {
                 SELECT COUNT_BIG(*) FROM dbo.hr_department_scopes hs
                 JOIN dbo.employee_assignments ta ON ta.department_id=hs.department_id
                 WHERE hs.hr_account_id=? AND ta.employee_id=?
-                  AND CONVERT(date,hs.effective_from)<=?
-                  AND (hs.effective_to IS NULL OR CONVERT(date,hs.effective_to)>?)
                   AND hs.revoked_at IS NULL AND hs.effective_from<=SYSUTCDATETIME() AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())
                   AND ta.effective_from<=? AND (ta.effective_to IS NULL OR ta.effective_to>?)
-                """, Long.class, accountId, targetEmployeeId, date, date, date, date);
+                """, Long.class, accountId, targetEmployeeId, date, date);
         return count != null && count > 0;
     }
 }

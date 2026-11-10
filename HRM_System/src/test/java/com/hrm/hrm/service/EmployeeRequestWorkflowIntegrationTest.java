@@ -30,6 +30,8 @@ class EmployeeRequestWorkflowIntegrationTest {
     @Autowired PersonnelAccessService access;
     @Autowired PersonnelCatalogService catalogs;
     @Autowired LeaveEntitlementService entitlements;
+    @Autowired LeaveRequestRules leaveRules;
+    @Autowired LeaveAccrualService accrual;
     @Autowired QualificationLevelService levels;
     @Autowired EmployeeQualificationService qualifications;
     @MockitoSpyBean PersonnelWorkflowSupport support;
@@ -39,8 +41,9 @@ class EmployeeRequestWorkflowIntegrationTest {
     final LocalDate day=LocalDate.of(2026,11,10);
     String tag;long employee,other,adminId,type,department,position,limit;
     Principal admin,worker,stranger;
-    @BeforeEach void setup() {
+    @BeforeEach void setup() throws Exception {
         assertEquals("hrm_test",jdbc.queryForObject("SELECT DB_NAME()",String.class));
+        for(String migration:List.of("005_request_approval_stages.sql","006_leave_request_rules.sql","007_qualification_validity_and_rank.sql","008_direct_termination_decisions.sql","009_leave_eligibility_and_accrual.sql","010_leave_cancellation_schedule_guard.sql","011_employee_optional_gender.sql","012_schedule_breaks_for_partial_leave.sql","013_leave_accrual_department_scope.sql","022_leave_request_numbers.sql"))jdbc.execute(java.nio.file.Files.readString(java.nio.file.Path.of("database/migrations/"+migration)));
         now.set(Instant.parse("2026-11-10T02:00:00Z"));
         when(clock.instant()).thenAnswer(i->now.get());when(clock.getZone()).thenReturn(ZoneId.of("Asia/Ho_Chi_Minh"));
         when(clock.withZone(any())).thenAnswer(i->Clock.fixed(now.get(),i.getArgument(0)));
@@ -182,10 +185,10 @@ class EmployeeRequestWorkflowIntegrationTest {
         requests.approve(request,new Decision(null,null),admin);hours("7");
         assertEquals(limit,((Number)((Map<?,?>)((List<?>)requests.detail(request,worker).get("allocations")).get(0)).get("entitlementId")).longValue());
     });}
-    @Test void startedLeaveCannotBeApprovedThroughOrdinaryWorkflow(){rollback(()->{
+    @Test void onTimeSubmissionCanBeApprovedLaterWhilePeriodIsMutable(){rollback(()->{
         long request=id(requests.leave(leave(1),worker));
         now.set(day.plusDays(1).atTime(8,1).atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());
-        fails(400,()->requests.approve(request,new Decision(null,null),admin));hours("0");
+        requests.approve(request,new Decision(null,null),admin);hours("9");
     });}
     @Test void scheduleChangesWhilePendingAreRecomputedAtApproval(){rollback(()->{
         long request=id(requests.leave(leave(1),worker));
@@ -215,6 +218,7 @@ class EmployeeRequestWorkflowIntegrationTest {
         fails(400,()->requests.list(true,"BOGUS",null,0,10,worker));fails(400,()->requests.list(true,null,null,-1,10,worker));
     });}
     @Test void resignationStaysWorkingUntilDayAfterLastDateAndRunsOnce(){rollback(()->{
+        int tokenVersion=jdbc.queryForObject("SELECT token_version FROM dbo.accounts WHERE username=?",Integer.class,worker.getName());
         LocalDate last=day.plusDays(3);long request=id(requests.resign(new Resignation(last,"Leaving"),worker));
         fails(409,()->requests.resign(new Resignation(last,"duplicate"),worker));
         requests.approve(request,new Decision(last,"accepted"),admin);
@@ -226,6 +230,7 @@ class EmployeeRequestWorkflowIntegrationTest {
         requests.execute(request,adminId);requests.execute(request,adminId);
         assertEquals("DA_NGHI",jdbc.queryForObject("SELECT employment_status FROM dbo.employees WHERE employee_id=?",String.class,employee));
         assertFalse(jdbc.queryForObject("SELECT is_active FROM dbo.accounts WHERE username=?",Boolean.class,worker.getName()));
+        assertEquals(tokenVersion+1,jdbc.queryForObject("SELECT token_version FROM dbo.accounts WHERE username=?",Integer.class,worker.getName()));
         assertEquals(last,jdbc.queryForObject("SELECT termination_date FROM dbo.employees WHERE employee_id=?",LocalDate.class,employee));
         assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.g2_resignation_executions WHERE request_id=?",Integer.class,request));
     });}
@@ -246,12 +251,15 @@ class EmployeeRequestWorkflowIntegrationTest {
     @Test void qualificationCatalogAndSoftDeleteKeepMetadataAndSinglePrimary(){rollback(()->{
         var levelRequest=new QualificationLevelRequestDTO();levelRequest.setLevelCode(tag);levelRequest.setLevelName("G2 level");
         var level=catalogs.write(admin,"qualification_levels",null,"QUALIFICATION_LEVEL_CREATE",()->levels.addQualificationLevel(levelRequest),QualificationLevelDTO::qualificationLevelId);
-        var q=new EmployeeQualificationRequestDTO();q.setQualificationLevelId(level.qualificationLevelId());q.setGraduationYear(2020);q.setIsPrimary(true);
+        var q=new EmployeeQualificationRequestDTO();q.setQualificationLevelId(level.qualificationLevelId());q.setGraduationYear(2020);q.setIsPrimary(false);
         var first=catalogs.qualification(admin,employee,null,"EMPLOYEE_QUALIFICATION_CREATE",()->qualifications.addEmployeeQualification(employee,q),EmployeeQualificationDTO::employeeQualificationId);
+        assertTrue(first.isPrimary());q.setIsPrimary(true);q.setGraduationYear(2021);
         var second=catalogs.qualification(admin,employee,null,"EMPLOYEE_QUALIFICATION_CREATE",()->qualifications.addEmployeeQualification(employee,q),EmployeeQualificationDTO::employeeQualificationId);
         assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.employee_qualifications WHERE employee_id=? AND is_primary=1",Integer.class,employee));
         assertFalse(qualifications.getEmployeeQualificationById(first.employeeQualificationId()).isPrimary());
         assertEquals(adminId,jdbc.queryForObject("SELECT updated_by FROM dbo.employee_qualifications WHERE employee_qualification_id=?",Long.class,first.employeeQualificationId()));
+        fails(409,()->qualifications.deleteEmployeeQualification(second.employeeQualificationId()));
+        catalogs.qualification(admin,employee,first.employeeQualificationId(),"EMPLOYEE_QUALIFICATION_PRIMARY",()->qualifications.setPrimaryEmployeeQualification(first.employeeQualificationId()),EmployeeQualificationDTO::employeeQualificationId);
         catalogs.write(admin,"employee_qualifications",second.employeeQualificationId(),"EMPLOYEE_QUALIFICATION_DELETE",()->{qualifications.deleteEmployeeQualification(second.employeeQualificationId());return second.employeeQualificationId();},Long::longValue);
         assertEquals(adminId,jdbc.queryForObject("SELECT deleted_by FROM dbo.employee_qualifications WHERE employee_qualification_id=?",Long.class,second.employeeQualificationId()));
         assertEquals(1,qualifications.getQualificationsPage(employee,0,10).getTotalElements());
@@ -260,5 +268,75 @@ class EmployeeRequestWorkflowIntegrationTest {
         long request=id(requests.leave(leave(2),worker));requests.approve(request,new Decision(null,null),admin);
         var update=new LeaveEntitlementRequestDTO();update.setEmployeeId(employee);update.setLeaveTypeId(type);update.setPeriodStart(day.minusDays(1));update.setPeriodEnd(day.plusMonths(1));update.setEntitledHours(new BigDecimal("1"));
         fails(409,()->catalogs.write(admin,"leave_entitlements",limit,"LEAVE_ENTITLEMENT_UPDATE",()->entitlements.updateLeaveEntitlement(limit,update),LeaveEntitlementDTO::entitlementId));
+    });}
+
+    private void adminContext(){org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(new com.hrm.security.AuthenticatedAccount(adminId,other,admin.getName(),"ADMIN"),null,List.of()));}
+    @AfterEach void clearContext(){org.springframework.security.core.context.SecurityContextHolder.clearContext();}
+    @Test void cancelledFutureLeaveRefundsOnceAndRetainsAllocationHistory(){rollback(()->{
+        adminContext();long request=id(requests.leave(leave(2),worker));requests.approve(request,new Decision(null,"approved"),admin);hours("8");
+        requests.cancelApproved(request,new Rejection("Changed plan"),admin);hours("0");
+        assertEquals("DA_HUY",requests.detail(request,worker).get("status"));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.g2_leave_allocations WHERE request_id=?",Integer.class,request));
+        fails(409,()->requests.cancelApproved(request,new Rejection("twice"),admin));hours("0");
+        jdbc.update("UPDATE dbo.work_schedules SET planned_end=DATEADD(MINUTE,30,planned_end) WHERE employee_id=? AND work_date=?",employee,day.plusDays(2));
+    });}
+    @Test void retroactiveLeaveAndEvidenceAreConfiguredPerType(){rollback(()->{
+        leaveRules.save(type,new LeaveRequestRules.Rules(7,0,new BigDecimal("10"),0,true),adminId);
+        assertEquals(7,leaveRules.get(type).retroactiveDays());
+        schedule(day.minusDays(1),0);
+        fails(400,()->requests.leave(new Leave(type,day.minusDays(1).atTime(8,0),day.minusDays(1).atTime(17,0),"Retro"),worker));
+        assertEquals(7,leaveRules.get(type).retroactiveDays());
+        long request=id(requests.leave(new Leave(type,day.minusDays(1).atTime(8,0),day.minusDays(1).atTime(17,0),"Retro","DOC-QA-1"),worker));
+        assertEquals("DOC-QA-1",requests.detail(request,worker).get("evidenceReference"));requests.approve(request,new Decision(null,"verified"),admin);hours("9");
+    });}
+    @Test void crossPeriodLeaveChargesEachEntitlementSeparately(){rollback(()->{
+        jdbc.update("UPDATE dbo.leave_entitlements SET period_end=?,entitled_hours=20 WHERE entitlement_id=?",day.plusDays(2),limit);
+        jdbc.update("INSERT dbo.leave_entitlements(employee_id,leave_type_id,period_start,period_end,entitled_hours) VALUES(?,?,?,?,?)",employee,type,day.plusDays(2),day.plusMonths(1),20);
+        long next=jdbc.queryForObject("SELECT entitlement_id FROM dbo.leave_entitlements WHERE employee_id=? AND period_start=?",Long.class,employee,day.plusDays(2));
+        long request=id(requests.leave(new Leave(type,day.plusDays(1).atTime(8,0),day.plusDays(2).atTime(17,0),"Cross period"),worker));requests.approve(request,new Decision(null,null),admin);
+        hours("9");assertEquals(0,new BigDecimal("8").compareTo(requests.used(next)));
+    });}
+    @Test void certificateValidityAndHighestDoNotReplacePrimary(){rollback(()->{
+        QualificationLevelRequestDTO low=new QualificationLevelRequestDTO();low.setLevelCode(tag+"L");low.setLevelName("Low");low.setRankOrder(1);
+        QualificationLevelRequestDTO high=new QualificationLevelRequestDTO();high.setLevelCode(tag+"H");high.setLevelName("High");high.setRankOrder(10);
+        long lowId=levels.addQualificationLevel(low).qualificationLevelId(),highId=levels.addQualificationLevel(high).qualificationLevelId();
+        EmployeeQualificationRequestDTO first=new EmployeeQualificationRequestDTO();first.setQualificationLevelId(lowId);first.setIssuedDate(day.minusYears(2));
+        long a=qualifications.addEmployeeQualification(employee,first).employeeQualificationId();
+        EmployeeQualificationRequestDTO second=new EmployeeQualificationRequestDTO();second.setQualificationLevelId(highId);second.setIssuedDate(day.minusYears(1));second.setExpiryDate(day.plusDays(20));
+        var b=qualifications.addEmployeeQualification(employee,second);assertEquals("EXPIRING",b.validityStatus());assertTrue(b.highest());assertFalse(b.isPrimary());assertTrue(qualifications.getEmployeeQualificationById(a).isPrimary());
+        second.setExpiryDate(day.minusDays(1));qualifications.updateEmployeeQualification(b.employeeQualificationId(),second);assertTrue(qualifications.getEmployeeQualificationById(a).highest());
+        second.setExpiryDate(day.minusYears(2));fails(400,()->qualifications.updateEmployeeQualification(b.employeeQualificationId(),second));
+    });}
+    @Test void directDecisionKeepsLastDayAndExecutesOnlyOnce(){rollback(()->{
+        adminContext();var last=day.plusDays(3);
+        long request=id(requests.directTermination(employee,new DirectTerminationRequest("Agreement",last,DirectTerminationRequest.DecisionType.MUTUAL_AGREEMENT,"QA-EXIT-1"),admin));
+        assertEquals("DANG_LAM",jdbc.queryForObject("SELECT employment_status FROM dbo.employees WHERE employee_id=?",String.class,employee));
+        assertEquals("QA-EXIT-1",requests.detail(request,worker).get("decisionNumber"));
+        now.set(last.plusDays(1).atStartOfDay(ZoneId.of("Asia/Ho_Chi_Minh")).toInstant());requests.execute(request,adminId);requests.execute(request,adminId);
+        assertEquals("DA_NGHI",jdbc.queryForObject("SELECT employment_status FROM dbo.employees WHERE employee_id=?",String.class,employee));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.g2_resignation_executions WHERE request_id=?",Integer.class,request));
+    });}
+
+    @Test void automaticGrantIsIdempotentAndPreservesManualAdjustments(){rollback(()->{
+        adminContext();accrual.save(type,new LeaveAccrualService.Policy(14,new BigDecimal("7.5"),false,department),admin);
+        var run=new LeaveAccrualService.Run(LocalDate.of(2027,1,1),LocalDate.of(2028,1,1),"Annual policy QA");
+        assertEquals(1,accrual.generate(type,run,admin).size());
+        long grant=jdbc.queryForObject("SELECT entitlement_id FROM dbo.leave_entitlements WHERE employee_id=? AND leave_type_id=? AND period_start=?",Long.class,employee,type,run.periodStart());
+        assertEquals(0,new BigDecimal("105").compareTo(jdbc.queryForObject("SELECT entitled_hours FROM dbo.leave_entitlements WHERE entitlement_id=?",BigDecimal.class,grant)));
+        jdbc.update("UPDATE dbo.leave_entitlements SET entitled_hours=80 WHERE entitlement_id=?",grant);
+        accrual.generate(type,run,admin);
+        assertEquals(0,new BigDecimal("80").compareTo(jdbc.queryForObject("SELECT entitled_hours FROM dbo.leave_entitlements WHERE entitlement_id=?",BigDecimal.class,grant)));
+        assertEquals(1,jdbc.queryForObject("SELECT COUNT(*) FROM dbo.personnel_leave_accrual_runs WHERE entitlement_id=?",Integer.class,grant));
+    });}
+
+    @Test void verifiedPartialLeaveUsesActualBreakPositionsInSqlServer(){rollback(()->{
+        LocalDate date=day.plusDays(2);long schedule=jdbc.queryForObject("SELECT schedule_id FROM dbo.work_schedules WHERE employee_id=? AND work_date=?",Long.class,employee,date);
+        jdbc.update("UPDATE dbo.work_schedules SET break_detail_status='VERIFIED' WHERE schedule_id=?",schedule);
+        jdbc.update("INSERT dbo.work_schedule_breaks(schedule_id,break_start,break_end) VALUES(?,?,?)",schedule,date.atTime(12,0),date.atTime(13,0));
+        long a=id(requests.leave(new Leave(type,date.atTime(8,0),date.atTime(12,0),"Morning half"),worker));
+        long b=id(requests.leave(new Leave(type,date.atTime(12,0),date.atTime(17,0),"Afternoon half"),worker));
+        requests.approve(a,new Decision(null,null),admin);requests.approve(b,new Decision(null,null),admin);hours("8");
+        assertEquals(0,new BigDecimal("4").compareTo(jdbc.queryForObject("SELECT charged_hours FROM dbo.g2_leave_allocations WHERE request_id=?",BigDecimal.class,a)));
+        assertEquals(0,new BigDecimal("4").compareTo(jdbc.queryForObject("SELECT charged_hours FROM dbo.g2_leave_allocations WHERE request_id=?",BigDecimal.class,b)));
     });}
 }

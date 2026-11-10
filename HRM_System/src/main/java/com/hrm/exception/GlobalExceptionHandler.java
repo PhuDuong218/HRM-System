@@ -211,6 +211,13 @@ public class GlobalExceptionHandler {
                                                 + "vui lòng kiểm tra lại URL.");
         }
 
+        @ExceptionHandler(org.springframework.web.bind.MissingServletRequestParameterException.class)
+        public ResponseEntity<Object> handleMissingParameter(
+                        org.springframework.web.bind.MissingServletRequestParameterException ex) {
+                return buildErrorResponse(HttpStatus.BAD_REQUEST,
+                                "Thiếu tham số bắt buộc: " + ex.getParameterName());
+        }
+
         // 15. Tham so sai kieu du lieu
         @ExceptionHandler(MethodArgumentTypeMismatchException.class)
         public ResponseEntity<Object> handleTypeMismatch(

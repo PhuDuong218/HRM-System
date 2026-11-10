@@ -10,13 +10,7 @@ export const contractTermKindLabels: Record<ContractTermKind, string> = {
 };
 export type TerminationReasonType = 'HET_HAN' | 'THOA_THUAN' | 'NLD_DON_PHUONG' | 'NSDLD_DON_PHUONG' | 'SA_THAI';
 
-export interface PageResponse<T> {
-  items: T[];
-  page: number;
-  size: number;
-  totalElements: number;
-  totalPages: number;
-}
+export type {ItemPage as PageResponse} from './page.model';
 
 export interface ContractResponse {
   contractId: number;
@@ -58,7 +52,7 @@ export interface ContractCreateRequest {
   probationGroup?: ProbationGroup | null;
   employeeId: number;
   contractTypeId: number;
-  contractNumber: string;
+  contractNumber?: string;
   signedDate: string;
   startDate: string;
   endDate: string | null;

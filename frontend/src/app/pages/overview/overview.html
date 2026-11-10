@@ -1,19 +1,12 @@
 <div class="overview">
-  <header class="overview-heading">
-    <div>
-      <h1>{{ language.t('Tổng quan') }}</h1>
-    </div>
-    <div class="heading-actions">
+<app-page-header variant="directory" title="Tổng quan" description="Theo dõi cơ cấu nhân sự, hợp đồng và công việc từ dữ liệu báo cáo hiện có.">
       <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}</span>
-      <button type="button" class="overview-refresh" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
-    </div>
-  </header>
+      <button type="button" hrmBtn="secondary" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
 
-  <section class="overview-intro">
-    <div><span class="intro-kicker">HRM CENTER / INSIGHTS</span><h2>{{ language.t('Một cái nhìn rõ hơn về đội ngũ.') }}</h2><p>{{ language.t('Theo dõi cơ cấu nhân sự, hợp đồng và công việc từ dữ liệu báo cáo hiện có.') }}</p></div>
-    <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a>
-  </section>
+    @if (isAdmin) { <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a> }
+  </app-page-header>
 
+  @if (isHr) { <p>{{ language.t('Số liệu chỉ bao gồm các phòng ban bạn được phân công quản lý.') }}</p> }
   <section class="metric-grid" [attr.aria-label]="language.t('Chỉ số nổi bật')">
     <article class="metric-card"><span>{{ language.t('Tổng hồ sơ nhân sự') }}</span><strong>{{ employeeReport ? number(totalEmployees) : '—' }}</strong><small>{{ language.t('Bao gồm cả nhân viên đã nghỉ') }}</small></article>
     <article class="metric-card"><span>{{ language.t('Đang làm việc') }}</span><strong>{{ employeeReport ? number(activeEmployees) : '—' }}</strong><small>{{ language.t('Theo trạng thái hồ sơ') }}</small></article>
@@ -25,7 +18,7 @@
     <article class="chart-card chart-wide">
       <div class="chart-header"><div><p class="chart-kicker">01 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Nhân sự theo phòng ban') }}</h2><p>{{ language.t('Phân công có hiệu lực tại thời điểm hiện tại.') }}</p></div><span class="chart-mark" aria-hidden="true">▥</span></div>
       @if (employeeState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
-      @else if (employeeState === 'error') { <p class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
+      @else if (employeeState === 'error') { <p [hrmNotice]="employeeError" noticeKind="error" class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
       @else if (!departments.length) { <p class="chart-state">{{ language.t('Chưa có dữ liệu để hiển thị.') }}</p> }
       @else {
         <div class="column-chart">
@@ -49,7 +42,7 @@
     <article class="chart-card">
       <div class="chart-header"><div><p class="chart-kicker">02 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Trạng thái nhân sự') }}</h2><p>{{ language.t('Cơ cấu hồ sơ theo trạng thái làm việc.') }}</p></div><span class="chart-mark" aria-hidden="true">◉</span></div>
       @if (employeeState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
-      @else if (employeeState === 'error') { <p class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
+      @else if (employeeState === 'error') { <p [hrmNotice]="employeeError" noticeKind="error" class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
       @else if (!totalEmployees) { <p class="chart-state">{{ language.t('Chưa có dữ liệu để hiển thị.') }}</p> }
       @else {
         <div class="donut-layout"><div class="donut" [style.background]="statusGradient" aria-hidden="true"><div><strong>{{ number(totalEmployees) }}</strong><small>{{ language.t('hồ sơ') }}</small></div></div>
@@ -61,7 +54,7 @@
     <article class="chart-card">
       <div class="chart-header"><div><p class="chart-kicker">03 / {{ language.t('HỢP ĐỒNG') }}</p><h2>{{ language.t('Theo dõi hợp đồng') }}</h2><p>{{ language.t('Các hợp đồng đã ký có giao với kỳ báo cáo.') }}</p></div><span class="chart-mark" aria-hidden="true">▤</span></div>
       @if (contractState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
-      @else if (contractState === 'error') { <p class="chart-state error" role="status">{{ language.t(contractError) }}</p> }
+      @else if (contractState === 'error') { <p [hrmNotice]="contractError" noticeKind="error" class="chart-state error" role="status">{{ language.t(contractError) }}</p> }
       @else if (contracts; as report) {
         <div class="column-chart small-chart">
           <div class="chart-axis" aria-hidden="true">@for (tick of ticks(contractMax); track $index) { <span>{{ number(tick) }}</span> }</div>
@@ -80,7 +73,7 @@
     <article class="chart-card">
       <div class="chart-header"><div><p class="chart-kicker">04 / {{ language.t('THỜI GIAN') }}</p><h2>{{ language.t('Công đã xác nhận') }}</h2><p>{{ date(fromDate) }} – {{ date(today) }}</p></div><span class="chart-mark" aria-hidden="true">◷</span></div>
       @if (workState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
-      @else if (workState === 'error') { <p class="chart-state error" role="status">{{ language.t(workError) }}</p> }
+      @else if (workState === 'error') { <p [hrmNotice]="workError" noticeKind="error" class="chart-state error" role="status">{{ language.t(workError) }}</p> }
       @else if (work; as report) {
         <div class="column-chart small-chart">
           <div class="chart-axis" aria-hidden="true">@for (tick of ticks(workMax); track $index) { <span>{{ number(tick) }}</span> }</div>
@@ -96,9 +89,10 @@
       }
     </article>
   </section>
-
   <section class="next-insights">
     <div><p class="chart-kicker">{{ language.t('PHÁT TRIỂN TIẾP') }}</p><h2>{{ language.t('Các chỉ số nên bổ sung') }}</h2><p>{{ language.t('Cần dữ liệu theo kỳ và xác nhận phạm vi truy cập trước khi hiển thị.') }}</p></div>
     <ul><li>{{ language.t('Biến động nhân sự theo tháng') }}</li><li>{{ language.t('Xu hướng công và tăng ca') }}</li><li>{{ language.t('Quỹ lương theo kỳ') }}</li></ul>
   </section>
 </div>
+
+@if(isHr){<app-seniority-report />}

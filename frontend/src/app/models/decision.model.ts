@@ -12,6 +12,7 @@ export interface DecisionPageResponse<T> {
 }
 
 export interface DecisionResponse {
+  reviewBlocker?: string|null;
   decisionId: number;
   employeeId: number;
   decisionNumber: string;
@@ -32,6 +33,7 @@ export interface DecisionResponse {
 
 // Backend lấy issuedBy/approvedBy từ phiên đăng nhập; client không gửi các trường này.
 export interface DecisionRequest {
+  rewardCode?: string | null;
   employeeId: number;
   decisionNumber: string;
   decisionType: DecisionType;

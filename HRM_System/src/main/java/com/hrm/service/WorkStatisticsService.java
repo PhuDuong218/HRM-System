@@ -28,6 +28,7 @@ public class WorkStatisticsService {
     private static final LocalDate LAST_REPORT_DATE = LocalDate.of(9999, 12, 30);
 
     private final WorkStatisticsRepository repository;
+    @org.springframework.beans.factory.annotation.Autowired private HrScopedReportService hrReports;
 
     public WorkStatisticsService(WorkStatisticsRepository repository) {
         this.repository = repository;
@@ -57,13 +58,17 @@ public class WorkStatisticsService {
                     "Kỳ thống kê phải nằm từ 0001-01-01 đến 9999-12-30");
         }
 
+        if (PersonnelScopeService.isHr())
+            return hrReports.work(fromDate, toDate, repository.attendanceInvalidationColumnLength() != null);
+
         // 3. Xac dinh khoang bao cao [start, end)
         LocalDateTime startInclusive = fromDate.atStartOfDay();
         LocalDateTime endExclusive = toDate.plusDays(1).atStartOfDay();
 
         // 4. Thong ke cham cong da xac nhan
-        WorkStatisticsRow row = repository
-                .summarizeAttendance(fromDate, toDate)
+        WorkStatisticsRow row = (repository.attendanceInvalidationColumnLength() == null
+                ? repository.summarizeAttendance(fromDate, toDate)
+                : repository.summarizeValidAttendance(fromDate, toDate))
                 .orElseThrow(() -> new IllegalStateException(
                         "Không thể tổng hợp thống kê công"));
 

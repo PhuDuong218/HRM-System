@@ -41,8 +41,11 @@ public class OvertimeRecognizedMinutes {
         List<Interval> rests = db.query(
                 "SELECT break_start,break_end FROM dbo.overtime_breaks WHERE overtime_id=? AND is_active=1 ORDER BY break_start",
                 (r, i) -> new Interval(r.getObject(1, LocalDateTime.class), r.getObject(2, LocalDateTime.class)), otId);
-        long totalRest = rests.stream().mapToLong(x -> Duration.between(x.start(), x.end()).toMinutes()).sum();
-        assertValid(totalRest == breakMinutes, "OT detailed break totals mismatch");
+
+        var actual=new OvertimeTimeMath.Span(actualStart,actualEnd);
+        var exactRests=rests.stream().map(r->new OvertimeTimeMath.Span(r.start(),r.end())).toList();
+        var exact=OvertimeTimeMath.breaks(actual,exactRests);
+        assertValid(OvertimeTimeMath.aggregateMatches(exactRests,breakMinutes,exact),"OT detailed break totals mismatch");
         List<Interval> windows = new ArrayList<>();
         LocalDateTime lo = max(actualStart, requestStart), hi = min(actualEnd, requestEnd);
         if (lo.isBefore(hi))
@@ -57,28 +60,14 @@ public class OvertimeRecognizedMinutes {
                 otId));
         windows.sort(Comparator.comparing(Interval::start));
         LocalDateTime last = null;
-        Map<LocalDate, Long> out = new TreeMap<>();
+
         for (Interval w : windows) {
             assertValid(w.start() != null && w.end() != null && w.start().isBefore(w.end())
                     && !w.start().isBefore(actualStart) && !w.end().isAfter(actualEnd), "Invalid approved window");
             assertValid(last == null || !w.start().isBefore(last), "Approved OT windows overlap");
             last = w.end();
-            for (LocalDate date = w.start().toLocalDate(); date
-                    .isBefore(w.end().toLocalDate().plusDays(1)); date = date.plusDays(1)) {
-                LocalDateTime begin = max(w.start(), date.atStartOfDay());
-                LocalDateTime end = min(w.end(), date.plusDays(1).atStartOfDay());
-                if (!begin.isBefore(end))
-                    continue;
-                long minutes = Duration.between(begin, end).toMinutes();
-                for (Interval rest : rests) {
-                    LocalDateTime a = max(begin, rest.start()), b = min(end, rest.end());
-                    if (a.isBefore(b))
-                        minutes -= Duration.between(a, b).toMinutes();
-                }
-                assertValid(minutes >= 0, "Break intervals overlap or are inconsistent");
-                out.merge(date, minutes, Long::sum);
-            }
         }
-        return out;
+        return OvertimeTimeMath.net(windows.stream().map(w->new OvertimeTimeMath.Span(w.start(),w.end())).toList(),exactRests);
+
     }
 }
