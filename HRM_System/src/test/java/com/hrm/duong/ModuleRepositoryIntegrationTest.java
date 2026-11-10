@@ -12,6 +12,7 @@ import org.springframework.jdbc.datasource.embedded.*;
 import org.springframework.orm.jpa.*;
 import org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter;
 import org.springframework.data.jpa.repository.support.JpaRepositoryFactory;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.transaction.support.TransactionTemplate;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -256,6 +257,26 @@ class ModuleRepositoryIntegrationTest {
         assertNull(jdbc.queryForObject("select effective_to from dbo.employee_allowances where employee_allowance_id=5",java.sql.Date.class));
     }
     @Test void overlapDoesNotLeakAcrossEmployees(){tx.execute(s->{assertEquals(0,contracts.countOverlapping(2L,TODAY,null));return null;});}
+    @Test void contractSearchFiltersBeforePaginationAndCount(){
+        jdbc.update("insert into dbo.contracts(contract_id,employee_id,contract_type_id,contract_number,signed_date,start_date,end_date,status,created_at) values (4,2,2,'OTHER',?,?,?,'DA_KY',CURRENT_TIMESTAMP)",TODAY,TODAY,TODAY.plusDays(30));
+        tx.execute(s->{
+            var page=contracts.searchScoped(null,null,"%",List.of(1L),PageRequest.of(0,1));
+            assertEquals(1,page.getTotalElements());assertEquals(1L,page.getContent().get(0).getEmployee().getEmployeeId());
+            assertEquals(0,contracts.searchScoped(2L,null,"%",List.of(1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,contracts.searchScoped(null,null,"%",List.of(-1L),PageRequest.of(0,1)).getTotalElements());
+            return null;
+        });
+    }
+    @Test void decisionSearchFiltersBeforePaginationAndCount(){
+        decisionRow(10,1,"CHO_DUYET","NONE",null);decisionRow(11,2,"CHO_DUYET","NONE",null);
+        tx.execute(s->{
+            var page=decisions.searchScoped(null,null,List.of(1L),PageRequest.of(0,1));
+            assertEquals(1,page.getTotalElements());assertEquals(1L,page.getContent().get(0).getEmployee().getEmployeeId());
+            assertEquals(0,decisions.searchScoped(2L,null,List.of(1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,decisions.searchScoped(null,null,List.of(-1L),PageRequest.of(0,1)).getTotalElements());
+            return null;
+        });
+    }
     @Test void salaryOverlapExcludesCurrentRowWhenUpdating(){tx.execute(s->{assertEquals(1,terms.countOverlapping(3L,TODAY,TODAY.plusDays(9),null));assertEquals(0,terms.countOverlapping(3L,TODAY,TODAY.plusDays(9),4L));return null;});}
     @Test void oneDayRangesIntersectOnlyOnTheirEffectiveDay() {
         jdbc.update("update dbo.contract_salary_terms set effective_to=effective_from where salary_term_id=4");
@@ -282,7 +303,7 @@ class ModuleRepositoryIntegrationTest {
     @Test void failedAuditRollsBackActualServiceInsertInPrivateDatabase(){
         var actors=mock(DecisionActorProvider.class);when(actors.requireManager()).thenReturn(new DecisionActor(20L,200L));
         var audit=mock(DecisionAuditService.class);doThrow(new IllegalStateException("synthetic audit failure")).when(audit).record(anyLong(),anyLong(),anyString(),anyString(),any(),any());
-        var service=new EmployeeDecisionService(decisions,employees,actors,audit,mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK);
+        var service=new EmployeeDecisionService(decisions,employees,actors,audit,mock(PayrollHistoryGuard.class),new DecisionPayrollPolicy("TEST-ONLY-v1"),CLOCK,TestData.numbers());
         var error=assertThrows(IllegalStateException.class,()->tx.execute(s->service.create(decisionRequest(DecisionPayrollEffect.NONE))));
         assertEquals("synthetic audit failure",error.getMessage());
         assertEquals(0,jdbc.queryForObject("select count(*) from dbo.employee_decisions",Integer.class));

@@ -44,6 +44,8 @@ import com.hrm.util.PagingUtils;
 
 @Service
 public class EmployeeService {
+    @org.springframework.beans.factory.annotation.Autowired private EmploymentExitGuard exitGuard;
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeSupplement supplement;
     @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
 
 
@@ -52,6 +54,7 @@ public class EmployeeService {
             .thenComparing(EmployeeAssignment::getAssignmentId,
                     Comparator.nullsFirst(Comparator.naturalOrder()));
 
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
@@ -87,7 +90,7 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees(AuthenticatedAccount actor) {
-        if ("EMPLOYEE".equals(actor.roleCode())) {
+        if ("EMPLOYEE".equals(actor.roleCode()) && (personnelScope==null||!personnelScope.isCurrentHead())) {
             throw new AccessDeniedException("EMPLOYEE không được xem danh sách nhân sự");
         }
         return getAllEmployees();
@@ -96,7 +99,7 @@ public class EmployeeService {
     @Transactional(readOnly = true)
     public List<EmployeeDTO> getAllEmployees() {
         LocalDate asOfDate = businessToday();
-        var allowed = PersonnelScopeService.isHr() ? personnelScope.employees() : null;
+        var allowed = personnelScope==null?null:personnelScope.readableEmployees();
         return employeeRepository.findAllWithAssignments().stream().filter(e -> allowed==null || allowed.contains(e.getEmployeeId()))
                 .map(employee -> convertToDTO(employee, asOfDate))
                 .collect(Collectors.toList());
@@ -104,7 +107,8 @@ public class EmployeeService {
 
     @Transactional(readOnly = true)
     public EmployeeDTO getEmployeeById(Long id, AuthenticatedAccount actor) {
-        if ("EMPLOYEE".equals(actor.roleCode()) && !Objects.equals(actor.employeeId(), id)) {
+        if ("EMPLOYEE".equals(actor.roleCode()) && !Objects.equals(actor.employeeId(), id)
+                && (personnelScope==null||!personnelScope.canReadPrivate(id))) {
             throw new AccessDeniedException("Không được truy cập hồ sơ của nhân viên khác");
         }
         Employee employee = employeeRepository.findByIdWithAssignments(id)
@@ -120,10 +124,25 @@ public class EmployeeService {
             Long positionId,
             int page,
             int size) {
+        return searchEmployees(keyword, status, departmentId, positionId, null, page, size);
+    }
+
+    public Page<EmployeeDTO> searchEmployees(
+            String keyword, EmploymentStatus status, Long departmentId, Long positionId,
+            Long employeeId, int page, int size) {
         LocalDate asOf = businessToday();
         String searchKeyword = "%" + (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT)) + "%";
         Pageable pageable = PagingUtils.create(page, size, Sort.by(Sort.Direction.DESC, "employeeId"));
-        Page<Employee> employees = PersonnelScopeService.isHr() ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,personnelScope.employees(),pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
+        Page<Employee> employees;
+        var readScope=personnelScope==null?null:personnelScope.readableEmployees();
+        if(employeeId!=null || (keyword!=null&&!keyword.isBlank())) {
+        var candidates = readScope!=null ? employeeRepository.searchEmployeesScoped("%",status,departmentId,positionId,asOf,readScope,org.springframework.data.domain.Pageable.unpaged(pageable.getSort())) : employeeRepository.searchEmployees("%",status,departmentId,positionId,asOf,org.springframework.data.domain.Pageable.unpaged(pageable.getSort()));
+            var matched=candidates.getContent().stream().filter(e->employeeId==null || employeeId.equals(e.getEmployeeId()))
+                    .filter(e->keyword==null || keyword.isBlank() || com.hrm.util.PersonnelSearch.matches(keyword,e.getFullName(),e.getEmployeeCode())).toList();
+            employees=com.hrm.util.PersonnelSearch.page(matched,page,size);
+        } else {
+        employees = readScope!=null ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,readScope,pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
+        }
         List<Long> employeeIds = employees.getContent().stream()
                 .map(Employee::getEmployeeId)
                 .toList();
@@ -174,14 +193,6 @@ public class EmployeeService {
         validateHireDateForCreation(requestDTO.getHireDate());
         guard.lockTimeline();
 
-        if (requestDTO.getEmployeeCode() == null || requestDTO.getEmployeeCode().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã nhân viên không được để trống");
-        }
-        String employeeCode = requestDTO.getEmployeeCode().trim();
-        if (employeeRepository.existsByEmployeeCode(employeeCode)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã nhân viên đã tồn tại: " + employeeCode);
-        }
-
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phòng ban có ID: " + requestDTO.getDepartmentId()));
@@ -203,7 +214,7 @@ public class EmployeeService {
         }
 
         Employee employee = new Employee();
-        employee.setEmployeeCode(employeeCode);
+        employee.setEmployeeCode(employeeCodes.next(position.getPositionCode()));
         employee.setFullName(requestDTO.getFullName().trim());
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
@@ -222,7 +233,9 @@ public class EmployeeService {
         assignment.setCreatedAt(auditNow());
         employee.getAssignments().add(assignment);
 
-        return convertToDTO(employeeRepository.save(employee));
+        Employee saved=employeeRepository.saveAndFlush(employee);
+        employeeCodes.track(saved.getEmployeeId(),position.getPositionId());
+        return convertToDTO(saved);
     }
 
     @Transactional
@@ -277,9 +290,11 @@ public class EmployeeService {
         validateEmployeeDates(requestDTO.getBirthDate(), employee.getHireDate());
         employee.setFullName(requestDTO.getFullName().trim());
         employee.setBirthDate(requestDTO.getBirthDate());
-        employee.setEmail(normalizeContactText(requestDTO.getEmail()));
-        employee.setPhone(normalizeContactText(requestDTO.getPhone()));
-        employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
+        if (requestDTO.getEmail()!=null) employee.setEmail(normalizeContactText(requestDTO.getEmail()));
+        if (requestDTO.hasPhone()) employee.setPhone(normalizeContactText(requestDTO.getPhone()));
+        if (requestDTO.getIdentityNumber()!=null) employee.setIdentityNumber(normalizeContactText(requestDTO.getIdentityNumber()));
+        // Omission preserves the address for older PUT clients; an empty string clears it.
+        if (requestDTO.getAddress() != null) employee.setAddress(normalizeContactText(requestDTO.getAddress()));
         employee.setUpdatedAt(auditNow());
         return convertToDTO(employeeRepository.save(employee));
     }
@@ -296,6 +311,7 @@ public class EmployeeService {
         }
 
         LocalDate terminationDate = businessToday();
+        if(exitGuard!=null)exitGuard.check(id,terminationDate);
         List<EmployeeAssignment> currentAssignments = assignmentRepository.findCurrentAssignments(id, terminationDate);
         if (currentAssignments.size() != 1) {
             throw new ResponseStatusException(HttpStatus.CONFLICT,
@@ -340,7 +356,9 @@ public class EmployeeService {
 
     private EmployeeDTO convertToSearchDTO(Employee employee, EmployeeAssignment assignment) {
         EmployeeDTO dto = new EmployeeDTO();
+        dto.setVersion(EmployeeWriteRules.version(employee));
         dto.setEmployeeId(employee.getEmployeeId());
+        if(supplement!=null)dto.setGender(supplement.get(employee.getEmployeeId()));
         dto.setEmployeeCode(employee.getEmployeeCode());
         dto.setFullName(employee.getFullName());
         dto.setBirthDate(employee.getBirthDate());

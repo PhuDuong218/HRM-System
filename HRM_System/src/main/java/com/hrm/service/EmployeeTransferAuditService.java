@@ -13,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class EmployeeTransferAuditService {
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
     private final EmployeeAssignmentRepository assignments;
     private final EmployeeAssignmentService service;
     private final EmployeeAuditService audit;
@@ -38,12 +39,14 @@ public class EmployeeTransferAuditService {
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Nhân viên phải có đúng một phân công hiện tại");
         }
         var old=current.get(0);
+        employeeCodes.track(employeeId,old.getPosition().getPositionId());
         var before=snapshot(old);
         var result=service.transferEmployee(employeeId,request);
         old.setUpdatedBy(actor);
         var next=assignments.findById(result.assignmentId()).orElseThrow();
         next.setCreatedBy(actor);
         assignments.flush();
+        employeeCodes.sync(next.getEmployee(),actor,request.reason());
         if(request.reason()==null) audit.recordTransfer(actor,employeeId,before,snapshot(next));
         else audit.recordTransferWithReason(actor,employeeId,before,snapshot(next),request.reason().trim());
         return result;
@@ -51,6 +54,8 @@ public class EmployeeTransferAuditService {
 
     private Map<String,String> snapshot(EmployeeAssignment assignment) {
         Map<String,String> data=new LinkedHashMap<>();
+        data.put("employeeCode",assignment.getEmployee().getEmployeeCode());
+        data.put("positionName",assignment.getPosition().getPositionName());
         data.put("assignmentId",String.valueOf(assignment.getAssignmentId()));
         data.put("departmentId",String.valueOf(assignment.getDepartment().getDepartmentId()));
         data.put("positionId",String.valueOf(assignment.getPosition().getPositionId()));

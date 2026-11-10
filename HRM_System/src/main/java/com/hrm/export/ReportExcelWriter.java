@@ -6,6 +6,7 @@ import com.hrm.dto.PayrollStatisticsResponse;
 import com.hrm.dto.PayrollStatisticsResponse.Amounts;
 import com.hrm.dto.WorkStatisticsResponse;
 import com.hrm.repository.projection.EmployeeStatisticsRow;
+import com.hrm.service.ReportDepartmentService.Movement;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.FillPatternType;
@@ -31,9 +32,22 @@ import java.util.function.Consumer;
 public class ReportExcelWriter {
 
     public byte[] employees(EmployeeStatisticsResponse report) {
+        return employees(report, false);
+    }
+
+    public byte[] employees(EmployeeStatisticsResponse report, boolean hrScope) {
+        return employees(report, hrScope, null);
+    }
+
+    public byte[] employees(EmployeeStatisticsResponse report, boolean hrScope, Long departmentId) {
+        return employees(report,hrScope,departmentId,null,null,null);
+    }
+
+    public byte[] employees(EmployeeStatisticsResponse report, boolean hrScope, Long departmentId,
+            java.time.LocalDate fromDate, java.time.LocalDate toDate, List<Movement> movements) {
         return write(book -> {
             book.filters("Thống kê nhân viên", List.of(
-                    row("Phạm vi bộ lọc", "Báo cáo hiện tại không có tham số lọc."),
+                    row("Phạm vi bộ lọc", departmentId != null ? "Phòng ban ID " + departmentId : hrScope ? "Các phòng ban được giao cho HR." : "Toàn trung tâm."),
                     row("Phân công hiện tại", "effective_from <= ngày chạy báo cáo < effective_to; effective_to có thể để trống."),
                     row("Chưa có phân công", "Nhân viên chưa có phân công hiệu lực được xếp nhóm CHUA_PHAN_CONG."),
                     row("Phân nhóm", "Phòng ban, chức vụ, trạng thái, trình độ")));
@@ -41,17 +55,28 @@ public class ReportExcelWriter {
             book.employeeGroups("Theo chuc vu", report.byPosition());
             book.employeeGroups("Theo trang thai", report.byStatus());
             book.employeeGroups("Theo trinh do", report.byQualification());
+            if (movements != null) {
+                book.table("Ky bien dong",new String[]{"Bộ lọc / quy tắc","Giá trị áp dụng"},List.of(row("Từ ngày",fromDate.toString()),row("Đến ngày",toDate.toString()),
+                    row("Nguồn dữ liệu","Ngày vào làm và ngày nghỉ hiện lưu trên hồ sơ; không tách các lần tái tuyển dụng.")));
+                List<Object[]> rows=new ArrayList<>();
+                for(var movement:movements)rows.add(row(movement.month(),movement.hired(),movement.terminated()));
+                book.table("Bien dong",new String[]{"Tháng","Vào làm","Nghỉ việc"},rows);
+            }
         });
     }
 
     public byte[] contracts(ContractStatisticsResponse report) {
+        return contracts(report, false);
+    }
+
+    public byte[] contracts(ContractStatisticsResponse report, boolean hrScope) {
         return write(book -> {
             book.filters("Thống kê hợp đồng", List.of(
                     row("Từ ngày (fromDate)", report.fromDate().toString()),
                     row("Đến ngày (toDate)", report.toDate().toString()),
                     row("Ngày báo cáo (reportDate)", report.reportDate().toString()),
                     row("Phòng ban (departmentId)", report.departmentId() == null
-                            ? "Tất cả phòng ban" : report.departmentId().toString()),
+                            ? (hrScope ? "Tất cả phòng ban được giao cho HR" : "Tất cả phòng ban") : report.departmentId().toString()),
                     row("Phân công dùng lọc phòng ban", "Có phần thời gian chung giữa phân công, kỳ lọc và hợp đồng; mỗi hợp đồng chỉ đếm một lần."),
                     row("Số ngày sắp hết hạn (expiringWithinDays)", report.expiringWithinDays())));
             book.table("Chi tieu", new String[]{"Chỉ tiêu", "Số hợp đồng"}, List.of(
@@ -62,10 +87,19 @@ public class ReportExcelWriter {
     }
 
     public byte[] work(WorkStatisticsResponse report) {
+        return work(report, false);
+    }
+
+    public byte[] work(WorkStatisticsResponse report, boolean hrScope) {
+        return work(report, hrScope, null);
+    }
+
+    public byte[] work(WorkStatisticsResponse report, boolean hrScope, Long departmentId) {
         return write(book -> {
             book.filters("Thống kê công/nghỉ/tăng ca", List.of(
                     row("Từ ngày (fromDate)", report.fromDate().toString()),
                     row("Đến ngày (toDate, bao gồm)", report.toDate().toString()),
+                    row("Phạm vi", departmentId != null ? "Phòng ban ID " + departmentId + " theo ngày phát sinh." : hrScope ? "Các phòng ban được giao cho HR theo ngày phát sinh." : "Toàn trung tâm."),
                     row("Công/vắng", "Đếm bản ghi đã xác nhận; một nhân viên có thể có nhiều bản ghi trong ngày."),
                     row("Giờ nghỉ phép", "Thời lượng trong đơn đã duyệt giao với kỳ; chưa quy đổi theo lịch làm việc."),
                     row("Giờ tăng ca", "Thời gian thực tế đã duyệt và xác nhận giao với kỳ; phân bổ phút nghỉ theo tỷ lệ thời lượng.")));
@@ -80,15 +114,24 @@ public class ReportExcelWriter {
     }
 
     public byte[] payroll(PayrollStatisticsResponse report) {
+        return payroll(report, false);
+    }
+
+    public byte[] payroll(PayrollStatisticsResponse report, boolean hrScope) {
+        return payroll(report, hrScope, null);
+    }
+
+    public byte[] payroll(PayrollStatisticsResponse report, boolean hrScope, Long departmentId) {
         return write(book -> {
             book.filters("Báo cáo quỹ lương", List.of(
                     row("Từ ngày (fromDate)", report.fromDate().toString()),
                     row("Đến ngày (toDate, bao gồm)", report.toDate().toString()),
                     row("Chọn kỳ", "Chỉ lấy kỳ nằm trọn trong khoảng lọc."),
                     row("Trạng thái và phiên bản", "Chỉ lấy batch DA_CHOT mới nhất của mỗi kỳ."),
-                    row("Ngày cuối kỳ", "periodEndExclusive là mốc kết thúc không bao gồm trong kỳ."),
+                    row("Ngày cuối kỳ", "Theo ngày kết thúc đã lưu của kỳ lương; bao gồm ngày cuối như luồng chốt lương."),
                     row("Phụ cấp và thưởng", "Đã nằm trong quỹ lương trước khấu trừ; không cộng thêm lần nữa."),
-                    row("Số bản ghi lương", "Là tổng bản ghi qua các kỳ, không phải số nhân viên duy nhất.")));
+                    row("Số bản ghi lương", "Là tổng bản ghi qua các kỳ, không phải số nhân viên duy nhất."),
+                    row("Phạm vi", departmentId != null ? "Phòng ban ID " + departmentId + "; chỉ gồm nhân viên thuộc phòng trong toàn bộ kỳ lương." : hrScope ? "Chỉ gồm nhân viên thuộc phòng được giao trong toàn bộ kỳ lương; kỳ chuyển phòng không được tính." : "Toàn trung tâm.")));
             Amounts totals = report.totals();
             book.table("Tong hop", new String[]{"Chỉ tiêu", "Giá trị"}, List.of(
                     row("Số batch đã chốt", report.batchCount()),
@@ -102,12 +145,12 @@ public class ReportExcelWriter {
             for (PayrollStatisticsResponse.BatchSummary batch : report.batches()) {
                 Amounts amounts = batch.totals();
                 batches.add(row(textId(batch.periodId()), batch.periodCode(), batch.periodStart().toString(),
-                        batch.periodEndExclusive().toString(), textId(batch.batchId()), batch.versionNo(),
+                        batch.periodEnd().toString(), textId(batch.batchId()), batch.versionNo(),
                         batch.employeeCount(), amounts.grossPayroll(), amounts.allowances(), amounts.bonuses(),
                         amounts.deductions(), amounts.netPayroll()));
             }
             book.table("Theo batch", new String[]{"ID kỳ", "Mã kỳ", "Ngày bắt đầu kỳ",
-                    "Kết thúc kỳ (không bao gồm)", "ID batch", "Phiên bản", "Số bản ghi lương",
+                    "Ngày kết thúc kỳ", "ID batch", "Phiên bản", "Số bản ghi lương",
                     "Quỹ lương trước khấu trừ", "Phụ cấp (đã gồm)", "Thưởng (đã gồm)", "Khấu trừ", "Thực nhận"}, batches);
         });
     }

@@ -1,91 +1,199 @@
-<p class="eyebrow">PHÂN TÍCH & THỐNG KÊ</p>
-<h1>Báo cáo</h1>
-<p class="page-description">Theo dõi số liệu nhân sự, hợp đồng, thời gian làm việc và quỹ lương.</p>
+<app-page-header variant="directory" title="Báo cáo" description="Theo dõi số liệu nhân sự, hợp đồng, thời gian làm việc và quỹ lương trong phạm vi được cấp." />
 
-<nav class="report-tabs" aria-label="Chọn loại báo cáo">
+<nav class="report-tabs" [attr.aria-label]="'Chọn loại báo cáo' | translate">
   @for (tab of tabs; track tab.id) {
-    <button type="button" [class.active]="selected === tab.id" [attr.aria-pressed]="selected === tab.id" (click)="select(tab.id)">{{ tab.label }}</button>
+    <button type="button" [class.active]="selected === tab.id" [attr.aria-pressed]="selected === tab.id" (click)="select(tab.id)">{{ tab.label | translate }}</button>
   }
 </nav>
 
 <section class="surface report-surface" aria-labelledby="report-title">
   <div class="report-heading">
-    <div><p class="report-kicker">BÁO CÁO TỔNG HỢP</p><h2 id="report-title">{{ activeTab.label }}</h2><p class="muted report-description">{{ activeTab.description }}</p></div>
-    <button type="button" class="btn btn-outline-primary export-button" (click)="export()" [disabled]="!hasResult || loading || exporting">{{ exporting ? 'Đang xuất…' : 'Xuất Excel' }}</button>
+    <div><p class="report-kicker">{{ 'BÁO CÁO TỔNG HỢP' | translate }}</p><h2 id="report-title">{{ activeTab.label | translate }}</h2><p class="muted report-description">{{ activeTab.description | translate }}</p></div>
+    <button type="button" class="btn btn-outline-primary export-button" (click)="export()" [disabled]="!hasResult || loading || exporting">{{ (exporting ? 'Đang xuất…' : 'Xuất Excel') | translate }}</button>
   </div>
 
-  @if (selected !== 'employees') {
     <form class="report-filters" (submit)="submit($event)">
-      <div><label for="report-from" class="form-label">Từ ngày</label><input #fromDate id="report-from" name="fromDate" type="date" class="form-control" [value]="filters.fromDate" (input)="filters.fromDate = fromDate.value" required></div>
-      <div><label for="report-to" class="form-label">Đến ngày</label><input #toDate id="report-to" name="toDate" type="date" class="form-control" [value]="filters.toDate" (input)="filters.toDate = toDate.value" required></div>
+      <div><label for="report-from" class="form-label">{{ 'Từ ngày' | translate }}</label><input #fromDate id="report-from" name="fromDate" type="date" class="form-control" [value]="filters.fromDate" (input)="filters.fromDate = fromDate.value" required></div>
+      <div><label for="report-to" class="form-label">{{ 'Đến ngày' | translate }}</label><input #toDate id="report-to" name="toDate" type="date" class="form-control" [value]="filters.toDate" (input)="filters.toDate = toDate.value" required></div>
+      <div><label for="report-department" class="form-label">{{ 'Phòng ban' | translate }}</label><select #department id="report-department" class="form-select" [value]="filters.departmentId" [disabled]="departmentsLoading" [attr.aria-busy]="departmentsLoading" (change)="filters.departmentId = department.value"><option value="">{{ (departmentsLoading ? 'Đang tải phòng ban…' : 'Tất cả phòng ban') | translate }}</option>@for (item of departments; track item.id) { <option [value]="item.id">{{ item.name }}</option> }</select></div>
       @if (selected === 'contracts') {
-        <div><label for="report-date" class="form-label">Ngày báo cáo <span>(không bắt buộc)</span></label><input #reportDate id="report-date" name="reportDate" type="date" class="form-control" [value]="filters.reportDate" (input)="filters.reportDate = reportDate.value"></div>
-        <div><label for="report-expiring" class="form-label">Sắp hết hạn trong (ngày)</label><input #expiring id="report-expiring" name="expiringWithinDays" type="number" min="0" max="2147483647" step="1" class="form-control" [value]="filters.expiringWithinDays" (input)="filters.expiringWithinDays = expiring.valueAsNumber" required></div>
-        <div><label for="report-department" class="form-label">ID phòng ban <span>(không bắt buộc)</span></label><input #department id="report-department" name="departmentId" type="text" inputmode="numeric" class="form-control" [value]="filters.departmentId" (input)="filters.departmentId = department.value" placeholder="Tất cả phòng ban"></div>
+        <div><label for="report-date" class="form-label">{{ 'Ngày báo cáo' | translate }} <span>{{ '(không bắt buộc)' | translate }}</span></label><input #reportDate id="report-date" name="reportDate" type="date" class="form-control" [value]="filters.reportDate" (input)="filters.reportDate = reportDate.value"></div>
+        <div><label for="report-expiring" class="form-label">{{ 'Sắp hết hạn trong (ngày)' | translate }}</label><input #expiring id="report-expiring" name="expiringWithinDays" type="number" min="0" max="3650" step="1" class="form-control" [value]="filters.expiringWithinDays" (input)="filters.expiringWithinDays = expiring.valueAsNumber" required></div>
       }
-      <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">Xem báo cáo</button></div>
+      <div class="filter-submit"><button type="submit" class="btn btn-primary" [disabled]="loading">{{ 'Xem báo cáo' | translate }}</button></div>
     </form>
-  } @else {
-    <div class="employee-info"><span>Phân công được tính theo ngày hiện tại.</span><button type="button" class="btn btn-outline-primary" (click)="load()" [disabled]="loading">Tải lại</button></div>
+  @if (departmentsError) { <div class="alert alert-warning mt-3" role="alert">{{ departmentsError }} <button type="button" class="btn btn-sm btn-outline-primary ms-2" (click)="loadDepartments()">{{ 'Thử lại' | translate }}</button></div> }
+  @if (updatedAt) {
+    <div class="report-updated">
+      <div class="update-info"><span class="update-indicator" aria-hidden="true"></span><div class="update-copy"><span>{{ 'Cập nhật lúc' | translate }} <strong>{{ updatedLabel() }}</strong></span><span class="update-frequency">{{ 'Tự cập nhật mỗi 5 phút khi đang xem' | translate }}</span></div></div>
+      <button type="button" class="btn btn-outline-primary btn-sm" (click)="load()" [disabled]="loading">{{ 'Tải lại' | translate }}</button>
+    </div>
   }
 
-  @if (exportError) { <div class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError }}</div> }
+  @if (exportError) { <div [hrmNotice]="exportError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError | translate }}</div> }
   <div #reportResults class="report-results" [style.min-height.px]="loading && loadingHeight ? loadingHeight : null" [attr.aria-busy]="loading">
   @if (loading) {
-    <div class="report-state muted" role="status">Đang tải báo cáo…</div>
+    <div class="report-state muted" role="status">{{ 'Đang tải báo cáo…' | translate }}</div>
   } @else if (error) {
-    <div class="alert alert-danger mt-4 mb-0" role="alert">{{ error }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
+    <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger mt-4 mb-0" role="alert">{{ error | translate }} <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load()">Thử lại</button></div>
   } @else if (employeeReport) {
+    <div class="employee-summary" [attr.aria-label]="'Tổng quan nhân sự' | translate">
+      <div class="summary-main"><span class="summary-icon" aria-hidden="true">◉</span><div><span class="summary-label">{{ 'Tổng nhân sự' | translate }}</span><strong>{{ number(employeeTotal) }}</strong><small>{{ 'Nhân viên trong phạm vi báo cáo' | translate }}</small></div></div>
+      <div class="summary-stat"><span class="status-dot active-dot" aria-hidden="true"></span><div><span>{{ 'Đang làm việc' | translate }}</span><strong>{{ number(employeeStatus('DANG_LAM')) }}</strong></div></div>
+      <div class="summary-stat"><span class="status-dot retired-dot" aria-hidden="true"></span><div><span>{{ 'Đã nghỉ việc' | translate }}</span><strong>{{ number(employeeStatus('DA_NGHI')) }}</strong></div></div>
+    </div>
+    <div class="employee-section-heading"><div><h3>{{ 'Biến động nhân sự trong kỳ' | translate }}</h3><p>{{ 'So sánh với kỳ liền trước tương ứng' | translate }}</p></div></div>
+    @if (movementLoading) { <p class="muted small" role="status">{{ 'Đang tải biến động nhân sự…' | translate }}</p> }
+    @else if (movementError) { <div class="alert alert-warning" role="alert">{{ movementError | translate }}</div> }
+    @else {
+      <div class="metric-grid"><div class="metric"><span>{{ 'Nhân viên mới' | translate }}</span><strong>{{ number(hired) }}</strong>@if (!comparisonLoading && !comparisonError) { <small>{{ change(hired, previousHired) }}</small> }</div><div class="metric"><span>{{ 'Nhân viên nghỉ việc' | translate }}</span><strong>{{ number(terminated) }}</strong>@if (!comparisonLoading && !comparisonError) { <small>{{ change(terminated, previousTerminated) }}</small> }</div></div>
+      @if (comparisonLoading) { <p class="report-note" role="status">{{ 'Đang tải kỳ trước…' | translate }}</p> }
+      @else if (comparisonError) { <p class="report-note" role="status">{{ comparisonError | translate }}</p> }
+      @else if (previousFilters; as previous) { <div class="comparison-note"><span class="comparison-label">{{ 'Kỳ trước' | translate }}</span><strong>{{ date(previous.fromDate) }} – {{ date(previous.toDate) }}</strong></div> }
+    }
+    <div class="employee-section-heading"><div><h3>{{ 'Cơ cấu nhân sự' | translate }}</h3><p>{{ 'So sánh số nhân viên trong từng nhóm' | translate }}</p></div><span>{{ 'Thanh biểu thị so với nhóm lớn nhất' | translate }}</span></div>
     <div class="group-grid">
-      @for (group of employeeGroups; track group.label) {
-        <article class="group-card">
-          <h3>{{ group.label }}</h3>
-          @if (!group.rows.length) { <p class="muted small mb-0">Chưa có dữ liệu.</p> }
+      @for (group of employeeGroups; track group.label; let i = $index) {
+        <article class="group-card" [class.group-teal]="i === 1" [class.group-violet]="i === 2" [class.group-amber]="i === 3">
+          <div class="group-heading"><div><h3>{{ group.label | translate }}</h3><p>{{ group.description | translate }}</p></div><span class="group-badge">{{ number(group.rows.length) }} {{ 'nhóm' | translate }}</span></div>
+          @if (!group.rows.length) { <p class="muted small mb-0">{{ 'Chưa có dữ liệu.' | translate }}</p> }
           @else {
-            <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ group.label }}</caption><thead><tr><th scope="col">Nhóm</th><th scope="col" class="text-end">Nhân viên</th></tr></thead><tbody>
-              @for (row of group.rows; track $index) { <tr><td>{{ row.groupName || row.groupCode || '—' }}</td><td class="text-end">{{ number(row.employeeCount) }}</td></tr> }
-            </tbody></table></div>
+            <ul class="group-list" [attr.aria-label]="group.label">
+              @for (row of group.rows; track $index) {
+                @let isSelected = employeeSelection?.groupBy === group.key && employeeSelection?.row === row;
+                <li>
+                  <button type="button" class="report-group-button" [class.is-selected]="isSelected" [attr.aria-expanded]="isSelected" [attr.aria-label]="'Xem nhân viên: ' + employeeGroupName(row)" aria-controls="employee-report-details" (click)="openEmployeeDetails(group.key, row)">
+                    <span class="group-row">
+                      <span class="group-name">{{ employeeGroupName(row) }}</span>
+                      <strong>{{ number(row.employeeCount) }} <small>{{ 'nhân viên' | translate }}</small></strong>
+                    </span>
+                    <span class="bar-track" aria-hidden="true"><span [style.width.%]="group.max ? row.employeeCount / group.max * 100 : 0"></span></span>
+                  </button>
+                </li>
+              }
+            </ul>
+            <div class="group-total"><span>{{ 'Tổng cộng' | translate }} @if (i === 3) { <small>{{ '(có trình độ chính)' | translate }}</small> }</span><strong>{{ number(group.total) }} <small>{{ 'nhân viên' | translate }}</small></strong></div>
           }
         </article>
       }
     </div>
+    @if (employeeSelection; as selection) {
+      <section id="employee-report-details" class="report-detail" [attr.aria-label]="'Nhân viên trong nhóm đã chọn' | translate" [attr.aria-busy]="employeeDetailLoading" [appDetailFocus]="employeeDetailFocus">
+        <div class="batch-heading"><div><h3>{{ 'Nhân viên' | translate }} · {{ selection.label }}</h3></div><button type="button" class="btn btn-outline-secondary btn-sm" (click)="closeEmployeeDetails()">{{ 'Đóng chi tiết' | translate }}</button></div>
+        @if (employeeDetailLoading) { <p class="report-note" role="status">{{ 'Đang tải nhân viên…' | translate }}</p> }
+        @else if (employeeDetailError) { <div class="alert alert-warning" role="alert">{{ employeeDetailError | translate }} <button type="button" class="btn btn-sm btn-outline-primary ms-2" (click)="loadEmployeeDetails(selection.groupBy, selection.row, employeeDetailPage)">{{ 'Thử lại' | translate }}</button></div> }
+        @else if (employeeDetails; as result) {
+          @if (!result.items.length) { <p class="report-note">{{ 'Không có nhân viên trong nhóm này.' | translate }}</p> }
+          @else {
+            <div class="table-responsive"><table class="table align-middle"><thead><tr><th>{{ 'Mã nhân viên' | translate }}</th><th>{{ 'Họ tên' | translate }}</th><th>{{ 'Phòng ban hiện tại' | translate }}</th><th>{{ 'Chức vụ hiện tại' | translate }}</th><th>{{ 'Trạng thái' | translate }}</th><th>{{ 'Ngày vào làm' | translate }}</th></tr></thead><tbody>
+              @for (item of result.items; track item.employeeId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ item.departmentName || 'Chưa có phân công' }}</td><td>{{ item.positionName || 'Chưa có chức vụ' }}</td><td>{{ item.employmentStatus === 'DANG_LAM' ? 'Đang làm việc' : item.employmentStatus === 'DA_NGHI' ? 'Đã nghỉ việc' : item.employmentStatus }}</td><td>{{ date(item.hireDate) }}</td></tr> }
+            </tbody></table></div>
+            <div class="report-pagination"><span>{{ number(result.totalElements) }} {{ 'nhân viên' | translate }} · {{ 'Trang' | translate }} {{ result.page + 1 }}/{{ result.totalPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page === 0" (click)="loadEmployeeDetails(selection.groupBy, selection.row, result.page - 1)">{{ 'Trước' | translate }}</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page + 1 >= result.totalPages" (click)="loadEmployeeDetails(selection.groupBy, selection.row, result.page + 1)">{{ 'Sau' | translate }}</button></div>
+          }
+        }
+      </section>
+    }
   } @else if (contractReport; as report) {
-    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }} · Ngày đánh giá: {{ date(report.reportDate) }}</p>
+    <p class="period-label">{{ 'Kỳ báo cáo: ' | translate }}{{ date(report.fromDate) }} – {{ date(report.toDate) }} · {{ 'Ngày đánh giá: ' | translate }}{{ date(report.reportDate) }}</p>
     <div class="metric-grid">
-      <div class="metric"><span>Tổng hợp đồng</span><strong>{{ number(report.contractCount) }}</strong><small>Trong khoảng được chọn</small></div>
-      <div class="metric"><span>Đang hiệu lực</span><strong>{{ number(report.effectiveCount) }}</strong><small>Tại ngày đánh giá</small></div>
-      <div class="metric"><span>Sắp hết hạn</span><strong>{{ number(report.expiringCount) }}</strong><small>Trong {{ report.expiringWithinDays }} ngày</small></div>
+      <div class="metric"><span>{{ 'Tổng hợp đồng' | translate }}</span><strong>{{ number(report.contractCount) }}</strong><small>{{ 'Trong khoảng được chọn' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Đang hiệu lực' | translate }}</span><strong>{{ number(report.effectiveCount) }}</strong><small>{{ 'Tại ngày đánh giá' | translate }}</small></div>
+      <div class="metric metric-expiring"><span>{{ 'Sắp hết hạn' | translate }}</span><strong>{{ number(report.expiringCount) }}</strong><small>{{ 'Trong' | translate }} {{ report.expiringWithinDays }} {{ 'ngày' | translate }}</small></div>
+      <div class="metric metric-expired"><span>{{ 'Đã hết hạn' | translate }}</span><strong>{{ expiredTotal === null ? '—' : number(expiredTotal) }}</strong><small>{{ 'Trong khoảng báo cáo' | translate }}</small></div>
     </div>
-    <p class="report-note">Phòng ban: {{ report.departmentId === null ? 'Tất cả' : 'ID ' + report.departmentId }}.</p>
+    @if (expiredCountError) { <p class="report-note" role="status">{{ expiredCountError | translate }}</p> }
+    @if (comparisonLoading) { <p class="report-note">{{ 'Đang tải kỳ trước…' | translate }}</p> }
+    @else if (previousContract; as previous) { <div class="comparison-note"><span class="comparison-label">{{ 'Kỳ trước' | translate }}</span><div><strong>{{ date(previous.fromDate) }} – {{ date(previous.toDate) }}</strong><span class="comparison-details">{{ number(previous.contractCount) }} {{ 'hợp đồng' | translate }} · {{ number(previous.expiringCount) }} {{ 'sắp hết hạn vào ngày đánh giá tương ứng.' | translate }}</span></div></div> }
+    @else if (comparisonError) { <p class="report-note" role="status">{{ comparisonError | translate }}</p> }
+    <section id="contract-report-list" [attr.aria-label]="'Danh sách hợp đồng' | translate" [attr.aria-busy]="detailLoading">
+    <div class="batch-heading"><h3>{{ 'Danh sách hợp đồng' | translate }}</h3><div class="contract-switch" role="group" [attr.aria-label]="'Chọn danh sách hợp đồng' | translate"><button type="button" [class.active]="detailKind === 'expiring'" [attr.aria-pressed]="detailKind === 'expiring'" aria-controls="contract-report-list" (click)="loadDetails('expiring')">{{ 'Sắp hết hạn' | translate }}</button><button type="button" [class.active]="detailKind === 'expired'" [attr.aria-pressed]="detailKind === 'expired'" aria-controls="contract-report-list" (click)="loadDetails('expired')">{{ 'Đã hết hạn' | translate }}</button></div></div>
+    @if (detailLoading) { <p class="report-note" role="status">{{ 'Đang tải danh sách…' | translate }}</p> }
+    @else if (detailError) { <div class="alert alert-warning" role="alert">{{ detailError | translate }}</div> }
+    @else if (!details.length) { <p class="report-note">{{ 'Không có hợp đồng phù hợp.' | translate }}</p> }
+    @else { <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã nhân viên</th><th>Nhân viên</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th></tr></thead><tbody>@for (item of details; track item.contractId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ date(item.startDate) }}</td><td>{{ date(item.endDate) }}</td></tr> }</tbody></table></div><div class="report-pagination"><span>{{ number(detailTotal) }} hợp đồng · Trang {{ detailPage + 1 }}/{{ detailPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage === 0" (click)="loadDetails(detailKind, detailPage - 1)">Trước</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage + 1 >= detailPages" (click)="loadDetails(detailKind, detailPage + 1)">Sau</button></div> }
+    </section>
   } @else if (workReport; as report) {
-    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
+    <p class="period-label">{{ 'Kỳ báo cáo: ' | translate }}{{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
     <div class="metric-grid">
-      <div class="metric"><span>Bản ghi đi làm</span><strong>{{ number(report.confirmedWorkDays) }}</strong><small>Đã xác nhận</small></div>
-      <div class="metric"><span>Bản ghi vắng</span><strong>{{ number(report.confirmedAbsentDays) }}</strong><small>Đã xác nhận</small></div>
-      <div class="metric"><span>Đơn nghỉ phép</span><strong>{{ number(report.approvedLeaveRequests) }}</strong><small>Đã duyệt</small></div>
-      <div class="metric"><span>Thời lượng nghỉ phép</span><strong>{{ number(report.approvedLeaveHours) }} <em>giờ</em></strong><small>Thời gian trong kỳ</small></div>
-      <div class="metric"><span>Đơn tăng ca</span><strong>{{ number(report.approvedOvertimeRequests) }}</strong><small>Đã duyệt và xác nhận</small></div>
-      <div class="metric"><span>Thời lượng tăng ca</span><strong>{{ number(report.approvedOvertimeHours) }} <em>giờ</em></strong><small>Đã phân bổ thời gian nghỉ</small></div>
+      <div class="metric"><span>{{ 'Bản ghi đi làm' | translate }}</span><strong>{{ number(report.confirmedWorkDays) }}</strong><small>{{ 'Đã xác nhận' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Bản ghi vắng' | translate }}</span><strong>{{ number(report.confirmedAbsentDays) }}</strong><small>{{ 'Đã xác nhận' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Đơn nghỉ phép' | translate }}</span><strong>{{ number(report.approvedLeaveRequests) }}</strong><small>{{ 'Đã duyệt' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Thời lượng nghỉ phép' | translate }}</span><strong>{{ number(report.approvedLeaveHours) }} <em>{{ 'giờ' | translate }}</em></strong><small>{{ 'Thời gian trong kỳ' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Đơn tăng ca' | translate }}</span><strong>{{ number(report.approvedOvertimeRequests) }}</strong><small>{{ 'Đã duyệt và xác nhận' | translate }}</small></div>
+      <div class="metric"><span>{{ 'Thời lượng tăng ca' | translate }}</span><strong>{{ number(report.approvedOvertimeHours) }} <em>{{ 'giờ' | translate }}</em></strong><small>{{ 'Đã phân bổ thời gian nghỉ' | translate }}</small></div>
     </div>
-    <p class="report-note">Công và vắng được tính theo bản ghi đã xác nhận; một nhân viên có thể có nhiều bản ghi trong ngày. Giờ nghỉ phép là thời lượng đơn trong kỳ, chưa quy đổi theo lịch làm việc.</p>
+    @if (comparisonLoading) { <p class="report-note">{{ 'Đang tải kỳ trước…' | translate }}</p> }
+    @else if (previousWork; as previous) { <div class="comparison-note"><span class="comparison-label">{{ 'Kỳ trước' | translate }}</span><div><strong>{{ date(previous.fromDate) }} – {{ date(previous.toDate) }}</strong><span class="comparison-details">{{ number(previous.confirmedWorkDays) }} {{ 'bản ghi đi làm' | translate }} · {{ number(previous.confirmedAbsentDays) }} {{ 'bản ghi vắng' | translate }} · {{ number(previous.approvedOvertimeHours) }} {{ 'giờ tăng ca' | translate }}.</span></div></div> }
+    @else if (comparisonError) { <p class="report-note" role="status">{{ comparisonError | translate }}</p> }
+    <div class="batch-heading"><h3>{{ 'Theo dõi theo tháng' | translate }}</h3><span class="muted small">{{ 'Thanh biểu thị giờ tăng ca' | translate }}</span></div>
+    @if (workTrendLoading) { <p class="report-note" role="status">{{ 'Đang tải số liệu theo tháng…' | translate }}</p> }
+    @else if (workTrendError) { <p class="report-note" role="status">{{ workTrendError | translate }}</p> }
+    @else { <div class="trend-list">@for (month of workMonths; track month.label) { <div class="work-trend-row"><strong>{{ month.label }}</strong><span>{{ 'Đi làm: ' | translate }}{{ number(month.report.confirmedWorkDays) }} · {{ 'Vắng: ' | translate }}{{ number(month.report.confirmedAbsentDays) }} · {{ 'Nghỉ phép: ' | translate }}{{ number(month.report.approvedLeaveHours) }} {{ 'giờ' | translate }}</span><div class="trend-track"><span [style.width.%]="month.report.approvedOvertimeHours / workMax * 100"></span></div><strong>{{ number(month.report.approvedOvertimeHours) }} {{ 'giờ OT' | translate }}</strong></div> }</div> }
   } @else if (payrollReport; as report) {
-    <p class="period-label">Kỳ báo cáo: {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
+    <p class="period-label">{{ 'Kỳ báo cáo:' | translate }} {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
     <div class="metric-grid payroll-metrics">
-      <div class="metric"><span>Quỹ lương trước khấu trừ</span><strong>{{ money(report.totals.grossPayroll) }} <em>đ</em></strong></div>
-      <div class="metric"><span>Phụ cấp</span><strong>{{ money(report.totals.allowances) }} <em>đ</em></strong></div>
-      <div class="metric"><span>Thưởng</span><strong>{{ money(report.totals.bonuses) }} <em>đ</em></strong></div>
-      <div class="metric"><span>Khấu trừ</span><strong>{{ money(report.totals.deductions) }} <em>đ</em></strong></div>
-      <div class="metric metric-highlight"><span>Thực nhận</span><strong>{{ money(report.totals.netPayroll) }} <em>đ</em></strong></div>
+      <div class="metric"><span>{{ 'Quỹ lương trước khấu trừ' | translate }}</span><strong>{{ money(report.totals.grossPayroll) }} <em>đ</em></strong></div>
+      <div class="metric"><span>{{ 'Phụ cấp' | translate }}</span><strong>{{ money(report.totals.allowances) }} <em>đ</em></strong></div>
+      <div class="metric"><span>{{ 'Thưởng' | translate }}</span><strong>{{ money(report.totals.bonuses) }} <em>đ</em></strong></div>
+      <div class="metric"><span>{{ 'Khấu trừ' | translate }}</span><strong>{{ money(report.totals.deductions) }} <em>đ</em></strong></div>
+      <div class="metric metric-highlight"><span>{{ 'Thực nhận' | translate }}</span><strong>{{ money(report.totals.netPayroll) }} <em>đ</em></strong></div>
     </div>
-    <p class="report-note">Phụ cấp và thưởng đã nằm trong quỹ lương trước khấu trừ. Chỉ tính kỳ nằm trọn trong khoảng lọc và phiên bản bảng lương đã chốt mới nhất của mỗi kỳ.</p>
-    <div class="batch-heading"><h3>Chi tiết theo kỳ lương</h3><span class="muted small">{{ number(report.batchCount) }} bảng lương · {{ number(report.payrollRecordCount) }} bản ghi lương</span></div>
-    @if (!report.batches.length) { <div class="empty-batches">Không có bảng lương đã chốt trong khoảng đã chọn.</div> }
+    @if (comparisonLoading) { <p class="report-note">{{ 'Đang tải kỳ trước…' | translate }}</p> }
+    @else if (previousPayroll; as previous) { <div class="comparison-note"><span class="comparison-label">{{ 'Kỳ trước' | translate }}</span><div><strong>{{ date(previous.fromDate) }} – {{ date(previous.toDate) }}</strong><span class="comparison-details">{{ 'Trước khấu trừ' | translate }} {{ money(previous.totals.grossPayroll) }} đ · {{ 'Thực nhận' | translate }} {{ money(previous.totals.netPayroll) }} đ · {{ number(previous.batchCount) }} {{ 'bảng lương' | translate }}.</span></div></div> }
+    @else if (comparisonError) { <p class="report-note" role="status">{{ comparisonError | translate }}</p> }
+    @if (report.batches.length) {
+      <div class="payroll-view-controls" role="group" [attr.aria-label]="'Cách xem bảng tổng hợp quỹ lương' | translate">
+        <div><label for="payroll-group" class="form-label">{{ 'Xem theo' | translate }}</label><select #payrollGroup id="payroll-group" class="form-select" [value]="payrollGrouping" (change)="setPayrollGrouping(payrollGroup.value)">        <option value="components">{{ 'Khoản lương' | translate }}</option><option value="periods">{{ 'Kỳ lương' | translate }}</option></select></div>
+        <div><label for="payroll-columns" class="form-label">{{ 'Cột thời gian' | translate }}</label><select #payrollPeriod id="payroll-columns" class="form-select" [value]="payrollGranularity" (change)="setPayrollGranularity(payrollPeriod.value)">        <option value="month">{{ 'Tháng bắt đầu kỳ' | translate }}</option><option value="quarter">{{ 'Quý bắt đầu kỳ' | translate }}</option><option value="year">{{ 'Năm bắt đầu kỳ' | translate }}</option></select></div>
+        @if (payrollGrouping === 'periods') { <div><label for="payroll-metric" class="form-label">{{ 'Chỉ tiêu' | translate }}</label><select #payrollAmount id="payroll-metric" class="form-select" [value]="payrollMetric" (change)="setPayrollMetric(payrollAmount.value)">@for (option of payrollMetricOptions; track option.key) {         <option [value]="option.key">{{ option.label | translate }}</option> }</select></div> }
+      </div>
+      <div class="batch-heading"><h3>{{ 'Bảng tổng hợp ' | translate }}{{ payrollGrouping === 'components' ? ('các khoản lương' | translate) : (payrollMetricLabel | translate) }}</h3><span class="muted small">{{ 'Đơn vị: đồng' | translate }}</span></div>
+      <div class="table-responsive"><table class="table payroll-matrix align-middle"><caption class="visually-hidden">{{ 'Tổng hợp quỹ lương theo thời điểm bắt đầu kỳ' | translate }}</caption>
+        <thead><tr><th scope="col">{{ (payrollGrouping === 'components' ? 'Khoản lương' : 'Kỳ lương') | translate }}</th>@for (column of payrollColumns; track column.key) { <th scope="col" class="text-end">{{ column.label }}</th> }<th scope="col" class="text-end">{{ 'Tổng cộng' | translate }}</th></tr></thead>
+        <tbody>@for (row of payrollRows; track row.key) { <tr><th scope="row">{{ row.label }}</th>@for (cell of row.cells; track $index; let i = $index) { <td class="text-end">@if (cell.value !== null) { <button type="button" class="payroll-cell" [class.selected]="payrollSelection?.rowKey === row.key && payrollSelection?.columnKey === payrollColumns[i].key" [attr.aria-label]="'Xem chi tiết ' + row.label + ', ' + payrollColumns[i].label + ': ' + money(cell.value) + ' đồng'" aria-controls="payroll-batch-details" (click)="selectPayrollCell(row, payrollColumns[i], cell)">{{ money(cell.value) }}</button> } @else { <span class="muted" aria-label="Không có kỳ lương ở cột này">—</span> }</td> }<td class="text-end amount payroll-row-total">{{ money(row.total) }}</td></tr> }</tbody>
+        @if (payrollGrouping === 'periods') { <tfoot><tr><th scope="row">{{ 'Tổng cộng' | translate }}</th>@for (total of payrollColumnTotals; track $index) { <td class="text-end amount">{{ money(total) }}</td> }<td class="text-end amount">{{ money(payrollMatrixTotal) }}</td></tr></tfoot> }
+      </table></div>
+    }
+    <section id="payroll-batch-details" [attr.aria-label]="'Chi tiết các kỳ lương' | translate">
+    <div class="batch-heading"><div><h3>{{ 'Chi tiết theo kỳ lương' | translate }}</h3>@if (payrollSelection; as selection) { <p class="payroll-selection" aria-live="polite">{{ selection.label }}</p> }</div><div class="detail-switch">@if (payrollSelection) { <button type="button" class="btn btn-outline-primary btn-sm" (click)="payrollSelection = null">{{ 'Xem tất cả kỳ' | translate }}</button> }<span class="muted small">{{ number(payrollDetailBatches.length) }} {{ 'bảng lương' | translate }} @if (!payrollSelection) { · {{ number(report.payrollRecordCount) }} {{ 'bản ghi lương' | translate }} }</span></div></div>
+    @if (!report.batches.length) { <div class="empty-batches">{{ 'Không có bảng lương đã chốt trong khoảng đã chọn.' | translate }}</div> }
     @else {
-      <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">Báo cáo lương theo kỳ</caption><thead><tr><th scope="col">Kỳ lương</th><th scope="col">Bắt đầu</th><th scope="col">Kết thúc (không gồm)</th><th scope="col">Phiên bản</th><th scope="col" class="text-end">Nhân viên</th><th scope="col" class="text-end">Trước khấu trừ</th><th scope="col" class="text-end">Khấu trừ</th><th scope="col" class="text-end">Thực nhận</th></tr></thead><tbody>
-        @for (batch of report.batches; track batch.batchId) { <tr><td class="batch-code">{{ batch.periodCode }}</td><td>{{ date(batch.periodStart) }}</td><td>{{ date(batch.periodEndExclusive) }}</td><td>{{ batch.versionNo }}</td><td class="text-end">{{ number(batch.employeeCount) }}</td><td class="text-end amount">{{ money(batch.totals.grossPayroll) }}</td><td class="text-end amount">{{ money(batch.totals.deductions) }}</td><td class="text-end amount">{{ money(batch.totals.netPayroll) }}</td></tr> }
+      <div class="table-responsive"><table class="table align-middle mb-0"><caption class="visually-hidden">{{ 'Báo cáo lương theo kỳ' | translate }}</caption><thead><tr><th scope="col">{{ 'Kỳ lương' | translate }}</th><th scope="col">{{ 'Bắt đầu' | translate }}</th><th scope="col">{{ 'Kết thúc kỳ' | translate }}</th><th scope="col">{{ 'Phiên bản' | translate }}</th><th scope="col" class="text-end">{{ 'Nhân viên' | translate }}</th><th scope="col" class="text-end">{{ 'Trước khấu trừ' | translate }}</th><th scope="col" class="text-end">{{ 'Phụ cấp' | translate }}</th><th scope="col" class="text-end">{{ 'Thưởng' | translate }}</th><th scope="col" class="text-end">{{ 'Khấu trừ' | translate }}</th><th scope="col" class="text-end">{{ 'Thực nhận' | translate }}</th></tr></thead><tbody>
+        @for (batch of payrollDetailBatches; track batch.batchId) { <tr [class.table-active]="activePayrollBatch?.batchId === batch.batchId"><td class="batch-code"><button type="button" class="payroll-cell" [attr.aria-label]="'Xem nhân viên của kỳ ' + batch.periodCode + ', phiên bản ' + batch.versionNo" aria-controls="payroll-employee-details" (click)="loadPayrollEmployees(batch)">{{ batch.periodCode }}</button></td><td>{{ date(batch.periodStart) }}</td><td>{{ date(batch.periodEnd) }}</td><td>{{ batch.versionNo }}</td><td class="text-end">{{ number(batch.employeeCount) }}</td><td class="text-end amount">{{ money(batch.totals.grossPayroll) }}</td><td class="text-end amount">{{ money(batch.totals.allowances) }}</td><td class="text-end amount">{{ money(batch.totals.bonuses) }}</td><td class="text-end amount">{{ money(batch.totals.deductions) }}</td><td class="text-end amount">{{ money(batch.totals.netPayroll) }}</td></tr> }
       </tbody></table></div>
     }
-    <p class="report-note">Số bản ghi lương là tổng qua các kỳ, không phải số nhân viên duy nhất. Giá trị tiền theo đơn vị đồng.</p>
+    </section>
+    @if (activePayrollBatch; as batch) {
+      <section id="payroll-employee-details" class="report-detail" [attr.aria-label]="'Lương từng nhân viên' | translate" [attr.aria-busy]="payrollEmployeeLoading">
+        <div class="batch-heading"><div><h3>{{ batch.periodCode }} · {{ 'Phiên bản' | translate }} {{ batch.versionNo }} · {{ 'Đã chốt' | translate }}</h3><p class="payroll-selection">{{ date(batch.periodStart) }} – {{ date(batch.periodEnd) }}</p></div><button type="button" class="btn btn-outline-secondary btn-sm" (click)="closePayrollEmployees()">{{ 'Đóng chi tiết' | translate }}</button></div>
+        @if (payrollEmployeeLoading) { <p class="report-note" role="status">{{ 'Đang tải lương nhân viên…' | translate }}</p> }
+        @else if (payrollEmployeeError) { <div class="alert alert-warning" role="alert">{{ payrollEmployeeError | translate }} <button type="button" class="btn btn-sm btn-outline-primary ms-2" (click)="loadPayrollEmployees(batch, payrollEmployeePage)">{{ 'Thử lại' | translate }}</button></div> }
+        @else if (payrollEmployees; as result) {
+          @if (!result.items.length) { <p class="report-note">{{ 'Không có bản ghi lương trong phạm vi đã chọn.' | translate }}</p> }
+          @else {
+            <div class="table-responsive"><table class="table align-middle"><caption class="visually-hidden">{{ 'Lương nhân viên của' | translate }} {{ batch.periodCode }}, {{ 'phiên bản' | translate }} {{ batch.versionNo }}</caption><thead><tr><th>{{ 'Mã nhân viên' | translate }}</th><th>{{ 'Họ tên' | translate }}</th><th class="text-end">{{ 'Trước khấu trừ' | translate }}</th><th class="text-end">{{ 'Phụ cấp' | translate }}</th><th class="text-end">{{ 'Thưởng' | translate }}</th><th class="text-end">{{ 'Khấu trừ' | translate }}</th><th class="text-end">{{ 'Thực nhận' | translate }}</th><th>{{ 'Chi tiết' | translate }}</th></tr></thead><tbody>
+              @for (item of result.items; track item.payrollDetailId) { <tr [class.table-active]="activePayrollEmployee?.payrollDetailId === item.payrollDetailId"><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td class="text-end amount">{{ money(item.totals.grossPayroll) }}</td><td class="text-end amount">{{ money(item.totals.allowances) }}</td><td class="text-end amount">{{ money(item.totals.bonuses) }}</td><td class="text-end amount">{{ money(item.totals.deductions) }}</td><td class="text-end amount">{{ money(item.totals.netPayroll) }}</td><td><button type="button" class="btn btn-sm btn-outline-primary" [attr.aria-label]="'Xem khoản lương của ' + item.employeeName" aria-controls="payroll-line-details" (click)="loadPayrollLines(item)">{{ 'Các khoản lương' | translate }}</button></td></tr> }
+            </tbody></table></div>
+            <div class="report-pagination"><span>{{ number(result.totalElements) }} {{ 'nhân viên' | translate }} · {{ 'Trang' | translate }} {{ result.page + 1 }}/{{ result.totalPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page === 0" (click)="loadPayrollEmployees(batch, result.page - 1)">{{ 'Trước' | translate }}</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page + 1 >= result.totalPages" (click)="loadPayrollEmployees(batch, result.page + 1)">{{ 'Sau' | translate }}</button></div>
+          }
+        }
+        @if (activePayrollEmployee; as employee) {
+          <section id="payroll-line-details" [attr.aria-label]="'Các khoản lương đã chốt' | translate" [attr.aria-busy]="payrollLineLoading">
+            <div class="batch-heading"><h3>{{ employee.employeeCode }} · {{ employee.employeeName }}</h3><button type="button" class="btn btn-outline-secondary btn-sm" (click)="closePayrollLines()">{{ 'Đóng khoản lương' | translate }}</button></div>
+            @if (payrollLineLoading) { <p class="report-note" role="status">{{ 'Đang tải các khoản lương…' | translate }}</p> }
+            @else if (payrollLineError) { <div class="alert alert-warning" role="alert">{{ payrollLineError | translate }} <button type="button" class="btn btn-sm btn-outline-primary ms-2" (click)="loadPayrollLines(employee)">{{ 'Thử lại' | translate }}</button></div> }
+            @else if (!payrollLines.length) { <p class="report-note">{{ 'Không có khoản lương.' | translate }}</p> }
+            @else {
+              <div class="table-responsive"><table class="table align-middle"><thead><tr><th>{{ 'Mã khoản' | translate }}</th><th>{{ 'Khoản lương' | translate }}</th><th>{{ 'Cộng / Trừ' | translate }}</th><th class="text-end">{{ 'Số tiền (đ)' | translate }}</th><th>{{ 'Diễn giải' | translate }}</th></tr></thead><tbody>
+                @for (line of payrollLines; track line.lineId) { <tr><td>{{ line.componentCode }}</td><td>{{ line.componentName }}</td><td>{{ (line.direction === 'ADD' ? 'Cộng' : 'Trừ') | translate }}</td><td class="text-end amount">{{ money(line.amount) }}</td><td class="report-line-explanation">{{ line.explanation || '—' }}</td></tr> }
+              </tbody></table></div>
+            }
+          </section>
+        }
+      </section>
+    }
   }
   </div>
 </section>
+
+@if(selected === 'employees'){<app-seniority-report />}

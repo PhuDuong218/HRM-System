@@ -1,13 +1,11 @@
-<div class="mb-4">
-  <p class="eyebrow">{{ "QUẢN LÝ NHÂN SỰ" | translate }}</p>
-  <h1 class="mb-0">{{ "Khen thưởng / Kỷ luật" | translate }}</h1>
-</div>
+<app-page-header variant="directory" title="Khen thưởng / Kỷ luật" description="Ghi nhận và theo dõi các quyết định khen thưởng, kỷ luật."/>
 
+@if(mine&&canViewMine){<app-my-employment kind="decisions" (back)="mine=false"/>} @else {
 @if (message) {
-  <div class="alert alert-success" role="status">{{ message | translate }}</div>
+  <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message | translate }}</div>
 }
 @if (error) {
-  <div class="alert alert-danger" role="alert">{{ error | translate }}</div>
+  <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">{{ error | translate }}</div>
 }
 
 <ul class="module-tabs">
@@ -43,6 +41,7 @@
                     [disabled]="employeesLoading || loading"
                     (change)="applyFilter(fEmp.value, fStatus.value)">
               <option value="">{{ "Tất cả" | translate }}</option>
+              @if(canViewMine){<option value="mine">Khen thưởng / Kỷ luật của tôi</option>}
               @for (employee of employees; track employee.employeeId) {
                 <option [value]="employee.employeeId">{{ employeeLabel(employee) }}</option>
               }
@@ -71,7 +70,7 @@
       @if (loading) {
         <p role="status">{{ "Đang tải danh sách quyết định…" | translate }}</p>
       } @else if (listError) {
-        <div class="alert alert-danger" role="alert">
+        <div [hrmNotice]="listError" noticeKind="error" class="alert alert-danger" role="alert">
           {{ listError | translate }}
           <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="load(page)">{{ "Thử lại" | translate }}</button>
         </div>
@@ -96,7 +95,7 @@
             </thead>
             <tbody>
               @for (row of rows; track row.decisionId) {
-                <tr [class.selected-row]="(actionTarget?.decisionId ?? selectedDecision?.decisionId) === row.decisionId" [appSelectedRowScroll]="actionTarget?.decisionId === row.decisionId ? actionMode : editing?.decisionId === row.decisionId && showForm ? 'edit' : null">
+                <tr (appRowView)="openDetail(row)" [rowViewDisabled]="saving||loading" [class.selected-row]="(actionTarget?.decisionId ?? selectedDecision?.decisionId) === row.decisionId" [appSelectedRowScroll]="actionTarget?.decisionId === row.decisionId ? actionMode : editing?.decisionId === row.decisionId && showForm ? 'edit' : null">
                   <td [attr.data-label]="'Số QĐ' | translate">
                     <button type="button" class="btn btn-link p-0 text-start" (click)="openDetail(row)">
                       {{ row.decisionNumber }}
@@ -112,14 +111,15 @@
                   <td [attr.data-label]="'Trạng thái' | translate">{{ statusLabels[row.approvalStatus] | translate }}</td>
                   <td class="text-end action-cell" [attr.data-label]="'Thao tác' | translate">
                     @if (row.approvalStatus === 'CHO_DUYET') {
-                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving"
+                      @if(row.reviewBlocker){<p class="small text-muted mb-2">{{row.reviewBlocker}}</p>}
+                      <button type="button" class="btn btn-sm btn-outline-success me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'approve')">{{ "Duyệt" | translate }}</button>
-                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving"
+                      <button type="button" class="btn btn-sm btn-outline-danger me-1" [disabled]="saving||!!row.reviewBlocker" [title]="row.reviewBlocker||''"
                               (click)="openAction(row, 'reject')">{{ "Từ chối" | translate }}</button>
                       <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving"
                               (click)="openEdit(row)">{{ "Sửa" | translate }}</button>
                       <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving"
-                              (click)="remove(row)">{{ "Xóa" | translate }}</button>
+                              (click)="remove(row)">{{ "Thu hồi" | translate }}</button>
                     }
                   </td>
                 </tr>
@@ -139,12 +139,12 @@
           <p class="muted">{{ "Quyết định mới được tạo ở trạng thái chờ duyệt." | translate }}</p>
         </div>
         @if (employeesError) {
-          <div class="alert alert-warning" role="alert">{{ employeesError | translate }}</div>
+          <div [hrmNotice]="employeesError" noticeKind="error" class="alert alert-warning" role="alert">{{ employeesError | translate }}</div>
         } @else if (employees.length === 0) {
           <div class="alert alert-warning" role="alert">{{ "Chưa có nhân viên để chọn." | translate }}</div>
         }
 
-        <form #formRef="ngForm" class="row g-3" (ngSubmit)="save()">
+        <form [hrmEditForm]="!!editing" #formRef="ngForm" class="row g-3" (ngSubmit)="save()">
           <div class="col-12">
             <label class="form-label" for="d-emp">{{ "Nhân viên" | translate }}</label>
             <select id="d-emp" name="employeeId" class="form-select" required
@@ -157,9 +157,8 @@
           </div>
           <div class="col-12">
             <label class="form-label" for="d-no">{{ "Số quyết định" | translate }}</label>
-            <input id="d-no" name="decisionNumber" class="form-control" maxlength="50" required
-                   pattern="[A-Za-z0-9_-]+" [(ngModel)]="form.decisionNumber" [disabled]="saving || !!editing">
-            <div class="form-text">{{ "Chỉ dùng chữ không dấu, số, dấu gạch dưới hoặc dấu gạch ngang. Mã không đổi sau khi tạo." | translate }}</div>
+            <input id="d-no" class="form-control" readonly [value]="editing ? form.decisionNumber : (form.decisionType==='KHEN_THUONG'?'KT':form.decisionType==='KY_LUAT'?'KL':'BT')+'-… (tự động khi lưu)'" aria-describedby="decision-number-help">
+            <div class="form-text" id="decision-number-help">Số được cấp tự động khi lưu: KT cho khen thưởng, KL cho kỷ luật, BT cho bồi thường. Không đổi số sau khi tạo.</div>
           </div>
           <div class="col-12">
             <label class="form-label" for="d-issued">{{ "Ngày ban hành" | translate }}</label>
@@ -169,7 +168,7 @@
           <div class="col-12">
             <label class="form-label" for="d-type">{{ "Loại quyết định" | translate }}</label>
             <select id="d-type" name="decisionType" class="form-select" required
-                    [(ngModel)]="form.decisionType" (ngModelChange)="onTypeChange()" [disabled]="saving">
+                    [(ngModel)]="form.decisionType" (ngModelChange)="onTypeChange()" [disabled]="saving || !!editing">
               @for (type of types; track type) {
                 <option [ngValue]="type">{{ typeLabels[type] | translate }}</option>
               }
@@ -205,11 +204,38 @@
             }
           }
           @if (form.payrollEffect !== 'NONE') {
+            @if (paidReward) {
+              <div class="col-12">
+                <label class="form-label" for="d-reward">{{ 'Hạng thưởng theo quy chế' | translate }}</label>
+                <select id="d-reward" name="rewardCode" class="form-select"
+                        [(ngModel)]="form.rewardCode" [required]="savedRewardAmount === null"
+                        [disabled]="saving || rewardLoading">
+                  <option [ngValue]="null">{{ (savedRewardAmount === null ? 'Chọn hạng thưởng' : 'Giữ mức thưởng đã lưu') | translate }}</option>
+                  @for (level of rewardLevels; track level.code) {
+                    <option [ngValue]="level.code">{{ level.label | translate }}</option>
+                  }
+                </select>
+                @if (rewardLoading) {
+                  <p class="form-text" role="status">{{ 'Đang tải hạng thưởng…' | translate }}</p>
+                } @else if (rewardLoadError) {
+                  <p class="form-text text-danger">{{ 'Không tải được hạng thưởng.' | translate }}
+                    <button type="button" class="btn btn-link p-0" (click)="loadRewardLevels()">{{ 'Thử lại' | translate }}</button>
+                  </p>
+                } @else if (rewardLevels.length === 0) {
+                  <p class="form-text">{{ 'Chưa cấu hình mức thưởng trong quy chế.' | translate }}</p>
+                }
+              </div>
+              <div class="col-12">
+                <label class="form-label" for="d-amount">{{ 'Số tiền theo quy chế' | translate }}</label>
+                <input id="d-amount" class="form-control" readonly [value]="money(rewardAmount)">
+              </div>
+            } @else {
             <div class="col-12">
               <label class="form-label" for="d-amount">{{ "Số tiền (> 0)" | translate }}</label>
               <input id="d-amount" name="amount" type="number" min="0.0001" step="0.0001" class="form-control" required
                      [(ngModel)]="form.amount" [disabled]="saving">
             </div>
+            }
             <div class="col-12">
               <label class="form-label" for="d-apply">{{ "Ngày áp dụng vào lương" | translate }}</label>
               <input id="d-apply" name="applyDate" type="date" class="form-control" required [min]="form.issuedDate || null"
@@ -223,7 +249,7 @@
           </div>
           <div class="col-12">
             <label class="form-label" for="d-reason">{{ "Lý do tạo/cập nhật" | translate }}</label>
-            <input id="d-reason" name="reason" class="form-control" maxlength="500" required
+            <input data-hrm-audit id="d-reason" name="reason" class="form-control" maxlength="500" required
                    [(ngModel)]="form.reason" [disabled]="saving">
           </div>
           <div class="col-12 d-flex gap-2">
@@ -241,7 +267,7 @@
           <h2>{{ (actionMode === 'approve' ? 'Duyệt quyết định' : 'Từ chối quyết định') | translate }}</h2>
           <p class="muted mb-0">{{ actionTarget.decisionNumber }} — {{ employeeName(actionTarget.employeeId) }}</p>
         </div>
-        <form #actionRef="ngForm" class="row g-3" (ngSubmit)="submitAction()">
+        <form [hrmEditForm]="false" #actionRef="ngForm" class="row g-3" (ngSubmit)="submitAction()">
           <div class="col-12">
             <label class="form-label" for="d-act-reason">{{ "Lý do xử lý" | translate }}</label>
             <textarea id="d-act-reason" name="reason" class="form-control" rows="3" maxlength="500" required
@@ -261,7 +287,7 @@
         <p role="status">{{ "Đang tải chi tiết quyết định…" | translate }}</p>
       } @else if (selectedDecision; as decision) {
         @if (detailError) {
-          <div class="alert alert-warning" role="alert">
+          <div [hrmNotice]="detailError" noticeKind="error" class="alert alert-warning" role="alert">
             {{ detailError | translate }}
             <button type="button" class="btn btn-sm btn-outline-secondary ms-2" (click)="retryDetail()">
               {{ "Thử lại" | translate }}
@@ -290,12 +316,14 @@
           <dt class="col-sm-5">{{ "Người xử lý (ID)" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedBy ?? '—' }}</dd>
           <dt class="col-sm-5">{{ "Thời điểm xử lý" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedAt || '—' }}</dd>
         </dl>
+        <h3 class="h6 mt-3">Lịch sử quyết định</h3>@if(historyError){<p class="text-warning">{{historyError}}</p>}@for(log of decisionHistory;track $index){<article class="border-top py-2"><strong>{{log.action==='DECISION_WITHDRAW'?'Thu hồi quyết định':log.action==='DECISION_CREATE'?'Tạo quyết định':log.action==='DECISION_APPROVE'?'Duyệt quyết định':log.action==='DECISION_REJECT'?'Từ chối':log.action==='DECISION_UPDATE'?'Sửa quyết định':log.action}}</strong><p class="small mb-1">{{log.actor||'Hệ thống'}} · {{log.occurredAt.replace('T',' ')}}</p><p class="mb-1">{{log.reason}}</p></article>}@empty{<p class="small text-muted">Chưa có lịch sử được lưu.</p>}
         @if (decision.approvalStatus === 'CHO_DUYET') {
+          @if(decision.reviewBlocker){<p class="alert alert-info">{{decision.reviewBlocker}}</p>}
           <div class="d-flex flex-wrap gap-2">
-            <button type="button" class="btn btn-outline-success" [disabled]="saving" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
-            <button type="button" class="btn btn-outline-danger" [disabled]="saving" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
+            <button type="button" class="btn btn-outline-success" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
+            <button type="button" class="btn btn-outline-danger" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
             <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="openEdit(decision)">{{ "Sửa" | translate }}</button>
-            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Xóa" | translate }}</button>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Thu hồi" | translate }}</button>
           </div>
         }
       } @else {
@@ -320,7 +348,7 @@
     @if (periodsLoading) {
       <p role="status">{{ "Đang tải kỳ lương…" | translate }}</p>
     } @else if (periodsError) {
-      <div class="alert alert-danger" role="alert">
+      <div [hrmNotice]="periodsError" noticeKind="error" class="alert alert-danger" role="alert">
         {{ periodsError | translate }}
         <button type="button" class="btn btn-sm btn-outline-danger ms-2" (click)="reloadPeriods()">{{ "Thử lại" | translate }}</button>
       </div>
@@ -329,7 +357,7 @@
     }
 
     @if (employeesError) {
-      <div class="alert alert-warning" role="alert">
+      <div [hrmNotice]="employeesError" noticeKind="error" class="alert alert-warning" role="alert">
         {{ employeesError | translate }}
         <button type="button" class="btn btn-sm btn-outline-secondary ms-2" [disabled]="employeesLoading" (click)="loadEmployees()">
           {{ "Thử lại" | translate }}
@@ -367,7 +395,7 @@
     </div>
 
     @if (payrollError) {
-      <div class="alert alert-danger mt-3" role="alert">{{ payrollError | translate }}</div>
+      <div [hrmNotice]="payrollError" noticeKind="error" class="alert alert-danger mt-3" role="alert">{{ payrollError | translate }}</div>
     } @else if (payrollLoading) {
       <p class="mt-3" role="status">{{ "Đang tải khoản thưởng/khấu trừ từ backend…" | translate }}</p>
     }
@@ -415,4 +443,6 @@
       </dl>
     }
   </section>
+}
+
 }

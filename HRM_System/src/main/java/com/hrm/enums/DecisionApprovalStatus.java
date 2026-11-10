@@ -1,5 +1,5 @@
 package com.hrm.enums;
 
 public enum DecisionApprovalStatus {
-    CHO_DUYET, DA_DUYET, TU_CHOI
+    CHO_DUYET, DA_DUYET, TU_CHOI, DA_THU_HOI
 }

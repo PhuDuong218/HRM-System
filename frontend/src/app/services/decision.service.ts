@@ -28,6 +28,12 @@ export class DecisionService {
     return this.http.get<DecisionResponse>(API_BASE_URL + '/employee-decisions/' + id);
   }
 
+  rewardLevels() {
+    return this.http.get<{ code: string; label: string; amount: number }[]>(
+      API_BASE_URL + '/employee-decisions/reward-levels',
+    );
+  }
+
   create(body: DecisionRequest) {
     return this.http.post<DecisionResponse>(API_BASE_URL + '/employee-decisions', body);
   }
@@ -36,6 +42,8 @@ export class DecisionService {
     return this.http.put<DecisionResponse>(API_BASE_URL + '/employee-decisions/' + id, body);
   }
 
+  withdraw(id:number,reason:string){return this.http.post<DecisionResponse>(API_BASE_URL+'/employee-decisions/'+id+'/withdraw',{reason});}
+  history(id:number){return this.http.get<{occurredAt:string;action:string;reason:string;actor:string}[]>(API_BASE_URL+'/employee-decisions/'+id+'/history');}
   remove(id: number, reason: string) {
     return this.http.delete<void>(API_BASE_URL + '/employee-decisions/' + id, {
       params: new HttpParams().set('reason', reason),

@@ -1,24 +1,20 @@
-<div class="d-flex flex-wrap justify-content-between align-items-center gap-2 mb-4">
-  <div>
-    <p class="eyebrow">{{ "HỢP ĐỒNG" | translate }}</p>
-    <h1 class="mb-0">{{ "Loại hợp đồng" | translate }}</h1>
-  </div>
+<app-page-header variant="directory" title="Loại hợp đồng" description="Quản lý loại hợp đồng và điều kiện áp dụng.">
 
   <button type="button"
           class="btn btn-primary"
           [disabled]="loading || saving"
           (click)="openCreate()">
     {{ " Thêm loại hợp đồng " | translate }}</button>
-</div>
+</app-page-header>
 
 @if (message) {
-  <div class="alert alert-success" role="status">
+  <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">
     {{(message) | translate}}
   </div>
 }
 
 @if (error) {
-  <div class="alert alert-danger" role="alert">
+  <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">
     {{(error) | translate}}
   </div>
 }
@@ -27,7 +23,7 @@
   <section class="surface mb-4">
     <h2>{{(editing ? 'Sửa loại hợp đồng' : 'Thêm loại hợp đồng') | translate}}</h2>
 
-    <form #typeForm="ngForm"
+    <form [hrmEditForm]="!!editing" #typeForm="ngForm"
           class="row g-3"
           (ngSubmit)="save()">
 
@@ -86,7 +82,7 @@
         </div>
       }
 
-      <div class="col-12"><label for="type-reason" class="form-label">Lý do</label><input id="type-reason" name="reason" class="form-control" maxlength="500" required [(ngModel)]="form.reason" [disabled]="saving"></div>
+      <div class="col-12"><label for="type-reason" class="form-label">Lý do</label><input data-hrm-audit id="type-reason" name="reason" class="form-control" maxlength="500" required [(ngModel)]="form.reason" [disabled]="saving"></div>
       <div class="col-12 d-flex gap-2">
         <button type="submit"
                 class="btn btn-primary"

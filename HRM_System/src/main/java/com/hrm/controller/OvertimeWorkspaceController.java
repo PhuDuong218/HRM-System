@@ -18,6 +18,7 @@ public class OvertimeWorkspaceController {
     public OvertimeWorkspaceController(OvertimeWorkspaceService service){this.service=service;}
     @GetMapping("/context") public Object context(@AuthenticationPrincipal AuthenticatedAccount a){return service.context(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
+    @GetMapping("/pending") public Object pending(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam String kind,@RequestParam(defaultValue="0") int page){return service.pending(a,kind,page);}
     @GetMapping({"/requests","/employees"}) public Object search(@AuthenticationPrincipal AuthenticatedAccount a,
         jakarta.servlet.http.HttpServletRequest servlet,@RequestParam(defaultValue="false") boolean mine,@RequestParam LocalDate from,@RequestParam LocalDate to,
         @RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,@RequestParam(required=false) String status,
@@ -29,7 +30,7 @@ public class OvertimeWorkspaceController {
     @PostMapping("/requests") public Object register(@AuthenticationPrincipal AuthenticatedAccount a,@Valid @RequestBody Register body){return service.register(a,body);}
     public record Edit(String expectedVersion,@Valid Register request){}
     @PutMapping("/requests/{id}") public Object edit(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestBody Edit body){return service.edit(a,id,body.expectedVersion(),body.request());}
-    @PostMapping("/requests/{id}/{action:approve|reject|cancel|actual|confirm|reopen}") public Object action(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@PathVariable String action,@RequestBody OvertimeWorkspaceService.Mutation body){return service.action(a,id,action,body);}
+    @PostMapping("/requests/{id}/{action:approve|reject|cancel|actual|amend-actual|confirm|reopen}") public Object action(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@PathVariable String action,@RequestBody OvertimeWorkspaceService.Mutation body){return service.action(a,id,action,body);}
     public record WorkflowSubmission(String expectedVersion,String reason,List<OvertimeRequestWorkflowService.Window> windows){}
     @PostMapping("/requests/{id}/cancel-request") public Object cancellation(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestBody WorkflowSubmission body){return Map.of("requestId",service.requestCancellation(a,id,body.expectedVersion(),body.reason()));}
     @PostMapping("/requests/{id}/overflow-request") public Object overflow(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestBody WorkflowSubmission body){return Map.of("requestId",service.requestOverflow(a,id,body.expectedVersion(),body.reason(),body.windows()));}

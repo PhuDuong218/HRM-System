@@ -1,6 +1,6 @@
 export type DisciplineForm = 'KHIEN_TRACH' | 'KEO_DAI_NANG_LUONG' | 'CACH_CHUC' | 'SA_THAI';
 export type DecisionType = 'KHEN_THUONG' | 'KY_LUAT' | 'BOI_THUONG';
-export type DecisionApprovalStatus = 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI';
+export type DecisionApprovalStatus = 'CHO_DUYET' | 'DA_DUYET' | 'TU_CHOI' | 'DA_THU_HOI';
 export type DecisionPayrollEffect = 'NONE' | 'ADD' | 'DEDUCT';
 
 export interface DecisionPageResponse<T> {
@@ -12,6 +12,7 @@ export interface DecisionPageResponse<T> {
 }
 
 export interface DecisionResponse {
+  reviewBlocker?: string|null;
   decisionId: number;
   employeeId: number;
   decisionNumber: string;
@@ -32,6 +33,7 @@ export interface DecisionResponse {
 
 // Backend lấy issuedBy/approvedBy từ phiên đăng nhập; client không gửi các trường này.
 export interface DecisionRequest {
+  rewardCode?: string | null;
   employeeId: number;
   decisionNumber: string;
   decisionType: DecisionType;

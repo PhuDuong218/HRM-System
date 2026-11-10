@@ -55,4 +55,15 @@ class ScheduleChangeAuthorizationRegressionTest {
         verifyNoInteractions(detailed);
         verify(db,never()).update(contains("UPDATE dbo.employee_requests"),any(Object[].class));
     }
+
+    @SuppressWarnings("unchecked") @Test void approvalAfterOriginalStartExpiresWithoutChangingSchedule() throws Exception {
+        actor();var past=LocalDateTime.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")).minusMinutes(1);
+        when(db.query(contains("SELECT r.employee_id,r.status,r.submitted_at"),any(RowMapper.class),eq(10L)))
+            .thenReturn(Collections.singletonList(new Object[]{9L,"CHO_DUYET",90L,past,past.plusHours(4),1L,past.plusDays(1),past.plusDays(1).plusHours(4),new byte[8]}));
+        var old=new ScheduleView(90,9,1L,past.toLocalDate(),past,past.plusHours(4),0,"");
+        when(db.query(contains("SELECT schedule_id,employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note,row_version"),any(RowMapper.class),eq(90L)))
+            .thenReturn(Collections.singletonList(new Object[]{old,new byte[8]}));
+        service.decide(hr,10,true,null);
+        verify(db).update(contains("status='HET_HIEU_LUC'"),eq(10L));verifyNoInteractions(detailed);
+    }
 }

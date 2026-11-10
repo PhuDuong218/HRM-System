@@ -4,6 +4,7 @@ import static com.hrm.dto.OvertimeDTOs.*;
 
 import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.OvertimeService;
+import com.hrm.service.OvertimeWorkspaceService;
 import jakarta.validation.Valid;
 import java.time.LocalDate;
 import java.util.List;
@@ -21,8 +22,10 @@ import org.springframework.web.bind.annotation.*;
 @ConditionalOnProperty(prefix = "hrm.task", name = "api-enabled", havingValue = "true", matchIfMissing = false)
 public class OvertimeController {
     private final OvertimeService service;
+    private final OvertimeWorkspaceService workspace;
 
-    public OvertimeController(OvertimeService service) {
+    public OvertimeController(OvertimeService service, OvertimeWorkspaceService workspace) {
+        this.workspace=workspace;
         this.service = service;
     }
 
@@ -74,8 +77,10 @@ public class OvertimeController {
 
     @PutMapping("/requests/{id}/actual")
     public OvertimeView actual(@AuthenticationPrincipal AuthenticatedAccount a,
-            @PathVariable long id, @Valid @RequestBody Actual body) {
-        return service.recordActual(a, id, body);
+            @PathVariable long id, @Valid @RequestBody Actual body,
+            @RequestHeader("If-Match") String version) {
+        String expected=version.length()>=2&&version.startsWith("\"")&&version.endsWith("\"")?version.substring(1,version.length()-1):version;
+        return workspace.action(a,id,"actual",new OvertimeWorkspaceService.Mutation(expected,body.reason(),body));
     }
 
     @PostMapping("/requests/{id}/confirm")
@@ -86,8 +91,9 @@ public class OvertimeController {
 
     @PostMapping("/requests/{id}/reopen-confirmation")
     public OvertimeView reopenConfirmation(@AuthenticationPrincipal AuthenticatedAccount a,
-            @PathVariable long id, @Valid @RequestBody ReopenConfirmation body) {
-        return service.reopenConfirmation(a, id, body.reason());
+            @PathVariable long id, @Valid @RequestBody ReopenConfirmation body,@RequestHeader("If-Match") String version) {
+        String expected=version.length()>=2&&version.startsWith("\"")&&version.endsWith("\"")?version.substring(1,version.length()-1):version;
+        return workspace.action(a,id,"reopen",new OvertimeWorkspaceService.Mutation(expected,body.reason(),null));
     }
 
     @PostMapping("/requests/{id}/overflow-review")

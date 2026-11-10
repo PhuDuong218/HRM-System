@@ -1,3 +1,8 @@
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {PageHeader} from '../../shared/page-header';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { employmentApiError } from '../../shared/employment-api-error';
@@ -25,11 +30,13 @@ type AssignMode = 'create' | 'edit' | 'change' | 'end';
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class AllowancesPage implements OnInit {
+ private actionDialogInPage=inject(ActionDialogService);
+
   private api = inject(AllowanceService);
   private personnel = inject(EmployeeService);
   private destroyRef = inject(DestroyRef);
@@ -213,9 +220,9 @@ export class AllowancesPage implements OnInit {
     });
   }
 
-  deactivateType(row: AllowanceTypeResponse): void {
+  async deactivateType(row: AllowanceTypeResponse): Promise<void> {
     if (this.saving || !row.isActive) return;
-    const reason = window.prompt(`Ngừng sử dụng loại "${row.typeName}"?\nCác khoản phụ cấp đã gán trong lịch sử vẫn được giữ.\nNhập lý do:`);
+    const reason = (await this.actionDialogInPage.prompt(`Ngừng sử dụng loại "${row.typeName}"?\nCác khoản phụ cấp đã gán trong lịch sử vẫn được giữ.\nNhập lý do:`));
     if (reason === null) return;
     if (!reason.trim()) { this.error = 'Vui lòng nhập lý do.'; return; }
     if (reason.trim().length > 500) { this.error = 'Lý do không được vượt quá 500 ký tự.'; return; }
@@ -455,17 +462,17 @@ export class AllowancesPage implements OnInit {
     }
   }
 
-  removeFuture(row: EmployeeAllowanceResponse): void {
+  async removeFuture(row: EmployeeAllowanceResponse): Promise<void> {
     if (this.saving || !this.employeeId) return;
     if (!this.canRemoveAllowance(row)) {
       this.error = 'Chỉ xóa được khoản phụ cấp chưa có hiệu lực.';
       return;
     }
-    const reason = window.prompt('Nhập lý do xóa khoản phụ cấp chưa có hiệu lực (tối đa 500 ký tự):');
+    const reason = (await this.actionDialogInPage.prompt('Nhập lý do xóa khoản phụ cấp chưa có hiệu lực (tối đa 500 ký tự):'));
     if (reason === null) return;
     if (!reason.trim()) { this.error = 'Vui lòng nhập lý do.'; return; }
     if (reason.trim().length > 500) { this.error = 'Lý do không được vượt quá 500 ký tự.'; return; }
-    if (!window.confirm('Xóa khoản phụ cấp từ ngày ' + row.effectiveFrom + '?')) return;
+    if (!(await this.actionDialogInPage.confirm('Xóa khoản phụ cấp từ ngày ' + row.effectiveFrom + '?'))) return;
     this.run(this.api.remove(this.employeeId, row.employeeAllowanceId, reason.trim()),
       'Đã xóa khoản phụ cấp chưa hiệu lực.', 'Không xóa được khoản phụ cấp.');
   }

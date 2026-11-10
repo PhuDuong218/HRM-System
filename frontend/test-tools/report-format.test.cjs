@@ -9,7 +9,7 @@ const source = fs.readFileSync(path.join(__dirname, '../src/app/services/report-
 const js = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2022 } }).outputText;
 const testModule = { exports: {} };
 new Function('exports', 'module', 'require', js)(testModule.exports, testModule, require);
-const { parsePayrollReport, formatMoney } = testModule.exports;
+const { parsePayrollReport, formatMoney, sumMoney } = testModule.exports;
 
 test('preserves exact payroll decimals, including values beyond JavaScript integer precision', () => {
   const result = parsePayrollReport('{"batchCount":1,"totals":{"grossPayroll":9007199254740993.1234,"allowances":20.0000,"bonuses":1e+3,"deductions":-0.0100,"netPayroll":9007199254740993.1134},"batches":[{"totals":{"grossPayroll":0.0001,"allowances":0,"bonuses":0,"deductions":0,"netPayroll":0.0001}}]}');
@@ -35,4 +35,13 @@ test('formats decimal exponents without rounding', () => {
   assert.equal(formatMoney('1.2345e-4'), '0,00012345');
   assert.equal(formatMoney('123.4500'), '123,4500');
   assert.equal(formatMoney('1e4'), '10.000');
+});
+
+test('sums payroll amounts exactly across periods, decimal scales and refunds', () => {
+  assert.equal(sumMoney(['9007199254740993.1000', '0.2', '-1']), '9007199254740992.3000');
+  assert.equal(sumMoney(['0.1', '0.2']), '0.3');
+  assert.equal(sumMoney(['1e3', '1.25e-2', '-1000']), '0.0125');
+  assert.equal(sumMoney(['-0.10', '0.1']), '0.00');
+  assert.equal(sumMoney([]), '0');
+  assert.throws(() => sumMoney(['1.2.3']), /Invalid report amount/);
 });

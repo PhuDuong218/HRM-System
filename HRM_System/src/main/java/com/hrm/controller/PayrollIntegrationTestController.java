@@ -5,6 +5,7 @@ import com.hrm.dto.EmployeeSalaryProfileDTO;
 import com.hrm.service.provider.AttendanceDataProvider;
 import com.hrm.service.provider.SalaryContractProvider;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
@@ -12,6 +13,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/payroll-integration-test")
+@PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
 public class PayrollIntegrationTestController {
 
     private final SalaryContractProvider salaryProvider;

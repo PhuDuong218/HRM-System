@@ -56,7 +56,7 @@ public class EmployeeController {
     // 1. Lay danh sach nhan vien
     // Giu kiem tra pham vi theo tai khoan dang nhap
     @GetMapping(params = { "!page", "!size" })
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public List<EmployeeDTO> listEmployees(Principal principal) {
 
         AuthenticatedAccount actor = authenticatedAccount(principal);
@@ -72,20 +72,20 @@ public class EmployeeController {
     // 2. Lay danh sach phan trang
     // Tam gioi han ADMIN cho den khi Service ho tro loc pham vi HR
     @GetMapping(params = { "page" })
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public Page<EmployeeDTO> getEmployeesPage(
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
 
-        actorAccountId(principal);
+        accessService.requireReader(principal);
 
         return employeeService.getEmployeesPage(page, size);
     }
 
     // 3. Xem chi tiet nhan vien
     @GetMapping("/{id}")
-    @PreAuthorize("(hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE'))"
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)"
             + " or (hasAuthority('SELF_READ') and #id == authentication.principal.employeeId())")
     public EmployeeDTO getEmployeeDetails(
             @PathVariable Long id,
@@ -145,25 +145,36 @@ public class EmployeeController {
     // 7. Tim kiem nhan vien
     // Tam gioi han ADMIN de tranh HR xem nhan vien ngoai pham vi
     @GetMapping("/search")
-    @PreAuthorize("hasAnyRole('ADMIN','HR') and hasAuthority('EMPLOYEE_MANAGE')")
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
     public Page<EmployeeDTO> searchEmployees(
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) EmploymentStatus status,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long positionId,
+            @RequestParam(required = false) Long employeeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
 
-        actorAccountId(principal);
+        accessService.requireReader(principal);
 
+        if (employeeId == null) {
+            return employeeService.searchEmployees(keyword, status, departmentId, positionId, page, size);
+        }
         return employeeService.searchEmployees(
                 keyword,
                 status,
                 departmentId,
                 positionId,
+                employeeId,
                 page,
                 size);
+    }
+
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
+    public Page<EmployeeDTO> searchEmployees(String keyword, EmploymentStatus status, Long departmentId,
+            Long positionId, int page, int size, Principal principal) {
+        return searchEmployees(keyword, status, departmentId, positionId, null, page, size, principal);
     }
 
     // 8. Giu cac phuong thuc Java cu cua Nhi
@@ -229,6 +240,7 @@ public class EmployeeController {
         update.setEmail(request.getEmail());
         update.setPhone(request.getPhone());
         update.setIdentityNumber(request.getIdentityNumber());
+        update.setAddress(request.getAddress());
 
         return update;
     }

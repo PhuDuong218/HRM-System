@@ -8,6 +8,7 @@ import java.util.List;
  * P-06: Interface cung cấp thông tin lương hợp đồng và phụ cấp
  */
 public interface SalaryContractProvider {
+    default boolean isSynthetic() { return false; }
 
     /**
      * Lấy hồ sơ lương & phụ cấp của một nhân viên trong kỳ

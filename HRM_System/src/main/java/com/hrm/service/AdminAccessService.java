@@ -26,40 +26,67 @@ import org.springframework.web.server.ResponseStatusException;
 @PreAuthorize("hasRole('ADMIN') and hasAuthority('ACCOUNT_MANAGE')")
 public class AdminAccessService {
     private static final Set<String> SYSTEM_ROLES = Set.of("ADMIN", "HR", "EMPLOYEE");
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private org.springframework.jdbc.core.JdbcTemplate headDb;
     private final AccountRepository accounts;
     private final EmployeeRepository employees;
     private final RoleRepository roles;
     private final PermissionRepository permissions;
     private final AuditLogRepository audits;
     private final PasswordEncoder encoder;
+    private final HrDepartmentScopeService hrScopes;
 
     public AdminAccessService(AccountRepository accounts, EmployeeRepository employees, RoleRepository roles,
-            PermissionRepository permissions, AuditLogRepository audits, PasswordEncoder encoder) {
+            PermissionRepository permissions, AuditLogRepository audits, PasswordEncoder encoder,
+            HrDepartmentScopeService hrScopes) {
         this.accounts = accounts;
         this.employees = employees;
         this.roles = roles;
         this.permissions = permissions;
         this.audits = audits;
         this.encoder = encoder;
+        this.hrScopes = hrScopes;
     }
 
     public PageResponse<AccountView> accounts(int page, int size, String keyword, Boolean active, Long roleId) {
+        return accounts(page,size,keyword,active,roleId,false);
+    }
+    public PageResponse<AccountView> accounts(int page,int size,String keyword,Boolean active,Long roleId,boolean departmentHead) {
         if (roleId != null && roleId < 1) throw new IllegalArgumentException("roleId phải lớn hơn 0");
         String term = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
         if (term.length() > 100) throw new IllegalArgumentException("Từ khóa tối đa 100 ký tự");
         String pattern = term.isEmpty() ? "" : "%" + term.replace("!", "!!").replace("%", "!%")
                 .replace("_", "!_").replace("[", "![") + "%";
-        var result = accounts.search(pattern, active, roleId,
-                PagingUtils.create(page, size, Sort.by("accountId")));
+        var paging=PagingUtils.create(page,size,Sort.by("accountId"));
+        var result = departmentHead?accounts.searchDepartmentHeads(pattern,active,java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")),paging):accounts.search(pattern,active,roleId,paging);
         // Fetch employee labels in one query for the whole page.
         Map<Long, Employee> labels = new HashMap<>();
         employees.findAllById(result.stream().map(Account::getEmployeeId).toList())
                 .forEach(e -> labels.put(e.getEmployeeId(), e));
-        return new PageResponse<>(result.stream().map(a -> view(a, labels.get(a.getEmployeeId()))).toList(),
+        var heads=currentHeadIds();
+        return new PageResponse<>(result.stream().map(a -> view(a, labels.get(a.getEmployeeId()),heads.contains(a.getEmployeeId()))).toList(),
                 page, size, result.getTotalElements(), result.getTotalPages());
     }
 
     public AccountView account(long id) { return view(accountEntity(id)); }
+
+    public AccountContact accountContact(long id) {
+        Account account = accountEntity(id);
+        Employee employee = employees.findById(account.getEmployeeId())
+                .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+        return new AccountContact(employee.getEmail(), employee.getPhone());
+    }
+
+    public PageResponse<EligibleEmployee> eligibleEmployees(String keyword, int page, int size) {
+        String term = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
+        if (term.length() > 100) throw new IllegalArgumentException("Từ khóa tối đa 100 ký tự");
+        String pattern = "%" + term.replace("!", "!!").replace("%", "!%")
+                .replace("_", "!_").replace("[", "![") + "%";
+        var result = employees.findWithoutAccount(pattern, EmploymentStatus.DANG_LAM,
+                PagingUtils.create(page, size, Sort.by("employeeCode").and(Sort.by("employeeId"))));
+        return new PageResponse<>(result.stream().map(e -> new EligibleEmployee(
+                e.getEmployeeId(), e.getEmployeeCode(), e.getFullName())).toList(),
+                page, size, result.getTotalElements(), result.getTotalPages());
+    }
 
     @Transactional
     public AccountView createAccount(AuthenticatedAccount actor, CreateAccount request) {
@@ -76,7 +103,9 @@ public class AdminAccessService {
             throw new IllegalArgumentException("Mật khẩu không được vượt quá 72 byte UTF-8");
         Account account = new Account();
         account.setEmployeeId(request.employeeId());
-        account.setRole(roleEntity(request.roleId()));
+        Role role = roleEntity(request.roleId());
+        validateAdminRoleAssignment(null, role.getRoleCode());
+        account.setRole(role);
         account.setUsername(request.username());
         account.setPasswordHash(encoder.encode(request.password()));
         account.setActive(request.active());
@@ -91,10 +120,69 @@ public class AdminAccessService {
     }
 
     @Transactional
+    public AccountView changeAccountStatus(AuthenticatedAccount actor, long id, ChangeAccountStatus request) {
+        adminWrite(actor);
+        Account account = accountEntity(id);
+        if (account.isActive() != request.expectedActive()) conflict("Trạng thái tài khoản đã thay đổi. Vui lòng tải lại.");
+        if (account.isActive() == request.active()) conflict("Tài khoản đã ở trạng thái yêu cầu.");
+        if (actor.accountId().equals(id)) conflict("Không được tự khóa tài khoản đang sử dụng");
+        if (request.active()) {
+            var employee = employees.findByIdForUpdate(account.getEmployeeId())
+                    .orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy nhân viên"));
+            if (employee.getEmploymentStatus() != EmploymentStatus.DANG_LAM)
+                conflict("Không thể mở tài khoản của nhân viên đã nghỉ việc");
+        }
+        account.setActive(request.active());
+        account.revokeTokens();
+        account.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+        account.setUpdatedBy(actor.accountId());
+        accounts.saveAndFlush(account);
+        audit(actor, request.active() ? "ACCOUNT_UNLOCKED" : "ACCOUNT_LOCKED", "accounts", id);
+        return view(account);
+    }
+
+    @Transactional
+    public AccountView editAccountIdentity(AuthenticatedAccount actor, long id, EditAccountIdentity request) {
+        adminWrite(actor);
+        boolean scopeRequested = request.expectedDepartmentIds() != null || request.departmentIds() != null;
+        if (scopeRequested) hrScopes.lockAccountForUpdate(actor, id);
+        Account account = accountEntity(id);
+        if (!account.getUsername().equals(request.expectedUsername()) ||
+                !account.getRole().getRoleId().equals(request.expectedRoleId()))
+            conflict("Thông tin tài khoản đã thay đổi. Vui lòng tải lại.");
+        Role role = roleEntity(request.roleId());
+        if (!SYSTEM_ROLES.contains(role.getRoleCode())) conflict("Vai trò không được hỗ trợ.");
+        validateAdminRoleAssignment(account.getRole().getRoleCode(), role.getRoleCode());
+        if (actor.accountId().equals(id) && !account.getRole().getRoleId().equals(request.roleId()))
+            conflict("Không được thay đổi vai trò tài khoản đang sử dụng.");
+        uniqueUsername(request.username(), id);
+        boolean identityChanged = !account.getUsername().equals(request.username()) || !account.getRole().getRoleId().equals(request.roleId());
+        if (scopeRequested && (!"HR".equals(role.getRoleCode()) || request.expectedDepartmentIds() == null || request.departmentIds() == null))
+            throw new IllegalArgumentException("Phân công phòng ban chỉ áp dụng cho vai trò HR và cần đủ thông tin");
+        if (!identityChanged && !scopeRequested)
+            conflict("Thông tin tài khoản chưa thay đổi.");
+        if (identityChanged) {
+            account.setUsername(request.username());
+            account.setRole(role);
+            account.revokeTokens();
+            account.setUpdatedAt(LocalDateTime.now(ZoneOffset.UTC));
+            account.setUpdatedBy(actor.accountId());
+            accounts.saveAndFlush(account);
+        }
+        if (scopeRequested) {
+            hrScopes.replaceDepartments(actor, id, new com.hrm.dto.HrScopeDTOs.ReplaceDepartmentsRequest(
+                    request.expectedDepartmentIds(), request.departmentIds(), "Quản trị viên cập nhật phạm vi khi sửa tài khoản"));
+        }
+        if (identityChanged) audit(actor, "ACCOUNT_UPDATED", "accounts", id);
+        return view(account);
+    }
+
+    @Transactional
     public AccountView updateAccount(AuthenticatedAccount actor, long id, UpdateAccount request) {
         adminWrite(actor);
         Account account = accountEntity(id);
         Role role = roleEntity(request.roleId());
+        validateAdminRoleAssignment(account.getRole().getRoleCode(), role.getRoleCode());
         if (actor.accountId().equals(id)
                 && (!request.active() || !account.getRole().getRoleId().equals(request.roleId())))
             conflict("Không được tự khóa hoặc thay đổi vai trò tài khoản đang sử dụng");
@@ -136,52 +224,13 @@ public class AdminAccessService {
     public List<RoleView> roles() {
         return roles.findAll(Sort.by("roleId")).stream().map(this::roleView).toList();
     }
+    /** ADMIN is provisioned initially; account management must never grant a second one. */
+    static void validateAdminRoleAssignment(String existingRole, String requestedRole) {
+        if ("ADMIN".equals(requestedRole) && !"ADMIN".equals(existingRole))
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Hệ thống chỉ sử dụng một ADMIN. Không thể tạo thêm hoặc cấp ADMIN cho tài khoản khác. HR có thể quản lý nhiều phòng ban.");
+    }
     public RoleView role(long id) { return roleView(roleEntity(id)); }
-
-    @Transactional
-    public RoleView createRole(AuthenticatedAccount actor, CreateRole request) {
-        adminWrite(actor);
-        if (roles.existsByRoleCodeIgnoreCase(request.roleCode())) conflict("Mã vai trò đã tồn tại");
-        Role role = new Role();
-        role.setRoleCode(request.roleCode());
-        role.setRoleName(request.roleName().trim());
-        role.setPermissions(resolvePermissions(request.roleCode(), request.permissionIds()));
-        roles.saveAndFlush(role);
-        audit(actor, "ROLE_CREATED", "roles", role.getRoleId());
-        return roleView(role);
-    }
-
-    @Transactional
-    public RoleView updateRole(AuthenticatedAccount actor, long id, UpdateRole request) {
-        adminWrite(actor);
-        Role role = roleEntity(id);
-        role.setRoleName(request.roleName().trim());
-        roles.saveAndFlush(role);
-        audit(actor, "ROLE_UPDATED", "roles", id);
-        return roleView(role);
-    }
-
-    @Transactional
-    public RoleView replacePermissions(AuthenticatedAccount actor, long id, ReplacePermissions request) {
-        adminWrite(actor);
-        Role role = roleEntity(id);
-        role.setPermissions(resolvePermissions(role.getRoleCode(), request.permissionIds()));
-        roles.saveAndFlush(role);
-        accounts.revokeRoleTokens(id, actor.accountId());
-        audit(actor, "ROLE_PERMISSIONS_REPLACED", "roles", id);
-        return roleView(role);
-    }
-
-    @Transactional
-    public void deleteRole(AuthenticatedAccount actor, long id) {
-        adminWrite(actor);
-        Role role = roleEntity(id);
-        if (SYSTEM_ROLES.contains(role.getRoleCode())) conflict("Không được xóa vai trò hệ thống");
-        if (accounts.existsByRoleRoleId(id)) conflict("Vai trò đang được tài khoản sử dụng");
-        roles.delete(role);
-        roles.flush();
-        audit(actor, "ROLE_DELETED", "roles", id);
-    }
 
     public List<PermissionView> permissions() {
         return permissions.findAll(Sort.by("permissionId")).stream().map(this::permissionView).toList();
@@ -189,17 +238,19 @@ public class AdminAccessService {
     public PermissionView permission(long id) { return permissionView(permissionEntity(id)); }
 
     @Transactional
-    public PermissionView createPermission(AuthenticatedAccount actor, CreatePermission request) {
+    public PermissionView editPermissionDetails(AuthenticatedAccount actor, long id, EditPermissionDetails request) {
         adminWrite(actor);
-        if (request.permissionCode().toUpperCase(Locale.ROOT).startsWith("ROLE_"))
-            throw new IllegalArgumentException("Tiền tố ROLE_ dành riêng cho vai trò xác thực");
-        if (permissions.existsByPermissionCodeIgnoreCase(request.permissionCode())) conflict("Mã quyền đã tồn tại");
-        Permission permission = new Permission();
-        permission.setPermissionCode(request.permissionCode());
-        permission.setPermissionName(request.permissionName().trim());
+        Permission permission = permissionEntity(id);
+        if (!Objects.equals(permission.getPermissionName(), request.expectedName()) ||
+                !Objects.equals(permission.getDescription(), request.expectedDescription()))
+            conflict("Thông tin quyền đã thay đổi. Vui lòng tải lại.");
+        String name = request.permissionName().trim();
+        if (Objects.equals(permission.getPermissionName(), name) && Objects.equals(permission.getDescription(), request.description()))
+            conflict("Thông tin quyền chưa thay đổi.");
+        permission.setPermissionName(name);
         permission.setDescription(request.description());
         permissions.saveAndFlush(permission);
-        audit(actor, "PERMISSION_CREATED", "permissions", permission.getPermissionId());
+        audit(actor, "PERMISSION_UPDATED", "permissions", id);
         return permissionView(permission);
     }
 
@@ -212,28 +263,6 @@ public class AdminAccessService {
         permissions.saveAndFlush(permission);
         audit(actor, "PERMISSION_UPDATED", "permissions", id);
         return permissionView(permission);
-    }
-
-    @Transactional
-    public void deletePermission(AuthenticatedAccount actor, long id) {
-        adminWrite(actor);
-        Permission permission = permissionEntity(id);
-        if ("ACCOUNT_MANAGE".equals(permission.getPermissionCode()) || roles.usesPermission(id))
-            conflict("Không được xóa quyền quản trị hoặc quyền đang gán cho vai trò");
-        permissions.delete(permission);
-        permissions.flush();
-        audit(actor, "PERMISSION_DELETED", "permissions", id);
-    }
-
-    private Set<Permission> resolvePermissions(String roleCode, Set<Long> ids) {
-        Set<Permission> resolved = new HashSet<>(permissions.findAllById(ids));
-        if (resolved.size() != ids.size()) throw new ResourceNotFoundException("Có quyền không tồn tại");
-        if (resolved.stream().anyMatch(p -> p.getPermissionCode().toUpperCase(Locale.ROOT).startsWith("ROLE_")))
-            throw new IllegalArgumentException("Không được cấp quyền có tiền tố ROLE_");
-        boolean managesAccounts = resolved.stream().anyMatch(p -> "ACCOUNT_MANAGE".equals(p.getPermissionCode()));
-        if ("ADMIN".equals(roleCode) && !managesAccounts) conflict("ADMIN phải giữ quyền ACCOUNT_MANAGE");
-        if (!"ADMIN".equals(roleCode) && managesAccounts) conflict("Chỉ ADMIN được cấp quyền ACCOUNT_MANAGE");
-        return resolved;
     }
 
     private void adminWrite(AuthenticatedAccount actor) {
@@ -259,10 +288,13 @@ public class AdminAccessService {
         return permissions.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quyền"));
     }
     private AccountView view(Account a) { return view(a, employees.findById(a.getEmployeeId()).orElse(null)); }
-    private AccountView view(Account a, Employee e) {
+    private Set<Long> currentHeadIds(){if(headDb==null)return Set.of();return new HashSet<>(headDb.queryForList("SELECT DISTINCT h.employee_id FROM dbo.employee_assignments h JOIN dbo.positions p ON p.position_id=h.position_id WHERE p.position_code='TRUONG_PHONG' AND h.effective_from<=CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time') AND (h.effective_to IS NULL OR h.effective_to>CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time'))",Long.class));}
+    private AccountView view(Account a, Employee e) {return view(a,e,currentHeadIds().contains(a.getEmployeeId()));}
+    private AccountView view(Account a, Employee e, boolean head) {
         return new AccountView(a.getAccountId(), a.getEmployeeId(), e == null ? null : e.getEmployeeCode(),
                 e == null ? null : e.getFullName(), a.getRole().getRoleId(), a.getRole().getRoleCode(),
-                a.getRole().getRoleName(), a.getUsername(), a.isActive(), a.getCreatedAt(), a.getUpdatedAt());
+                a.getRole().getRoleName(), a.getUsername(), a.isActive(), a.getCreatedAt(), a.getUpdatedAt(),
+                e == null ? null : e.getEmploymentStatus(), head);
     }
     private PermissionView permissionView(Permission p) {
         return new PermissionView(p.getPermissionId(), p.getPermissionCode(), p.getPermissionName(), p.getDescription());

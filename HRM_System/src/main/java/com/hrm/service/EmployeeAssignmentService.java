@@ -61,7 +61,8 @@ public class EmployeeAssignmentService {
         @Transactional(readOnly = true)
         public List<EmployeeAssignmentDTO> getAllAssignments() {
                 var allowed=PersonnelScopeService.isHr()?personnelScope.employees():null;
-                return assignmentRepository.findAllWithDetails().stream().filter(a->allowed==null||allowed.contains(a.getEmployee().getEmployeeId())).toList()
+                var departments=PersonnelScopeService.isHr()?personnelScope.departments():null;
+                return assignmentRepository.findAllWithDetails().stream().filter(a->allowed==null||(allowed.contains(a.getEmployee().getEmployeeId())&&departments.contains(a.getDepartment().getDepartmentId()))).toList()
                                 .stream()
                                 .map(this::convertToDTO)
                                 .toList();
@@ -76,8 +77,10 @@ public class EmployeeAssignmentService {
                                         "Không tìm thấy nhân viên có ID: " + employeeId);
                 }
 
+                var departments=PersonnelScopeService.isHr()?personnelScope.departments():null;
                 return assignmentRepository.findHistoryByEmployeeId(employeeId)
                                 .stream()
+                                .filter(a->departments==null||departments.contains(a.getDepartment().getDepartmentId()))
                                 .map(this::convertToDTO)
                                 .toList();
         }
@@ -122,6 +125,7 @@ public class EmployeeAssignmentService {
                                         "Nhân viên không còn đang làm việc");
                 }
 
+                if(personnelScope!=null)personnelScope.department(request.departmentId());
                 // Kiem tra phong ban moi
                 Department newDepartment = departmentRepository
                                 .findById(request.departmentId())
@@ -164,12 +168,6 @@ public class EmployeeAssignmentService {
                                         "Ngày điều chuyển không được trước ngày vào làm");
                 }
 
-                if (transferDate.isAfter(asOf)) {
-                        throw new ResponseStatusException(
-                                        HttpStatus.BAD_REQUEST,
-                                        "Chưa hỗ trợ điều chuyển trong tương lai");
-                }
-
                 // Tim phan cong hien tai theo thoi diem
                 List<EmployeeAssignment> currentList = assignmentRepository.findCurrentAssignments(
                                 employeeId, asOf);
@@ -181,6 +179,10 @@ public class EmployeeAssignmentService {
                 }
 
                 EmployeeAssignment oldAssignment = currentList.get(0);
+                if(oldAssignment.getEffectiveTo()!=null || assignmentRepository.findHistoryByEmployeeId(employeeId).stream()
+                        .anyMatch(a->a.getEffectiveFrom().isAfter(asOf))) {
+                    throw new ResponseStatusException(HttpStatus.CONFLICT,"Đã có thay đổi phân công được lên lịch; cần đối soát trước khi tạo thay đổi mới");
+                }
 
                 // Truong phong phai theo nghiep vu rieng
                 if (AssignmentGuardService.HEAD_CODE.equals(
@@ -245,7 +247,7 @@ public class EmployeeAssignmentService {
                         int page,
                         int size) {
 
-                if(PersonnelScopeService.isHr()) return assignmentRepository.findScoped(personnelScope.employees(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
+                if(PersonnelScopeService.isHr()) return assignmentRepository.findScoped(personnelScope.employees(),personnelScope.departments(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
                 return assignmentRepository.findAllPagedWithDetails(
                                 PagingUtils.create(
                                                 page,
@@ -268,6 +270,7 @@ public class EmployeeAssignmentService {
                                         "Không tìm thấy nhân viên: " + employeeId);
                 }
 
+                if(PersonnelScopeService.isHr()) return assignmentRepository.findHistoryScoped(employeeId,personnelScope.departments(),PagingUtils.create(page,size,Sort.by(Sort.Order.desc("effectiveFrom"),Sort.Order.desc("assignmentId")))).map(this::convertToDTO);
                 return assignmentRepository.findHistoryPagedByEmployeeId(
                                 employeeId,
                                 PagingUtils.create(

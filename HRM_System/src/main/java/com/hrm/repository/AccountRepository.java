@@ -27,15 +27,29 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                 @Param("keyword") String keyword, @Param("active") Boolean active,
                 @Param("roleId") Long roleId, org.springframework.data.domain.Pageable pageable);
 
-        @Modifying(flushAutomatically = true)
         @Query("""
-                update Account a set a.tokenVersion = a.tokenVersion + 1,
-                       a.updatedAt = CURRENT_TIMESTAMP, a.updatedBy = :actor
-                where a.role.roleId = :roleId
+                select a from Account a join Employee e on e.employeeId = a.employeeId
+                where (:keyword = '' or lower(a.username) like :keyword escape '!'
+                       or lower(e.employeeCode) like :keyword escape '!'
+                       or lower(e.fullName) like :keyword escape '!')
+                  and (:active is null or a.active = :active)
+                  and exists (select head.assignmentId from EmployeeAssignment head join head.position p
+                    where head.employee.employeeId = a.employeeId and p.positionCode = 'TRUONG_PHONG'
+                      and head.effectiveFrom <= :today and (head.effectiveTo is null or head.effectiveTo > :today))
                 """)
-        int revokeRoleTokens(@Param("roleId") Long roleId, @Param("actor") Long actor);
+        org.springframework.data.domain.Page<Account> searchDepartmentHeads(
+                @Param("keyword") String keyword, @Param("active") Boolean active,
+                @Param("today") java.time.LocalDate today, org.springframework.data.domain.Pageable pageable);
 
         Optional<Account> findByUsername(String username);
+
+        @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        @Query("select a from Account a where a.accountId = :accountId")
+        Optional<Account> findByIdForUpdate(@Param("accountId") Long accountId);
+
+        @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)
+        @Query("select a from Account a where a.username = :username")
+        Optional<Account> findByUsernameForRecovery(@Param("username") String username);
 
         // Vo hieu hoa tai khoan khi nhan vien nghi viec
         // Dong thoi tang tokenVersion de thu hoi JWT cu
@@ -43,7 +57,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
         @Query("""
                         update Account a
                            set a.active = false,
-                               a.tokenVersion = a.tokenVersion + 1,
+                               a.tokenVersion = coalesce(a.tokenVersion, 0) + 1,
                                a.updatedAt = CURRENT_TIMESTAMP
                          where a.employeeId = :employeeId
                         """)
@@ -51,6 +65,8 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                         @Param("employeeId") Long employeeId);
 
         // Vo hieu hoa cac JWT hien tai khi dang xuat
+        // Compatibility only: AuthService.logout now locks and updates the versioned entity.
+        @Deprecated(forRemoval = false)
         @Modifying(clearAutomatically = true, flushAutomatically = true)
         @Query("""
                         update Account a

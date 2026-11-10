@@ -132,44 +132,10 @@ class AttendanceServiceIntegrationTest {
                                 "DI_LAM",
                                 "Integration test");
 
-                // 6. Kiểm tra tạo công hợp lệ
-                AttendanceView created = attendanceService.createManual(input, testAdminAccountId);
-
-                assertNotNull(created);
-                assertEquals(3L, created.employeeId());
-                assertEquals(4L, created.scheduleId());
-                assertEquals("DI_LAM", created.attendanceResult());
-                assertEquals(
-                                "CHUA_XAC_NHAN",
-                                created.verificationStatus());
-
-                System.out.println(
-                                "PASS: Tao cham cong thanh cong");
-
-                // 7. Xác nhận bản ghi đã được ghi trong transaction
-                Integer countAfterCreate = db.queryForObject(
-                                """
-                                                SELECT COUNT(*)
-                                                FROM dbo.attendance_records
-                                                WHERE schedule_id = 4
-                                                """,
-                                Integer.class);
-
-                assertEquals(1, countAfterCreate);
-
-                // 8. Thử tạo chấm công trùng lịch
-                ResponseStatusException exception = assertThrows(
-                                ResponseStatusException.class,
-                                () -> attendanceService.createManual(input, testAdminAccountId));
-
-                assertEquals(
-                                HttpStatus.CONFLICT,
-                                exception.getStatusCode());
-
-                System.out.println(
-                                "PASS: Ngan cham cong trung lich");
-
-                // Spring Test sẽ rollback toàn bộ thay đổi
-                // khi phương thức kiểm thử kết thúc.
+                // Direct manual hours now require an employee request and cannot create attendance.
+                ResponseStatusException exception=assertThrows(ResponseStatusException.class,
+                        ()->attendanceService.createManual(input,testAdminAccountId));
+                assertEquals(HttpStatus.CONFLICT,exception.getStatusCode());
+                assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM dbo.attendance_records WHERE schedule_id=4",Integer.class));
         }
 }

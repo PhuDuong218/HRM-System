@@ -20,6 +20,8 @@ import com.hrm.util.PagingUtils;
 @Service
 @Transactional(readOnly=true)
 public class DepartmentHeadService {
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
+    @org.springframework.beans.factory.annotation.Autowired private com.hrm.repository.EmployeeRepository employees;
     private final JdbcTemplate jdbc;
     private final AssignmentGuardService guard;
     private final DepartmentHeadAccessService access;
@@ -95,6 +97,7 @@ public class DepartmentHeadService {
         var existing=openHeads(departmentId);
         if (existing.size()>1) throw conflict("Dữ liệu có nhiều trưởng phòng mở; cần đối soát trước");
         DepartmentHeadDTO old=existing.isEmpty()?null:existing.get(0);
+        if(old!=null && old.effectiveFrom().isAfter(LocalDate.now(clock))) throw conflict("Đã có bổ nhiệm tương lai; cần đối soát trước khi thay đổi tiếp");
         if (old!=null) {
             if (Objects.equals(old.employeeId(),request.employeeId())) throw conflict("Nhân viên này đang là trưởng phòng");
             if (request.previousHeadPositionId()==null) throw bad("Phải chọn chức vụ tiếp theo cho trưởng phòng cũ");
@@ -138,16 +141,19 @@ public class DepartmentHeadService {
             """,(r,n)->new Assignment(r.getLong(1),r.getLong(2),r.getLong(3),r.getLong(4),r.getObject(5,LocalDate.class)),employeeId);
         if(rows.size()!=1 || !rows.get(0).departmentId().equals(departmentId)) throw conflict("Nhân viên phải có một phân công mở thuộc phòng này");
         Assignment a=rows.get(0);
+        if(a.start().isAfter(LocalDate.now(clock))) throw conflict("Nhân viên đã có phân công tương lai; cần đối soát trước khi bổ nhiệm");
         if(!date.isAfter(a.start())) throw bad("Ngày hiệu lực phải sau ngày bắt đầu phân công hiện tại; không tạo khoảng rỗng");
         return a;
     }
 
     private void change(Assignment old, Long position, LocalDate date, Long actor) {
+        employeeCodes.track(old.employeeId(),old.positionId());
         jdbc.update("UPDATE dbo.employee_assignments SET effective_to=?,updated_at=SYSUTCDATETIME(),updated_by=? WHERE assignment_id=?",date,actor,old.id());
         jdbc.update("""
             INSERT dbo.employee_assignments(employee_id,department_id,position_id,effective_from,created_by)
             VALUES (?,?,?,?,?)
             """,old.employeeId(),old.departmentId(),position,date,actor);
+        employeeCodes.sync(employees.findByIdForUpdate(old.employeeId()).orElseThrow(),actor,"Thay đổi chức vụ trưởng phòng");
     }
 
     private void requireDepartment(Long id, boolean active) {
@@ -169,7 +175,7 @@ public class DepartmentHeadService {
     }
 
     private void validateDate(LocalDate date) {
-        if(date==null || date.isAfter(LocalDate.now(clock))) throw bad("Ngày hiệu lực bắt buộc và không được ở tương lai");
+        if(date==null) throw bad("Ngày hiệu lực bắt buộc");
     }
 
     private List<DepartmentHeadDTO> openHeads(Long departmentId) {

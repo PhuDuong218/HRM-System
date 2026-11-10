@@ -19,6 +19,9 @@ public class AttendancePortalDeadlinePolicy {
         for(String value:weekends.split(","))if(!value.isBlank())this.weekends.add(DayOfWeek.valueOf(value.trim()));
         if(this.weekends.size()==7)throw new IllegalArgumentException("Working calendar must have working days");
     }
+    public Map<String,Object> calendarInfo() {
+        return Map.of("configured",configured,"holidays",configured?holidays.stream().sorted().map(LocalDate::toString).toList():List.of());
+    }
     public LocalDateTime processingDeadline(LocalDate received){
         if(!configured)return null;
         return new AttendanceRequestDeadlineService().processingDeadline(received,date->!weekends.contains(date.getDayOfWeek())&&!holidays.contains(date)).withNano(999_000_000);

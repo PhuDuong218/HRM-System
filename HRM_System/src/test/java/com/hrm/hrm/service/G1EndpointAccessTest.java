@@ -31,12 +31,27 @@ class G1EndpointAccessTest {
     @Mock JdbcTemplate jdbc;
     MockMvc mvc;
     Principal employee=()->"employee-test";
+    org.springframework.context.annotation.AnnotationConfigApplicationContext security;
+    @org.springframework.context.annotation.Configuration
+    @org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity(proxyTargetClass=true)
+    static class MethodSecurity {}
 
     @BeforeEach void setup() {
+        org.springframework.security.core.context.SecurityContextHolder.clearContext();
+        // Standalone MockMvc does not apply @PreAuthorize unless the controller is proxied.
+        security=new org.springframework.context.annotation.AnnotationConfigApplicationContext();
+        security.register(MethodSecurity.class);
+        security.registerBean(PositionService.class,()->positions);
+        security.registerBean(DepartmentHeadAccessService.class,()->access);
+        security.registerBean(PersonnelScopeService.class,()->mock(PersonnelScopeService.class));
+        security.registerBean(CatalogAuditService.class,()->catalogs);
+        security.registerBean(PositionController.class,()->new PositionController(positions,access,catalogs));
+        security.refresh();
         mvc=MockMvcBuilders.standaloneSetup(new DepartmentController(departments,access,catalogs),
-                new PositionController(positions,access,catalogs),new EmployeeAssignmentController(assignments,access,transfers),
-                new G1AuditController(jdbc,access)).setControllerAdvice(new GlobalExceptionHandler()).build();
+                security.getBean(PositionController.class),new EmployeeAssignmentController(assignments,access,transfers),
+                new G1AuditController(jdbc,access,mock(AuditReadPolicy.class))).setControllerAdvice(new GlobalExceptionHandler()).build();
     }
+    @AfterEach void cleanup(){org.springframework.security.core.context.SecurityContextHolder.clearContext();security.close();}
 
     private List<MockHttpServletRequestBuilder> requests() {
         String d="{\"departmentCode\":\"D1\",\"departmentName\":\"Phòng\"}";
@@ -53,12 +68,16 @@ class G1EndpointAccessTest {
 
     @Test void anonymousCannotReadOrWriteAnyG1CatalogOrAssignment() throws Exception {
         when(access.requireManager(null)).thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
+        when(access.requireReader(null)).thenThrow(new ResponseStatusException(HttpStatus.UNAUTHORIZED));
         for(var request:requests()) mvc.perform(request).andExpect(status().isUnauthorized());
         verifyNoInteractions(departments,positions,catalogs,assignments,transfers,jdbc);
     }
 
     @Test void forbiddenEmployeeCannotReadOrWriteAnyG1CatalogOrAssignment() throws Exception {
+        org.springframework.security.core.context.SecurityContextHolder.getContext().setAuthentication(
+            new org.springframework.security.authentication.UsernamePasswordAuthenticationToken("employee-test","",List.of(new org.springframework.security.core.authority.SimpleGrantedAuthority("ROLE_EMPLOYEE"))));
         when(access.requireManager(employee)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
+        when(access.requireReader(employee)).thenThrow(new ResponseStatusException(HttpStatus.FORBIDDEN));
         for(var request:requests()) mvc.perform(request.principal(employee)).andExpect(status().isForbidden());
         verifyNoInteractions(departments,positions,catalogs,assignments,transfers,jdbc);
     }

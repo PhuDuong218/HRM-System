@@ -31,9 +31,18 @@ import java.util.concurrent.*;
  */
 public class EmployeeActivity extends AppCompatActivity {
     private static final int BLUE = 0xff004581, INK = 0xff163d5c, MUTED = 0xff6d8196;
+    private TextInputEditText leaveEvidenceTarget;private boolean evidenceUploading;
+    private final androidx.activity.result.ActivityResultLauncher<String> leaveEvidencePicker=registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.GetContent(),uri->{
+        final TextInputEditText target=leaveEvidenceTarget;if(uri==null||target==null)return;evidenceUploading=true;target.setText("Đang tải minh chứng…");
+        this.executor.execute(()->{try{byte[] bytes;try(java.io.InputStream input=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream output=new java.io.ByteArrayOutputStream()){if(input==null)throw new java.io.IOException("Không mở được tệp");byte[] buffer=new byte[8192];int size;while((size=input.read(buffer))!=-1){if(output.size()+size>3*1024*1024)throw new java.io.IOException("Minh chứng tối đa 3 MB");output.write(buffer,0,size);}bytes=output.toByteArray();}
+            JSONObject uploaded=this.api.send("/employee-requests/evidence","POST",this.session.token(),json("content",android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP)));
+            runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText(uploaded.optString("reference"));target.setError(null);toast("Đã đính kèm minh chứng");}});
+        }catch(Exception error){runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText("");target.setError(HrmApi.message(error));target.requestFocus();}});}});
+    });
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private HrmApplication session;
     private HrmApi api;
+    private MobileNotifications notifications;
     private LinearLayout body;
     private BottomNavigationView navigation;
     private View loading;
@@ -51,6 +60,13 @@ public class EmployeeActivity extends AppCompatActivity {
         JSONObject run() throws Exception;
     }
 
+    public boolean showNotificationPage(JSONObject target){
+        JSONObject detail=target.optJSONObject("detail");String kind=target.optString("referenceType");
+        if(kind.equals("overtime_requests")){navigation.setSelectedItemId(R.id.navRequests);category="ot";render();fetch("/api/overtime/workspace/requests/"+target.optLong("referenceId"),this::otDetail);return true;}
+        if(kind.equals("attendance_records")){category="regular";navigation.setSelectedItemId(R.id.navAttendance);long schedule=target.optLong("scheduleId");fetch("/api/attendance-workspace/schedules/"+schedule+"?mine=true",this::attendanceDetail);return true;}
+        navigation.setSelectedItemId(R.id.navRequests);
+        category=kind.equals("attendance_portal_requests")?"regular":detail!=null&&detail.optString("requestType").equals("NGHI_VIEC")?"resignation":"leave";render();return false;
+    }
     private static LocalDate today() {
         return LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
@@ -86,6 +102,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     : id == R.id.navAttendance ? "attendance"
                             : id == R.id.navRequests ? "requests" : id == R.id.navProfile ? "profile" : "home";
             category = "regular";
+            attendanceCalendarOpen = false;
             page = 0;
             render();
             return true;
@@ -94,8 +111,17 @@ public class EmployeeActivity extends AppCompatActivity {
             if (!writing)
                 render();
         });
+        notifications=new MobileNotifications(this,api,session,findViewById(R.id.employeeBell),findViewById(R.id.employeeNotificationBadge));
         render();
     }
+
+    @Override protected void onResume(){
+        super.onResume();
+        if(notifications!=null)notifications.start();
+        if(body!=null && api!=null && session!=null && session.token()!=null && !writing && pendingReads==0)render();
+    }
+
+    @Override protected void onPause(){if(notifications!=null)notifications.stop();super.onPause();}
 
     private int dp(float n) {
         return (int) (n * getResources().getDisplayMetrics().density + .5f);
@@ -168,7 +194,7 @@ public class EmployeeActivity extends AppCompatActivity {
 
     private void badge(LinearLayout box, String value, String state) {
         int color = state.contains("TU_CHOI") || state.contains("VANG") ? 0xffa32b32
-                : state.contains("CHO") || state.contains("THIEU") || state.contains("DANG_XU_LY") ? 0xff8a5b00
+                : state.contains("CHO") || state.contains("CHUA") || state.contains("THIEU") || state.contains("DANG_XU_LY") ? 0xff8a5b00
                         : 0xff137957;
         TextView t = text(value, 12, color, true);
         t.setPadding(dp(10), dp(6), dp(10), dp(6));
@@ -242,7 +268,7 @@ public class EmployeeActivity extends AppCompatActivity {
             case "CHO_XU_LY":
                 return "Chờ xử lý";
             case "DANG_XU_LY":
-                return "Đang xử lý";
+                return "Đã tiếp nhận";
             case "DA_CHAP_NHAN":
                 return "Đã chấp nhận";
             case "DA_XAC_NHAN":
@@ -253,8 +279,12 @@ public class EmployeeActivity extends AppCompatActivity {
                 return "Đi làm";
             case "VANG":
                 return "Vắng";
+            case "MISSING_ATTENDANCE":
+                return "Bổ sung giờ vào/ra";
             case "MISSING_CHECKOUT":
                 return "Bổ sung giờ ra";
+            case "UNCONFIRMED_CORRECTION":
+                return "Sửa công chưa xác nhận";
             case "CONFIRMED_CORRECTION":
                 return "Điều chỉnh công";
             default:
@@ -434,7 +464,7 @@ public class EmployeeActivity extends AppCompatActivity {
         body.removeAllViews();
         body.setPadding(dp(16), dp(16), dp(16), dp(16));
         findViewById(R.id.employeeHeader)
-                .setVisibility((section.equals("schedule") || section.equals("attendance")) ? View.GONE : View.VISIBLE);
+                .setVisibility(View.VISIBLE);
         loading.setVisibility(View.GONE);
         ((NestedScrollView) findViewById(R.id.employeeScroll)).scrollTo(0, 0);
         switch (section) {
@@ -522,7 +552,277 @@ public class EmployeeActivity extends AppCompatActivity {
         return b;
     }
 
+    private List<JSONObject> attendanceLeaves = new ArrayList<>();
+    private Map<Long,String> attendanceLeaveTypes = new HashMap<>();
+    private Set<String> attendanceHolidays = new HashSet<>();
+    private YearMonth attendanceMonth = YearMonth.from(today());
+    private boolean attendanceMonthView = true;
+    private boolean attendanceCalendarOpen = false;
+    private LocalDate attendanceSelectedDay = today();
+    private String attendanceStateFilter = "all";
+
+    private void attendanceMonthCalendar() {
+        button(body, "‹ Quay lại chấm công", false, () -> { attendanceCalendarOpen = false; render(); });
+        title("Lịch xem công", "Chọn ngày để xem ca, giờ vào/ra và gửi yêu cầu hợp lệ.");
+        LinearLayout toolbar = new LinearLayout(this);
+        toolbar.setGravity(Gravity.CENTER_VERTICAL);
+        MaterialButton prev = calendarButton("‹", () -> moveAttendanceCalendar(-1));
+        toolbar.addView(prev, new LinearLayout.LayoutParams(dp(44), dp(48)));
+        MaterialButton month = calendarButton("Tháng " + attendanceMonth.getMonthValue() + "/" + attendanceMonth.getYear(), () -> pickDate(attendanceSelectedDay, d -> {
+            attendanceSelectedDay = d;
+            attendanceMonth = YearMonth.from(d);
+            render();
+        }));
+        month.setContentDescription("Chọn nhanh tháng và năm");
+        toolbar.addView(month, new LinearLayout.LayoutParams(0, dp(48), 1));
+        toolbar.addView(calendarButton("›", () -> moveAttendanceCalendar(1)), new LinearLayout.LayoutParams(dp(44), dp(48)));
+        body.addView(toolbar);
+        LinearLayout modes = new LinearLayout(this);
+        for (boolean monthly : new boolean[]{true, false}) {
+            MaterialButton b = calendarButton(monthly ? "Theo tháng" : "Theo tuần", () -> { attendanceMonthView = monthly; render(); });
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(attendanceMonthView == monthly ? CALENDAR_BLUE : 0xffe8ecf8));
+            b.setTextColor(attendanceMonthView == monthly ? Color.WHITE : CALENDAR_BLUE);
+            modes.addView(b, new LinearLayout.LayoutParams(0, dp(44), 1));
+        }
+        body.addView(modes);
+        HorizontalScrollView filterScroll = new HorizontalScrollView(this);
+        filterScroll.setHorizontalScrollBarEnabled(false);
+        LinearLayout filters = new LinearLayout(this);
+        String[] keys = {"all", "late", "missing", "absent", "leave", "maternity", "holiday", "ot"};
+        String[] names = {"Tất cả", "Muộn / sớm", "Chưa chấm công", "Nghỉ không phép", "Nghỉ phép", "Thai sản", "Ngày lễ", "Tăng ca (OT)"};
+        for (int i = 0; i < keys.length; i++) {
+            final String key = keys[i];
+            MaterialButton b = calendarButton(names[i], () -> { attendanceStateFilter = key; render(); });
+            b.setStrokeWidth(dp(1));
+            b.setStrokeColor(android.content.res.ColorStateList.valueOf(0xffcbd2ed));
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(key.equals(attendanceStateFilter) ? CALENDAR_BLUE : 0xfff1f4fa));
+            b.setTextColor(key.equals(attendanceStateFilter) ? Color.WHITE : CALENDAR_BLUE);
+            filters.addView(b);
+        }
+        filterScroll.addView(filters);
+        body.addView(filterScroll);
+        LinearLayout kinds = new LinearLayout(this);
+        String[] kindsKeys = {"all", "regular", "ot"}, kindNames = {"Tất cả ca", "Ca thường", "OT"};
+        for (int i = 0; i < kindsKeys.length; i++) {
+            String key = kindsKeys[i];
+            MaterialButton b = calendarButton(kindNames[i], () -> { attendanceFilter = key; render(); });
+            b.setBackgroundTintList(android.content.res.ColorStateList.valueOf(attendanceFilter.equals(key) ? CALENDAR_BLUE : 0xffe8ecf8));
+            b.setTextColor(attendanceFilter.equals(key) ? Color.WHITE : CALENDAR_BLUE);
+            kinds.addView(b, new LinearLayout.LayoutParams(0, dp(40), 1));
+        }
+        body.addView(kinds);
+        LocalDate first = attendanceMonthView ? attendanceMonth.atDay(1) : attendanceSelectedDay.with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY));
+        LocalDate last = attendanceMonthView ? attendanceMonth.atEndOfMonth() : first.plusDays(6);
+        LinearLayout content = column();
+        body.addView(content);
+        content.addView(text("Đang tải lịch công…", 14, MUTED, false));
+        int version = generation;
+        String token = session.token(), kind = attendanceFilter;
+        ++pendingReads;
+        loading.setVisibility(View.VISIBLE);
+        executor.execute(() -> {
+            try {
+                List<JSONObject> entries = new ArrayList<>();
+                if (!kind.equals("ot")) calendarPages("/api/attendance-workspace/records?mine=true&from=" + first.minusDays(1) + "&to=" + last, "regular", token, entries);
+                if (!kind.equals("regular")) calendarPages("/api/overtime/workspace/calendar?mine=true&from=" + first.minusDays(1) + "&to=" + last, "ot", token, entries);
+                List<JSONObject> leaves = new ArrayList<>(); Map<Long,String> types = new HashMap<>(); Set<String> holidays = new HashSet<>();
+                String warning = "";
+                try {
+                    for(int p=0,total=1;p<total;p++) {
+                        JSONObject data=api.get("/employee-requests/mine?type=NGHI_PHEP&status=DA_DUYET&size=100&page="+p,token);
+                        JSONArray items=data.getJSONArray("content");total=data.optInt("totalPages",1);
+                        for(int i=0;i<items.length();i++){JSONObject l=items.getJSONObject(i);if(str(l,"withdrawnAt").isEmpty()&&str(l,"leaveStart").compareTo(last.plusDays(1)+"T00:00:00")<0&&str(l,"leaveEnd").compareTo(first+"T00:00:00")>0)leaves.add(l);}
+                    }
+                    for(int p=0,total=1;p<total;p++) {
+                        JSONObject data=api.get("/leave-types?size=100&page="+p,token);total=data.optInt("totalPages",1);JSONArray items=data.getJSONArray("content");
+                        for(int i=0;i<items.length();i++){JSONObject t=items.getJSONObject(i);types.put(t.optLong("leaveTypeId"),str(t,"typeCode")+" — "+str(t,"typeName"));}
+                    }
+                }catch(Exception ex){warning="Chưa tải được nghỉ phép / thai sản: "+HrmApi.message(ex);}
+                try{JSONObject policy=api.get("/api/attendance-workspace/calendar-policy",token);if(policy.optBoolean("configured")){JSONArray dates=policy.getJSONArray("holidays");for(int i=0;i<dates.length();i++)holidays.add(dates.getString(i));}else warning+=" Chưa có lịch lễ chính thức.";}catch(Exception ex){warning+=" Chưa tải được lịch lễ chính thức.";}
+                final String calendarWarning=warning;
+                runOnUiThread(() -> {
+                    if (isDestroyed() || generation != version) return;
+                    --pendingReads;
+                    loading.setVisibility(pendingReads > 0 ? View.VISIBLE : View.GONE);
+                    content.removeAllViews();
+                    attendanceLeaves=leaves;attendanceLeaveTypes=types;attendanceHolidays=holidays;
+                    if(!calendarWarning.isBlank())content.addView(text(calendarWarning,12,MUTED,false));
+                    attendanceCalendarGrid(content, first, last, entries);
+                });
+            } catch (Exception ex) {
+                runOnUiThread(() -> {
+                    if (isDestroyed() || generation != version) return;
+                    --pendingReads;
+                    loading.setVisibility(pendingReads > 0 ? View.VISIBLE : View.GONE);
+                    content.removeAllViews();
+                    content.addView(text(HrmApi.message(ex), 14, 0xff9f2534, false));
+                    content.addView(calendarButton("Tải lại", this::render));
+                    if (ex instanceof HrmApi.ApiException && ((HrmApi.ApiException)ex).status == 401) {session.clearSession(); signOutLocal();}
+                });
+            }
+        });
+    }
+
+    private void moveAttendanceCalendar(int n) {
+        if (attendanceMonthView) {attendanceMonth = attendanceMonth.plusMonths(n); attendanceSelectedDay = attendanceMonth.atDay(1);}
+        else {attendanceSelectedDay = attendanceSelectedDay.plusWeeks(n); attendanceMonth = YearMonth.from(attendanceSelectedDay);}
+        render();
+    }
+    private List<JSONObject> entriesOn(LocalDate day, List<JSONObject> entries) {
+        List<JSONObject> out = new ArrayList<>();
+        for (JSONObject e : entries) if (CalendarMonth.overlaps(day, str(e,"calendarStart"), str(e,"calendarEnd"))) out.add(e);
+        return out;
+    }
+    private String calendarRowState(JSONObject e) {
+        JSONObject source = e.optJSONObject("source");
+        boolean ot = str(e,"kind").equals("ot");
+        JSONObject r = ot ? source.optJSONObject("row").optJSONObject("ot") : source;
+        if (str(r,"attendanceResult").equals("VANG")) return "absent";
+        JSONArray anomalies = r.optJSONArray("anomalies");
+        if (!ot && anomalies != null) for (int i=0;i<anomalies.length();i++) if (anomalies.optString(i).equals("DI_MUON") || anomalies.optString(i).equals("VE_SOM")) return "late";
+        if (str(r,"actualStart").isEmpty() || str(r,"actualEnd").isEmpty()) return "missing";
+        return "normal";
+    }
+    private String specialLeaveState(JSONObject l){
+        String value=java.text.Normalizer.normalize(attendanceLeaveTypes.getOrDefault(l.optLong("leaveTypeId"),""),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}+","").replace('_',' ').toLowerCase(Locale.ROOT);
+        if(value.contains("thai san")||value.contains("maternity"))return "maternity";
+        if(value.contains("nghi om")||value.contains("sick")||value.isBlank())return "";
+        return "leave";
+    }
+    private String calendarDayState(LocalDate day, List<JSONObject> entries) {
+        List<JSONObject> allDaily=entriesOn(day,entries);
+        List<JSONObject> daily=new ArrayList<>();
+        for(JSONObject e:allDaily)if(!str(e,"kind").equals("ot"))daily.add(e);
+        for(JSONObject e:daily)if(calendarRowState(e).equals("normal"))return "normal";
+        for(String state:new String[]{"maternity","leave"})for(JSONObject l:attendanceLeaves)if(CalendarMonth.overlaps(day,str(l,"leaveStart"),str(l,"leaveEnd"))&&specialLeaveState(l).equals(state))return state;
+        if(allDaily.isEmpty()&&(attendanceHolidays.contains(day.toString())||!VietnameseHoliday.name(day).isEmpty()))return "holiday";
+        for (String priority : new String[]{"absent","late"}) for(JSONObject e:daily) if(calendarRowState(e).equals(priority))return priority;
+        for(JSONObject e:daily) if(calendarRowState(e).equals("missing"))return "missing";
+        return daily.isEmpty()?(allDaily.isEmpty()?"empty":"ot"):"normal";
+    }
+    private int calendarStateColor(String state) {
+        switch(state) {case "ot":return 0xfff08a18;case "normal":return 0xff164c96;case "late":return 0xfff4b52f;case "absent":return 0xffca334b;case "missing":return 0xffe7dfd3;case "leave":return 0xffb9e2ff;case "maternity":return 0xffbf347d;case "holiday":return Color.TRANSPARENT;default:return 0xffcbd0d7;}
+    }
+    private int calendarStateInk(String state){return state.equals("normal")||state.equals("absent")||state.equals("maternity")?Color.WHITE:INK;}
+    private String calendarStateLabel(String state) {
+        switch(state) {case "ot":return "Tăng ca (OT)";case "normal":return "Đi làm bình thường";case "late":return "Đi muộn / về sớm";case "absent":return "Nghỉ không phép";case "missing":return "Chưa / thiếu chấm công";case "leave":return "Nghỉ phép";case "maternity":return "Nghỉ thai sản";case "holiday":return "Ngày lễ";default:return "Không có lịch";}
+    }
+
+    private void attendanceCalendarGrid(LinearLayout parent, LocalDate first, LocalDate last, List<JSONObject> entries) {
+        Set<String> planned = new HashSet<>(), present = new HashSet<>(); int late=0; Set<String> absent = new HashSet<>();
+        for(JSONObject e:entries) {
+            if(!str(e,"kind").equals("regular")) continue;
+            JSONObject r=e.optJSONObject("source"); String date=str(r,"workDate");
+            if(date.compareTo(first.toString())<0||date.compareTo(last.toString())>0)continue;
+            planned.add(date);
+            if(str(r,"attendanceResult").equals("VANG"))absent.add(date);
+            if(!str(r,"actualStart").isEmpty()&&!str(r,"attendanceResult").equals("VANG"))present.add(date);
+            JSONArray anomalies=r.optJSONArray("anomalies");
+            if(anomalies!=null)for(int i=0;i<anomalies.length();i++)if(anomalies.optString(i).equals("DI_MUON")){late++;break;}
+        }
+        TextView stats=text("Có lịch: "+planned.size()+" ngày  •  Có giờ vào: "+present.size()+" ngày\nĐi muộn: "+late+" lần  •  Vắng: "+absent.size()+" ngày",12,INK,true);
+        stats.setPadding(dp(10),dp(10),dp(10),dp(10));parent.addView(stats);
+        TextView note=text("Đếm ngày có lịch và ngày có giờ vào, không phải công chuẩn quy đổi.",11,MUTED,false);parent.addView(note);
+        LinearLayout headings=new LinearLayout(this);
+        for(String s:new String[]{"T2","T3","T4","T5","T6","T7","CN"}) {TextView t=text(s,13,INK,true);t.setGravity(Gravity.CENTER);headings.addView(t,new LinearLayout.LayoutParams(0,dp(36),1));}parent.addView(headings);
+        LinearLayout detail=column();
+        LocalDate start=attendanceMonthView?CalendarMonth.firstCell(attendanceMonth):first;
+        LocalDate finish=attendanceMonthView?CalendarMonth.lastCell(attendanceMonth):last;
+        for(LocalDate week=start;!week.isAfter(finish);week=week.plusDays(7)) {
+            LinearLayout row=new LinearLayout(this);
+            for(int i=0;i<7;i++) {
+                LocalDate date=week.plusDays(i);String state=calendarDayState(date,entries);
+                TextView cell=text(String.valueOf(date.getDayOfMonth()),18,calendarStateInk(state),true);
+                cell.setGravity(Gravity.CENTER);cell.setBackground(rounded(calendarStateColor(state),9));
+                if(attendanceHolidays.contains(date.toString())||!VietnameseHoliday.name(date).isEmpty())((android.graphics.drawable.GradientDrawable)cell.getBackground()).setStroke(dp(3),0xffb91c1c);
+                List<JSONObject> daily=entriesOn(date,entries);
+                if(!daily.isEmpty())cell.setText(date.getDayOfMonth()+"\n"+daily.size()+" ca");
+                String holidayName=VietnameseHoliday.name(date);
+                if(!holidayName.isEmpty()){
+                    String current=cell.getText().toString(),label=current+"\n"+holidayName;
+                    android.text.SpannableString styled=new android.text.SpannableString(label);
+                    styled.setSpan(new android.text.style.ForegroundColorSpan(0xff8b0000),current.length()+1,label.length(),0);
+                    styled.setSpan(new android.text.style.BackgroundColorSpan(0xfffff1f2),current.length()+1,label.length(),0);
+                    styled.setSpan(new android.text.style.RelativeSizeSpan(.48f),current.length()+1,label.length(),0);
+                    cell.setText(styled);
+                }
+                cell.setContentDescription(holidayName+" "+date+", "+calendarStateLabel(state)+", "+daily.size()+" ca");
+                boolean matches=attendanceStateFilter.equals("all")||state.equals(attendanceStateFilter)||daily.stream().anyMatch(e->calendarRowState(e).equals(attendanceStateFilter));
+                cell.setAlpha(date.isBefore(first)||date.isAfter(last)?.3f:matches?1f:.25f);
+                cell.setFocusable(true);
+                cell.setEnabled(!date.isBefore(first)&&!date.isAfter(last));
+                cell.setOnClickListener(v->{attendanceSelectedDay=date;showAttendanceCalendarDay(detail,date,entries);detail.post(()->{detail.requestFocus();NestedScrollView scroll=findViewById(R.id.employeeScroll);android.graphics.Rect rect=new android.graphics.Rect();detail.getDrawingRect(rect);scroll.offsetDescendantRectToMyCoords(detail,rect);scroll.smoothScrollTo(0,rect.top);});});
+                FrameLayout frame=new FrameLayout(this);
+                frame.addView(cell,new FrameLayout.LayoutParams(-1,-1));
+                LinearLayout dots=new LinearLayout(this);dots.setGravity(Gravity.END);
+                Set<String> statuses=new LinkedHashSet<>();
+                for(JSONObject e:daily)statuses.add(str(e,"kind").equals("ot")?"ot":calendarRowState(e));
+                for(String status:statuses){
+                    View dot=new View(this);dot.setBackground(rounded(calendarStateColor(status),6));
+                    android.graphics.drawable.GradientDrawable circle=(android.graphics.drawable.GradientDrawable)dot.getBackground();circle.setStroke(dp(1),Color.WHITE);
+                    dot.setContentDescription(calendarStateLabel(status));
+                    LinearLayout.LayoutParams dotParams=new LinearLayout.LayoutParams(dp(9),dp(9));dotParams.setMarginStart(dp(3));dots.addView(dot,dotParams);
+                }
+                FrameLayout.LayoutParams dotsParams=new FrameLayout.LayoutParams(-2,-2,Gravity.BOTTOM|Gravity.END);dotsParams.setMargins(0,0,dp(5),dp(4));
+                dots.setClickable(false);dots.setFocusable(false);dots.setImportantForAccessibility(View.IMPORTANT_FOR_ACCESSIBILITY_NO_HIDE_DESCENDANTS);frame.addView(dots,dotsParams);
+                cell.setContentDescription(cell.getContentDescription()+", "+String.join(", ",statuses.stream().map(this::calendarStateLabel).toArray(String[]::new)));
+                LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,dp(66),1);p.setMargins(dp(2),dp(2),dp(2),dp(2));row.addView(frame,p);
+            }parent.addView(row);
+        }
+        attendanceColorLegend(parent);
+        parent.addView(text("Thiếu / chưa có công không đồng nghĩa vắng không phép. OT không cộng vào thống kê công thường.",11,MUTED,false));
+        parent.addView(detail);
+        detail.setFocusableInTouchMode(true);
+        if(!attendanceSelectedDay.isBefore(first)&&!attendanceSelectedDay.isAfter(last))showAttendanceCalendarDay(detail,attendanceSelectedDay,entries);
+        button(parent,"Tổng công theo tháng / năm",false,()->{section="summary";render();});
+    }
+    private void attendanceColorLegend(LinearLayout parent) {
+        TextView heading=text("Chú thích màu trạng thái công",13,INK,true);
+        heading.setPadding(dp(12),dp(10),dp(8),dp(4));
+        LinearLayout legendHeader=new LinearLayout(this);
+        legendHeader.setGravity(Gravity.CENTER_VERTICAL);
+        legendHeader.addView(heading,new LinearLayout.LayoutParams(0,-2,1));
+        if (section.equals("attendance") && !attendanceCalendarOpen) {
+            MaterialButton viewCalendar=calendarButton("Xem lịch",()->{
+                attendanceSelectedDay=attendancePeriod.anchor();
+                attendanceMonth=YearMonth.from(attendanceSelectedDay);
+                attendanceMonthView=true;
+                attendanceCalendarOpen=true;
+                render();
+            });
+            viewCalendar.setStrokeWidth(dp(1));
+            viewCalendar.setStrokeColor(android.content.res.ColorStateList.valueOf(CALENDAR_BLUE));
+            viewCalendar.setCornerRadius(dp(8));
+            viewCalendar.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xffe8ecf8));
+            viewCalendar.setTag("attendance.viewCalendar");
+            LinearLayout.LayoutParams actionParams=new LinearLayout.LayoutParams(-2,dp(44));
+            actionParams.setMarginEnd(dp(8));
+            legendHeader.addView(viewCalendar,actionParams);
+        }
+        parent.addView(legendHeader);
+        for(String[] pair:new String[][]{{"normal","late"},{"absent","missing"},{"leave","maternity"},{"holiday","empty"},{"ot"}}){
+            LinearLayout row=new LinearLayout(this);
+            for(String state:pair){
+                TextView legend=text("● "+calendarStateLabel(state),12,calendarStateInk(state),false);
+                legend.setPadding(dp(8),dp(8),dp(8),dp(8));
+                legend.setBackground(rounded(calendarStateColor(state),7));
+                if(state.equals("holiday"))((android.graphics.drawable.GradientDrawable)legend.getBackground()).setStroke(dp(2),0xffa855c7);
+                LinearLayout.LayoutParams p=new LinearLayout.LayoutParams(0,-2,1);
+                p.setMargins(dp(4),dp(3),dp(4),dp(3));row.addView(legend,p);
+            }parent.addView(row);
+        }
+    }
+
+    private void showAttendanceCalendarDay(LinearLayout target, LocalDate day, List<JSONObject> entries) {
+        target.removeAllViews();
+        for(JSONObject l:attendanceLeaves)if(CalendarMonth.overlaps(day,str(l,"leaveStart"),str(l,"leaveEnd"))&&!specialLeaveState(l).isEmpty()){
+            String state=specialLeaveState(l);TextView leave=text(calendarStateLabel(state)+" · Đã duyệt\n"+time(str(l,"leaveStart"))+" → "+time(str(l,"leaveEnd")),13,calendarStateInk(state),true);leave.setBackground(rounded(calendarStateColor(state),8));leave.setPadding(dp(10),dp(10),dp(10),dp(10));target.addView(leave);
+        }
+        calendarDay(target,day,entriesOn(day,entries));
+    }
+
     private void schedule() {
+        if (section.equals("attendance") && attendanceCalendarOpen) { attendanceMonthCalendar(); return; }
         final boolean attendanceView = section.equals("attendance");
         final SchedulePeriod schedulePeriod = attendanceView ? attendancePeriod : this.schedulePeriod;
         final String scheduleFilter = attendanceView ? attendanceFilter : this.scheduleFilter;
@@ -642,6 +942,7 @@ public class EmployeeActivity extends AppCompatActivity {
             filters.addView(b, p);
         }
         body.addView(filters);
+        if (attendanceView) attendanceColorLegend(body);
         if (attendanceView) {
             LinearLayout summaryLink = column();
             summaryLink.setPadding(dp(16), 0, dp(16), 0);
@@ -749,6 +1050,8 @@ public class EmployeeActivity extends AppCompatActivity {
         row.addView(dot, new LinearLayout.LayoutParams(dp(30), dp(30)));
         TextView date = text(day.format(DateTimeFormatter.ofPattern("EEEE, dd/MM/yyyy", new Locale("vi", "VN"))), 15,
                 INK, true);
+        String holidayName=VietnameseHoliday.name(day);
+        if(!holidayName.isEmpty()){date.setText(date.getText()+"\n"+holidayName);date.setTextColor(0xff8b0000);}
         date.setAccessibilityHeading(true);
         LinearLayout.LayoutParams dateParams = new LinearLayout.LayoutParams(0, -2, 1);
         dateParams.setMarginStart(dp(10));
@@ -853,7 +1156,11 @@ public class EmployeeActivity extends AppCompatActivity {
                     "Check-in OT theo giờ máy chủ?", null));
         if (ot && source.optBoolean("canCheckOut"))
             button(box, "Check-out OT", true, () -> otCheckout(row));
-        if (section.equals("attendance") && !ot && row.optBoolean("canRequest"))
+        if(section.equals("attendance")&&!ot&&"DA_XAC_NHAN".equals(str(row,"verificationStatus"))) {
+            button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
+            box.addView(text("Công đã được xác nhận",12,MUTED,false));
+        }
+        if (section.equals("attendance") && !ot && row.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(row,"verificationStatus")))
             button(box, "Yêu cầu điều chỉnh / bổ sung", false,
                     () -> fetch("/api/attendance-workspace/schedules/" + row.optLong("scheduleId") + "?mine=true",
                             d -> attendanceProposal(d.getJSONObject("row"))));
@@ -863,12 +1170,36 @@ public class EmployeeActivity extends AppCompatActivity {
         parent.addView(outer);
     }
 
+    private String clockReviewState(JSONObject row,boolean checkIn){
+        String side=checkIn?"check-in":"check-out";
+        if(str(row,checkIn?"actualStart":"actualEnd").isEmpty())return "Chưa "+side;
+        if("DA_XAC_NHAN".equals(str(row,"verificationStatus")))return "Đã xác nhận "+side+" trong công";
+        return row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed")?"Đã đối soát "+side:"Đã "+side+" — chờ đối soát";
+    }
+    private void clockReviewFacts(LinearLayout box,JSONObject row){
+        for(boolean checkIn:new boolean[]{true,false}){
+            boolean recorded=!str(row,checkIn?"actualStart":"actualEnd").isEmpty();
+            boolean reviewed=row.optBoolean(checkIn?"checkInReviewed":"checkOutReviewed");
+            boolean confirmed="DA_XAC_NHAN".equals(str(row,"verificationStatus"));
+            badge(box,clockReviewState(row,checkIn),(reviewed||confirmed)?"DA_DOI_SOAT":recorded?"CHO_DOI_SOAT":"CHUA_GHI_NHAN");
+            if(reviewed)box.addView(text(str(row,checkIn?"checkInReviewer":"checkOutReviewer")+" · "+utc(str(row,checkIn?"checkInReviewedAt":"checkOutReviewedAt")),12,MUTED,false));
+        }
+    }
+
+    private void clockTimingFacts(LinearLayout box,String plannedStart,String plannedEnd,String actualStart,String actualEnd){
+        String in=ClockTiming.describe(plannedStart,actualStart,true),out=ClockTiming.describe(plannedEnd,actualEnd,false);
+        if(!in.isEmpty())box.addView(text(in,13,INK,true));
+        if(!out.isEmpty())box.addView(text(out,13,INK,true));
+    }
+
     private void attendanceFacts(LinearLayout box, JSONObject row, JSONObject actual, boolean ot) {
-        line(box, "Giờ vào thực tế", time(str(actual, "actualStart")));
-        line(box, "Giờ ra thực tế", time(str(actual, "actualEnd")));
+        clockTimingFacts(box,str(ot?actual:row,ot?"requestedStart":"plannedStart"),str(ot?actual:row,ot?"requestedEnd":"plannedEnd"),str(actual,"actualStart"),str(actual,"actualEnd"));
+        line(box, "Giờ vào thực tế", str(actual,"actualStart").isEmpty()?"Chưa check-in":time(str(actual,"actualStart")));
+        line(box, "Giờ ra thực tế", str(actual,"actualEnd").isEmpty()?"Chưa check-out":time(str(actual,"actualEnd")));
         if (!ot) {
             String status = str(row, "verificationStatus");
-            badge(box, label(status), status.isEmpty() ? "CHO" : status);
+            badge(box, "DA_XAC_NHAN".equals(status)?"Công đã được xác nhận":"Công chưa xác nhận toàn bộ",status.isEmpty()?"CHO":status);
+            clockReviewFacts(box,row);
             String result = str(row, "attendanceResult");
             if (!result.isEmpty())
                 badge(box, label(result), result);
@@ -993,9 +1324,11 @@ public class EmployeeActivity extends AppCompatActivity {
         LinearLayout box = card(str(r, "shift"));
         line(box, "Ngày ca", str(r, "workDate"));
         line(box, "Dự kiến", time(str(r, "plannedStart")) + " → " + time(str(r, "plannedEnd")));
-        badge(box, label(str(r, "verificationStatus")),
-                str(r, "verificationStatus").isEmpty() ? "CHO" : str(r, "verificationStatus"));
-        line(box, "Giờ vào / ra", time(str(r, "actualStart")) + " → " + time(str(r, "actualEnd")));
+        badge(box, "DA_XAC_NHAN".equals(str(r,"verificationStatus")) ? "Công đã được xác nhận" : "Công chưa xác nhận toàn bộ", str(r,"verificationStatus").isEmpty()?"CHO":str(r,"verificationStatus"));
+        line(box,"Giờ check-in",str(r,"actualStart").isEmpty()?"Chưa check-in":time(str(r,"actualStart")));
+        line(box,"Giờ check-out",str(r,"actualEnd").isEmpty()?"Chưa check-out":time(str(r,"actualEnd")));
+        clockReviewFacts(box,r);
+        clockTimingFacts(box,str(r,"plannedStart"),str(r,"plannedEnd"),str(r,"actualStart"),str(r,"actualEnd"));
         JSONArray anomalies = r.optJSONArray("anomalies");
         if (anomalies != null && anomalies.length() > 0)
             badge(box,
@@ -1012,7 +1345,11 @@ public class EmployeeActivity extends AppCompatActivity {
         if (r.optBoolean("canCheckOut"))
             button(box, "Check-out", true, () -> write("/api/attendance-workspace/schedules/" + id + "/check-out",
                     "POST", new JSONObject(), "Check-out ca này bằng giờ máy chủ?", null));
-        if (r.optBoolean("canRequest"))
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus"))) {
+            button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
+            box.addView(text("Công đã được xác nhận",12,MUTED,false));
+        }
+        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus")))
             button(box, "Yêu cầu điều chỉnh / bổ sung", false,
                     () -> fetch("/api/attendance-workspace/schedules/" + id + "?mine=true",
                             d -> attendanceProposal(d.getJSONObject("row"))));
@@ -1026,14 +1363,27 @@ public class EmployeeActivity extends AppCompatActivity {
                 .append("\nRa: ").append(time(str(r, "actualEnd"))).append("\nNghỉ thực tế: ")
                 .append(r.optInt("actualBreakMinutes")).append(" phút\nNgười nhập: ").append(str(r, "enteredByLabel"))
                 .append("\nNgười xác nhận: ").append(str(r, "confirmedByLabel"));
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus")))info.append("\nCông đã được xác nhận");
+        info.append("\nCheck-in: ").append(clockReviewState(r,true)).append("\nCheck-out: ").append(clockReviewState(r,false));
+        if(r.optBoolean("checkInReviewed"))info.append("\nĐối soát giờ vào: ").append(str(r,"checkInReviewer")).append(" · ").append(utc(str(r,"checkInReviewedAt")));
+        if(r.optBoolean("checkOutReviewed"))info.append("\nĐối soát giờ ra: ").append(str(r,"checkOutReviewer")).append(" · ").append(utc(str(r,"checkOutReviewedAt")));
+        info.append("\n").append(ClockTiming.describe(str(r,"plannedStart"),str(r,"actualStart"),true)).append("\n").append(ClockTiming.describe(str(r,"plannedEnd"),str(r,"actualEnd"),false));
         JSONArray rests = detail.optJSONArray("breaks");
         if (rests != null)
             for (int i = 0; i < rests.length(); i++) {
                 JSONObject b = rests.getJSONObject(i);
                 info.append("\nNghỉ: ").append(time(str(b, "start"))).append(" → ").append(time(str(b, "end")));
             }
-        new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null)
-                .show();
+        JSONArray linked = detail.optJSONArray("requests");
+        if(linked!=null)for(int i=0;i<linked.length();i++){
+            JSONObject request=linked.getJSONObject(i);
+            info.append("\nYêu cầu: ").append(str(request,"requestCode")).append(" · ").append(label(str(request,"status")))
+                .append("\nTiếp nhận: ").append(str(request,"receiver")).append(" · ").append(utc(str(request,"receivedAt")))
+                .append("\nXử lý: ").append(str(request,"processor")).append(" · ").append(utc(str(request,"processedAt")));
+        }
+        MaterialAlertDialogBuilder details = new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null);
+        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) details.setNeutralButton("Gửi yêu cầu điều chỉnh", (dialog, which) -> attendanceProposal(r));
+        details.show();
     }
 
     private void otCalendar() {
@@ -1066,10 +1416,111 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
+
+    private void ownResignations() {
+        LinearLayout create=card("Đơn xin nghỉ việc của tôi");
+        create.addView(text("Gửi đề nghị để trưởng phòng và HR/ADMIN xử lý theo thẩm quyền. Nộp hoặc duyệt đơn chưa đồng nghĩa nghỉ việc ngay; cần hoàn tất bàn giao và đến ngày hiệu lực.",13,MUTED,false));
+        button(create,"Nộp đơn xin nghỉ việc",true,this::resignationForm);
+        fetch("/employee-requests/mine?type=NGHI_VIEC&page="+page+"&size=10",data->{
+            JSONArray rows=data.optJSONArray("content");
+            if(rows==null||rows.length()==0)card("Chưa có đơn nghỉ việc").addView(text("Đơn đã gửi và kết quả xử lý sẽ hiển thị tại đây.",13,MUTED,false));
+            else for(int i=0;i<rows.length();i++){
+                JSONObject r=rows.getJSONObject(i);LinearLayout box=card(str(r,"requestCode"));
+                badge(box,!str(r,"withdrawnAt").isEmpty()?"Đã rút đơn":label(str(r,"status")),str(r,"status"));
+                line(box,"Ngày làm cuối đề nghị",str(r,"requestedLastWorkingDate"));
+                line(box,"Ngày làm cuối được duyệt",str(r,"approvedLastWorkingDate"));
+                line(box,"Ngày gửi",utc(str(r,"submittedAt")));line(box,"Lý do",str(r,"reason"));
+                button(box,"Chi tiết và lịch sử",false,()->fetch("/employee-requests/"+r.optLong("requestId"),detail->{
+                    StringBuilder message=new StringBuilder("Trạng thái: ").append(!str(detail,"withdrawnAt").isEmpty()?"Đã rút đơn":label(str(detail,"status")))
+                        .append("\nNgày làm cuối đề nghị: ").append(str(detail,"requestedLastWorkingDate"))
+                        .append("\nNgày làm cuối được duyệt: ").append(str(detail,"approvedLastWorkingDate"))
+                        .append("\nNgày gửi: ").append(utc(str(detail,"submittedAt")))
+                        .append("\nNgày xử lý: ").append(utc(str(detail,"processedAt")))
+                        .append("\nLý do: ").append(str(detail,"reason"))
+                        .append("\nLý do từ chối: ").append(str(detail,"rejectionReason"))
+                        .append("\nLưu ý báo trước: ").append(str(detail,"noticeWarning"));
+                    JSONArray history=detail.optJSONArray("history");
+                    if(history!=null)for(int n=0;n<history.length();n++){JSONObject h=history.getJSONObject(n);message.append("\n\n").append(utc(str(h,"occurredAt"))).append(" · ").append(str(h,"actor")).append("\n").append(resignationAction(str(h,"action"))).append("\n").append(str(h,"reason"));}
+                    new MaterialAlertDialogBuilder(this).setTitle(str(detail,"requestCode")).setMessage(message).setPositiveButton("Đóng",null).show();
+                }));
+                if("CHO_DUYET".equals(str(r,"status"))&&str(r,"withdrawnAt").isEmpty())button(box,"Rút đơn",false,()->{
+                    LinearLayout form=form();TextInputEditText reason=input(form,"Lý do rút đơn *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+                    dialog("Rút đơn xin nghỉ việc",form,"Tiếp tục",d->{if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}write("/employee-requests/"+r.optLong("requestId")+"/withdraw","POST",json("reason",value(reason)),"Xác nhận rút đơn xin nghỉ việc?",d);});
+                });
+            }
+            pages(data);
+        });
+    }
+    private String resignationAction(String action){
+        switch(action){case "RESIGNATION_REQUEST_CREATE":return "Nộp đơn nghỉ việc";case "REQUEST_HEAD_APPROVE":return "Duyệt cấp 1";case "REQUEST_HEAD_REJECT":return "Từ chối cấp 1";case "REQUEST_APPROVE":return "Duyệt cuối";case "REQUEST_REJECT":return "Từ chối đơn";case "REQUEST_WITHDRAW":return "Rút đơn";case "RESIGNATION_EXECUTE":return "Áp dụng nghỉ việc";default:return action;}
+    }
+    private void resignationForm(){
+        LinearLayout box=form();box.addView(text("Chọn ngày làm việc cuối cùng đề nghị. Hệ thống kiểm tra thời hạn báo trước và các nghĩa vụ bàn giao khi duyệt.",13,MUTED,false));
+        final LocalDate[] last={today().plusDays(30)};
+        TextInputEditText date=input(box,"Ngày làm việc cuối đề nghị *",last[0].format(DateTimeFormatter.ofPattern("dd/MM/yyyy")),InputType.TYPE_NULL);
+        date.setFocusable(false);date.setCompoundDrawablesWithIntrinsicBounds(0,0,android.R.drawable.ic_menu_my_calendar,0);
+        date.setOnClickListener(v->pickDate(last[0],chosen->{last[0]=chosen;date.setText(chosen.format(DateTimeFormatter.ofPattern("dd/MM/yyyy")));}));
+        TextInputEditText reason=input(box,"Lý do xin nghỉ việc *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        dialog("Nộp đơn xin nghỉ việc",box,"Gửi đơn",d->{
+            if(last[0].isBefore(today())){date.setError("Ngày làm cuối không được ở quá khứ");date.requestFocus();return;}
+            if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}
+            write("/employee-requests/resignation","POST",json("requestedLastWorkingDate",last[0].toString(),"reason",value(reason)),"Xác nhận gửi đơn xin nghỉ việc với ngày làm cuối "+last[0].format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))+"?",d);
+        });
+    }
+
+    private void ownLeaveRequests() {
+        LinearLayout create=card("Nghỉ phép của tôi");
+        create.addView(text("Nghỉ phép năm trừ quỹ giờ khi được duyệt. Nghỉ ốm và thai sản theo chính sách riêng, không trừ phép năm. Đơn được chuyển theo quy trình duyệt của trung tâm.",12,MUTED,false));
+        button(create,"Nộp đơn nghỉ phép",true,()->fetch("/api/me/leave-options",this::leaveForm));
+        fetch("/employee-requests/mine?type=NGHI_PHEP&size=100", data->{
+            JSONArray rows=data.optJSONArray("content");
+            if(rows==null||rows.length()==0){card("Chưa có đơn nghỉ phép").addView(text("Các đơn mới sẽ xuất hiện ở đây sau khi gửi thành công.",13,MUTED,false));return;}
+            for(int i=0;i<rows.length();i++){
+                JSONObject request=rows.getJSONObject(i);LinearLayout box=card(str(request,"requestCode"));
+                badge(box,str(request,"withdrawnAt").isEmpty()?label(str(request,"status")):"Đã rút / hủy",str(request,"status"));
+                line(box,"Thời gian nghỉ",time(str(request,"leaveStart"))+" → "+time(str(request,"leaveEnd")));
+                line(box,"Lý do",str(request,"reason"));
+                if(request.optBoolean("canCancelLeave"))button(box,"Hủy đơn nghỉ phép",false,()->cancelLeaveForm(request));
+                else if(!str(request,"cancelLeaveBlocker").isEmpty())box.addView(text(str(request,"cancelLeaveBlocker"),12,MUTED,false));
+                if(!str(request,"withdrawnAt").isEmpty())line(box,"Hủy đơn",utc(str(request,"withdrawnAt"))+" · "+str(request,"withdrawnBy")+" · "+str(request,"withdrawalReason"));
+                button(box,"Chi tiết và kết quả",false,()->fetch("/employee-requests/"+request.optLong("requestId"),detail->{
+                    String value="Trạng thái: "+label(str(detail,"status"))+"\nThời gian: "+time(str(detail,"leaveStart"))+" → "+time(str(detail,"leaveEnd"))+"\nLý do: "+str(detail,"reason")+"\nNgày gửi: "+utc(str(detail,"submittedAt"))+"\nNgười xử lý: "+str(detail,"processedBy")+"\nLúc xử lý: "+utc(str(detail,"processedAt"))+"\nLý do từ chối: "+str(detail,"rejectionReason");
+                    if(!str(detail,"withdrawnAt").isEmpty())value+="\nNgười hủy: "+str(detail,"withdrawnBy")+"\nLúc hủy: "+utc(str(detail,"withdrawnAt"))+"\nLý do hủy: "+str(detail,"withdrawalReason");
+                    new MaterialAlertDialogBuilder(this).setTitle(str(detail,"requestCode")).setMessage(value).setPositiveButton("Đóng",null).show();
+                }));
+            }
+        });
+    }
+    private void cancelLeaveForm(JSONObject request){
+        LinearLayout box=form();box.addView(text("Hủy "+str(request,"requestCode")+" trước giờ bắt đầu nghỉ. Đơn đã duyệt được hoàn quỹ phép nếu đủ điều kiện.",13,INK,false));
+        TextInputEditText reason=input(box,"Lý do hủy *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        dialog("Hủy đơn nghỉ phép",box,"Tiếp tục",dialog->{if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}write("/employee-requests/"+request.optLong("requestId")+"/cancel-leave","POST",json("reason",value(reason)),"Xác nhận hủy đơn nghỉ phép?",dialog);});
+    }
+    private void leaveForm(JSONObject options) throws Exception {
+        JSONArray types=options.optJSONArray("types");if(types==null||types.length()==0){toast("Chưa có loại nghỉ hoạt động. Liên hệ ADMIN.");return;}
+        LinearLayout box=form();List<String> labels=new ArrayList<>();for(int i=0;i<types.length();i++)labels.add(types.getJSONObject(i).getString("typeName"));
+        box.addView(text("Loại nghỉ",13,INK,true));Spinner type=new Spinner(this);type.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));box.addView(type);
+        DateField start=new DateField(box,"Bắt đầu nghỉ *",today().plusDays(1).atTime(8,0).toString(),false),end=new DateField(box,"Kết thúc nghỉ * (không gồm thời điểm này)",today().plusDays(1).atTime(17,0).toString(),false);
+        TextView policy=text("",12,MUTED,false);box.addView(policy);
+        TextInputEditText reason=input(box,"Lý do *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE),evidence=input(box,"Minh chứng đính kèm (JPG, PNG, PDF)","",InputType.TYPE_CLASS_TEXT);
+        evidence.setKeyListener(null);leaveEvidenceTarget=evidence;button(box,"Chọn giấy khám bệnh / minh chứng",false,()->{if(!evidenceUploading)leaveEvidencePicker.launch("*/*");});
+        Runnable update=()->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;String code=str(t,"typeCode");boolean maternity=code.equals("MATERNITY")||code.equals("THAI_SAN");policy.setText(maternity?"Chính sách trung tâm: nam tối đa "+options.optInt("maleDays",14)+" ngày lịch, nữ tối đa "+options.optInt("femaleMonths",6)+" tháng mỗi đơn. Cần minh chứng.":t.optBoolean("evidenceRequired")?"Loại nghỉ này cần tham chiếu giấy tờ minh chứng.":"Phép năm tính theo giờ làm việc được phân công, trừ quỹ khi được duyệt.");if(maternity){try{LocalDateTime from=LocalDateTime.parse(start.value);end.value=(str(options,"gender").equals("MALE")?from.plusDays(options.optInt("maleDays",14)):from.plusMonths(options.optInt("femaleMonths",6))).toString();end.edit.setText(time(end.value));}catch(Exception ignored){}}};
+        type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> p){}public void onItemSelected(android.widget.AdapterView<?> p,View v,int position,long id){update.run();}});
+        start.edit.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){}public void afterTextChanged(android.text.Editable e){update.run();}});
+        dialog("Nộp đơn nghỉ phép",box,"Gửi đơn",d->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;
+            if(start.value.isEmpty()||end.value.isEmpty()||end.value.compareTo(start.value)<=0){end.edit.setError("Giờ kết thúc phải sau bắt đầu");end.edit.requestFocus();return;}
+            if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}
+            if(evidenceUploading){toast("Đợi tải minh chứng xong");return;}if(t.optBoolean("evidenceRequired")&&value(evidence).isEmpty()){evidence.setError("Cần đính kèm minh chứng");evidence.requestFocus();return;}
+            write("/employee-requests/leave","POST",json("leaveTypeId",t.optLong("leaveTypeId"),"leaveStart",start.value,"leaveEnd",end.value,"reason",value(reason),"evidenceReference",value(evidence)),"Gửi đơn nghỉ phép để xét duyệt?",d);
+        });
+    }
+
     private void requests() {
         title("Đơn của tôi", "Theo dõi đề nghị cá nhân và kết quả xử lý.");
-        tabs(new String[] { "Điều chỉnh công", "Đơn OT", "Bổ sung công OT" },
-                new String[] { "regular", "ot", "supplement" });
+        tabs(new String[] { "Điều chỉnh công", "Đơn OT", "Bổ sung công OT", "Nghỉ phép", "Nghỉ việc" },
+                new String[] { "regular", "ot", "supplement", "leave", "resignation" });
+        if(category.equals("resignation")){ownResignations();return;}
+        if(category.equals("leave")){ownLeaveRequests();return;}
         range();
         if (category.equals("ot")) {
             ownOt();
@@ -1102,8 +1553,8 @@ public class EmployeeActivity extends AppCompatActivity {
                                                 .setMessage("Trạng thái: " + label(str(q, "status")) + "\nGiờ đề nghị: "
                                                         + time(str(q, "proposedStart")) + " → "
                                                         + time(str(q, "proposedEnd")) + "\nLý do: " + str(q, "reason")
-                                                        + "\nNgười tiếp nhận: " + str(q, "receiver") + "\nNgười xử lý: "
-                                                        + str(q, "processor") + "\nKết quả: "
+                                                        + "\nNgày gửi: " + utc(str(q, "submittedAt")) + "\nNgười tiếp nhận: " + str(q, "receiver") + "\nGiờ tiếp nhận: " + utc(str(q, "receivedAt")) + "\nNgười xử lý: "
+                                                        + str(q, "processor") + "\nGiờ xử lý: " + utc(str(q, "processedAt")) + "\nGiờ được duyệt: " + time(str(q, "acceptedStart")) + " → " + time(str(q, "acceptedEnd")) + "\nLý do điều chỉnh giờ: " + str(q, "adjustmentReason") + "\nKết quả: "
                                                         + str(q, "decisionReason"))
                                                 .setPositiveButton("Đóng", null).show();
                                     }));
@@ -1112,21 +1563,33 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
+    private void attendanceCandidatePages(String url, int candidatePage, JSONArray collected, Reply reply) {
+        fetch(url + "&page=" + candidatePage, data -> {
+            JSONArray rows = data.optJSONArray("items");
+            if (rows == null) throw new org.json.JSONException("Thiếu danh sách công từ máy chủ.");
+            for (int i = 0; i < rows.length(); i++) collected.put(rows.getJSONObject(i));
+            if (candidatePage + 1 < data.optInt("totalPages", 1)) {
+                attendanceCandidatePages(url, candidatePage + 1, collected, reply);
+            } else {
+                reply.accept(json("items", collected));
+            }
+        });
+    }
     private void attendanceCandidates() {
-        fetch("/api/attendance-workspace/records?mine=true&" + query(), data -> {
+        attendanceCandidatePages("/api/attendance-workspace/records?mine=true&from=" + from + "&to=" + to, 0, new JSONArray(), data -> {
             JSONArray items = data.optJSONArray("items");
             List<JSONObject> eligible = new ArrayList<>();
             List<String> names = new ArrayList<>();
             if (items != null)
                 for (int i = 0; i < items.length(); i++) {
                     JSONObject r = items.getJSONObject(i);
-                    if (r.optBoolean("canRequest")) {
+                    if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) {
                         eligible.add(r);
                         names.add(str(r, "workDate") + " · " + str(r, "shift"));
                     }
                 }
             if (names.isEmpty()) {
-                toast("Chưa có bản ghi đủ điều kiện trong trang/khoảng ngày hiện tại. Kiểm tra hạn gửi, trạng thái xác nhận và yêu cầu đang mở.");
+                toast("Không có công đủ điều kiện trong khoảng ngày đã chọn. Có thể bổ sung công cho lịch đã bắt đầu chưa có công, bổ sung giờ ra sau khi ca kết thúc hoặc điều chỉnh công đã xác nhận; bản ghi phải còn hạn, kỳ chưa khóa và chưa có yêu cầu đang mở.");
                 return;
             }
             new MaterialAlertDialogBuilder(this).setTitle("Chọn bản ghi công cá nhân")
@@ -1327,21 +1790,24 @@ public class EmployeeActivity extends AppCompatActivity {
     }
 
     private void attendanceProposal(JSONObject r) {
+        if("DA_XAC_NHAN".equals(str(r,"verificationStatus"))){toast("Công đã được xác nhận");return;}
         if (!r.optBoolean("canRequest")) {
             toast("Bản ghi không còn đủ điều kiện gửi yêu cầu.");
             return;
         }
         LinearLayout box = form();
-        boolean missing = !str(r, "verificationStatus").equals("DA_XAC_NHAN");
+        boolean unrecorded = r.isNull("attendanceId");
+        boolean confirmed = str(r,"verificationStatus").equals("DA_XAC_NHAN");
+        boolean missing = !unrecorded && !confirmed && !str(r,"actualStart").isEmpty() && str(r,"actualEnd").isEmpty();
         box.addView(text(
-                missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
-                        : "Đề xuất điều chỉnh công đã xác nhận. Công gốc chỉ thay đổi sau khi được duyệt.",
+                unrecorded ? "Bổ sung giờ vào và giờ ra thực tế cho lịch chưa có công. Không nhập giờ tương lai. Công chỉ được ghi sau khi duyệt." : missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
+                        : "Đề xuất điều chỉnh công. Công gốc chỉ thay đổi sau khi được duyệt.",
                 13, MUTED, false));
         Spinner result = new Spinner(this);
         result.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
                 new String[] { "Đi làm", "Vắng" }));
         result.setSelection(str(r, "attendanceResult").equals("VANG") ? 1 : 0);
-        result.setEnabled(!missing);
+        result.setEnabled(!missing && !unrecorded);
         box.addView(result);
         DateField start = new DateField(box, "Giờ vào đề nghị", str(r, "actualStart"), missing),
                 end = new DateField(box, "Giờ ra đề nghị", str(r, "actualEnd"), false);
@@ -1362,7 +1828,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     return;
                 }
                 write("/api/attendance-workspace/requests", "POST",
-                        json("type", missing ? "MISSING_CHECKOUT" : "CONFIRMED_CORRECTION", "attendanceId",
+                        json("type", unrecorded ? "MISSING_ATTENDANCE" : missing ? "MISSING_CHECKOUT" : confirmed ? "CONFIRMED_CORRECTION" : "UNCONFIRMED_CORRECTION", "scheduleId", r.optLong("scheduleId"), "attendanceId",
                                 r.optLong("attendanceId"), "actualStart",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : start.value, "actualEnd",
                                 result.getSelectedItemPosition() == 1 ? JSONObject.NULL : end.value,
@@ -1528,7 +1994,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 { "Ngày sinh", "birthDate" }, { "Điện thoại", "phone" }, { "Email", "email" },
                 { "Địa chỉ", "address" } })
             line(info, field[0], str(p, field[1]));
-        info.addView(text("Thông tin hồ sơ ở chế độ chỉ xem. Liên hệ HR khi cần cập nhật.", 12, MUTED, false));
+        info.addView(text("Bạn có thể cập nhật thông tin liên hệ. Thông tin nhân sự khác vui lòng liên hệ HR.", 12, MUTED, false));
+        button(info, "Chỉnh sửa hồ sơ", true, this::editProfile);
         LinearLayout income = card("Lương và phúc lợi");
         button(income, "Phiếu lương cá nhân đã công bố", false, () -> fetch("/api/me/payslips", data -> {
             JSONArray rows = data.optJSONArray("items");
@@ -1582,6 +2049,72 @@ public class EmployeeActivity extends AppCompatActivity {
                         }).show());
     }
 
+    private void editProfile() {
+        if (writing) return;
+        JSONObject p = session.profile();
+        LinearLayout box = form();
+        TextInputEditText email = input(box, "Email", str(p, "email"),
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS);
+        TextInputEditText phone = input(box, "Số điện thoại", str(p, "phone"), InputType.TYPE_CLASS_PHONE);
+        TextInputEditText address = input(box, "Địa chỉ", str(p, "address"),
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        TextView notice = text("", 13, 0xffa32b32, false);
+        box.addView(notice);
+        dialog("Chỉnh sửa hồ sơ cá nhân", box, "Lưu thay đổi", d -> {
+            if (writing) return;
+            String e = value(email), ph = value(phone).replaceAll("[\\s().-]", ""), a = value(address);
+            if (ph.startsWith("+84")) ph = "0" + ph.substring(3);
+            final String normalizedPhone = ph;
+            if (e.length() > 254 || (!e.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(e).matches())) {
+                email.setError("Email không hợp lệ"); email.requestFocus(); return;
+            }
+            if (!ph.matches("^(?:0[35789][0-9]{8})?$")) {
+                phone.setError("Nhập số điện thoại Việt Nam gồm 10 chữ số"); phone.requestFocus(); return;
+            }
+            if (a.length() > 500) {
+                address.setError("Địa chỉ tối đa 500 ký tự"); address.requestFocus(); return;
+            }
+            phone.setText(normalizedPhone);
+            email.setEnabled(false); phone.setEnabled(false); address.setEnabled(false);
+            notice.setTextColor(MUTED);
+            notice.setText("Đang lưu thay đổi…");
+            writing = true;
+            d.setCancelable(false);
+            d.getButton(-1).setEnabled(false);
+            d.getButton(-2).setEnabled(false);
+            String token = session.token();
+            executor.execute(() -> {
+                try {
+                    JSONObject updated = api.send("/api/me/profile", "PUT", token,
+                            json("email", e, "phone", normalizedPhone, "address", a));
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        session.signIn(token, updated);
+                        d.dismiss();
+                        toast("Đã cập nhật hồ sơ cá nhân.");
+                        render();
+                    });
+                } catch (Exception error) {
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        d.setCancelable(true);
+                        email.setEnabled(true); phone.setEnabled(true); address.setEnabled(true);
+                        notice.setTextColor(0xffa32b32);
+                        d.getButton(-1).setEnabled(true);
+                        d.getButton(-2).setEnabled(true);
+                        if (error instanceof HrmApi.ApiException && ((HrmApi.ApiException) error).status == 401) {
+                            d.dismiss(); session.clearSession(); signOutLocal(); return;
+                        }
+                        notice.setText(HrmApi.message(error));
+                        notice.postDelayed(() -> notice.setText(""), 10000);
+                    });
+                }
+            });
+        });
+    }
+
     private void changePassword() {
         LinearLayout box = form();
         TextInputEditText old = input(box, "Mật khẩu hiện tại", "",
@@ -1633,6 +2166,7 @@ public class EmployeeActivity extends AppCompatActivity {
     @Override
     protected void onDestroy() {
         ++generation;
+        if(notifications!=null)notifications.destroy();
         executor.shutdownNow();
         super.onDestroy();
     }

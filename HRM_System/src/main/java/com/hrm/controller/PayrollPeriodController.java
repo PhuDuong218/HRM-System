@@ -12,7 +12,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 
 @RestController
-@RequestMapping("/payroll-periods")
+@RequestMapping({"/payroll-periods", "/api/payroll-periods"})
 @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAuthority('PAYROLL_MANAGE')")
 public class PayrollPeriodController {
 

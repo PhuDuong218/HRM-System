@@ -10,6 +10,8 @@ import com.hrm.repository.PayrollLineRepository;
 import com.hrm.service.PayrollBatchService;
 import com.hrm.service.PayrollExecutionService;
 import com.hrm.service.PayrollPeriodService;
+import com.hrm.service.PersonnelScopeService;
+import com.hrm.model.PayrollDetail;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -38,6 +40,7 @@ class PayrollManagementAuthorizationTest {
     PayrollDetailRepository details;
     PayrollLineRepository lines;
     PayrollExecutionService execution;
+    PersonnelScopeService scope;
     PayrollBatchController batches;
     PayrollPeriodController periodController;
 
@@ -45,9 +48,10 @@ class PayrollManagementAuthorizationTest {
         service=mock(PayrollBatchService.class); periods=mock(PayrollPeriodService.class);
         details=mock(PayrollDetailRepository.class); lines=mock(PayrollLineRepository.class);
         execution=mock(PayrollExecutionService.class);
+        scope=mock(PersonnelScopeService.class);
         context=new AnnotationConfigApplicationContext();
         context.register(MethodSecurity.class);
-        context.registerBean(PayrollBatchController.class,()->new PayrollBatchController(service,execution,details,lines));
+        context.registerBean(PayrollBatchController.class,()->new PayrollBatchController(service,execution,details,lines,scope));
         context.registerBean(PayrollPeriodController.class,()->new PayrollPeriodController(periods));
         context.refresh();
         batches=context.getBean(PayrollBatchController.class);
@@ -106,5 +110,23 @@ class PayrollManagementAuthorizationTest {
         batches.lockBatch(1L,999L); batches.publishBatch(1L,999L);
         verify(service).lockBatch(1L,71L); verify(service).publishBatch(1L,71L);
         verify(service,never()).lockBatch(1L,999L); verify(service,never()).publishBatch(1L,999L);
+    }
+    @Test void hrSeesOnlyPayrollDetailsForAssignedEmployees() {
+        login("HR","PAYROLL_VIEW");
+        var allowed=mock(PayrollDetail.class);when(allowed.getEmployeeId()).thenReturn(1L);when(allowed.getPayrollDetailId()).thenReturn(11L);
+        var outside=mock(PayrollDetail.class);when(outside.getEmployeeId()).thenReturn(2L);when(outside.getPayrollDetailId()).thenReturn(12L);
+        when(details.findByBatchId(5L)).thenReturn(java.util.List.of(allowed,outside));
+        when(scope.employees()).thenReturn(java.util.List.of(1L));
+        var result=batches.getBatchDetails(5L).getBody();
+        assertNotNull(result);assertEquals(1,result.size());assertEquals(1L,result.get(0).getEmployeeId());
+        verify(lines,never()).findByPayrollDetailIdOrderByLineNoAsc(12L);
+    }
+    @Test void hrCannotRunWholeCenterPayrollOperations() {
+        login("HR","PAYROLL_MANAGE");
+        assertThrows(AccessDeniedException.class,()->batches.calculatePayroll(1L));
+        assertThrows(AccessDeniedException.class,()->batches.lockBatch(1L,null));
+        assertThrows(AccessDeniedException.class,()->batches.publishBatch(1L,null));
+        assertThrows(AccessDeniedException.class,()->batches.createAdjustment(1L,new AdjustmentBatchRequestDTO()));
+        verifyNoInteractions(service,execution);
     }
 }

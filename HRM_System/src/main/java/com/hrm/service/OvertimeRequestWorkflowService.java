@@ -142,6 +142,8 @@ public class OvertimeRequestWorkflowService {
         VerifiedActor actor = perms.requireOwner(principal, o.employee());
         check("DA_DUYET".equals(o.status()) && o.confirmedBy() == null && o.actualStart() != null
                 && o.actualEnd() != null, "Actual OT must be recorded and unconfirmed");
+        var correction=db.query("SELECT TOP(1) action FROM dbo.audit_logs WHERE target_table='overtime_requests' AND target_record_key=? AND action IN ('OT_REOPEN_CONFIRMATION','OT_ACTUAL','OT_ACTUAL_AMEND','OT_CONFIRM') ORDER BY occurred_at DESC,audit_id DESC",(rs,n)->rs.getString(1),Long.toString(overtimeId));
+        check(correction.isEmpty()||!"OT_REOPEN_CONFIRMATION".equals(correction.get(0)),"Complete the opened actual OT amendment before requesting overflow");
         check(windows != null && !windows.isEmpty(), "Overflow windows required");
         // Validate BEFORE sorting: Comparator.comparing(Window::start) otherwise
         // throws NullPointerException for a null entry or null start time.
@@ -194,7 +196,7 @@ public class OvertimeRequestWorkflowService {
         check(o.employee() == employee, "Workflow request owner mismatch");
         var actor = perms.active(principal);
         if (actor.employeeId() == null || actor.employeeId() != employee)
-            perms.requireApprove(principal, employee, o.start().toLocalDate());
+            perms.requireView(principal, employee, o.start().toLocalDate());
         else
             perms.requireOwner(principal, employee);
         return db.queryForList(

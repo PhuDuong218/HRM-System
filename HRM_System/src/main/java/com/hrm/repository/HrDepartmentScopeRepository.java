@@ -1,6 +1,8 @@
 package com.hrm.repository;
 
 import com.hrm.dto.HrScopeDTOs.ScopeView;
+import com.hrm.dto.HrScopeDTOs.ActiveDepartment;
+import com.hrm.dto.HrScopeDTOs.DepartmentOption;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -30,6 +32,60 @@ public class HrDepartmentScopeRepository {
 
     public List<ScopeView> all() {
         return jdbc.query("SELECT * FROM dbo.hr_department_scopes ORDER BY scope_id", MAPPER);
+    }
+
+    public List<ActiveDepartment> activeDepartments(long accountId) {
+        return jdbc.query("""
+            SELECT DISTINCT d.department_id, d.department_name
+            FROM dbo.hr_department_scopes hs
+            JOIN dbo.departments d ON d.department_id=hs.department_id
+            WHERE hs.hr_account_id=? AND hs.revoked_at IS NULL
+              AND hs.effective_from<=SYSUTCDATETIME()
+              AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME())
+            ORDER BY d.department_name, d.department_id
+            """, (r, i) -> new ActiveDepartment(r.getLong("department_id"), r.getString("department_name")), accountId);
+    }
+
+    public List<DepartmentOption> departmentOptions(long accountId) {
+        return jdbc.query("""
+            SELECT d.department_id, d.department_name, d.is_active,
+              CASE WHEN EXISTS (SELECT 1 FROM dbo.hr_department_scopes hs
+                WHERE hs.hr_account_id=? AND hs.department_id=d.department_id AND hs.revoked_at IS NULL
+                  AND hs.effective_from<=SYSUTCDATETIME()
+                  AND (hs.effective_to IS NULL OR hs.effective_to>SYSUTCDATETIME()))
+              THEN 1 ELSE 0 END AS assigned
+            FROM dbo.departments d ORDER BY d.department_name, d.department_id
+            """, (r, i) -> new DepartmentOption(r.getLong("department_id"), r.getString("department_name"),
+                r.getBoolean("is_active"), r.getBoolean("assigned")), accountId);
+    }
+
+    public List<ScopeView> currentScopesForUpdate(long accountId, LocalDateTime now) {
+        return jdbc.query("""
+            SELECT * FROM dbo.hr_department_scopes WITH (UPDLOCK, HOLDLOCK)
+            WHERE hr_account_id=? AND revoked_at IS NULL AND effective_from<=?
+              AND (effective_to IS NULL OR effective_to>?) ORDER BY department_id, scope_id
+            """, MAPPER, accountId, now, now);
+    }
+
+    public List<Long> futureDepartmentIds(long accountId, LocalDateTime now) {
+        return jdbc.queryForList("""
+            SELECT DISTINCT department_id FROM dbo.hr_department_scopes WITH (UPDLOCK, HOLDLOCK)
+            WHERE hr_account_id=? AND revoked_at IS NULL AND effective_from>?
+            """, Long.class, accountId, now);
+    }
+
+    public void lockAccount(long accountId) {
+        Integer result = jdbc.queryForObject("""
+            SET NOCOUNT ON;
+            DECLARE @result int;
+            EXEC @result = sys.sp_getapplock
+              @Resource=?, @LockMode='Exclusive', @LockOwner='Transaction', @LockTimeout=10000;
+            SELECT @result;
+            """, Integer.class, "hrscope-account:" + accountId);
+        if (result == null || result < 0) throw new IllegalStateException("Không thể khóa phạm vi HR");
+        // Serialize scope writes with account status and role changes as well.
+        jdbc.query("SELECT account_id FROM dbo.accounts WITH (UPDLOCK, HOLDLOCK) WHERE account_id=?",
+                rs -> { }, accountId);
     }
 
     public ScopeView byId(long id) {
@@ -69,6 +125,19 @@ public class HrDepartmentScopeRepository {
         Integer n = jdbc.queryForObject("""
                 SELECT COUNT(*) FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id
                 WHERE a.account_id=? AND r.role_code='HR'
+                """, Integer.class, accountId);
+        return n != null && n == 1;
+    }
+
+    public boolean accountExists(long accountId) {
+        Integer count = jdbc.queryForObject("SELECT COUNT(*) FROM dbo.accounts WHERE account_id=?", Integer.class, accountId);
+        return count != null && count == 1;
+    }
+
+    public boolean isActiveHrAccount(long accountId) {
+        Integer n = jdbc.queryForObject("""
+                SELECT COUNT(*) FROM dbo.accounts a JOIN dbo.roles r ON a.role_id=r.role_id
+                WHERE a.account_id=? AND a.is_active=1 AND r.role_code='HR'
                 """, Integer.class, accountId);
         return n != null && n == 1;
     }

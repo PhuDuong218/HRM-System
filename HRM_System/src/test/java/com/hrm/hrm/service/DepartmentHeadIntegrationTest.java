@@ -113,11 +113,17 @@ class DepartmentHeadIntegrationTest {
         assertNull(departments.getDepartment(department).getHeadEmployeeId());
     }
 
-    @Test void refusesFutureAndZeroLengthAndDuplicateAppointments() {
-        fails(400,()->appoint(employeeA,day.plusDays(1),null));
+    @Test void refusesZeroLengthAndDuplicateAppointments() {
         fails(400,()->appoint(employeeA,day.minusDays(10),null));
         appoint(employeeA,day.minusDays(2),null);
         fails(409,()->appoint(employeeA,day,null));
+    }
+
+    @Test void futureAppointmentDoesNotChangeCurrentHeadBeforeEffectiveDay(){
+        appoint(employeeA,day.plusDays(1),null);
+        assertNull(service.getHead(department,day,principal));
+        assertEquals(employeeA,service.getHead(department,day.plusDays(1),principal).employeeId());
+        fails(409,()->appoint(employeeB,day.plusDays(2),position));
     }
 
     @Test void refusesInactiveDepartmentAndRetiredEmployee() {

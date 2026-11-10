@@ -133,6 +133,14 @@ public Page<PositionDTO> getPositionsPage(int page, int size) {
 
 @Transactional(readOnly = true)
 public Page<PositionDTO> searchPositions(String keyword, Boolean active, int page, int size) {
+    if(keyword!=null&&!keyword.isBlank()){
+        PagingUtils.create(page,size,Sort.unsorted());
+        var rows=positionRepository.findAll(Sort.by(Sort.Direction.DESC,"positionId")).stream()
+            .filter(row->active==null||active.equals(row.getIsActive()))
+            .filter(row->com.hrm.util.PersonnelSearch.matches(keyword,row.getPositionCode(),row.getPositionName()))
+            .map(this::convertToDTO).toList();
+        return com.hrm.util.PersonnelSearch.page(rows,page,size);
+    }
     String pattern = keyword == null || keyword.isBlank() ? null : "%" + keyword.trim().toLowerCase(Locale.ROOT) + "%";
     return positionRepository.search(pattern, active,
             PagingUtils.create(

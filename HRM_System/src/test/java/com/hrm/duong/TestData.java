@@ -10,6 +10,12 @@ import org.springframework.test.util.ReflectionTestUtils;
 import static org.junit.jupiter.api.Assertions.*;
 
 final class TestData {
+    static com.hrm.service.DecisionNumberService numbers(){
+        var numbers=org.mockito.Mockito.mock(com.hrm.service.DecisionNumberService.class);
+        org.mockito.Mockito.when(numbers.next(org.mockito.ArgumentMatchers.any())).thenAnswer(call->switch((DecisionType)call.getArgument(0)){case KHEN_THUONG->"KT-000001";case KY_LUAT->"KL-000001";case BOI_THUONG->"BT-000001";});
+        return numbers;
+    }
+
     static final LocalDate TODAY=LocalDate.of(2026,10,26);
     static final Clock CLOCK=Clock.fixed(Instant.parse("2026-10-26T03:00:00Z"),ZoneId.of("Asia/Bangkok"));
     static BigDecimal money(String s){return new BigDecimal(s);}

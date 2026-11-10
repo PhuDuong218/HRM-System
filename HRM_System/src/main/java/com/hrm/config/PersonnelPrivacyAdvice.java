@@ -19,8 +19,8 @@ import tools.jackson.databind.json.JsonMapper;
 /** Enforces private employee fields in HTTP responses, including historical audit JSON. */
 @ControllerAdvice(basePackages="com.hrm.controller")
 public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements ResponseBodyAdvice<Object> {
- private final PersonnelScopeService scope;private final JdbcTemplate jdbc;private final JsonMapper json=JsonMapper.builder().build();
- public PersonnelPrivacyAdvice(PersonnelScopeService scope,JdbcTemplate jdbc){this.scope=scope;this.jdbc=jdbc;}
+ private final com.hrm.service.AuditReadPolicy auditPolicy;private final PersonnelScopeService scope;private final JdbcTemplate jdbc;private final JsonMapper json=JsonMapper.builder().build();
+ public PersonnelPrivacyAdvice(PersonnelScopeService scope,JdbcTemplate jdbc,com.hrm.service.AuditReadPolicy auditPolicy){this.scope=scope;this.jdbc=jdbc;this.auditPolicy=auditPolicy;}
  @Override public boolean supports(MethodParameter parameter,Type type,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object afterBodyRead(Object body,HttpInputMessage message,MethodParameter parameter,Type type,Class<? extends HttpMessageConverter<?>> converter){
   var actor=PersonnelScopeService.current();if(actor==null)return body;
@@ -28,30 +28,45 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
    if(body instanceof EmployeeRequestDTO r && r.getDepartmentId()!=null)scope.department(r.getDepartmentId());
    if(body instanceof EmployeeTransferRequestDTO r && r.departmentId()!=null)scope.department(r.departmentId());
    if(body instanceof LeaveEntitlementRequestDTO r && r.getEmployeeId()!=null)scope.employee(r.getEmployeeId(),false);
+   if(body instanceof ContractCreateRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
+   if(body instanceof ContractRenewRequest r && r.newContract()!=null && r.newContract().employeeId()!=null)scope.managedEmployee(r.newContract().employeeId());
+   if(body instanceof DecisionRequest r && r.employeeId()!=null)scope.managedEmployee(r.employeeId());
   }
   var attrs=RequestContextHolder.getRequestAttributes();if(!(attrs instanceof ServletRequestAttributes servlet))return body;
   var matcher=java.util.regex.Pattern.compile("^/employees/(\\d+)(?:/contact)?$").matcher(servlet.getRequest().getRequestURI());
   if(!matcher.matches())return body;long id=PersonnelPolicyWebConfiguration.recordId(matcher.group(1));
   if(body instanceof EmployeeUpdateRequestDTO r){
-   var existing=jdbc.queryForList("SELECT email,phone,identity_number FROM dbo.employees WHERE employee_id=?",id);
+   if(!Objects.equals(actor.employeeId(),id))scope.managedEmployee(id);
+   if(!scope.canReadPrivate(id))r.ignorePrivateChanges();
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasEmail(),r.getEmail(),"Email");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasIdentityNumber(),r.getIdentityNumber(),"CCCD/CMND");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasAddress(),r.getAddress(),"Địa chỉ");
+   com.hrm.service.EmployeeWriteRules.identity(r.getIdentityNumber());
+   var existing=jdbc.queryForList("SELECT email,phone,identity_number,address FROM dbo.employees WHERE employee_id=?",id);
    if(!existing.isEmpty()){
     var old=existing.get(0);
-    if(Objects.equals(actor.employeeId(),id)&&(!Objects.equals(clean(r.getEmail()),clean((String)old.get("email")))||!Objects.equals(clean(r.getPhone()),clean((String)old.get("phone")))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
+    if(Objects.equals(actor.employeeId(),id)&&((r.hasEmail()&&!Objects.equals(clean(r.getEmail()),clean((String)old.get("email"))))||(r.hasPhone()&&!Objects.equals(clean(r.getPhone()),clean((String)old.get("phone"))))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
     if(Objects.equals(actor.employeeId(),id)) {
      if(r.getIdentityNumber()!=null&&!Objects.equals(clean(r.getIdentityNumber()),clean((String)old.get("identity_number"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
-    } else if(r.getIdentityNumber()!=null)throw privateWrite();
-    r.setIdentityNumber((String)old.get("identity_number"));
+     if(r.getAddress()!=null&&!Objects.equals(clean(r.getAddress()),clean((String)old.get("address"))))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không được tự sửa thông tin liên hệ");
+    }
    }
   }
-  if(body instanceof EmployeeContactPatchDTO r&&!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))throw privateWrite();
+  if(body instanceof EmployeeContactPatchDTO r){
+   if(!Objects.equals(actor.employeeId(),id)&&(r.getAddress()!=null||r.getIdentityNumber()!=null))scope.managedEmployee(id);
+   if(!scope.canReadPrivate(id))r.ignorePrivateChanges();
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasEmail(),r.getEmail(),"Email");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasIdentityNumber(),r.getIdentityNumber(),"CCCD/CMND");
+   com.hrm.service.EmployeeWriteRules.requiredIfPresent(r.hasAddress(),r.getAddress(),"Địa chỉ");
+   com.hrm.service.EmployeeWriteRules.identity(r.getIdentityNumber());
+  }
   return body;
  }
  private static String clean(String v){return v==null||v.isBlank()?null:v.trim();}
- private static ResponseStatusException privateWrite(){return new ResponseStatusException(HttpStatus.FORBIDDEN,"CCCD và địa chỉ nhà chỉ dành cho chủ hồ sơ");}
  @Override public boolean supports(MethodParameter parameter,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object beforeBodyWrite(Object body,MethodParameter parameter,MediaType type,Class<? extends HttpMessageConverter<?>> converter,ServerHttpRequest request,ServerHttpResponse response){
   var actor=PersonnelScopeService.current();
-  if(body instanceof EmployeeDetailDTO detail){boolean own=actor!=null&&Objects.equals(actor.employeeId(),detail.getEmployeeId());if(!own){detail.setAddress(null);detail.setIdentityNumber(null);}return detail;}
+  if(body instanceof EmployeeDetailDTO detail){if(!scope.canReadPrivate(detail.getEmployeeId())){detail.setAddress(null);detail.setIdentityNumber(null);}return detail;}
   String controller=parameter.getContainingClass().getSimpleName();
   if(!Set.of("G1AuditController","PersonnelAuditController","AuditLogController").contains(controller))return body;
   if(body instanceof Page<?> page)return page.map(row->scrubAudit(row,request));return body;
@@ -61,9 +76,6 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
   var actor=PersonnelScopeService.current();var query=org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams();
   String table=Objects.toString(map.getOrDefault("targetTable",query.getFirst("targetTable")),"");
   String record=Objects.toString(map.getOrDefault("targetRecordKey",map.getOrDefault("recordKey",query.getFirst("recordId"))),"");
-  boolean own=actor!=null&&"employees".equals(table)&&Objects.equals(String.valueOf(actor.employeeId()),record);
-  if(!own)for(String field:List.of("beforeDataJson","afterDataJson")){Object value=map.get(field);if(value instanceof String text){try{map.put(field,json.writeValueAsString(redact(json.readValue(text,Object.class))));}catch(RuntimeException ex){map.put(field,null);}}}
-  return map;
+  return auditPolicy.row(table,record,map);
  }
- private Object redact(Object value){if(value instanceof Map<?,?> map){var result=new LinkedHashMap<String,Object>();map.forEach((k,v)->{String key=k.toString(),normalized=key.replace("_","").toLowerCase(Locale.ROOT);result.put(key,Set.of("identitynumber","address","homeaddress").contains(normalized)?"[REDACTED]":redact(v));});return result;}if(value instanceof Collection<?> list)return list.stream().map(this::redact).toList();return value;}
 }

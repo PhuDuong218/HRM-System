@@ -11,7 +11,7 @@ public interface PayrollStatisticsRow {
 
     LocalDate getPeriodStart();
 
-    LocalDate getPeriodEndExclusive();
+    LocalDate getPeriodEnd();
 
     Long getBatchId();
 

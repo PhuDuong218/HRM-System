@@ -29,6 +29,11 @@ public class EmployeeDecisionController {
         return service.get(id);
     }
 
+    @GetMapping("/reward-levels")
+    public java.util.List<DecisionPayrollPolicy.RewardLevel> rewardLevels() {
+        return service.rewardLevels();
+    }
+
     @GetMapping
     public PageResponse<DecisionResponse> list(@RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) DecisionApprovalStatus status,
@@ -47,6 +52,8 @@ public class EmployeeDecisionController {
         service.delete(id, reason);
     }
 
+    @PostMapping("/{id}/withdraw") public DecisionResponse withdraw(@PathVariable Long id,@Valid @RequestBody DecisionActionRequest body){return service.withdraw(id,body.reason());}
+    @GetMapping("/{id}/history") public Object history(@PathVariable Long id){return service.decisionHistory(id);}
     @PostMapping("/{id}/approve")
     public DecisionResponse approve(@PathVariable Long id, @Valid @RequestBody DecisionActionRequest r) {
         return service.approve(id, r);

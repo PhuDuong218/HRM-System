@@ -1,0 +1,65 @@
+﻿BO DATABASE HOP NHAT HRM CENTER - 04/11/2026
+
+1. FILE CHINH
+HRM_CENTER_FULL.sql: chay 1 file nay la du; khong chay lai cac file 01..05 sau do.
+Cac file 01..05 la ban tach de doi chieu, khong phai buoc bo sung sau file tong.
+
+2. CACH CHAY TREN SSMS
+- Ket noi SQL Server dang dung.
+- Mo HRM_CENTER_FULL.sql.
+- BAT Query > SQLCMD Mode. Bat buoc vi script dung :ON ERROR EXIT va :setvar.
+- Nhan Execute/F5; doi dong PASS o cuoi.
+- Script mac dinh tao database MOI ten hrm_center_full.
+- Neu DB da ton tai: DUNG, khong ghi de, khong DROP/TRUNCATE du lieu.
+- Khong chay tren hrm_db hien tai. Khong can ghep/chay lai 5 file dump cu.
+- Neu muon doi ten, thay TAT CA cac dong :setvar DatabaseName "hrm_center_full" thanh cung mot ten moi.
+- Cac duong dan mdf/ldf va SQL LOGIN cua may cac thanh vien da loai bo.
+- Script co index OPTIMIZE_FOR_SEQUENTIAL_KEY: dung SQL Server 2019+; da kiem chung tren instance SQL Server local hien tai.
+
+3. KET NOI BACKEND
+Dung databaseName=hrm_center_full trong spring.datasource.url cua cau hinh local (hoac bien moi truong SPRING_DATASOURCE_URL). Giu nguyen server, user/password SQL Server thuc te cua ban. Neu profile hrm-db ghi de URL, override URL bang command-line/SPRING_DATASOURCE_URL theo cau hinh du an. Khoi dong lai Backend, F5 frontend va dang nhap lai.
+Chua thay cau hinh Backend/server dang chay; hrm_db cu van nguyen.
+Khong tao SQL LOGIN/USER, khong cap db_owner. Tai khoan ket noi SQL can co quyen tren DB moi.
+
+4. TAI KHOAN DEMO
+Mat khau chung: Demo@2026!
+- demo.admin: ADMIN, quan ly toan bo.
+- demo.hr: HR; pham vi DUOC CAP la DT va TV, khong tu co quyen quan ly phong HCNS du tai khoan nay lam viec tai HCNS.
+- demo.head.dt: truong phong Dao tao (role EMPLOYEE, chuc vu TRUONG_PHONG).
+- demo.head.tv: truong phong Tu van.
+- demo.head.hcns / demo.head.kt / demo.head.cntt: truong phong cac phong con lai.
+- demo.emp008 den demo.emp032: nhan vien.
+Chi la tai khoan/CCCD/dia chi du lieu GIA LAP. Khong dung mat khau demo cho he thong that.
+
+5. QUAN HE DU LIEU
+- employee_code DEMO001..DEMO032 la khoa tra cuu; khong phu thuoc ID auto-increment.
+- employees -> employee_assignments -> departments + positions: moi nguoi dang lam dung 1 phan cong hien tai; moi phong co 1 truong phong.
+- DEMO009 co lich su chuyen tu TV sang DT ngay01/01/2025, khong ghi de lich su.
+- accounts -> employees + roles -> role_permissions -> permissions; hr_department_scopes quan ly pham vi HR.
+- employees -> contracts -> contract_types -> contract_salary_terms; moi nguoi co hop dong hien tai va dieu khoan luong.
+- employees -> employee_qualifications -> qualification_levels: moi nguoi co1bang chinh.
+- leave_types -> g2_leave_policies + personnel_leave_rules -> leave_entitlements; phep nam96gio trong ky [01/01/nam,01/01/nam sau).
+- work_shifts -> work_shift_breaks -> work_schedules -> work_schedule_breaks -> attendance_records -> attendance_actual_breaks.
+- Ca ngay08-17, nghi12-13. Lich14ngay truoc den14ngay sau ngay chay, thu2..thu6. Chi tao cong da xac nhan cho ngay da qua.
+- Don DEMO-LEAVE-9 (DEMO009/DT) va DEMO-LEAVE-10 (DEMO010/TV) dang cho truong phong duyet cap1. HR DT/TV duyet cuoi. Chua tru quy phep khi dang cho.
+- Don DEMO-RESIGN-011 dang cho, ngay lam cuoi du kien sau45ngay; khong tu cho nhan vien nghi viec.
+- DEMO-OT-009 la tang ca cho duyet; quyet dinh khen thuong DEMO-KT-009 chua duyet, khong tu cong tien.
+- payroll_periods -> payroll_batches(NHAP) -> payroll_details -> payroll_snapshots: du32nhan vien. Chua co payroll_lines/phieu luong cong bo; can dung UI tinh luong, ra soat, chot va cong bo. Khong gia lap thanh toan, khong khang dinh cong thuc tien da duoc nghiem thu.
+- audit_logs co lich su khoi tao32ho so de tra cuu. OTP/password_recovery va bang lich su thuc thi co the trong cho den khi dung nghiep vu; khong chen ma OTP hay lich su gia.
+
+6. DOI CHIEU NGUON
+57bang la hop cua5dump, moi bang chi duoc tao1lan.
+SCHEMA_SOURCES.json ghi nguon chon tung bang: Viet cho accounts/quyen/khoi phuc, Duong cho hop dong/phu cap/quyet dinh, Nhi cho lich/cong/OT, Phuong cho luong, XuanAnh cho nhan su/don tu/quy phep.
+2bang khoang nghi dung khoa break_id cua Nhi, khong them cot identity thu2 tu ban XuanAnh. API hien tai da doi chieu.
+5dump khong chua trigger; 59trigger duoc doi chieu/xuat tu hrm_db local dang co, khong xuat du lieu ca nhan. Them migration016trang thaiDA_HUY va017ngayhieuluc theo source hien tai.
+Khong import du lieu cu, hash mat khau cu, SQL user/role capquyen may khac, duong dan file database may khac.
+
+7. KIEM CHUNG
+- Chay tron bo tren hrm_center_full_accept_1104: PASS.
+- 57bang,59trigger,168FK,92CHECK,282index; FK/CHECK bat va trusted, DBCC CHECKCONSTRAINTS khong loi.
+- 32nhan vien,32tai khoan,33phan cong,32hop dong,32bang cap,32quy phep; ngaykiemtra04/11/2026 tao672lich va320bancong. So lich/cong thay doi theo ngay chay.
+- 3don nhan vien,1donOT,1quyetdinhkhenthuongdangcho;32dongluongnhap.
+- Spring Boot smoke test: dangnhapdemo.admin/demo.hr/demo.head.dt,docAPI cacmodule,chanHRngoai phamvi,nhan dien truongphong: PASS.
+- Chua test moi thao tac CRUD/thoi gian/dongthoi tren DBmoi. Khong cam ket moi nghiepvu deuPASS chi vi DBtaothanhcong.
+- 2database kiemchung duoc giu de doi chieu: hrm_center_full_verify_1104 va hrm_center_full_accept_1104. Khong tu xoa chung hay DBcu.
+- Chua git add/commit/push bo nay.

@@ -36,7 +36,7 @@ public class LeaveTypeController {
         this.writes = writes;
     }
 
-    @GetMapping
+    @GetMapping(params={"!keyword","!active"})
     public Page<LeaveTypeDTO> getAllLeaveTypes(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size, Principal p) {
         access.actor(p);
@@ -70,5 +70,13 @@ public class LeaveTypeController {
             service.deleteLeaveType(id);
             return id;
         }, Long::longValue);
+    }
+
+    @GetMapping
+    public Page<LeaveTypeDTO> search(@RequestParam(defaultValue="0") int page,
+            @RequestParam(defaultValue="10") int size, @RequestParam(required=false) String keyword,
+            @RequestParam(required=false) Boolean active, Principal p) {
+        access.actor(p);
+        return service.searchLeaveTypes(keyword,active,page,size);
     }
 }

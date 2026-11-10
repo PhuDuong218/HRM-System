@@ -41,6 +41,7 @@ public class ScheduleStateWriteService {
     }
 
     private ScheduleStateService.State transition(AuthenticatedAccount actor, long id, String reason, boolean lock) {
+        if(actor!=null&&"EMPLOYEE".equals(actor.roleCode()))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ ADMIN/HR có quyền khóa hoặc mở khóa sửa lịch");
         validateReason(reason);
         if (id <= 0)
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "ID lịch không hợp lệ");
@@ -78,6 +79,7 @@ public class ScheduleStateWriteService {
         ScheduleView schedule=schedules.get(id);
         permissions.requireCreate(actor,schedule.employeeId(),schedule.plannedStart());
         var state=states.current(id);
+        if(actor!=null&&"EMPLOYEE".equals(actor.roleCode())&&state!=ScheduleStateService.State.ACTIVE)throw new ResponseStatusException(HttpStatus.CONFLICT,"Lịch đã khóa hoặc đã hủy; trưởng phòng không được thay đổi");
         if(state==ScheduleStateService.State.CANCELLED)throw new ResponseStatusException(HttpStatus.CONFLICT,"Lịch đã được hủy");
         if(!LocalDateTime.now(clock).isBefore(schedule.plannedStart()))
             throw new ResponseStatusException(HttpStatus.CONFLICT,"Lịch đã bắt đầu, không được hủy lịch");

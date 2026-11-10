@@ -1,3 +1,11 @@
+import {MyEmployment} from '../../shared/my-employment';
+import {AuthService} from '../../services/auth.service';
+import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import {ActionDialogService} from '../../shared/ui/action-dialog';
+import {EditFormDirective} from '../../shared/edit-form.directive';
+import {HrmNotice} from '../../shared/ui/notice';
+import {PageHeader} from '../../shared/page-header';
+import {RowViewDirective} from '../../shared/row-view.directive';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpErrorResponse } from '@angular/common/http';
 import { employmentApiError } from '../../shared/employment-api-error';
@@ -28,12 +36,46 @@ type Action = 'approve' | 'reject';
 @Component({
   selector: 'app-decisions',
   standalone: true,
-  imports: [FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[MyEmployment,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,RowViewDirective,FormsModule, TranslatePipe, Pagination, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './decisions.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
 export class DecisionsPage implements OnInit {
+ readonly auth=inject(AuthService);
+ mine=false;
+ get canViewMine(){return this.auth.profile()?.role==='HR';}
+ selectPersonal(value:string){if(value==='mine'&&this.canViewMine)this.mine=true;}
+
+ private actionDialogInPage=inject(ActionDialogService);
+
   private api = inject(DecisionService);
+  rewardLevels: { code: string; label: string; amount: number }[] = [];
+  rewardLoading = false;
+  rewardLoadError = false;
+
+  get paidReward(): boolean {
+    return this.form.decisionType === 'KHEN_THUONG' && this.form.payrollEffect === 'ADD';
+  }
+
+  get savedRewardAmount(): number | null {
+    return this.editing?.decisionType === 'KHEN_THUONG' && this.editing.payrollEffect === 'ADD'
+      ? this.editing.amount : null;
+  }
+
+  get rewardAmount(): number | null {
+    return this.form.rewardCode
+      ? this.rewardLevels.find(level => level.code === this.form.rewardCode)?.amount ?? null
+      : this.savedRewardAmount;
+  }
+
+  loadRewardLevels(): void {
+    this.rewardLoading = true;
+    this.rewardLoadError = false;
+    this.api.rewardLevels().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: levels => { this.rewardLevels = levels; this.rewardLoading = false; },
+      error: () => { this.rewardLoading = false; this.rewardLoadError = true; },
+    });
+  }
   private periodsApi = inject(AllowanceService);
   private personnel = inject(EmployeeService);
   private destroyRef = inject(DestroyRef);
@@ -54,6 +96,7 @@ export class DecisionsPage implements OnInit {
     CHO_DUYET: 'Chờ duyệt',
     DA_DUYET: 'Đã duyệt',
     TU_CHOI: 'Từ chối',
+    DA_THU_HOI: 'Đã thu hồi',
   };
   readonly effectLabels: Record<DecisionPayrollEffect, string> = {
     NONE: 'Không ảnh hưởng lương',
@@ -105,6 +148,7 @@ export class DecisionsPage implements OnInit {
   actionReason = '';
 
   selectedDecision: DecisionResponse | null = null;
+  decisionHistory:{occurredAt:string;action:string;reason:string;actor:string}[]=[];historyError='';
   detailLoading = false;
   detailError = '';
   private detailRequestVersion = 0;
@@ -160,6 +204,8 @@ export class DecisionsPage implements OnInit {
   }
 
   private fail(error: HttpErrorResponse, fallback: string): string {
+    const detail=error.error?.loi_chi_tiet??error.error?.detail;
+    if(error.status===403&&typeof detail==='string'&&detail.trim())return detail;
     return employmentApiError(error, fallback);
   }
 
@@ -192,6 +238,7 @@ export class DecisionsPage implements OnInit {
   }
 
   applyFilter(employee: string, status: string): void {
+    if(employee==='mine'&&this.canViewMine){this.mine=true;return;}
     const employeeId = Number(employee);
     this.filterEmployee = employee && Number.isInteger(employeeId) && employeeId > 0 ? employeeId : null;
     this.filterStatus = status as DecisionApprovalStatus | '';
@@ -214,6 +261,7 @@ export class DecisionsPage implements OnInit {
       employeeId: 0,
       decisionNumber: '',
       decisionType: 'KHEN_THUONG',
+      rewardCode: null,
       content: '',
       issuedDate: '',
       payrollEffect: 'NONE',
@@ -231,6 +279,7 @@ export class DecisionsPage implements OnInit {
     this.error = '';
     this.message = '';
     this.showForm = true;
+    this.loadRewardLevels();
   }
 
   openEdit(row: DecisionResponse): void {
@@ -242,6 +291,7 @@ export class DecisionsPage implements OnInit {
       employeeId: row.employeeId,
       decisionNumber: row.decisionNumber,
       decisionType: row.decisionType,
+      rewardCode: null,
       content: row.content,
       issuedDate: row.issuedDate,
       payrollEffect: row.payrollEffect,
@@ -253,6 +303,7 @@ export class DecisionsPage implements OnInit {
     this.error = '';
     this.message = '';
     this.showForm = true;
+    if (row.decisionType === 'KHEN_THUONG') this.loadRewardLevels();
   }
 
   cancelForm(): void {
@@ -263,6 +314,7 @@ export class DecisionsPage implements OnInit {
   }
 
   onEffectChange(): void {
+    if (!this.paidReward) this.form.rewardCode = null;
     if (this.form.payrollEffect === 'NONE') {
       this.form.amount = null;
       this.form.applyDate = null;
@@ -275,12 +327,13 @@ export class DecisionsPage implements OnInit {
     const amountText = form.amount === null || form.amount === undefined ? '' : String(form.amount);
     const body: DecisionRequest = {
       employeeId: Number(form.employeeId),
-      decisionNumber: form.decisionNumber.trim(),
+      decisionNumber: this.editing ? form.decisionNumber.trim() : '',
       decisionType: form.decisionType,
       content: form.content.trim(),
       issuedDate: form.issuedDate,
       payrollEffect: form.payrollEffect,
-      amount: form.payrollEffect === 'NONE' ? null : (form.amount === null ? null : Number(form.amount)),
+      amount: form.payrollEffect === 'NONE' || this.paidReward ? null : (form.amount === null ? null : Number(form.amount)),
+      rewardCode: this.paidReward ? form.rewardCode || null : null,
       applyDate: form.payrollEffect === 'NONE' ? null : (form.applyDate || null),
       reason: form.reason.trim(),
       disciplineForm: form.disciplineForm, violationDate: form.violationDate, salaryIncreaseDelayMonths: form.salaryIncreaseDelayMonths,
@@ -302,7 +355,7 @@ export class DecisionsPage implements OnInit {
       this.error = 'Vui lòng chọn nhân viên.';
       return;
     }
-    if (!body.decisionNumber || !/^[A-Za-z0-9_-]+$/.test(body.decisionNumber) || body.decisionNumber.length > 50) {
+    if (this.editing && (!body.decisionNumber || !/^[A-Za-z0-9_-]+$/.test(body.decisionNumber) || body.decisionNumber.length > 50)) {
       this.error = 'Số quyết định chỉ gồm chữ không dấu, số, _ hoặc -, tối đa 50 ký tự.';
       return;
     }
@@ -319,7 +372,11 @@ export class DecisionsPage implements OnInit {
       return;
     }
     if (body.payrollEffect !== 'NONE') {
-      if (!/^\d{1,15}(\.\d{1,4})?$/.test(amountText) || body.amount === null || !(body.amount > 0)) {
+      if (this.paidReward && this.rewardAmount === null) {
+        this.error = 'Vui lòng chọn hạng thưởng đã được cấu hình.';
+        return;
+      }
+      if (!this.paidReward && (!/^\d{1,15}(\.\d{1,4})?$/.test(amountText) || body.amount === null || !(body.amount > 0))) {
         this.error = 'Số tiền phải lớn hơn 0, tối đa 15 chữ số nguyên và 4 chữ số thập phân.';
         return;
       }
@@ -354,9 +411,9 @@ export class DecisionsPage implements OnInit {
     );
   }
 
-  remove(row: DecisionResponse): void {
+  async remove(row: DecisionResponse): Promise<void> {
     if (this.saving || row.approvalStatus !== 'CHO_DUYET') return;
-    const reason = window.prompt('Nhập lý do xóa quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):');
+    const reason = (await this.actionDialogInPage.prompt('Nhập lý do thu hồi quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):'));
     if (reason === null) return;
     if (!reason.trim()) {
       this.error = 'Vui lòng nhập lý do.';
@@ -366,17 +423,18 @@ export class DecisionsPage implements OnInit {
       this.error = 'Lý do không được vượt quá 500 ký tự.';
       return;
     }
-    if (!window.confirm('Xóa quyết định ' + row.decisionNumber + '?')) return;
+    if (!(await this.actionDialogInPage.confirm('Thu hồi quyết định chờ duyệt ' + row.decisionNumber + '? Bản ghi và lịch sử được giữ nguyên.'))) return;
     this.run(
-      this.api.remove(row.decisionId, reason.trim()),
-      'Đã xóa quyết định chờ duyệt.',
-      'Không xóa được quyết định.',
+      this.api.withdraw(row.decisionId, reason.trim()),
+      'Đã thu hồi quyết định chờ duyệt.',
+      'Không thu hồi được quyết định.',
       () => { this.selectedDecision = null; },
     );
   }
 
   openAction(row: DecisionResponse, mode: Action): void {
     if (this.saving || row.approvalStatus !== 'CHO_DUYET') return;
+    if(row.reviewBlocker){this.error=row.reviewBlocker;return;}
     this.actionTarget = row;
     this.actionMode = mode;
     this.actionReason = '';
@@ -394,6 +452,7 @@ export class DecisionsPage implements OnInit {
   submitAction(): void {
     const target = this.actionTarget;
     if (!target || this.saving) return;
+    if(target.reviewBlocker){this.error=target.reviewBlocker;return;}
     const reason = this.actionReason.trim();
     if (!reason) {
       this.error = 'Vui lòng nhập lý do.';
@@ -450,7 +509,7 @@ export class DecisionsPage implements OnInit {
   }
 
   openDetail(row: DecisionResponse): void {
-    if (this.saving) return;
+    if (this.saving) return;this.decisionHistory=[];this.historyError='';
     this.selectedDecision = row;
     this.detailLoading = true;
     this.detailError = '';
@@ -461,6 +520,7 @@ export class DecisionsPage implements OnInit {
         if (requestVersion !== this.detailRequestVersion) return;
         this.selectedDecision = result;
         this.detailLoading = false;
+        this.api.history(row.decisionId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:logs=>{if(requestVersion===this.detailRequestVersion)this.decisionHistory=logs;},error:()=>{if(requestVersion===this.detailRequestVersion)this.historyError='Không tải được lịch sử quyết định.';}});
       },
       error: (error: HttpErrorResponse) => {
         if (requestVersion !== this.detailRequestVersion) return;

@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
 
 @Service
 public class PayrollBatchService {
+    @org.springframework.beans.factory.annotation.Autowired
+    private PayrollReadinessGuard readiness;
 
     private final PayrollBatchRepository batchRepository;
     private final PayrollPeriodRepository periodRepository;
@@ -79,7 +81,7 @@ public class PayrollBatchService {
     // P-12: Chốt bảng lương (Khóa cứng dữ liệu theo đúng CK_batches_lock)
     @Transactional
     public PayrollBatchDTO lockBatch(Long batchId, Long actorAccountId) {
-        PayrollBatch batch = batchRepository.findById(batchId)
+        PayrollBatch batch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.NHAP) {
@@ -89,6 +91,8 @@ public class PayrollBatchService {
         if (detailRepository.findByBatchId(batchId).isEmpty()) {
             throw new RuntimeException("Bảng lương chưa được chạy tính toán dữ liệu, không thể chốt!");
         }
+
+        readiness.requireReady(batch.getPeriodId());
 
         Long actor = actorAccountId != null ? actorAccountId : DEFAULT_ACTOR_ACCOUNT_ID;
 
@@ -105,7 +109,7 @@ public class PayrollBatchService {
     // P-12 & P-14: Công bố bảng lương và tự động phát hành phiếu lương (theo đúng CK_batches_publication)
     @Transactional
     public PayrollBatchDTO publishBatch(Long batchId, Long actorAccountId) {
-        PayrollBatch batch = batchRepository.findById(batchId)
+        PayrollBatch batch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.DA_CHOT) {
@@ -138,7 +142,7 @@ public class PayrollBatchService {
     // P-13: Tạo phiên bản điều chỉnh có lý do, liên kết batch cũ
     @Transactional
     public PayrollBatchDTO createAdjustmentBatch(Long batchId, AdjustmentBatchRequestDTO request) {
-        PayrollBatch oldBatch = batchRepository.findById(batchId)
+        PayrollBatch oldBatch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương gốc ID: " + batchId));
 
         if (oldBatch.getStatus() != BatchStatus.DA_CHOT) {

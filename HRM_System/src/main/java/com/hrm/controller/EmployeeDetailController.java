@@ -37,7 +37,7 @@ private final EmployeeContactService contactService;
             Principal principal) {
 
         var actor=com.hrm.service.PersonnelScopeService.current();
-        if(actor==null || !"EMPLOYEE".equals(actor.roleCode()) || !java.util.Objects.equals(actor.employeeId(),id)) accessService.requireManager(principal);
+        if(actor==null || !"EMPLOYEE".equals(actor.roleCode()) || !java.util.Objects.equals(actor.employeeId(),id)) accessService.requireReader(principal);
 
         return employeeService.getEmployeeDetailById(id);
     }

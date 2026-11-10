@@ -178,7 +178,7 @@ public class WorkScheduleService {
         assertNoOverlap(v.employeeId(), v.plannedStart(), v.plannedEnd(), -1);
 
         Long id = db.queryForObject(
-                "INSERT INTO dbo.work_schedules(employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note) OUTPUT INSERTED.schedule_id VALUES (?,?,?,?,?,?,?)",
+                "DECLARE @created TABLE (schedule_id bigint); INSERT INTO dbo.work_schedules(employee_id,shift_id,work_date,planned_start,planned_end,planned_break_minutes,note) OUTPUT INSERTED.schedule_id INTO @created(schedule_id) VALUES (?,?,?,?,?,?,?); SELECT schedule_id FROM @created;",
                 Long.class,
                 v.employeeId(),
                 v.shiftId(),

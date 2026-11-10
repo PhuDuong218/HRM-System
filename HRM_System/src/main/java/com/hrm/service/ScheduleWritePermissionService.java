@@ -17,6 +17,7 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public class ScheduleWritePermissionService {
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private DepartmentWorkspaceAccess headAccess;
     private final JdbcTemplate db;
 
     public ScheduleWritePermissionService(JdbcTemplate db) {
@@ -53,6 +54,7 @@ public class ScheduleWritePermissionService {
             deny();
         }
         String role = actual.get(0).roleCode();
+        if(role.equals("EMPLOYEE")&&headAccess!=null){headAccess.employee(actor,employeeId,start.toLocalDate(),true);return;}
         if (!role.equals("ADMIN") && !role.equals("HR"))
             deny();
 
