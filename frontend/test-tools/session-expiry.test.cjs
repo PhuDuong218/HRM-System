@@ -10,7 +10,7 @@ test('session expires without interaction, notices revoked sessions, and ignores
   await esbuild.build({ entryPoints: [path.join(__dirname, 'logout-harness.ts')], bundle: true,
     packages: 'external', platform: 'node', format: 'esm', outfile: output });
   const data = new Map();
-  global.sessionStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  global.localStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
   global.document = new EventTarget();
   let injector;
   const originalNow = Date.now;
@@ -78,7 +78,7 @@ test('session expires without interaction, notices revoked sessions, and ignores
     Date.now = originalNow;
     injector?.destroy();
     delete global.document;
-    delete global.sessionStorage;
+    delete global.localStorage;
     fs.unlinkSync(output);
   }
 });
@@ -88,7 +88,7 @@ test('activity renews the web token and ten idle minutes end the session', async
   await esbuild.build({ entryPoints: [path.join(__dirname, 'logout-harness.ts')], bundle: true,
     packages: 'external', platform: 'node', format: 'esm', outfile: output });
   const data = new Map();
-  global.sessionStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  global.localStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
   global.document = new EventTarget();
   const originalNow = Date.now;
   let now = originalNow();
@@ -112,6 +112,7 @@ test('activity renews the web token and ten idle minutes end the session', async
     assert.equal(firstRefresh.request.headers.get('Authorization'), `Bearer ${jwt(1)}`);
     firstRefresh.flush({ accessToken: jwt(2), tokenType: 'Bearer', expiresInSeconds: 600 });
     assert.equal(auth.token(), jwt(2));
+    assert.equal(auth.username(), 'admin', 'refresh preserves the current account');
 
     now += 9 * 60_000;
     document.dispatchEvent(new Event('pointerdown'));
@@ -129,7 +130,7 @@ test('activity renews the web token and ten idle minutes end the session', async
     Date.now = originalNow;
     injector?.destroy();
     delete global.document;
-    delete global.sessionStorage;
+    delete global.localStorage;
     fs.unlinkSync(output);
   }
 });
@@ -139,7 +140,7 @@ test('configured short session duration drives both refresh and idle expiration'
   await esbuild.build({ entryPoints: [path.join(__dirname, 'logout-harness.ts')], bundle: true,
     packages: 'external', platform: 'node', format: 'esm', outfile: output });
   const data = new Map();
-  global.sessionStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  global.localStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
   global.document = new EventTarget();
   const originalNow = Date.now;
   let now = originalNow();
@@ -170,7 +171,7 @@ test('configured short session duration drives both refresh and idle expiration'
     Date.now = originalNow;
     injector?.destroy();
     delete global.document;
-    delete global.sessionStorage;
+    delete global.localStorage;
     fs.unlinkSync(output);
   }
 });

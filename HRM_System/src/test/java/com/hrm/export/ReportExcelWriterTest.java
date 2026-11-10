@@ -15,6 +15,29 @@ import static org.junit.jupiter.api.Assertions.*;
 class ReportExcelWriterTest {
     private final ReportExcelWriter writer = new ReportExcelWriter();
 
+    @Test void payrollKeepsTheStoredLastDayInExcel() throws Exception {
+        var from = java.time.LocalDate.of(2026,11,1);
+        var end = java.time.LocalDate.of(2026,11,30);
+        var zero = java.math.BigDecimal.ZERO;
+        var totals = new com.hrm.dto.PayrollStatisticsResponse.Amounts(new java.math.BigDecimal("1000"),zero,zero,zero,new java.math.BigDecimal("1000"));
+        var batch = new com.hrm.dto.PayrollStatisticsResponse.BatchSummary(1L,"P11",from,end,11L,2,1,totals);
+        var report = new com.hrm.dto.PayrollStatisticsResponse(from,end,1,1,totals,List.of(batch));
+        try (var workbook = new XSSFWorkbook(new ByteArrayInputStream(writer.payroll(report)))) {
+            var sheet = workbook.getSheet("Theo batch");
+            assertEquals("Ngày kết thúc kỳ",sheet.getRow(0).getCell(3).getStringCellValue());
+            assertEquals("2026-11-30",sheet.getRow(1).getCell(3).getStringCellValue());
+            var filters = workbook.getSheet("Bo loc");
+            boolean foundLastDay = false;
+            for (var row : filters) {
+                if ("Ngày cuối kỳ".equals(row.getCell(0).getStringCellValue())) {
+                    foundLastDay = true;
+                    assertTrue(row.getCell(1).getStringCellValue().contains("bao gồm ngày cuối"));
+                }
+            }
+            assertTrue(foundLastDay);
+        }
+    }
+
     @Test
     void exportsGroupsInNumericIdOrderWithUnassignedLastAndKeepsRowsTogether() throws Exception {
         List<EmployeeStatisticsRow> groups = List.of(

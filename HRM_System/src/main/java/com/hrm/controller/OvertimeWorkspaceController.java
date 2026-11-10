@@ -18,6 +18,7 @@ public class OvertimeWorkspaceController {
     public OvertimeWorkspaceController(OvertimeWorkspaceService service){this.service=service;}
     @GetMapping("/context") public Object context(@AuthenticationPrincipal AuthenticatedAccount a){return service.context(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
+    @GetMapping("/pending") public Object pending(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam String kind,@RequestParam(defaultValue="0") int page){return service.pending(a,kind,page);}
     @GetMapping({"/requests","/employees"}) public Object search(@AuthenticationPrincipal AuthenticatedAccount a,
         jakarta.servlet.http.HttpServletRequest servlet,@RequestParam(defaultValue="false") boolean mine,@RequestParam LocalDate from,@RequestParam LocalDate to,
         @RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,@RequestParam(required=false) String status,

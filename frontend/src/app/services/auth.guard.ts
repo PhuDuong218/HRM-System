@@ -3,7 +3,9 @@ import { CanActivateFn, RedirectCommand, Router } from '@angular/router';
 import { AuthService } from './auth.service';
 
 export const authGuard: CanActivateFn = () => {
-  return inject(AuthService).token() ? true : inject(Router).createUrlTree(['/login']);
+  return inject(AuthService).token()
+    ? true
+    : new RedirectCommand(inject(Router).parseUrl('/login'), { replaceUrl: true });
 };
 
 export const guestGuard: CanActivateFn = () => {

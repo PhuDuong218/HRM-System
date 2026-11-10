@@ -14,7 +14,7 @@ export const routes: Routes = [
     path: "",
     component: AdminLayout,
     canActivate: [authGuard],
-    canActivateChild:[personnelPortalGuard],
+    canActivateChild:[authGuard, personnelPortalGuard],
     children: [
       {path:'ui-kit',canActivate:[adminGuard],loadComponent:()=>import('./pages/ui-kit/ui-kit').then(m=>m.UiKitPage)},
       { path: "", redirectTo: "overview", pathMatch: "full" },
@@ -135,4 +135,4 @@ export const routes: Routes = [
     ],
   },
 ];
-for(const route of routes){for(const child of route.children??[]){if(child.component||child.loadComponent)child.canDeactivate=[...(child.canDeactivate??[]),pendingEditorGuard];}}
+for(const route of routes){for(const child of route.children??[]){if(child.component||child.loadComponent){child.canDeactivate=[...(child.canDeactivate??[]),pendingEditorGuard];child.runGuardsAndResolvers='always';}}}

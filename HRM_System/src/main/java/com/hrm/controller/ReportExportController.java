@@ -36,6 +36,15 @@ public class ReportExportController {
         return download(exports.exportEmployees());
     }
 
+    @GetMapping(value="/monitor/employees/export")
+    @PreAuthorize(ReportExportService.VIEW_AUTHORIZATION)
+    public ResponseEntity<byte[]> exportEmployeeMonitoring(
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam(required=false) Long departmentId) {
+        return download(exports.exportEmployeeMonitoring(fromDate,toDate,departmentId));
+    }
+
     @GetMapping("/contracts/export")
     @PreAuthorize(ReportExportService.VIEW_AUTHORIZATION)
     public ResponseEntity<byte[]> exportContracts(
@@ -56,12 +65,30 @@ public class ReportExportController {
         return download(exports.exportWork(fromDate, toDate));
     }
 
+    @GetMapping("/monitor/work/export")
+    @PreAuthorize(ReportExportService.VIEW_AUTHORIZATION)
+    public ResponseEntity<byte[]> exportWorkForDepartment(
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam long departmentId) {
+        return download(exports.exportWorkForDepartment(fromDate,toDate,departmentId));
+    }
+
     @GetMapping("/payroll/export")
     @PreAuthorize(PayrollStatisticsService.VIEW_AUTHORIZATION)
     public ResponseEntity<byte[]> exportPayroll(
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate fromDate,
             @RequestParam @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate toDate) {
         return download(exports.exportPayroll(fromDate, toDate));
+    }
+
+    @GetMapping("/monitor/payroll/export")
+    @PreAuthorize(PayrollStatisticsService.VIEW_AUTHORIZATION)
+    public ResponseEntity<byte[]> exportPayrollForDepartment(
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate fromDate,
+            @RequestParam @DateTimeFormat(iso=DateTimeFormat.ISO.DATE) LocalDate toDate,
+            @RequestParam long departmentId) {
+        return download(exports.exportPayrollForDepartment(fromDate,toDate,departmentId));
     }
 
     private ResponseEntity<byte[]> download(ReportExportFile file) {

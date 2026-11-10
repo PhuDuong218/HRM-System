@@ -10,7 +10,7 @@ test('logout clears local session on success, offline, and timeout without clear
   await esbuild.build({ entryPoints: [path.join(__dirname, 'logout-harness.ts')], bundle: true,
     packages: 'external', platform: 'node', format: 'esm', outfile: output });
   const data = new Map();
-  global.sessionStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
+  global.localStorage = { getItem: key => data.get(key) ?? null, setItem: (key, value) => data.set(key, value), removeItem: key => data.delete(key) };
   try {
     const { setup } = await import(pathToFileURL(output).href);
     const { auth, http, injector } = setup();
@@ -47,5 +47,5 @@ test('logout clears local session on success, offline, and timeout without clear
     request.flush('Unauthorized', { status: 401, statusText: 'Unauthorized' });
     assert.equal(result, false); assert.equal(auth.token(), jwt(5));
     http.verify(); injector.destroy();
-  } finally { delete global.sessionStorage; fs.unlinkSync(output); }
+  } finally { delete global.localStorage; fs.unlinkSync(output); }
 });

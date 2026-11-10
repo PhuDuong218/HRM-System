@@ -15,7 +15,7 @@ public interface PayrollStatisticsRepository extends Repository<PayrollDetail, L
             select pp.period_id as periodId,
                    pp.period_code as periodCode,
                    pp.period_start as periodStart,
-                   pp.period_end as periodEndExclusive,
+                   pp.period_end as periodEnd,
                    pb.batch_id as batchId,
                    pb.version_no as versionNo,
                    count(distinct pd.employee_id) as employeeCount,
@@ -32,7 +32,7 @@ public interface PayrollStatisticsRepository extends Repository<PayrollDetail, L
             join payroll_details pd on pd.batch_id = pb.batch_id
             join payroll_lines pl on pl.payroll_detail_id = pd.payroll_detail_id
             where pp.period_start >= :fromDate
-              and pp.period_end <= :endExclusive
+              and pp.period_end <= :toDate
               and pb.status = 'DA_CHOT'
               and pb.locked_by is not null
               and pb.locked_at is not null
@@ -51,5 +51,5 @@ public interface PayrollStatisticsRepository extends Repository<PayrollDetail, L
             """, nativeQuery = true)
     List<PayrollStatisticsRow> summarizeFinalizedBatches(
             @Param("fromDate") LocalDate fromDate,
-            @Param("endExclusive") LocalDate endExclusive);
+            @Param("toDate") LocalDate toDate);
 }

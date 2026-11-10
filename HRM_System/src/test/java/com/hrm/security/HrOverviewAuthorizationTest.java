@@ -17,6 +17,22 @@ import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class HrOverviewAuthorizationTest {
+    @Test void pendingQueuesAreAvailableToAdminAndHrWithoutReportPermission() {
+        try(var context=new AnnotationConfigApplicationContext()){
+            var service=mock(com.hrm.service.OverviewPendingService.class);
+            context.register(MethodSecurityConfiguration.class);
+            context.registerBean(com.hrm.service.OverviewPendingService.class,()->service);
+            context.register(com.hrm.controller.OverviewPendingController.class);context.refresh();
+            var controller=context.getBean(com.hrm.controller.OverviewPendingController.class);
+            var actor=new AuthenticatedAccount(1L,2L,"admin","ADMIN");
+            for(String role:List.of("ROLE_ADMIN","ROLE_HR")){
+                authenticate(role);
+                assertEquals("no-store",controller.pending(actor).getHeaders().getCacheControl());
+            }
+            clearInvocations(service);authenticate("ROLE_EMPLOYEE","REPORT_VIEW");
+            assertThrows(AccessDeniedException.class,()->controller.pending(actor));verifyNoInteractions(service);
+        }
+    }
     @Configuration
     @EnableMethodSecurity
     static class MethodSecurityConfiguration {}
