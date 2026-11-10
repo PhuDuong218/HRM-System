@@ -19,6 +19,8 @@ public class EmployeeRequestController {
     public EmployeeRequestController(EmployeeRequestService service,PersonnelAccessService access,ResignationExecutionService runner) {this.service=service;this.access=access;this.runner=runner;}
     @GetMapping("/capabilities") public Map<String,Object> capabilities(Principal p){return stages.capabilities(p);}
     @GetMapping("/head-queue") public Page<Map<String,Object>> headQueue(Principal p,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size){return stages.queue(p,page,size);}
+    @GetMapping("/head-search") public Page<Map<String,Object>> headSearch(Principal p,@RequestParam(required=false) String stageStatus,@RequestParam(required=false) String status,@RequestParam(required=false) String type,@RequestParam(defaultValue="") String keyword,@RequestParam(required=false) java.time.LocalDate fromDate,@RequestParam(required=false) java.time.LocalDate toDate,@RequestParam(defaultValue="0") int page,@RequestParam(defaultValue="10") int size){return stages.search(p,stageStatus,status,type,keyword,fromDate,toDate,page,size);}
+    @GetMapping("/head-detail/{id}") public Map<String,Object> headDetail(@PathVariable long id,Principal p){var history=stages.history(id,p);var detail=service.detail(id,p);detail.put("history",history);return detail;}
     public record HeadDecision(@jakarta.validation.constraints.NotNull Boolean approve,@jakarta.validation.constraints.Size(max=1000) String note){}
     @PostMapping("/{id}/head-decision") public Map<String,Object> headDecision(@PathVariable long id,@Valid @RequestBody HeadDecision body,Principal p){return stages.decide(id,body.approve(),body.note(),p);}
     @PostMapping("/leave") @ResponseStatus(HttpStatus.CREATED)
@@ -45,6 +47,7 @@ public class EmployeeRequestController {
     @org.springframework.beans.factory.annotation.Autowired private LeaveRequestRules rules;
     @GetMapping("/leave-rules/{type}") public LeaveRequestRules.Rules rules(@PathVariable long type,Principal p){access.manager(p);return rules.get(type);}
     @PutMapping("/leave-rules/{type}") public LeaveRequestRules.Rules saveRules(@PathVariable long type,@RequestBody LeaveRequestRules.Rules body,Principal p){return rules.save(type,body,access.admin(p).accountId());}
+    @PostMapping("/{id}/cancel-leave") public Map<String,Object> cancelLeave(@PathVariable long id,@Valid @RequestBody Rejection body,Principal p){return service.cancelLeave(id,body,p);}
     @PostMapping("/{id}/cancel-approved") public Map<String,Object> cancel(@PathVariable long id,@Valid @RequestBody Rejection body,Principal p){return service.cancelApproved(id,body,p);}
     @PostMapping("/resignations/execute-due") public List<Map<String,Object>> execute(Principal p){return runner.run(access.admin(p).accountId());}
 }

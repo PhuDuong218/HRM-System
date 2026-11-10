@@ -19,9 +19,9 @@ test('employee editor hydrates detail, retains failed drafts, and rejects invali
   assert.deepEqual(page.form,draft);assert.equal(page.mode,'edit');assert.equal(page.saving,false);
   page.mode='detail';page.edit('contact');http.expectOne('/api/employees/5/detail').flush({message:'unavailable'},{status:500,statusText:'Error'});
   assert.deepEqual(page.form,draft);assert.equal(page.mode,'detail');assert.equal(page.detailLoading,false);
-  const valid={...draft,departmentId:1,positionId:2};
+  const valid={...draft,employeeCode:'',departmentId:1,positionId:2};
   assert.deepEqual(employeeFormErrors(valid,'create','2026-11-04'),{});
-  for(const [field,value,error]of [['employeeCode',' ','employeeCode'],['fullName',' ','fullName'],['birthDate','2020-01-02','birthDate'],['birthDate','2026-11-05','birthDate'],['hireDate','2026-11-05','hireDate'],['email','invalid','email'],['phone','123','phone'],['identityNumber','1'.repeat(51),'identityNumber'],['address','a'.repeat(501),'address'],['departmentId',null,'departmentId'],['positionId',null,'positionId'],['gender','INVALID','gender']])assert.ok(employeeFormErrors({...valid,[field]:value},'create','2026-11-04')[error],field);
+  for(const [field,value,error]of [['fullName',' ','fullName'],['birthDate','2020-01-02','birthDate'],['birthDate','2026-11-05','birthDate'],['hireDate','2026-11-05','hireDate'],['email','invalid','email'],['phone','123','phone'],['identityNumber','1'.repeat(51),'identityNumber'],['address','a'.repeat(501),'address'],['departmentId',null,'departmentId'],['positionId',null,'positionId'],['gender','INVALID','gender']])assert.ok(employeeFormErrors({...valid,[field]:value},'create','2026-11-04')[error],field);
   assert.ok(employeeFormErrors({...valid,reason:'  '},'edit','2026-11-04').changeReason);
   const missing=employeeFormErrors({...valid,email:'',phone:'',identityNumber:'',address:'',birthDate:'',gender:null},'edit','2026-11-04');
   for(const field of ['email','identityNumber','address'])assert.ok(missing[field],field+' is required');

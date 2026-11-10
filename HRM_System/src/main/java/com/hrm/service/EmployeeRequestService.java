@@ -24,6 +24,7 @@ public class EmployeeRequestService {
 
     @org.springframework.beans.factory.annotation.Autowired private RequestApprovalStages approvalStages;
     @org.springframework.beans.factory.annotation.Autowired private LeaveRequestRules leaveRules;
+    @org.springframework.beans.factory.annotation.Autowired private LeaveRequestNumberService leaveNumbers;
     private final JdbcTemplate jdbc;
     private final PersonnelAccessService access;
     private final PersonnelWorkflowSupport support;
@@ -33,7 +34,7 @@ public class EmployeeRequestService {
     }
     private static final String SELECT="""
         SELECT r.request_id AS requestId,r.employee_id AS employeeId,r.request_code AS requestCode,
-          r.request_type AS requestType,r.reason,CASE WHEN r.status='DA_DUYET' AND r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END AS status,r.processed_by AS processedBy,r.rejection_reason AS rejectionReason,
+          r.request_type AS requestType,r.reason,CASE WHEN r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END AS status,r.processed_by AS processedBy,r.rejection_reason AS rejectionReason,
           CONVERT(varchar(23),r.submitted_at,126)+'Z' AS submittedAt,
           CONVERT(varchar(23),r.processed_at,126)+'Z' AS processedAt,
           l.leave_type_id AS leaveTypeId,CONVERT(varchar(23),l.leave_start,126) AS leaveStart,
@@ -41,12 +42,13 @@ public class EmployeeRequestService {
           CONVERT(varchar(10),d.requested_last_working_date,23) AS requestedLastWorkingDate,
           CONVERT(varchar(10),d.approved_last_working_date,23) AS approvedLastWorkingDate,
           CONVERT(varchar(23),x.executed_at,126)+'Z' AS executedAt,
-          CONVERT(varchar(23),w.withdrawn_at,126)+'Z' AS withdrawnAt,w.reason AS withdrawalReason
+          CONVERT(varchar(23),w.withdrawn_at,126)+'Z' AS withdrawnAt,w.reason AS withdrawalReason,withdrawer.username AS withdrawnBy
         FROM dbo.employee_requests r
         LEFT JOIN dbo.leave_request_details l ON l.request_id=r.request_id
         LEFT JOIN dbo.resignation_request_details d ON d.request_id=r.request_id
         LEFT JOIN dbo.g2_resignation_executions x ON x.request_id=r.request_id
         LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id
+        LEFT JOIN dbo.accounts withdrawer ON withdrawer.account_id=w.withdrawn_by
         """;
     private Map<String,Object> required(long id) {
         var rows=jdbc.queryForList(SELECT+" WHERE r.request_id=? AND r.request_type IN ('NGHI_PHEP','NGHI_VIEC')",id);
@@ -66,6 +68,8 @@ public class EmployeeRequestService {
         if(notice!=null&&"NGHI_VIEC".equals(row.get("requestType")))row.put("noticeWarning",notice.warning(number(row,"employeeId"),Instant.parse(row.get("submittedAt").toString()).atZone(ZoneId.of("Asia/Ho_Chi_Minh")).toLocalDate(),LocalDate.parse(row.get("requestedLastWorkingDate").toString())));
         if(jdbc.queryForObject("SELECT CASE WHEN OBJECT_ID('dbo.personnel_termination_decisions') IS NULL THEN 0 ELSE 1 END",Integer.class)==1){var decisions=jdbc.queryForList("SELECT decision_type AS decisionType,decision_number AS decisionNumber FROM dbo.personnel_termination_decisions WHERE request_id=?",id);if(!decisions.isEmpty())row.putAll(decisions.get(0));}
         row.put("allocations",jdbc.queryForList("SELECT schedule_id AS scheduleId,entitlement_id AS entitlementId,charged_hours AS chargedHours FROM dbo.g2_leave_allocations WHERE request_id=? ORDER BY allocation_id",id));
+        cancellationInfo(row,p);
+        row.put("history",jdbc.queryForList("SELECT l.audit_id auditId,l.action,ac.username actor,CONVERT(varchar(23),l.occurred_at,126)+'Z' occurredAt,l.reason FROM dbo.audit_logs l LEFT JOIN dbo.accounts ac ON ac.account_id=l.actor_account_id WHERE l.target_table='employee_requests' AND l.target_record_key=? ORDER BY l.occurred_at DESC,l.audit_id DESC",Long.toString(id)));
         return row;
     }
     public Page<Map<String,Object>> list(boolean mine,String status,String type,int page,int size,Principal p) {
@@ -76,17 +80,20 @@ public class EmployeeRequestService {
         if(status!=null&&!Set.of("CHO_DUYET","DA_DUYET","TU_CHOI","DA_HUY").contains(status)) throw PersonnelWorkflowSupport.bad("Trạng thái không hợp lệ");
         if(type!=null&&!Set.of("NGHI_PHEP","NGHI_VIEC").contains(type)) throw PersonnelWorkflowSupport.bad("Loại đơn không hợp lệ");
         var pageable=PagingUtils.create(page,size,Sort.unsorted());
-        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.status='DA_DUYET' AND r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
+        String where=" WHERE r.request_type IN ('NGHI_PHEP','NGHI_VIEC') AND (?=0 OR r.employee_id=?) AND (? IS NULL OR (CASE WHEN r.request_type='NGHI_PHEP' AND w.request_id IS NOT NULL THEN 'DA_HUY' ELSE r.status END)=?) AND (? IS NULL OR r.request_type=?) AND (?=1 OR w.request_id IS NULL)";
         if(!mine && PersonnelScopeService.isHr()) where+=" AND "+personnelScope.sqlEmployees("r.employee_id");
         var args=new ArrayList<Object>(Arrays.asList(mine?1:0,actor.employeeId(),status,status,type,type,(mine||"DA_HUY".equals(status))?1:0));
         if(!mine && employeeId!=null){where+=" AND r.employee_id=?";args.add(employeeId);}
         long total=jdbc.queryForObject("SELECT COUNT_BIG(*) FROM dbo.employee_requests r LEFT JOIN dbo.employee_request_withdrawals w ON w.request_id=r.request_id"+where,Long.class,args.toArray());
         args.add(pageable.getOffset());args.add(pageable.getPageSize());
         var rows=jdbc.queryForList(SELECT+where+" ORDER BY r.submitted_at DESC,r.request_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",args.toArray());
+        for(var row:rows)cancellationInfo(row,p);
         return new PageImpl<>(rows,pageable,total);
     }
     private long header(long employee,String type,String reason,long actor) {
-        String code="REQ-"+UUID.randomUUID();
+        return header(employee,type,reason,actor,"REQ-"+UUID.randomUUID());
+    }
+    private long header(long employee,String type,String reason,long actor,String code){
         jdbc.update("INSERT dbo.employee_requests(employee_id,request_code,request_type,reason,submitted_at,created_by) VALUES(?,?,?,?,?,?)",
             employee,code,type,reason.trim(),support.utc(),actor);
         long id=jdbc.queryForObject("SELECT request_id FROM dbo.employee_requests WHERE request_code=?",Long.class,code);
@@ -99,7 +106,7 @@ public class EmployeeRequestService {
         lockEmployee(actor.employeeId());
         validateLeave(actor.employeeId(),input.leaveTypeId(),input.leaveStart(),input.leaveEnd(),null);
         if(leaveRules!=null)leaveRules.eligibility(actor.employeeId(),input.leaveTypeId(),input.evidenceReference(),input.leaveStart().toLocalDate());
-        long id=header(actor.employeeId(),"NGHI_PHEP",input.reason(),actor.accountId());
+        long id=header(actor.employeeId(),"NGHI_PHEP",input.reason(),actor.accountId(),leaveNumbers.next(input.leaveTypeId()));
         if(leaveRules!=null)leaveRules.evidence(id,input.evidenceReference());
         jdbc.update("INSERT dbo.leave_request_details(request_id,leave_type_id,leave_start,leave_end,created_by) VALUES(?,?,?,?,?)",
             id,input.leaveTypeId(),input.leaveStart(),input.leaveEnd(),actor.accountId());
@@ -134,6 +141,7 @@ public class EmployeeRequestService {
     @Transactional
     public Map<String,Object> withdraw(long id,Rejection input,Principal p) {
         var actor=access.actor(p);support.lock();var before=required(id);
+        if("NGHI_PHEP".equals(before.get("requestType"))){if(actor.employeeId()!=number(before,"employeeId"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ người nộp được rút đơn của mình");return cancelLeave(id,input,p);}
         if(actor.employeeId()!=number(before,"employeeId"))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Chỉ người nộp được rút đơn của mình");
         if(!"CHO_DUYET".equals(before.get("status"))||before.get("withdrawnAt")!=null)throw PersonnelWorkflowSupport.conflict("Chỉ được rút đơn đang chờ và chưa rút");
         jdbc.update("INSERT dbo.employee_request_withdrawals(request_id,withdrawn_by,withdrawn_at,reason) VALUES(?,?,?,?)",id,actor.accountId(),support.utc(),input.reason().trim());
@@ -195,6 +203,32 @@ public class EmployeeRequestService {
         jdbc.update("INSERT dbo.employee_request_withdrawals(request_id,withdrawn_by,withdrawn_at,reason) VALUES(?,?,?,?)",id,actor.accountId(),support.utc(),input.reason().trim());
         var after=required(id);support.audit(actor.accountId(),"LEAVE_APPROVAL_CANCEL","employee_requests",id,input.reason(),before,after);return after;
     }
+    private String cancellationBlocker(Map<String,Object> row,Principal p){
+        var actor=access.actor(p);long employee=number(row,"employeeId");
+        if(actor.employeeId()!=employee){
+            if(Set.of("ADMIN","HR").contains(actor.role())){access.approver(p);personnelScope.managedEmployee(employee);}
+            else if(approvalStages==null||!approvalStages.canRead(employee,p))throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Không có quyền hủy đơn của nhân viên này");
+            else if("DA_DUYET".equals(row.get("status")))return "Đơn đã duyệt cuối: chủ đơn hoặc HR/ADMIN xử lý hủy";
+        }
+        Object start=row.get("leaveStart");
+        return LeaveCancellationPolicy.blocker(Objects.toString(row.get("requestType"),""),Objects.toString(row.get("status"),""),row.get("withdrawnAt")!=null,start==null?null:LocalDateTime.parse(start.toString()),support.localNow());
+    }
+    private void cancellationInfo(Map<String,Object> row,Principal p){
+        String blocker;
+        try{blocker=cancellationBlocker(row,p);}catch(ResponseStatusException denied){blocker=denied.getReason();}
+        row.put("canCancelLeave",blocker==null);row.put("cancelLeaveBlocker",blocker==null?"":blocker);
+    }
+    @Transactional
+    public Map<String,Object> cancelLeave(long id,Rejection input,Principal p){
+        var actor=access.actor(p);
+        if(input.reason()==null||input.reason().isBlank()||input.reason().length()>1000)throw PersonnelWorkflowSupport.bad("Bắt buộc lý do hủy tối đa 1000 ký tự");
+        support.lock();timeline.lockTimeline();var before=required(id);
+        String blocker=cancellationBlocker(before,p);if(blocker!=null)throw PersonnelWorkflowSupport.conflict(blocker);
+        long employee=number(before,"employeeId");lockEmployee(employee);
+        if("DA_DUYET".equals(before.get("status")))leaveRules.requireMutable(employee,LocalDateTime.parse(before.get("leaveStart").toString()),LocalDateTime.parse(before.get("leaveEnd").toString()));
+        jdbc.update("INSERT dbo.employee_request_withdrawals(request_id,withdrawn_by,withdrawn_at,reason) VALUES(?,?,?,?)",id,actor.accountId(),support.utc(),input.reason().trim());
+        var after=required(id);support.audit(actor.accountId(),"LEAVE_REQUEST_CANCEL","employee_requests",id,input.reason().trim(),before,after);cancellationInfo(after,p);return after;
+    }
     private void process(long id,String status,long actor,String rejection) {
         int updated=jdbc.queryForObject("""
             SET NOCOUNT ON;
@@ -234,7 +268,11 @@ public class EmployeeRequestService {
             SELECT schedule_id,work_date,planned_start,planned_end,planned_break_minutes FROM dbo.work_schedules WITH(UPDLOCK,HOLDLOCK)
             WHERE cancelled_at IS NULL AND employee_id=? AND planned_start<? AND planned_end>? ORDER BY planned_start,schedule_id
             """,employee,end,start);
-        if(schedules.isEmpty()) throw PersonnelWorkflowSupport.conflict("Chưa có lịch làm việc trong khoảng nghỉ");
+        if(schedules.isEmpty()) {
+      String code=jdbc.queryForObject("SELECT type_code FROM dbo.leave_types WHERE leave_type_id=?",String.class,type);
+      if(!policies.get(0)&&java.util.Set.of("MATERNITY","THAI_SAN").contains(code))return List.of();
+      throw PersonnelWorkflowSupport.conflict("Chưa có lịch làm việc trong khoảng nghỉ");
+    }
         var charges=new ArrayList<Charge>();var totals=new HashMap<Long,BigDecimal>();LocalDateTime previousEnd=null;
         for(var row:schedules) {
             var a=((java.sql.Timestamp)row.get("planned_start")).toLocalDateTime();var b=((java.sql.Timestamp)row.get("planned_end")).toLocalDateTime();

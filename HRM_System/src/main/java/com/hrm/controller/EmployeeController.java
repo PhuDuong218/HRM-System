@@ -151,19 +151,30 @@ public class EmployeeController {
             @RequestParam(required = false) EmploymentStatus status,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) Long positionId,
+            @RequestParam(required = false) Long employeeId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size,
             Principal principal) {
 
         accessService.requireReader(principal);
 
+        if (employeeId == null) {
+            return employeeService.searchEmployees(keyword, status, departmentId, positionId, page, size);
+        }
         return employeeService.searchEmployees(
                 keyword,
                 status,
                 departmentId,
                 positionId,
+                employeeId,
                 page,
                 size);
+    }
+
+    @PreAuthorize("@departmentHeadAccessService.canReadPersonnel(authentication)")
+    public Page<EmployeeDTO> searchEmployees(String keyword, EmploymentStatus status, Long departmentId,
+            Long positionId, int page, int size, Principal principal) {
+        return searchEmployees(keyword, status, departmentId, positionId, null, page, size, principal);
     }
 
     // 8. Giu cac phuong thuc Java cu cua Nhi

@@ -43,7 +43,7 @@ public class ContractLifecycleService {
         if (old.getEndDate()==null) throw bad("Hợp đồng vô thời hạn không dùng gia hạn");
         if (audit.hasAction("contracts",id,"CONTRACT_TERMINATE")) throw bad("Bản đã chấm dứt không dùng gia hạn");
         if (audit.hasAction("contracts",id,"CONTRACT_RENEW")) throw bad("Bản này đã gia hạn");
-        var next=request.newContract();
+        var next=service.prepare(request.newContract());
         if (!old.getEmployee().getEmployeeId().equals(next.employeeId())) throw bad("Gia hạn phải cùng nhân viên");
         if (!next.startDate().isAfter(old.getEndDate())) throw bad("Bản mới phải bắt đầu sau ngày cuối bản cũ");
         // Nếu không hết hạn tự nhiên mà status kết thúc sớm thì không suy đoán nguyên nhân.

@@ -104,7 +104,7 @@
   </div>
 </div>
 
-<dialog #profileDialog id="profile-dialog" class="profile-dialog motion-dialog" aria-labelledby="profile-title">
+<dialog #profileDialog id="profile-dialog" class="profile-dialog motion-dialog" aria-labelledby="profile-title" (cancel)="profileSaving && $event.preventDefault()">
   <div class="profile-dialog-header">
     <div><h2 id="profile-title">{{language.t("HỒ SƠ CÁ NHÂN")}}</h2></div>
     <button type="button" class="profile-close" (click)="closeProfile()" [attr.aria-label]="&quot;Đóng hồ sơ&quot; | translate">{{ "×" | translate }}</button>
@@ -134,9 +134,25 @@
       <div><dt>{{language.t("Địa chỉ")}}</dt><dd>{{(profile.address || 'Chưa cập nhật') | translate}}</dd></div>
     </dl>
   }
+  @if(profileMessage){<p class="alert alert-success mx-3" [hrmNotice]="profileMessage" noticeKind="success" role="status">{{profileMessage}}</p>}
+  @if(profileEditing){
+    <form id="own-contact-form" [formGroup]="contactForm" (ngSubmit)="saveProfile()" class="p-3">
+      <fieldset [disabled]="profileSaving">
+        <label for="own-email" class="form-label">Email</label><input id="own-email" type="email" class="form-control mb-2" formControlName="email" maxlength="254" autocomplete="email">
+        <label for="own-phone" class="form-label">Số điện thoại</label><input id="own-phone" type="tel" class="form-control mb-2" formControlName="phone" autocomplete="tel" placeholder="Số điện thoại Việt Nam 10 chữ số">
+        <label for="own-address" class="form-label">Địa chỉ</label><textarea id="own-address" class="form-control" formControlName="address" rows="3" maxlength="500" autocomplete="street-address"></textarea>
+      </fieldset>
+    </form>
+  }
   <div class="profile-dialog-footer">
     <button type="button" class="btn btn-outline-primary" (click)="closeProfile()">{{language.t("Đóng")}}</button>
+    @if(profileEditing){
+      <button type="button" class="btn btn-outline-secondary" [disabled]="profileSaving" (click)="cancelProfileEdit()">Hủy</button>
+      <button type="submit" form="own-contact-form" class="btn btn-primary" [disabled]="profileSaving">{{profileSaving?'Đang lưu…':'Lưu hồ sơ'}}</button>
+    } @else {
+      <button type="button" class="btn btn-primary" [disabled]="profileLoading||!auth.profile()" (click)="editProfile()">Sửa hồ sơ</button>
     <button type="button" class="btn btn-primary" (click)="openPasswordDialog()">{{language.t("Đổi mật khẩu")}}</button>
+    }
   </div>
 </dialog>
 

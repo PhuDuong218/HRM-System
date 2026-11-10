@@ -70,6 +70,10 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     pages = 0;
     total = 0;
     keyword = '';
+    employeeFilterId: number | null = null;
+    employeeChoices: Employee[] = [];
+    employeeChoicesLoading = false;
+    employeeChoicesError = '';
     status = '';
     department = '';
     position = '';
@@ -112,14 +116,21 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     get canSearch(){return this.canManage||!!this.auth.profile()?.departmentHead;}
     get canReadPrivate(){return this.ownProfile||this.canSearch;}
     get ownProfile(){return !!this.selected && this.selected.employeeCode===this.auth.profile()?.employeeCode;}
-    ngOnInit() { this.auth.loadCurrentUser().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => this.load(), error: () => this.load() }); this.loadChoices(); }
+    ngOnInit() { this.auth.loadCurrentUser().pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: () => { this.load(); if (this.canSearch) this.loadEmployeeChoices(); }, error: () => this.load() }); this.loadChoices(); }
+    loadEmployeeChoices() {
+        this.employeeChoicesLoading = true;
+        this.employeeChoicesError = '';
+        this.api.all().pipe(takeUntilDestroyed(this.destroy), finalize(() => this.employeeChoicesLoading = false))
+            .subscribe({next: rows => this.employeeChoices = rows.sort((a, b) => a.employeeCode.localeCompare(b.employeeCode, 'vi', {numeric: true})),
+                error: () => this.employeeChoicesError = 'Không tải được danh sách chọn nhân viên.'});
+    }
     loadChoices() { if(!this.canManage)return; this.choicesError = ''; for (const path of ['departments', 'positions'])
         this.api.choices(path).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { const k = path === 'departments' ? 'department' : 'position'; const c = r.filter(x => x['isActive'] !== false).map(x => ({ id: Number(x[k + 'Id']), name: String(x[k + 'Name']) })); if (path === 'departments')
                 this.departments = c;
             else
                 this.positions = c; }, error: e => this.choicesError = (path === 'positions' ? 'Danh mục chức vụ: ' : 'Danh mục phòng ban: ') + errorMessage(e) }); }
     load(page = 0) { if (this.loading || this.saving)
-        return; this.loading = true; this.error = ''; this.api.list(this.canSearch, page, this.applied.keyword, this.applied.status, this.applied.department, this.applied.position).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
+        return; this.loading = true; this.error = ''; this.api.list(this.canSearch, page, this.applied.keyword, this.applied.status, this.applied.department, this.applied.position, this.applied.employeeId).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.loading = false)).subscribe({ next: r => { if (Array.isArray(r)) {
             this.rows = r;
             this.page = 0;
             this.pages = r.length ? 1 : 0;
@@ -131,9 +142,9 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
             this.pages = r.totalPages;
             this.total = r.totalElements;
         } }, error: e => this.error = errorMessage(e) }); }
-    private applied = {keyword:'',status:'',department:'',position:''};
-    search() { if(this.loading||this.saving)return; this.applied={keyword:this.keyword.trim(),status:this.status,department:this.department,position:this.position};this.close();this.load(0); }
-    reset() { this.keyword = ''; this.status = ''; this.department = ''; this.position=''; this.search(); }
+    private applied = {keyword:'',status:'',department:'',position:'',employeeId:null as number | null};
+    search() { if(this.loading||this.saving)return; this.applied={keyword:this.keyword.trim(),status:this.status,department:this.department,position:this.position,employeeId:this.employeeFilterId};this.close();this.load(0); }
+    reset() { this.keyword = ''; this.employeeFilterId = null; this.status = ''; this.department = ''; this.position=''; this.search(); }
     select(row: Employee) { if (this.saving)
         return; this.auditRequest?.unsubscribe();this.auditRows=[];this.auditOpen=false;this.auditError='';this.auditLoading=false; this.detailRequest?.unsubscribe(); this.mode = 'detail'; this.selected = row; this.detailLoading = true; this.detailError = ''; this.detailRequest = this.api.detail(row.employeeId).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { this.selected = r; this.detailLoading = false; }, error: e => { this.detailError = errorMessage(e); this.detailLoading = false; } }); }
     close() { if (this.saving)

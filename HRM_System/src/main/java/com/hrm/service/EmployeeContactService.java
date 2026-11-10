@@ -42,6 +42,19 @@ public class EmployeeContactService {
         // ID tài khoản được xác định từ đăng nhập phía server.
         Long actorAccountId = accessService.requireManager(principal);
 
+        return updateContact(employeeId, request, actorAccountId);
+    }
+
+    @Transactional
+    public void updateOwnContact(com.hrm.security.AuthenticatedAccount actor, EmployeeContactPatchDTO request) {
+        if (actor == null || actor.employeeId() == null || !java.util.Set.of("ADMIN", "HR", "EMPLOYEE").contains(actor.roleCode()))
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.FORBIDDEN);
+        if (request.getIdentityNumber() != null)
+            throw new org.springframework.web.server.ResponseStatusException(org.springframework.http.HttpStatus.BAD_REQUEST, "Không được tự sửa CCCD");
+        updateContact(actor.employeeId(), request, actor.accountId());
+    }
+
+    private EmployeeDetailDTO updateContact(Long employeeId, EmployeeContactPatchDTO request, Long actorAccountId) {
         Employee employee = employeeRepository
                 .findByIdForUpdate(employeeId)
                 .orElseThrow(() -> new ResourceNotFoundException(

@@ -54,6 +54,7 @@ public class EmployeeService {
             .thenComparing(EmployeeAssignment::getAssignmentId,
                     Comparator.nullsFirst(Comparator.naturalOrder()));
 
+    @org.springframework.beans.factory.annotation.Autowired private EmployeeCodeService employeeCodes;
     private final EmployeeRepository employeeRepository;
     private final DepartmentRepository departmentRepository;
     private final PositionRepository positionRepository;
@@ -123,14 +124,21 @@ public class EmployeeService {
             Long positionId,
             int page,
             int size) {
+        return searchEmployees(keyword, status, departmentId, positionId, null, page, size);
+    }
+
+    public Page<EmployeeDTO> searchEmployees(
+            String keyword, EmploymentStatus status, Long departmentId, Long positionId,
+            Long employeeId, int page, int size) {
         LocalDate asOf = businessToday();
         String searchKeyword = "%" + (keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT)) + "%";
         Pageable pageable = PagingUtils.create(page, size, Sort.by(Sort.Direction.DESC, "employeeId"));
         Page<Employee> employees;
         var readScope=personnelScope==null?null:personnelScope.readableEmployees();
-        if(keyword!=null&&!keyword.isBlank()) {
+        if(employeeId!=null || (keyword!=null&&!keyword.isBlank())) {
         var candidates = readScope!=null ? employeeRepository.searchEmployeesScoped("%",status,departmentId,positionId,asOf,readScope,org.springframework.data.domain.Pageable.unpaged(pageable.getSort())) : employeeRepository.searchEmployees("%",status,departmentId,positionId,asOf,org.springframework.data.domain.Pageable.unpaged(pageable.getSort()));
-            var matched=candidates.getContent().stream().filter(e->com.hrm.util.PersonnelSearch.matches(keyword,e.getFullName(),e.getEmployeeCode())).toList();
+            var matched=candidates.getContent().stream().filter(e->employeeId==null || employeeId.equals(e.getEmployeeId()))
+                    .filter(e->keyword==null || keyword.isBlank() || com.hrm.util.PersonnelSearch.matches(keyword,e.getFullName(),e.getEmployeeCode())).toList();
             employees=com.hrm.util.PersonnelSearch.page(matched,page,size);
         } else {
         employees = readScope!=null ? employeeRepository.searchEmployeesScoped(searchKeyword,status,departmentId,positionId,asOf,readScope,pageable) : employeeRepository.searchEmployees(searchKeyword,status,departmentId,positionId,asOf,pageable);
@@ -185,14 +193,6 @@ public class EmployeeService {
         validateHireDateForCreation(requestDTO.getHireDate());
         guard.lockTimeline();
 
-        if (requestDTO.getEmployeeCode() == null || requestDTO.getEmployeeCode().isBlank()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Mã nhân viên không được để trống");
-        }
-        String employeeCode = requestDTO.getEmployeeCode().trim();
-        if (employeeRepository.existsByEmployeeCode(employeeCode)) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Mã nhân viên đã tồn tại: " + employeeCode);
-        }
-
         Department department = departmentRepository.findById(requestDTO.getDepartmentId())
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "Không tìm thấy phòng ban có ID: " + requestDTO.getDepartmentId()));
@@ -214,7 +214,7 @@ public class EmployeeService {
         }
 
         Employee employee = new Employee();
-        employee.setEmployeeCode(employeeCode);
+        employee.setEmployeeCode(employeeCodes.next(position.getPositionCode()));
         employee.setFullName(requestDTO.getFullName().trim());
         employee.setBirthDate(requestDTO.getBirthDate());
         employee.setEmail(normalizeContactText(requestDTO.getEmail()));
@@ -233,7 +233,9 @@ public class EmployeeService {
         assignment.setCreatedAt(auditNow());
         employee.getAssignments().add(assignment);
 
-        return convertToDTO(employeeRepository.save(employee));
+        Employee saved=employeeRepository.saveAndFlush(employee);
+        employeeCodes.track(saved.getEmployeeId(),position.getPositionId());
+        return convertToDTO(saved);
     }
 
     @Transactional

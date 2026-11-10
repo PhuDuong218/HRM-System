@@ -63,7 +63,7 @@ export class EmployeeService {
         );
     }
 
-    list(admin: boolean, page: number, keyword: string, status: string, department: string, position = ""): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}), ...(position ? { positionId: position } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
+    list(admin: boolean, page: number, keyword: string, status: string, department: string, position = "", employeeId: number | null = null): Observable<Page | Employee[]> { return admin ? this.http.get<Page>(API_BASE_URL + '/employees/search', { params: { page, size: 10, ...(keyword ? { keyword } : {}), ...(status ? { status } : {}), ...(department ? { departmentId: department } : {}), ...(position ? { positionId: position } : {}), ...(employeeId !== null ? { employeeId } : {}) } }).pipe(timeout(15000)) : this.http.get<Employee[]>(API_BASE_URL + '/employees').pipe(timeout(15000)); }
     detail(id: number) { return this.http.get<Employee>(API_BASE_URL + `/employees/${id}/detail`).pipe(timeout(15000)); }
     audit(id:number,page=0){return this.http.get<{content:Record<string,unknown>[];number:number;totalPages:number}>(API_BASE_URL+'/g1/audit',{params:{targetTable:'employees',recordId:id,page,size:20}}).pipe(timeout(15000));}
     all() { return this.http.get<Employee[]>(API_BASE_URL+'/employees').pipe(timeout(15000)); }

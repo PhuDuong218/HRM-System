@@ -438,7 +438,7 @@ public class OvertimeService {
             q.append(" AND o.requested_start<?");
             p.add(to.plusDays(1).atStartOfDay());
         }
-        q.append(" ORDER BY o.requested_start DESC,o.overtime_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
+        q.append(" ORDER BY o.submitted_at DESC,o.overtime_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY");
         p.add(page * size);
         p.add(size);
         return db.query(q.toString(), MAPPER, p.toArray());

@@ -1,0 +1,9 @@
+package com.hrm.service;
+import org.junit.jupiter.api.Test;import org.springframework.jdbc.core.JdbcTemplate;
+import static org.junit.jupiter.api.Assertions.*;import static org.mockito.Mockito.*;
+class LeaveRequestNumberServiceTest {
+ @Test void supportedLeaveTypesHaveStablePrefixes(){assertEquals("PN",LeaveRequestNumberService.prefix("ANNUAL"));assertEquals("PN",LeaveRequestNumberService.prefix("PHEP_NAM"));assertEquals("PO",LeaveRequestNumberService.prefix("NGHI_OM"));assertEquals("PO",LeaveRequestNumberService.prefix("sick"));assertEquals("TS",LeaveRequestNumberService.prefix("MATERNITY"));assertEquals("KP",LeaveRequestNumberService.prefix("UNPAID"));assertEquals("NP",LeaveRequestNumberService.prefix("CUSTOM"));}
+ @Test void formattingPadsWithoutTruncatingLargerValues(){assertEquals("PN-000001",LeaveRequestNumberService.format("PN",1));assertEquals("PO-000012",LeaveRequestNumberService.format("PO",12));assertEquals("TS-1000000",LeaveRequestNumberService.format("TS",1000000));assertThrows(IllegalArgumentException.class,()->LeaveRequestNumberService.format("PN",0));}
+ @Test void allocationUsesServerTypeAndFixedSequence(){var db=mock(JdbcTemplate.class);when(db.queryForObject("SELECT type_code FROM dbo.leave_types WHERE leave_type_id=?",String.class,7L)).thenReturn("SICK");when(db.queryForObject("SELECT NEXT VALUE FOR dbo.leave_request_number_po",Long.class)).thenReturn(42L);assertEquals("PO-000042",new LeaveRequestNumberService(db).next(7));verify(db).queryForObject("SELECT NEXT VALUE FOR dbo.leave_request_number_po",Long.class);}
+ @Test void unexpectedCatalogValuesNeverBecomeSqlIdentifiers(){var db=mock(JdbcTemplate.class);when(db.queryForObject("SELECT type_code FROM dbo.leave_types WHERE leave_type_id=?",String.class,7L)).thenReturn("SICK; DROP TABLE employees");when(db.queryForObject("SELECT NEXT VALUE FOR dbo.leave_request_number_np",Long.class)).thenReturn(1L);assertEquals("NP-000001",new LeaveRequestNumberService(db).next(7));}
+}

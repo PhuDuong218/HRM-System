@@ -112,6 +112,10 @@ export class AccountService {
     return this.http.get<AccountPage>(`${API_BASE_URL}/admin/accounts`, { params }).pipe(timeout(15000));
   }
 
+  update(id: number, request: {username: string; roleId: number; active: boolean}) {
+    return this.http.put<Account>(`${API_BASE_URL}/admin/accounts/${id}`, request);
+  }
+
   roles() {
     return this.http.get<AccountRole[]>(`${API_BASE_URL}/admin/roles`).pipe(timeout(15000));
   }
