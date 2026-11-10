@@ -16,6 +16,10 @@ public class AllowanceType extends BaseEntity {
     private String description;
     @Column(name="is_active", nullable=false)
     private Boolean isActive;
+    @Column(name="is_taxable", nullable=false)
+    private boolean taxable = true;
+    @Column(name="counts_for_social_insurance", nullable=false)
+    private boolean countsForSocialInsurance;
 
     public AllowanceType() {}
     public Long getAllowanceTypeId() { return allowanceTypeId; }
@@ -27,4 +31,8 @@ public class AllowanceType extends BaseEntity {
     public void setDescription(String v) { description=v; }
     public Boolean getIsActive() { return isActive; }
     public void setIsActive(Boolean v) { isActive=v; }
+    public boolean isTaxable() { return taxable; }
+    public void setTaxable(boolean taxable) { this.taxable = taxable; }
+    public boolean isCountsForSocialInsurance() { return countsForSocialInsurance; }
+    public void setCountsForSocialInsurance(boolean value) { countsForSocialInsurance = value; }
 }

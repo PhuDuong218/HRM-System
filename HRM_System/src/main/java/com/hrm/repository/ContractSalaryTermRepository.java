@@ -9,6 +9,8 @@ import org.springframework.data.repository.query.Param;
 
 public interface ContractSalaryTermRepository extends JpaRepository<ContractSalaryTerm,Long> {
     List<ContractSalaryTerm> findByContract_ContractIdOrderByEffectiveFromAsc(Long contractId);
+    List<ContractSalaryTerm> findByContract_ContractIdAndContract_Employee_EmployeeIdOrderByEffectiveFromAscSalaryTermIdAsc(
+            Long contractId, Long employeeId);
     Optional<ContractSalaryTerm> findBySalaryTermIdAndContract_ContractId(Long id, Long contractId);
 
     @Query("""

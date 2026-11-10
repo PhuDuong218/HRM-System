@@ -14,5 +14,7 @@ public record ContractResponse(
     LocalDate signedDate,
     LocalDate startDate,
     LocalDate endDate,
-    ContractStatus status
+    ContractStatus status,
+    com.hrm.enums.ContractTermKind termKind, com.hrm.enums.ProbationGroup probationGroup,
+    com.hrm.enums.TerminationReasonType reasonType
 ) {}

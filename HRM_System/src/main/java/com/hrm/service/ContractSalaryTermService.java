@@ -17,6 +17,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+/** Salary terms include both effective dates. A null end is bounded by the contract, if finite. */
 @Service
 @Transactional(readOnly=true)
 public class ContractSalaryTermService {
@@ -103,9 +104,6 @@ public class ContractSalaryTermService {
             throw error("Đổi lương giữ ngày kết thúc của khoảng cũ");
         }
         LocalDate oldEnd=next.effectiveFrom().minusDays(1);
-        if (!oldEnd.isAfter(old.getEffectiveFrom())) {
-            throw error("Khoảng cũ còn một ngày, SQL hiện không hỗ trợ; cần thống nhất migration");
-        }
         // validate đã bảo đảm khoảng mới đúng; bước này cũng bắt ngày mới sau end cũ.
         assertNoOverlap(c,next,id);
         guard.assertMutable(c.getEmployee().getEmployeeId(),next.effectiveFrom(),applicableEnd(c,next.effectiveTo()));
@@ -140,9 +138,16 @@ public class ContractSalaryTermService {
         }
     }
     private void validate(Contract c,SalaryTermRequest r) {
+        if(c.getContractType().getTermKind()==com.hrm.enums.ContractTermKind.THU_VIEC) {
+            if(r.officialReferenceSalary()==null || r.officialReferenceSalary().signum()<=0 || r.officialReferencePayBasis()==null)
+                throw error("Thử việc bắt buộc lương chính thức tham chiếu dương và đơn vị trả lương");
+        } else if(r.officialReferenceSalary()!=null || r.officialReferencePayBasis()!=null)
+            throw error("Chỉ hợp đồng thử việc được nhập lương tham chiếu");
+
         if (c.getStatus()!=ContractStatus.DA_KY) throw error("Chỉ ghi mức lương cho hợp đồng DA_KY");
         if (r.effectiveFrom().isBefore(c.getStartDate())) throw error("Mức lương bắt đầu trước hợp đồng");
-        if (r.effectiveTo()!=null && !r.effectiveTo().isAfter(r.effectiveFrom())) throw error("Ngày kết thúc phải lớn hơn bắt đầu");
+        if (r.effectiveTo()!=null && r.effectiveTo().isBefore(r.effectiveFrom()))
+            throw error("Ngày kết thúc phải từ ngày bắt đầu trở đi.");
         if (c.getEndDate()!=null && (r.effectiveFrom().isAfter(c.getEndDate()) ||
                 (r.effectiveTo()!=null && r.effectiveTo().isAfter(c.getEndDate())))) {
             throw error("Khoảng lương vượt thời hạn hợp đồng");
@@ -161,10 +166,20 @@ public class ContractSalaryTermService {
     private void apply(ContractSalaryTerm t,SalaryTermRequest r) {
         t.setEffectiveFrom(r.effectiveFrom()); t.setEffectiveTo(r.effectiveTo());
         t.setBaseSalary(r.baseSalary()); t.setPayBasis(r.payBasis()); t.setDocumentReference(r.documentReference());
+        t.setOfficialReferenceSalary(r.officialReferenceSalary());t.setOfficialReferencePayBasis(r.officialReferencePayBasis());
     }
     private SalaryTermResponse dto(ContractSalaryTerm t) {
         return new SalaryTermResponse(t.getSalaryTermId(),t.getContract().getContractId(),
-                t.getEffectiveFrom(),t.getEffectiveTo(),t.getBaseSalary(),t.getPayBasis(),t.getDocumentReference());
+                t.getEffectiveFrom(),t.getEffectiveTo(),t.getBaseSalary(),t.getPayBasis(),t.getDocumentReference(),
+                t.getOfficialReferenceSalary(),t.getOfficialReferencePayBasis(),warnings(t));
+    }
+    private List<String> warnings(ContractSalaryTerm t) {
+        if(t.getContract().getContractType().getTermKind()!=com.hrm.enums.ContractTermKind.THU_VIEC) return List.of();
+        if(t.getOfficialReferenceSalary()==null || t.getOfficialReferencePayBasis()==null) return List.of("Thiếu lương tham chiếu trong dữ liệu thử việc cũ");
+        if(t.getPayBasis()!=t.getOfficialReferencePayBasis()) return List.of("Không so sánh được: khác pay_basis; không tự quy đổi");
+        if(t.getBaseSalary().multiply(new java.math.BigDecimal("100")).compareTo(t.getOfficialReferenceSalary().multiply(new java.math.BigDecimal("85")))<0)
+            return List.of("Lương thử việc dưới 85% lương chính thức tham chiếu");
+        return List.of();
     }
     private BusinessException error(String message) { return new BusinessException(HttpStatus.BAD_REQUEST,message); }
 }

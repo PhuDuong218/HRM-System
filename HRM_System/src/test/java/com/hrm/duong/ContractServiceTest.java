@@ -15,7 +15,7 @@ import static com.hrm.duong.TestData.*;
 class ContractServiceTest {
     ContractRepository contracts;ContractTypeRepository types;EmployeeRepository employees;
     ContractAuditService audit;PayrollHistoryGuard history;ContractService service;
-    @BeforeEach void setup(){contracts=mock(ContractRepository.class);types=mock(ContractTypeRepository.class);employees=mock(EmployeeRepository.class);audit=mock(ContractAuditService.class);history=mock(PayrollHistoryGuard.class);service=new ContractService(contracts,types,employees,audit,history);
+    @BeforeEach void setup(){contracts=mock(ContractRepository.class);types=mock(ContractTypeRepository.class);employees=mock(EmployeeRepository.class);audit=mock(ContractAuditService.class);history=mock(PayrollHistoryGuard.class);service=new ContractService(contracts,types,employees,audit,history,new ContractTermPolicy(contracts,30,180,60,30,6));
         when(employees.findByIdForUpdate(1L)).thenReturn(Optional.of(employee(1)));when(types.findById(2L)).thenReturn(Optional.of(contractType()));
         when(contracts.saveAndFlush(any())).thenAnswer(x->{var c=(com.hrm.model.Contract)x.getArgument(0);id(c,"contractId",3);return c;});}
     @Test void createsSignedDtoAndGuardsHistory(){var r=service.create(contractRequest(TODAY,TODAY.plusDays(30)));assertEquals(3L,r.contractId());assertEquals(ContractStatus.DA_KY,r.status());verify(history).assertMutable(1L,TODAY,TODAY.plusDays(30));verify(audit).record(eq("CONTRACT_CREATE"),eq(3L),anyString(),isNull(),anyString());}

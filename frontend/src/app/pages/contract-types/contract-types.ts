@@ -5,10 +5,12 @@ import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
 import {
+  contractTermKindLabels,
   ContractTypeRequest,
   ContractTypeResponse
 } from '../../models/contract.model';
 import { ContractService } from '../../services/contract.service';
+import { employmentApiError } from '../../shared/employment-api-error';
 
 @Component({
   selector: 'app-contract-types',
@@ -17,6 +19,7 @@ import { ContractService } from '../../services/contract.service';
   templateUrl: './contract-types.html'
 })
 export class ContractTypesPage implements OnInit {
+  readonly termKindLabels = contractTermKindLabels;
   private api = inject(ContractService);
   private destroyRef = inject(DestroyRef);
 
@@ -41,7 +44,8 @@ export class ContractTypesPage implements OnInit {
     return {
       typeCode: '',
       typeName: '',
-      isActive: true
+      termKind: 'XAC_DINH', maxMonths: 36,
+      reason: "", isActive: true
     };
   }
 
@@ -86,7 +90,8 @@ export class ContractTypesPage implements OnInit {
     this.form = {
       typeCode: row.typeCode,
       typeName: row.typeName,
-      isActive: row.isActive
+      termKind: row.termKind, maxMonths: row.maxMonths,
+      reason: "", isActive: row.isActive
     };
 
     this.error = '';
@@ -108,7 +113,8 @@ export class ContractTypesPage implements OnInit {
     const request: ContractTypeRequest = {
       typeCode: this.form.typeCode.trim(),
       typeName: this.form.typeName.trim(),
-      isActive: this.form.isActive
+      termKind: this.form.termKind, maxMonths: this.form.termKind === 'XAC_DINH' ? this.form.maxMonths : null,
+      reason: this.form.reason.trim(), isActive: this.form.isActive
     };
 
     this.error = '';
@@ -204,22 +210,6 @@ export class ContractTypesPage implements OnInit {
     error: HttpErrorResponse,
     fallback: string
   ): string {
-    if (error.status === 0) {
-      return 'Không kết nối được backend. Hãy kiểm tra kết nối.';
-    }
-
-    if (error.status === 401) {
-      return 'Phiên đăng nhập không hợp lệ hoặc đã hết hạn.';
-    }
-
-    if (error.status === 403) {
-      return 'Tài khoản không có quyền quản lý loại hợp đồng.';
-    }
-
-    const detail = error.error?.loi_chi_tiet;
-
-    return typeof detail === 'string' && detail.trim()
-      ? detail
-      : fallback;
+    return employmentApiError(error, fallback);
   }
 }

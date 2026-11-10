@@ -4,6 +4,7 @@ package com.hrm.model;
 import java.time.LocalDate;
 
 import com.hrm.enums.ContractStatus;
+import com.hrm.enums.TerminationReasonType;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,6 +51,23 @@ public class Contract extends BaseEntity {
     @Column(name = "status", nullable = false, length = 20)
     private ContractStatus status;
 
+    @Enumerated(EnumType.STRING)
+    @Column(name = "termination_reason_type", length = 30)
+    private TerminationReasonType terminationReasonType;
+
+    public TerminationReasonType getTerminationReasonType() {
+        return terminationReasonType;
+    }
+
+    public void setTerminationReasonType(TerminationReasonType value) {
+        terminationReasonType = value;
+    }
+
+    @Enumerated(EnumType.STRING)
+    @Column(name="probation_group", length=30)
+    private com.hrm.enums.ProbationGroup probationGroup;
+    public com.hrm.enums.ProbationGroup getProbationGroup(){return probationGroup;}
+    public void setProbationGroup(com.hrm.enums.ProbationGroup value){probationGroup=value;}
     public Contract() {
     }
 
