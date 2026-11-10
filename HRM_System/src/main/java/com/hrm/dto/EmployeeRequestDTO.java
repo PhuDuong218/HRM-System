@@ -10,6 +10,8 @@ import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 
 public class EmployeeRequestDTO {
+    @NotBlank(message="Vui lòng chọn giới tính")
+    @Pattern(regexp="MALE|FEMALE|OTHER|UNDISCLOSED",message="Giới tính chưa hợp lệ")
     private String gender;
     public String getGender(){return gender;}
     public void setGender(String value){gender=value;}

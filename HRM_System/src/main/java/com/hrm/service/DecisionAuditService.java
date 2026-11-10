@@ -15,6 +15,7 @@ public class DecisionAuditService {
     public DecisionAuditService(JdbcTemplate jdbc,JsonMapper json,Clock clock) {
         this.jdbc=jdbc;this.json=json;this.clock=clock;
     }
+    public java.util.List<java.util.Map<String,Object>> history(long id){return jdbc.queryForList("SELECT CONVERT(varchar(23),l.occurred_at,126) occurredAt,l.action,l.reason,a.username actor FROM dbo.audit_logs l LEFT JOIN dbo.accounts a ON a.account_id=l.actor_account_id WHERE l.target_table='employee_decisions' AND l.target_record_key=? ORDER BY l.audit_id DESC",Long.toString(id));}
     @Transactional(propagation=Propagation.MANDATORY)
     public void record(Long actorId,Long decisionId,String action,String reason,Object before,Object after) {
         jdbc.update("""

@@ -27,6 +27,7 @@ public class ConfirmedAttendancePeriodService {
             long netMinutes, long unresolvedRecords) {
     }
 
+    @org.springframework.beans.factory.annotation.Autowired private DepartmentWorkspaceAccess headAccess;
     private final JdbcTemplate db;
     private final AttendanceActualBreakService actualBreaks;
 
@@ -46,8 +47,11 @@ public class ConfirmedAttendancePeriodService {
         return summarizeInternal(principal, from, to, null, true);
     }
 
+    @org.springframework.transaction.annotation.Transactional(value="scheduleTransactionManager",readOnly=true)
+    public PeriodSummary summarizeDepartment(AuthenticatedAccount p,LocalDate from,LocalDate to,Long employee){headAccess.departments(p);return summarizeInternal(p,from,to,employee,false,true);}
+    private PeriodSummary summarizeInternal(AuthenticatedAccount p,LocalDate from,LocalDate to,Long employee,boolean mine){return summarizeInternal(p,from,to,employee,mine,false);}
     private PeriodSummary summarizeInternal(AuthenticatedAccount principal, LocalDate from, LocalDate to,
-            Long employeeFilter, boolean mine) {
+            Long employeeFilter, boolean mine, boolean departmentHead) {
         if (principal == null || principal.accountId() == null || principal.accountId() <= 0)
             throw new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Authentication required");
         if (from == null || to == null || to.isBefore(from) || ChronoUnit.DAYS.between(from, to) > 366)
@@ -68,9 +72,9 @@ public class ConfirmedAttendancePeriodService {
             if ((!"EMPLOYEE".equals(role) && !"HR".equals(role)) || principal.employeeId() == null || principal.employeeId() <= 0) deny();
             employeeFilter = principal.employeeId();
         }
-        if (!mine && !"ADMIN".equals(role) && !"HR".equals(role))
+        if (!mine && !departmentHead && !"ADMIN".equals(role) && !"HR".equals(role))
             deny();
-        if (!mine) {
+        if (!mine && !departmentHead) {
         Long granted = db.queryForObject("""
                 SELECT COUNT_BIG(*) FROM dbo.accounts a JOIN dbo.role_permissions rp ON rp.role_id=a.role_id
                 JOIN dbo.permissions p ON p.permission_id=rp.permission_id
@@ -101,7 +105,7 @@ public class ConfirmedAttendancePeriodService {
             query.append(" AND a.employee_id=?");
             parameters.add(employeeFilter);
         }
-        if (!mine && "HR".equals(role)) {
+        if (!mine && !departmentHead && "HR".equals(role)) {
             query.append("""
                     AND EXISTS (
                       SELECT 1 FROM dbo.employee_assignments ea
@@ -115,6 +119,7 @@ public class ConfirmedAttendancePeriodService {
                     """);
             parameters.add(principal.accountId());
         }
+        if(departmentHead)query.append(" AND "+headAccess.predicate(principal,"a.employee_id","a.work_date"));
         query.append(" ORDER BY a.employee_id,a.work_date,a.actual_start");
         record Line(long employeeId, LocalDate date, String result, LocalDateTime start,
                 LocalDateTime end, Integer breaks, String code, String name, String department,long attendanceId) {

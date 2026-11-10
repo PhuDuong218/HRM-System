@@ -81,7 +81,7 @@ export class AdminLayout {
   get menu():NavigationItem[]{
     const role=this.auth.profile()?.role||'';
     if(!role)return [];
-    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'personnel',label:'Quản lý Nhân sự',children:[{path:'employees',label:'Nhân viên'}]},{id:'time',label:'Thời gian & Chấm công',children:[{path:'requests/head',label:'Quản lý đơn từ'}]}]:[];
+    if(!['ADMIN','HR'].includes(role))return this.auth.profile()?.departmentHead?[{id:'personnel',label:'Nhân sự phòng ban',children:[{path:'employees',label:'Nhân viên'},{path:'department/assignments',label:'Phân công / Điều chuyển'}]},{id:'time',label:'Thời gian & Đơn từ',children:[{path:'department/schedules',label:'Lịch làm việc'},{path:'department/attendance',label:'Chấm công'},{path:'department/summary',label:'Tổng hợp công theo kỳ'},{path:'department/overtime',label:'Tăng ca'},{path:'requests/head',label:'Quản lý đơn từ'}]},{id:'reports',label:'Báo cáo phòng ban',children:[{path:'department/reports',label:'Báo cáo công phòng ban'}]}]:[];
     const extra=this.auth.profile()?.departmentHead?[{path:'requests/head',label:'Duyệt cấp 1'}]:[];
     return navigation.filter(item=>!item.roles||item.roles.includes(role)).map(item=>item.children?{...item,children:[...item.children.filter(child=>!child.roles||child.roles.includes(role)),...(item.id==='time'?extra:[])]}:item);
   }

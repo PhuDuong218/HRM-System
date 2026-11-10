@@ -35,7 +35,9 @@ public final class AdminAccessDTOs {
 
     public record AccountView(Long accountId, Long employeeId, String employeeCode, String fullName,
             Long roleId, String roleCode, String roleName, String username, boolean active,
-            LocalDateTime createdAt, LocalDateTime updatedAt, EmploymentStatus employmentStatus) {}
+            LocalDateTime createdAt, LocalDateTime updatedAt, EmploymentStatus employmentStatus, boolean departmentHead) {
+        public AccountView(Long accountId, Long employeeId, String employeeCode, String fullName, Long roleId, String roleCode, String roleName, String username, boolean active, LocalDateTime createdAt, LocalDateTime updatedAt, EmploymentStatus employmentStatus){this(accountId,employeeId,employeeCode,fullName,roleId,roleCode,roleName,username,active,createdAt,updatedAt,employmentStatus,false);}
+    }
 
     public record AccountContact(String email, String phone) {}
 

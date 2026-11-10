@@ -17,7 +17,7 @@ public class EmployeeSupplement {
   save(employee,gender,actor,reason,false);
  }
  private void save(long employee,String gender,long actor,String reason,boolean recordAudit){
-  if(gender==null)return;
+  if(gender==null||gender.isBlank())throw PersonnelWorkflowSupport.bad("Vui lòng chọn giới tính");
   if(!Set.of("MALE","FEMALE","OTHER","UNDISCLOSED").contains(gender))throw PersonnelWorkflowSupport.bad("Giới tính chưa hợp lệ");
   if(!exists())throw PersonnelWorkflowSupport.conflict("Cần migration 011 để lưu thông tin giới tính");
   String before=get(employee);if(Objects.equals(before,gender))return;

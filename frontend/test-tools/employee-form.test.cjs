@@ -24,7 +24,7 @@ test('employee editor hydrates detail, retains failed drafts, and rejects invali
   for(const [field,value,error]of [['fullName',' ','fullName'],['birthDate','2020-01-02','birthDate'],['birthDate','2026-11-05','birthDate'],['hireDate','2026-11-05','hireDate'],['email','invalid','email'],['phone','123','phone'],['identityNumber','1'.repeat(51),'identityNumber'],['address','a'.repeat(501),'address'],['departmentId',null,'departmentId'],['positionId',null,'positionId'],['gender','INVALID','gender']])assert.ok(employeeFormErrors({...valid,[field]:value},'create','2026-11-04')[error],field);
   assert.ok(employeeFormErrors({...valid,reason:'  '},'edit','2026-11-04').changeReason);
   const missing=employeeFormErrors({...valid,email:'',phone:'',identityNumber:'',address:'',birthDate:'',gender:null},'edit','2026-11-04');
-  for(const field of ['email','identityNumber','address'])assert.ok(missing[field],field+' is required');
+  for(const field of ['email','identityNumber','address','gender'])assert.ok(missing[field],field+' is required');
   assert.deepEqual(employeeFormErrors({...valid,email:'',identityNumber:'',address:'',privateFieldsEditable:false},'edit','2026-11-04',false),{});
   page.form={...valid,email:'bad'};page.mode='edit';page.save(f);http.expectNone('/api/employees/5');assert.ok(page.fieldError('email',f));
   http.verify();injector.destroy();

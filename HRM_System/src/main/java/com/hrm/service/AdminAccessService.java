@@ -26,6 +26,7 @@ import org.springframework.web.server.ResponseStatusException;
 @PreAuthorize("hasRole('ADMIN') and hasAuthority('ACCOUNT_MANAGE')")
 public class AdminAccessService {
     private static final Set<String> SYSTEM_ROLES = Set.of("ADMIN", "HR", "EMPLOYEE");
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private org.springframework.jdbc.core.JdbcTemplate headDb;
     private final AccountRepository accounts;
     private final EmployeeRepository employees;
     private final RoleRepository roles;
@@ -47,18 +48,22 @@ public class AdminAccessService {
     }
 
     public PageResponse<AccountView> accounts(int page, int size, String keyword, Boolean active, Long roleId) {
+        return accounts(page,size,keyword,active,roleId,false);
+    }
+    public PageResponse<AccountView> accounts(int page,int size,String keyword,Boolean active,Long roleId,boolean departmentHead) {
         if (roleId != null && roleId < 1) throw new IllegalArgumentException("roleId phải lớn hơn 0");
         String term = keyword == null ? "" : keyword.trim().toLowerCase(Locale.ROOT);
         if (term.length() > 100) throw new IllegalArgumentException("Từ khóa tối đa 100 ký tự");
         String pattern = term.isEmpty() ? "" : "%" + term.replace("!", "!!").replace("%", "!%")
                 .replace("_", "!_").replace("[", "![") + "%";
-        var result = accounts.search(pattern, active, roleId,
-                PagingUtils.create(page, size, Sort.by("accountId")));
+        var paging=PagingUtils.create(page,size,Sort.by("accountId"));
+        var result = departmentHead?accounts.searchDepartmentHeads(pattern,active,java.time.LocalDate.now(java.time.ZoneId.of("Asia/Ho_Chi_Minh")),paging):accounts.search(pattern,active,roleId,paging);
         // Fetch employee labels in one query for the whole page.
         Map<Long, Employee> labels = new HashMap<>();
         employees.findAllById(result.stream().map(Account::getEmployeeId).toList())
                 .forEach(e -> labels.put(e.getEmployeeId(), e));
-        return new PageResponse<>(result.stream().map(a -> view(a, labels.get(a.getEmployeeId()))).toList(),
+        var heads=currentHeadIds();
+        return new PageResponse<>(result.stream().map(a -> view(a, labels.get(a.getEmployeeId()),heads.contains(a.getEmployeeId()))).toList(),
                 page, size, result.getTotalElements(), result.getTotalPages());
     }
 
@@ -283,11 +288,13 @@ public class AdminAccessService {
         return permissions.findById(id).orElseThrow(() -> new ResourceNotFoundException("Không tìm thấy quyền"));
     }
     private AccountView view(Account a) { return view(a, employees.findById(a.getEmployeeId()).orElse(null)); }
-    private AccountView view(Account a, Employee e) {
+    private Set<Long> currentHeadIds(){if(headDb==null)return Set.of();return new HashSet<>(headDb.queryForList("SELECT DISTINCT h.employee_id FROM dbo.employee_assignments h JOIN dbo.positions p ON p.position_id=h.position_id WHERE p.position_code='TRUONG_PHONG' AND h.effective_from<=CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time') AND (h.effective_to IS NULL OR h.effective_to>CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time'))",Long.class));}
+    private AccountView view(Account a, Employee e) {return view(a,e,currentHeadIds().contains(a.getEmployeeId()));}
+    private AccountView view(Account a, Employee e, boolean head) {
         return new AccountView(a.getAccountId(), a.getEmployeeId(), e == null ? null : e.getEmployeeCode(),
                 e == null ? null : e.getFullName(), a.getRole().getRoleId(), a.getRole().getRoleCode(),
                 a.getRole().getRoleName(), a.getUsername(), a.isActive(), a.getCreatedAt(), a.getUpdatedAt(),
-                e == null ? null : e.getEmploymentStatus());
+                e == null ? null : e.getEmploymentStatus(), head);
     }
     private PermissionView permissionView(Permission p) {
         return new PermissionView(p.getPermissionId(), p.getPermissionCode(), p.getPermissionName(), p.getDescription());

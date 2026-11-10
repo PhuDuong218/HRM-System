@@ -27,6 +27,20 @@ public interface AccountRepository extends JpaRepository<Account, Long> {
                 @Param("keyword") String keyword, @Param("active") Boolean active,
                 @Param("roleId") Long roleId, org.springframework.data.domain.Pageable pageable);
 
+        @Query("""
+                select a from Account a join Employee e on e.employeeId = a.employeeId
+                where (:keyword = '' or lower(a.username) like :keyword escape '!'
+                       or lower(e.employeeCode) like :keyword escape '!'
+                       or lower(e.fullName) like :keyword escape '!')
+                  and (:active is null or a.active = :active)
+                  and exists (select head.assignmentId from EmployeeAssignment head join head.position p
+                    where head.employee.employeeId = a.employeeId and p.positionCode = 'TRUONG_PHONG'
+                      and head.effectiveFrom <= :today and (head.effectiveTo is null or head.effectiveTo > :today))
+                """)
+        org.springframework.data.domain.Page<Account> searchDepartmentHeads(
+                @Param("keyword") String keyword, @Param("active") Boolean active,
+                @Param("today") java.time.LocalDate today, org.springframework.data.domain.Pageable pageable);
+
         Optional<Account> findByUsername(String username);
 
         @org.springframework.data.jpa.repository.Lock(jakarta.persistence.LockModeType.PESSIMISTIC_WRITE)

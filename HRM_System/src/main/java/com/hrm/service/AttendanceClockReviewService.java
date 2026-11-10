@@ -8,6 +8,7 @@ import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.HttpStatus;
 @Service
 public class AttendanceClockReviewService {
+ @org.springframework.beans.factory.annotation.Autowired(required=false) private AttendanceNotifications notifications;
  private final JdbcTemplate db;private final AttendancePortalService portal;
  public AttendanceClockReviewService(JdbcTemplate db,AttendancePortalService portal){this.db=db;this.portal=portal;}
  @Transactional("scheduleTransactionManager")
@@ -24,6 +25,7 @@ public class AttendanceClockReviewService {
   int count=db.update("UPDATE dbo.attendance_records SET "+prefix+"_reviewed_by=?,"+prefix+"_reviewed_at=SYSUTCDATETIME(),"+prefix+"_reviewed_value="+actual+" WHERE attendance_id=? AND row_version=? AND invalidated_at IS NULL",actor.accountId(),attendanceId,Base64.getDecoder().decode(expectedVersion));
   if(count!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"Công đã thay đổi đồng thời.");
   db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json) VALUES(?,?,'attendance_records',?,?,?,?)",actor.accountId(),checkIn?"ATTENDANCE_REVIEW_CHECK_IN":"ATTENDANCE_REVIEW_CHECK_OUT",Long.toString(attendanceId),reason.trim(),before,snapshot(attendanceId));
+  if(notifications!=null)notifications.publishRecord(attendanceId,checkIn?"ATTENDANCE_REVIEW_CHECK_IN":"ATTENDANCE_REVIEW_CHECK_OUT",actor.accountId());
   return portal.detail(actor,false,schedule);
  }
  private String snapshot(long id){return db.queryForObject("SELECT (SELECT * FROM dbo.attendance_records WHERE attendance_id=? FOR JSON PATH,WITHOUT_ARRAY_WRAPPER)",String.class,id);}

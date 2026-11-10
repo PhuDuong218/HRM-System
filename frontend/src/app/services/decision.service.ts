@@ -42,6 +42,8 @@ export class DecisionService {
     return this.http.put<DecisionResponse>(API_BASE_URL + '/employee-decisions/' + id, body);
   }
 
+  withdraw(id:number,reason:string){return this.http.post<DecisionResponse>(API_BASE_URL+'/employee-decisions/'+id+'/withdraw',{reason});}
+  history(id:number){return this.http.get<{occurredAt:string;action:string;reason:string;actor:string}[]>(API_BASE_URL+'/employee-decisions/'+id+'/history');}
   remove(id: number, reason: string) {
     return this.http.delete<void>(API_BASE_URL + '/employee-decisions/' + id, {
       params: new HttpParams().set('reason', reason),

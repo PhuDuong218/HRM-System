@@ -14,7 +14,7 @@ export function employeeFormErrors(form: EmployeeForm, mode: string, today: stri
     if (mode !== 'contact') {
         if (!text(form.fullName) || text(form.fullName).length > 200) errors['fullName'] = 'Nhập họ tên hợp lệ, tối đa 200 ký tự.';
         if (form.birthDate && (!day(form.birthDate) || form.birthDate >= today || (!!form.hireDate && form.birthDate >= form.hireDate))) errors['birthDate'] = 'Ngày sinh phải trong quá khứ và trước ngày vào làm.';
-        if (form.gender && !['MALE','FEMALE','OTHER','UNDISCLOSED'].includes(form.gender)) errors['gender'] = 'Chọn giới tính trong danh sách hoặc để trống.';
+        if (!form.gender || !['MALE','FEMALE','OTHER','UNDISCLOSED'].includes(form.gender)) errors['gender'] = 'Vui lòng chọn giới tính.';
     }
     if (text(form.email) && (text(form.email).length > 254 || !/^[^\s@]+@[^\s@]+$/.test(text(form.email)))) errors['email'] = 'Email chưa đúng định dạng.';
     if (contactEditable&&!text(form.email)) errors['email']='Vui lòng nhập email.';

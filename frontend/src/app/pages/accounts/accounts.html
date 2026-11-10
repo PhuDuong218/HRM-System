@@ -40,6 +40,7 @@
       <label for="account-role" class="form-label">{{ 'Vai trò' | translate }}</label>
       <select #role id="account-role" class="form-select" [disabled]="!!rolesError">
         <option value="" [selected]="filters.roleId === ''">{{ 'Tất cả vai trò' | translate }}</option>
+        <option value="DEPARTMENT_HEAD" [selected]="filters.roleId === 'DEPARTMENT_HEAD'">Trưởng phòng (theo phân công hiệu lực)</option>
         @for (item of roles; track item.roleId) {
           <option [value]="item.roleId" [selected]="filters.roleId === '' + item.roleId">{{ item.roleName }} ({{ item.roleCode }})</option>
         }
@@ -71,7 +72,7 @@
               <td class="account-username" [attr.data-label]="'Tên đăng nhập' | translate">{{ account.username }}</td>
               <td [attr.data-label]="'Mã nhân viên' | translate">{{ (account.employeeCode || '—') | translate }}</td>
               <td [attr.data-label]="'Họ và tên' | translate">{{ (account.fullName || '—') | translate }}</td>
-              <td [attr.data-label]="'Vai trò' | translate">{{ account.roleName || account.roleCode }}</td>
+              <td [attr.data-label]="'Vai trò' | translate">{{ account.departmentHead ? (account.roleCode==='EMPLOYEE'?'Trưởng phòng':account.roleName+' · Trưởng phòng') : (account.roleName || account.roleCode) }}</td>
               <td [attr.data-label]="'Trạng thái' | translate"><span class="account-status" [class.active]="account.active" [class.inactive]="!account.active">{{ (account.active ? 'Đang hoạt động' : 'Đã khóa') | translate }}</span></td>
               <td [attr.data-label]="'Thao tác' | translate"><div class="row-actions">
                 <button type="button" class="btn btn-sm btn-outline-primary" (click)="$event.stopPropagation(); openDialog('account-view', account)" [attr.aria-label]="'Chi tiết tài khoản ' + account.username">{{ (selectedAccount?.accountId === account.accountId ? 'Đang xem' : 'Chi tiết') | translate }}</button>
@@ -86,7 +87,7 @@
 </section>
 } @else if (section === 'roles') {
 <section class="surface" aria-labelledby="roles-title">
-  <div class="list-heading">
+  <div class="alert alert-info">Trưởng phòng là vai trò nghiệp vụ theo chức vụ TRUONG_PHONG và phân công còn hiệu lực. Quyền duyệt cấp 1 chỉ áp dụng trong phòng ban phụ trách; không tự duyệt đơn của mình. Bổ nhiệm hoặc thay đổi tại Phân công / Điều chuyển.</div><div class="list-heading">
     <div><h2 id="roles-title" class="mb-1">{{ 'Danh sách vai trò' | translate }}</h2><p class="muted small mb-0">{{ 'Xem các vai trò và nhóm quyền tương ứng.' | translate }}</p></div>
     <div class="heading-actions"><button type="button" class="btn btn-outline-primary" (click)="loadRoles()" [disabled]="rolesLoading">{{ 'Làm mới' | translate }}</button></div>
   </div>
@@ -142,7 +143,8 @@
       </section>
       <section class="detail-section" aria-labelledby="owner-info-title">
         <h3 id="owner-info-title">{{ 'Chủ tài khoản' | translate }}</h3>
-        <dl class="detail-grid"><div><dt>{{ 'Họ và tên' | translate }}</dt><dd>{{ (account.fullName || 'Chưa có thông tin') | translate }}</dd></div><div><dt>{{ 'Mã nhân viên' | translate }}</dt><dd>{{ (account.employeeCode || 'Chưa có thông tin') | translate }}</dd></div><div><dt>{{ 'Trạng thái làm việc' | translate }}</dt><dd><span class="account-status employment-status" [class.active]="account.employmentStatus === 'DANG_LAM'" [class.resigned]="account.employmentStatus === 'DA_NGHI'" [class.unknown]="!account.employmentStatus">{{ (account.employmentStatus === 'DANG_LAM' ? 'Đang làm việc' : account.employmentStatus === 'DA_NGHI' ? 'Đã nghỉ việc' : 'Chưa có thông tin') | translate }}</span></dd></div><div><dt>{{ 'Vai trò' | translate }}</dt><dd>{{ account.roleName || account.roleCode }}</dd></div></dl>
+        <dl class="detail-grid"><div><dt>{{ 'Họ và tên' | translate }}</dt><dd>{{ (account.fullName || 'Chưa có thông tin') | translate }}</dd></div><div><dt>{{ 'Mã nhân viên' | translate }}</dt><dd>{{ (account.employeeCode || 'Chưa có thông tin') | translate }}</dd></div><div><dt>{{ 'Trạng thái làm việc' | translate }}</dt><dd><span class="account-status employment-status" [class.active]="account.employmentStatus === 'DANG_LAM'" [class.resigned]="account.employmentStatus === 'DA_NGHI'" [class.unknown]="!account.employmentStatus">{{ (account.employmentStatus === 'DANG_LAM' ? 'Đang làm việc' : account.employmentStatus === 'DA_NGHI' ? 'Đã nghỉ việc' : 'Chưa có thông tin') | translate }}</span></dd></div><div><dt>{{ 'Vai trò' | translate }}</dt><dd>{{ account.departmentHead ? (account.roleCode==='EMPLOYEE'?'Trưởng phòng':account.roleName+' · Trưởng phòng') : (account.roleName || account.roleCode) }}</dd></div></dl>
+        @if(account.departmentHead){<p class="alert alert-info">Trưởng phòng theo phân công đang có hiệu lực. Thay đổi chức vụ/phòng ban tại Phân công / Điều chuyển.</p>}
         @if (account.roleCode === 'HR') {
           <p class="detail-label detail-subheading">{{ 'Phòng ban được giao quản lý' | translate }}</p>
           @if (hrDepartmentsLoading) { <p class="muted small" role="status">{{ 'Đang tải phạm vi phòng ban…' | translate }}</p> }

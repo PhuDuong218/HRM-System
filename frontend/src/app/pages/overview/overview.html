@@ -3,7 +3,7 @@
       <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}</span>
       <button type="button" hrmBtn="secondary" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
 
-    @if (isAdmin) { <a routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a> }
+    @if (isAdmin) { <a hrmBtn="primary" routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a> }
   </app-page-header>
 
   @if (isHr) { <p>{{ language.t('Số liệu chỉ bao gồm các phòng ban bạn được phân công quản lý.') }}</p> }

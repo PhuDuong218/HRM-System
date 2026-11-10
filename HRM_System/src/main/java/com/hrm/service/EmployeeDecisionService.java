@@ -103,18 +103,19 @@ public class EmployeeDecisionService {
         return after;
     }
 
+    /** Legacy DELETE endpoint now withdraws without removing history. */
     @Transactional
-    public void delete(Long id, String reason) {
-        var actor = actors.requireManager();
-        var d = lock(id);
-        pending(d);
-        if (reason == null || reason.isBlank() || reason.length() > 500)
-            throw error(HttpStatus.BAD_REQUEST, "Cần lý do xóa từ 1 đến 500 ký tự");
-        var before = dto(d);
-        decisions.delete(d);
-        decisions.flush();
-        audit.record(actor.accountId(), id, "DECISION_DELETE", reason.trim(), before, null);
+    public void delete(Long id, String reason) { withdraw(id,reason); }
+
+    @Transactional
+    public DecisionResponse withdraw(Long id,String reason){
+        var actor=actors.requireManager();var d=lock(id);pending(d);
+        if(reason==null||reason.isBlank()||reason.trim().length()>500)throw error(HttpStatus.BAD_REQUEST,"Nhập lý do thu hồi từ 1 đến 500 ký tự");
+        var before=dto(d);d.setApprovalStatus(DecisionApprovalStatus.DA_THU_HOI);touch(d,actor);decisions.saveAndFlush(d);var after=dto(d);
+        audit.record(actor.accountId(),id,"DECISION_WITHDRAW",reason.trim(),before,after);return after;
     }
+
+    public java.util.List<java.util.Map<String,Object>> decisionHistory(Long id){get(id);return audit.history(id);}
 
     @Transactional
     public DecisionResponse approve(Long id, DecisionActionRequest r) {

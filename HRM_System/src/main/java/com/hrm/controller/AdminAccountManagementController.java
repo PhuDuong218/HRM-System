@@ -22,8 +22,8 @@ public class AdminAccountManagementController {
     @GetMapping
     public PageResponse<AccountView> list(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size, @RequestParam(required = false) String keyword,
-            @RequestParam(required = false) Boolean active, @RequestParam(required = false) Long roleId) {
-        return service.accounts(page, size, keyword, active, roleId);
+            @RequestParam(required = false) Boolean active, @RequestParam(required = false) Long roleId, @RequestParam(defaultValue="false") boolean departmentHead) {
+        return service.accounts(page, size, keyword, active, roleId,departmentHead);
     }
     @GetMapping("/eligible-employees")
     public PageResponse<EligibleEmployee> eligibleEmployees(@RequestParam(required = false) String keyword,

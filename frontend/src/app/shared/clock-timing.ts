@@ -10,6 +10,6 @@ export function clockTiming(planned: string | null | undefined, actual: string |
   if (delta === 0) return `${label} đúng giờ`;
   const seconds = Math.floor(Math.abs(delta) / 1000);
   const minutes = Math.floor(seconds / 60), rest = seconds % 60;
-  const amount = minutes ? `${minutes} phút${rest ? ` ${rest} giây` : ''}` : seconds ? `${seconds} giây` : 'dưới 1 giây';
+  const amount = seconds >= 3600 ? `${Math.floor(seconds / 3600)} giờ ${minutes % 60} phút ${rest} giây` : minutes ? `${minutes} phút${rest ? ` ${rest} giây` : ''}` : seconds ? `${seconds} giây` : 'dưới 1 giây';
   return `${label} ${delta > 0 ? 'muộn' : 'sớm'} ${amount}`;
 }

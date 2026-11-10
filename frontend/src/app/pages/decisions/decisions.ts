@@ -96,6 +96,7 @@ export class DecisionsPage implements OnInit {
     CHO_DUYET: 'Chờ duyệt',
     DA_DUYET: 'Đã duyệt',
     TU_CHOI: 'Từ chối',
+    DA_THU_HOI: 'Đã thu hồi',
   };
   readonly effectLabels: Record<DecisionPayrollEffect, string> = {
     NONE: 'Không ảnh hưởng lương',
@@ -147,6 +148,7 @@ export class DecisionsPage implements OnInit {
   actionReason = '';
 
   selectedDecision: DecisionResponse | null = null;
+  decisionHistory:{occurredAt:string;action:string;reason:string;actor:string}[]=[];historyError='';
   detailLoading = false;
   detailError = '';
   private detailRequestVersion = 0;
@@ -411,7 +413,7 @@ export class DecisionsPage implements OnInit {
 
   async remove(row: DecisionResponse): Promise<void> {
     if (this.saving || row.approvalStatus !== 'CHO_DUYET') return;
-    const reason = (await this.actionDialogInPage.prompt('Nhập lý do xóa quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):'));
+    const reason = (await this.actionDialogInPage.prompt('Nhập lý do thu hồi quyết định ' + row.decisionNumber + ' (tối đa 500 ký tự):'));
     if (reason === null) return;
     if (!reason.trim()) {
       this.error = 'Vui lòng nhập lý do.';
@@ -421,11 +423,11 @@ export class DecisionsPage implements OnInit {
       this.error = 'Lý do không được vượt quá 500 ký tự.';
       return;
     }
-    if (!(await this.actionDialogInPage.confirm('Xóa quyết định ' + row.decisionNumber + '?'))) return;
+    if (!(await this.actionDialogInPage.confirm('Thu hồi quyết định chờ duyệt ' + row.decisionNumber + '? Bản ghi và lịch sử được giữ nguyên.'))) return;
     this.run(
-      this.api.remove(row.decisionId, reason.trim()),
-      'Đã xóa quyết định chờ duyệt.',
-      'Không xóa được quyết định.',
+      this.api.withdraw(row.decisionId, reason.trim()),
+      'Đã thu hồi quyết định chờ duyệt.',
+      'Không thu hồi được quyết định.',
       () => { this.selectedDecision = null; },
     );
   }
@@ -507,7 +509,7 @@ export class DecisionsPage implements OnInit {
   }
 
   openDetail(row: DecisionResponse): void {
-    if (this.saving) return;
+    if (this.saving) return;this.decisionHistory=[];this.historyError='';
     this.selectedDecision = row;
     this.detailLoading = true;
     this.detailError = '';
@@ -518,6 +520,7 @@ export class DecisionsPage implements OnInit {
         if (requestVersion !== this.detailRequestVersion) return;
         this.selectedDecision = result;
         this.detailLoading = false;
+        this.api.history(row.decisionId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({next:logs=>{if(requestVersion===this.detailRequestVersion)this.decisionHistory=logs;},error:()=>{if(requestVersion===this.detailRequestVersion)this.historyError='Không tải được lịch sử quyết định.';}});
       },
       error: (error: HttpErrorResponse) => {
         if (requestVersion !== this.detailRequestVersion) return;

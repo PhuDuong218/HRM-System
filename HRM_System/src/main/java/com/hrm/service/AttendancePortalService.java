@@ -16,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 /** Attendance page API. All identities, scopes, clocks and action eligibility are server-owned. */
 @Service
 public class AttendancePortalService {
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private DepartmentReviewService departmentReviews;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private AttendanceNotifications notifications;
     public record Context(String role, boolean mine, boolean manage, LocalDateTime serverNow,
             int checkoutRequestDays, int correctionRequestDays) {}
@@ -313,6 +314,7 @@ public class AttendancePortalService {
     private void requestLock(long id){db.queryForObject("SELECT request_id FROM dbo.attendance_portal_requests WITH(UPDLOCK,HOLDLOCK) WHERE request_id=?",Long.class,id);}
     @Transactional("scheduleTransactionManager")
     public void decide(AuthenticatedAccount p,long id,Decision body){Actor a=actor(p);if(body==null)throw error(HttpStatus.BAD_REQUEST,"Thiếu quyết định.");RequestDetail d=request(p,false,id);employeeLock(d.current().row().employeeId());if(d.request().attendanceId()!=null)attendanceLock(d.request().attendanceId());requestLock(id);d=request(p,false,id);Request r=d.request();if(!r.canDecide())throw error(HttpStatus.FORBIDDEN,"Chỉ người tiếp nhận độc lập có quyền hoàn tất yêu cầu đang xử lý.");
+        if(body.approve()&&departmentReviews!=null)departmentReviews.requireApproval("ATTENDANCE",id);
         if(!body.approve())reason(body.reason());
         if(body.approve()&&r.requestType().equals("MISSING_ATTENDANCE")){
           approveMissing(p,a,r,body);
@@ -378,7 +380,7 @@ public class AttendancePortalService {
         if(r.requestType().equals("MISSING_CHECKOUT")&&!Objects.equals(acceptedStart(r,body),r.originalStart()))throw error(HttpStatus.BAD_REQUEST,"Bổ sung check-out phải giữ nguyên giờ vào.");
     }
     private void saveDecisionTimes(Request r,Decision body){db.update("UPDATE dbo.attendance_portal_requests SET accepted_start=?,adjustment_reason=? WHERE request_id=?",acceptedStart(r,body),body.adjustmentReason(),r.requestId());}
-    private void recordWorkflowAudit(Actor actor,long attendanceId,String action,String why,String before,String after){db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json) VALUES(?,?,'attendance_records',?,?,?,?)",actor.id(),action,Long.toString(attendanceId),why,before,after);}
+    private void recordWorkflowAudit(Actor actor,long attendanceId,String action,String why,String before,String after){db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json) VALUES(?,?,'attendance_records',?,?,?,?)",actor.id(),action,Long.toString(attendanceId),why,before,after);if(notifications!=null)notifications.publishRecord(attendanceId,action,actor.id());}
     private void confirmApproved(long id,Actor actor,String why){
         // The request reviewer was authorized and checked for independence before any writes.
         String before=snapshot(id);

@@ -10,6 +10,7 @@ export interface Account {
   fullName: string | null;
   roleId: number;
   roleCode: string;
+  departmentHead?: boolean;
   roleName: string;
   username: string;
   active: boolean;
@@ -108,7 +109,7 @@ export class AccountService {
     let params = new HttpParams().set('page', page).set('size', 10);
     if (filters.keyword) params = params.set('keyword', filters.keyword);
     if (filters.active) params = params.set('active', filters.active);
-    if (filters.roleId) params = params.set('roleId', filters.roleId);
+    if (filters.roleId === 'DEPARTMENT_HEAD') params = params.set('departmentHead', true);else if (filters.roleId) params = params.set('roleId', filters.roleId);
     return this.http.get<AccountPage>(`${API_BASE_URL}/admin/accounts`, { params }).pipe(timeout(15000));
   }
 

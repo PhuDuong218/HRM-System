@@ -1,4 +1,4 @@
-<div class="d-flex gap-2 mb-3"><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=false">Duyệt đơn phòng ban</button><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=true">Đơn nghỉ phép của tôi</button></div>
+<nav class="d-flex gap-2 mb-3"><a class="btn btn-primary" routerLink="/requests/head">Nghỉ phép / Nghỉ việc</a><a class="btn btn-outline-primary" routerLink="/department/reviews">OT / Giải trình công</a></nav><div class="d-flex gap-2 mb-3"><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=false">Duyệt đơn phòng ban</button><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=true">Đơn nghỉ phép của tôi</button></div>
 @if(ownLeaveOpen){<app-my-leave-requests/>}@else{
 <hrm-feedback [error]="error" [success]="message"/>
 <app-page-header variant="directory" [resultCount]="total" [busy]="loading" title="Duyệt cấp 1 và tra cứu đơn" description="Trưởng phòng duyệt cấp 1 trong phòng ban phụ trách; HR/ADMIN duyệt cuối. Không tự duyệt đơn của mình." />
@@ -17,7 +17,7 @@
 @if(d.canCancelLeave){<button class="btn btn-outline-danger mt-3" [disabled]="saving||detailLoading" (click)="cancel()">Hủy đơn nghỉ phép</button>}
 @if(!d.canCancelLeave&&selected?.requestType==='NGHI_PHEP'){<p class="small text-muted">{{d.cancelLeaveBlocker}}</p>}
 @if(d.withdrawnAt){<p class="mt-3">Hủy bởi {{d.withdrawnBy}} · {{d.withdrawnAt|date:'dd/MM/yyyy HH:mm':'+0700'}}</p><p>Lý do hủy: {{d.withdrawalReason}}</p>}
-<h3 class="h6 mt-4">Lịch sử thao tác của đơn</h3>@for(log of d.history;track log.auditId){<article class="audit-entry"><strong>{{actionLabel(log.action)}}</strong><p class="small">{{log.actor||'Hệ thống'}} · {{log.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}}</p><p>{{log.reason||'Không có ghi chú bổ sung'}}</p>@if(log.beforeJson||log.afterJson){<details><summary class="small">Dữ liệu trước / sau</summary><pre>{{log.beforeJson||'—'}} → {{log.afterJson||'—'}}</pre></details>}</article>}@empty{<p class="small text-muted">Chưa có nhật ký được lưu cho đơn này. Dữ liệu cũ không tự sinh lịch sử.</p>}}
+@if(d.evidenceReference){<app-leave-evidence [requestId]="selected!.requestId"/>}<h3 class="h6 mt-4">Lịch sử thao tác của đơn</h3>@for(log of d.history;track log.auditId){<article class="audit-entry"><strong>{{actionLabel(log.action)}}</strong><p class="small">{{log.actor||'Hệ thống'}} · {{log.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}}</p><p>{{log.reason||'Không có ghi chú bổ sung'}}</p>@if(log.beforeJson||log.afterJson){<details><summary class="small">Dữ liệu trước / sau</summary><pre>{{log.beforeJson||'—'}} → {{log.afterJson||'—'}}</pre></details>}</article>}@empty{<p class="small text-muted">Chưa có nhật ký được lưu cho đơn này. Dữ liệu cũ không tự sinh lịch sử.</p>}}
 </section></app-record-workspace>
 
 }

@@ -21,6 +21,7 @@ import com.hrm.dto.AttendanceDTOs.AttendanceView;
 @Service
 public class AttendanceService {
 
+        @org.springframework.beans.factory.annotation.Autowired(required=false) private AttendanceNotifications notifications;
         private final JdbcTemplate db;
         private final AttendancePermissionService permissionService;
 
@@ -401,6 +402,7 @@ public class AttendanceService {
                                 reason,
                                 beforeJson,
                                 afterJson);
+                if(notifications!=null)notifications.publishRecord(attendanceId,action,actorAccountId);
         }
 
         // HR/Quản lý điều chỉnh công CHƯA xác nhận

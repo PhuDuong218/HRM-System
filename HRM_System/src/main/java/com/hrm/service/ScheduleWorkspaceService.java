@@ -22,6 +22,7 @@ public class ScheduleWorkspaceService {
     public record SaveInput(Long employeeId, Long shiftId, LocalDate workDate, String note) {}
     public record Row(ScheduleView schedule, String employeeLabel, String shiftLabel, String breakDetailStatus,String state,String cancellationReason) {}
     private record Label(long id, String employee, String shift, String status,String state,String cancellationReason) {}
+    @org.springframework.beans.factory.annotation.Autowired(required=false) private DepartmentWorkspaceAccess headAccess;
     private final JdbcTemplate db;
     private final WorkShiftService shifts;
     private final WorkScheduleService schedules;
@@ -155,7 +156,7 @@ public class ScheduleWorkspaceService {
 
     @Transactional("scheduleTransactionManager")
     public ScheduleView save(AuthenticatedAccount actor, Long id, SaveInput body) {
-        context(actor);
+        if(actor!=null&&"EMPLOYEE".equals(actor.roleCode())&&headAccess!=null)headAccess.departments(actor);else context(actor);
         ScheduleInput input=input(body);
         if (id==null) permissions.requireCreate(actor,input.employeeId(),input.plannedStart());
         else {

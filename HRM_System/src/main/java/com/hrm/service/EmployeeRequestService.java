@@ -18,6 +18,7 @@ import org.springframework.web.server.ResponseStatusException;
 @Service
 @Transactional(readOnly=true)
 public class EmployeeRequestService {
+    @org.springframework.beans.factory.annotation.Autowired private LeaveEvidenceStore evidenceFiles;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private WorkflowNotifications notifications;
     private void notifyRequest(long id,String action,long actor){if(notifications!=null)notifications.request(id,action,actor);}
     @org.springframework.beans.factory.annotation.Autowired private PersonnelScopeService personnelScope;
@@ -117,6 +118,8 @@ public class EmployeeRequestService {
         var actor=access.actor(p);support.lock();timeline.lockTimeline();
         lockEmployee(actor.employeeId());
         validateLeave(actor.employeeId(),input.leaveTypeId(),input.leaveStart(),input.leaveEnd(),null);
+        String leaveCode=jdbc.queryForObject("SELECT type_code FROM dbo.leave_types WHERE leave_type_id=?",String.class,input.leaveTypeId());
+        if(input.evidenceReference()!=null&&!input.evidenceReference().isBlank()||leaveCode!=null&&java.util.Set.of("SICK","NGHI_OM","OM","PO").contains(leaveCode.toUpperCase(java.util.Locale.ROOT)))evidenceFiles.requireOwned(actor.accountId(),input.evidenceReference());
         if(leaveRules!=null)leaveRules.eligibility(actor.employeeId(),input.leaveTypeId(),input.evidenceReference(),input.leaveStart().toLocalDate());
         long id=header(actor.employeeId(),"NGHI_PHEP",input.reason(),actor.accountId(),leaveNumbers.next(input.leaveTypeId()));
         if(leaveRules!=null)leaveRules.evidence(id,input.evidenceReference());

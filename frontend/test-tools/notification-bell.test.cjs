@@ -2,14 +2,14 @@ const {test}=require('node:test');const assert=require('node:assert/strict');con
 function fixture(){
  const scheduler=new rx.VirtualTimeScheduler(),end=new rx.Subject();const listeners={},calls=[];
  const doc={hidden:false,addEventListener:(n,f)=>listeners[n]=f,removeEventListener:n=>delete listeners[n]};
- const HttpClient=class HttpClient{},DestroyRef=class DestroyRef{},ElementRef=class ElementRef{};
+ const Router=class Router{};const navigation=[];const HttpClient=class HttpClient{},DestroyRef=class DestroyRef{},ElementRef=class ElementRef{};
  const inbox={items:[],totalElements:0,totalPages:0,page:0,unreadCount:105,snapshotId:10};
- const http={get:(url,options)=>{calls.push([url,options]);return rx.of(url.endsWith('unread-count')?{unreadCount:105}:inbox);},put:()=>rx.of(null)};
- const angular={Component:()=>c=>c,HostListener:()=>()=>{},DestroyRef,ElementRef,inject:token=>token===HttpClient?http:token===DestroyRef?{}:{nativeElement:{contains:()=>false,querySelector:()=>null}}};
+ const http={get:(url,options)=>{calls.push([url,options]);return rx.of(url.endsWith('/target')?{detail:{requestType:'NGHI_PHEP'},mine:false}:url.endsWith('unread-count')?{unreadCount:105}:inbox);},put:()=>rx.of(null)};
+ const angular={Component:()=>c=>c,HostListener:()=>()=>{},DestroyRef,ElementRef,inject:token=>token===Router?{navigate:(...args)=>{navigation.push(args);return Promise.resolve(true);}}:token===HttpClient?http:token===DestroyRef?{}:{nativeElement:{contains:()=>false,querySelector:()=>null}}};
  const source=fs.readFileSync(path.join(__dirname,'../src/app/shared/notification-bell.ts'),'utf8');const exports={};
  const output=ts.transpileModule(source,{compilerOptions:{module:ts.ModuleKind.CommonJS,target:ts.ScriptTarget.ES2022,experimentalDecorators:true}}).outputText;
- vm.runInNewContext(output,{exports,document:doc,console,require:name=>name==='@angular/core'?angular:name==='@angular/common/http'?{HttpClient}:name==='@angular/core/rxjs-interop'?{takeUntilDestroyed:()=>rx.takeUntil(end)}:name==='rxjs'?{...rx,forkJoin:arg=>rx.forkJoin(Object.fromEntries(Object.entries(arg))),timer:(a,b)=>rx.timer(a,b,scheduler)}:name.includes('api.config')?{API_BASE_URL:'/api'}:{}});
- const c=new exports.NotificationBell();return {c,calls,doc,listeners,end,flush:to=>{scheduler.maxFrames=to;scheduler.flush();}};
+ vm.runInNewContext(output,{exports,document:doc,console,require:name=>name==='@angular/router'?{Router}:name==='@angular/core'?angular:name==='@angular/common/http'?{HttpClient}:name==='@angular/core/rxjs-interop'?{takeUntilDestroyed:()=>rx.takeUntil(end)}:name==='rxjs'?{...rx,forkJoin:arg=>rx.forkJoin(Object.fromEntries(Object.entries(arg))),timer:(a,b)=>rx.timer(a,b,scheduler)}:name.includes('api.config')?{API_BASE_URL:'/api'}:{}});
+ const c=new exports.NotificationBell();return {c,calls,navigation,doc,listeners,end,flush:to=>{scheduler.maxFrames=to;scheduler.flush();}};
 }
 test('polls every 15 seconds, pauses when hidden, resumes immediately and cleans up on destroy',()=>{
  const f=fixture();f.c.ngOnInit();f.flush(0);assert.equal(f.calls.length,1);assert.equal(f.c.badge,'99+');
@@ -21,3 +21,5 @@ test('opening bell never marks all read; unread filtering and pagination carry o
  f.c.setFilter(true);const last=f.calls.at(-1);assert.equal(last[1].params.read,false);assert.equal(last[1].params.page,0);assert.equal('recipientId' in last[1].params,false);
  f.end.next();
 });
+
+test('notification opens its source request detail and closes bell',()=>{const f=fixture();f.c.ngOnInit();f.flush(0);f.c.open=true;f.c.select({id:3,referenceId:17,referenceType:'employee_requests'});assert.equal(f.c.open,false);assert.equal(f.navigation.length,1);const [route,options]=f.navigation[0];assert.equal(route[0],'/requests');assert.equal(options.queryParams.notificationRequest,17);assert.equal(options.queryParams.notificationMine,false);f.end.next();});

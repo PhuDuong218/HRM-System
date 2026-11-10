@@ -31,6 +31,14 @@ import java.util.concurrent.*;
  */
 public class EmployeeActivity extends AppCompatActivity {
     private static final int BLUE = 0xff004581, INK = 0xff163d5c, MUTED = 0xff6d8196;
+    private TextInputEditText leaveEvidenceTarget;private boolean evidenceUploading;
+    private final androidx.activity.result.ActivityResultLauncher<String> leaveEvidencePicker=registerForActivityResult(new androidx.activity.result.contract.ActivityResultContracts.GetContent(),uri->{
+        final TextInputEditText target=leaveEvidenceTarget;if(uri==null||target==null)return;evidenceUploading=true;target.setText("Đang tải minh chứng…");
+        this.executor.execute(()->{try{byte[] bytes;try(java.io.InputStream input=getContentResolver().openInputStream(uri);java.io.ByteArrayOutputStream output=new java.io.ByteArrayOutputStream()){if(input==null)throw new java.io.IOException("Không mở được tệp");byte[] buffer=new byte[8192];int size;while((size=input.read(buffer))!=-1){if(output.size()+size>3*1024*1024)throw new java.io.IOException("Minh chứng tối đa 3 MB");output.write(buffer,0,size);}bytes=output.toByteArray();}
+            JSONObject uploaded=this.api.send("/employee-requests/evidence","POST",this.session.token(),json("content",android.util.Base64.encodeToString(bytes,android.util.Base64.NO_WRAP)));
+            runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText(uploaded.optString("reference"));target.setError(null);toast("Đã đính kèm minh chứng");}});
+        }catch(Exception error){runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText("");target.setError(HrmApi.message(error));target.requestFocus();}});}});
+    });
     private final ExecutorService executor = Executors.newSingleThreadExecutor();
     private HrmApplication session;
     private HrmApi api;
@@ -52,6 +60,13 @@ public class EmployeeActivity extends AppCompatActivity {
         JSONObject run() throws Exception;
     }
 
+    public boolean showNotificationPage(JSONObject target){
+        JSONObject detail=target.optJSONObject("detail");String kind=target.optString("referenceType");
+        if(kind.equals("overtime_requests")){navigation.setSelectedItemId(R.id.navRequests);category="ot";render();fetch("/api/overtime/workspace/requests/"+target.optLong("referenceId"),this::otDetail);return true;}
+        if(kind.equals("attendance_records")){category="regular";navigation.setSelectedItemId(R.id.navAttendance);long schedule=target.optLong("scheduleId");fetch("/api/attendance-workspace/schedules/"+schedule+"?mine=true",this::attendanceDetail);return true;}
+        navigation.setSelectedItemId(R.id.navRequests);
+        category=kind.equals("attendance_portal_requests")?"regular":detail!=null&&detail.optString("requestType").equals("NGHI_VIEC")?"resignation":"leave";render();return false;
+    }
     private static LocalDate today() {
         return LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
     }
@@ -1487,14 +1502,15 @@ public class EmployeeActivity extends AppCompatActivity {
         box.addView(text("Loại nghỉ",13,INK,true));Spinner type=new Spinner(this);type.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));box.addView(type);
         DateField start=new DateField(box,"Bắt đầu nghỉ *",today().plusDays(1).atTime(8,0).toString(),false),end=new DateField(box,"Kết thúc nghỉ * (không gồm thời điểm này)",today().plusDays(1).atTime(17,0).toString(),false);
         TextView policy=text("",12,MUTED,false);box.addView(policy);
-        TextInputEditText reason=input(box,"Lý do *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE),evidence=input(box,"Tham chiếu giấy tờ / giấy khám bệnh","",InputType.TYPE_CLASS_TEXT);
+        TextInputEditText reason=input(box,"Lý do *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE),evidence=input(box,"Minh chứng đính kèm (JPG, PNG, PDF)","",InputType.TYPE_CLASS_TEXT);
+        evidence.setKeyListener(null);leaveEvidenceTarget=evidence;button(box,"Chọn giấy khám bệnh / minh chứng",false,()->{if(!evidenceUploading)leaveEvidencePicker.launch("*/*");});
         Runnable update=()->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;String code=str(t,"typeCode");boolean maternity=code.equals("MATERNITY")||code.equals("THAI_SAN");policy.setText(maternity?"Chính sách trung tâm: nam tối đa "+options.optInt("maleDays",14)+" ngày lịch, nữ tối đa "+options.optInt("femaleMonths",6)+" tháng mỗi đơn. Cần minh chứng.":t.optBoolean("evidenceRequired")?"Loại nghỉ này cần tham chiếu giấy tờ minh chứng.":"Phép năm tính theo giờ làm việc được phân công, trừ quỹ khi được duyệt.");if(maternity){try{LocalDateTime from=LocalDateTime.parse(start.value);end.value=(str(options,"gender").equals("MALE")?from.plusDays(options.optInt("maleDays",14)):from.plusMonths(options.optInt("femaleMonths",6))).toString();end.edit.setText(time(end.value));}catch(Exception ignored){}}};
         type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> p){}public void onItemSelected(android.widget.AdapterView<?> p,View v,int position,long id){update.run();}});
         start.edit.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){}public void afterTextChanged(android.text.Editable e){update.run();}});
         dialog("Nộp đơn nghỉ phép",box,"Gửi đơn",d->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;
             if(start.value.isEmpty()||end.value.isEmpty()||end.value.compareTo(start.value)<=0){end.edit.setError("Giờ kết thúc phải sau bắt đầu");end.edit.requestFocus();return;}
             if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}
-            if(t.optBoolean("evidenceRequired")&&value(evidence).isEmpty()){evidence.setError("Cần tham chiếu minh chứng");evidence.requestFocus();return;}
+            if(evidenceUploading){toast("Đợi tải minh chứng xong");return;}if(t.optBoolean("evidenceRequired")&&value(evidence).isEmpty()){evidence.setError("Cần đính kèm minh chứng");evidence.requestFocus();return;}
             write("/employee-requests/leave","POST",json("leaveTypeId",t.optLong("leaveTypeId"),"leaveStart",start.value,"leaveEnd",end.value,"reason",value(reason),"evidenceReference",value(evidence)),"Gửi đơn nghỉ phép để xét duyệt?",d);
         });
     }

@@ -50,4 +50,16 @@ class AdminAccountEmploymentStatusTest {
         when(employees.findById(12L)).thenReturn(Optional.empty());
         assertNull(service.account(5L).employmentStatus());
     }
+    @Test void departmentHeadFilterPreservesBaseRoleAndDatabasePagination(){
+        var accounts=mock(AccountRepository.class);var employees=mock(EmployeeRepository.class);var db=mock(org.springframework.jdbc.core.JdbcTemplate.class);
+        var service=new AdminAccessService(accounts,employees,mock(RoleRepository.class),mock(PermissionRepository.class),mock(AuditLogRepository.class),mock(PasswordEncoder.class),mock(HrDepartmentScopeService.class));
+        org.springframework.test.util.ReflectionTestUtils.setField(service,"headDb",db);
+        var account=mock(Account.class);var role=mock(Role.class);var employee=mock(Employee.class);
+        when(account.getEmployeeId()).thenReturn(12L);when(account.getRole()).thenReturn(role);when(role.getRoleCode()).thenReturn("EMPLOYEE");when(employee.getEmployeeId()).thenReturn(12L);
+        when(accounts.searchDepartmentHeads(eq("%head%"),eq(true),any(java.time.LocalDate.class),any(Pageable.class))).thenReturn(new PageImpl<>(List.of(account),org.springframework.data.domain.PageRequest.of(0,10),21));
+        when(employees.findAllById(any())).thenReturn(List.of(employee));when(db.queryForList(anyString(),eq(Long.class))).thenReturn(List.of(12L));
+        var page=service.accounts(0,10,"head",true,null,true);
+        assertTrue(page.items().get(0).departmentHead());assertEquals("EMPLOYEE",page.items().get(0).roleCode());assertEquals(21,page.totalElements());
+        verify(accounts,never()).search(anyString(),any(),any(),any());
+    }
 }

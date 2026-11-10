@@ -119,7 +119,7 @@
                       <button type="button" class="btn btn-sm btn-outline-primary me-1" [disabled]="saving"
                               (click)="openEdit(row)">{{ "Sửa" | translate }}</button>
                       <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="saving"
-                              (click)="remove(row)">{{ "Xóa" | translate }}</button>
+                              (click)="remove(row)">{{ "Thu hồi" | translate }}</button>
                     }
                   </td>
                 </tr>
@@ -316,13 +316,14 @@
           <dt class="col-sm-5">{{ "Người xử lý (ID)" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedBy ?? '—' }}</dd>
           <dt class="col-sm-5">{{ "Thời điểm xử lý" | translate }}</dt><dd class="col-sm-7">{{ decision.approvedAt || '—' }}</dd>
         </dl>
+        <h3 class="h6 mt-3">Lịch sử quyết định</h3>@if(historyError){<p class="text-warning">{{historyError}}</p>}@for(log of decisionHistory;track $index){<article class="border-top py-2"><strong>{{log.action==='DECISION_WITHDRAW'?'Thu hồi quyết định':log.action==='DECISION_CREATE'?'Tạo quyết định':log.action==='DECISION_APPROVE'?'Duyệt quyết định':log.action==='DECISION_REJECT'?'Từ chối':log.action==='DECISION_UPDATE'?'Sửa quyết định':log.action}}</strong><p class="small mb-1">{{log.actor||'Hệ thống'}} · {{log.occurredAt.replace('T',' ')}}</p><p class="mb-1">{{log.reason}}</p></article>}@empty{<p class="small text-muted">Chưa có lịch sử được lưu.</p>}
         @if (decision.approvalStatus === 'CHO_DUYET') {
           @if(decision.reviewBlocker){<p class="alert alert-info">{{decision.reviewBlocker}}</p>}
           <div class="d-flex flex-wrap gap-2">
             <button type="button" class="btn btn-outline-success" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'approve')">{{ "Duyệt" | translate }}</button>
             <button type="button" class="btn btn-outline-danger" [disabled]="saving||!!decision.reviewBlocker" [title]="decision.reviewBlocker||''" (click)="openAction(decision, 'reject')">{{ "Từ chối" | translate }}</button>
             <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="openEdit(decision)">{{ "Sửa" | translate }}</button>
-            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Xóa" | translate }}</button>
+            <button type="button" class="btn btn-outline-secondary" [disabled]="saving" (click)="remove(decision)">{{ "Thu hồi" | translate }}</button>
           </div>
         }
       } @else {

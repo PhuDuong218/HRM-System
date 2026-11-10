@@ -14,6 +14,12 @@ import static org.junit.jupiter.api.Assertions.*;
 @EnabledIfSystemProperty(named="notifications.db.verify",matches="true")
 class NotificationOutboxDatabaseTest {
  @Autowired NotificationPublisher publisher;@Autowired JdbcTemplate db;@Autowired PlatformTransactionManager manager;
+ @Autowired @org.springframework.beans.factory.annotation.Qualifier("scheduleTransactionManager") PlatformTransactionManager jdbcManager;
+ @Test void attendanceJdbcTransactionCanPublishAndRollBackWithoutStartingJpaTransaction(){
+  long recipient=db.queryForObject("SELECT TOP(1) account_id FROM dbo.accounts WHERE is_active=1 ORDER BY account_id",Long.class);String key="jdbc-test:"+UUID.randomUUID();
+  new TransactionTemplate(jdbcManager).execute(s->{publisher.enqueue(key,null,"TEST","Title","Message","attendance_portal_requests",1,List.of(recipient));assertEquals(1,db.queryForObject("SELECT COUNT(*) FROM dbo.NotificationOutbox WHERE idempotency_key=?",Integer.class,key));s.setRollbackOnly();return null;});
+  assertEquals(0,db.queryForObject("SELECT COUNT(*) FROM dbo.NotificationOutbox WHERE idempotency_key=?",Integer.class,key));
+ }
  @Test void mandatoryTransactionAndBusinessFailureLeaveNoEvent(){
   assertEquals("hrm_center_full",db.queryForObject("SELECT DB_NAME()",String.class));
   long recipient=db.queryForObject("SELECT TOP(1) account_id FROM dbo.accounts WHERE is_active=1 ORDER BY account_id",Long.class);
