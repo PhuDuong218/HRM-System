@@ -37,7 +37,7 @@
     }
     <form
       class="contract-filters"
-      (submit)="$event.preventDefault(); search(employee.value, status.value, keyword.value)"
+      (submit)="$event.preventDefault(); search(employee.value, statusSelect.value, keyword.value, fromDate.value, toDate.value)"
     >
       <div class="filter-field">
         <label for="employee-id" class="form-label"
@@ -53,7 +53,7 @@
           <option value="">{{language.t("Tất cả nhân viên")}}</option>
           @if(canViewMine){<option value="mine">Hợp đồng của tôi</option>}
           @for (person of employees; track person.employeeId) {
-          <option [value]="person.employeeId">
+          <option [value]="person.employeeId" [selected]="person.employeeId === employeeId">
             {{person.employeeCode}} — {{person.fullName}}
           </option>
           }
@@ -64,7 +64,7 @@
         <label for="contract-status" class="form-label"
           >{{language.t("Trạng thái")}}</label
         >
-        <select id="contract-status" #status class="form-select">
+        <select id="contract-status" #statusSelect class="form-select" [value]="status ?? ''">
           <option value="">{{language.t("Tất cả")}}</option>
           <option value="DA_KY">{{language.t("Đã ký")}}</option>
           <option value="DA_KET_THUC">{{language.t("Đã kết thúc")}}</option>
@@ -76,8 +76,32 @@
         <label for="keyword" class="form-label"
           >{{language.t("Từ khóa")}}</label
         >
-        <input id="keyword" #keyword class="form-control" maxlength="50" />
+        <input id="keyword" #keyword class="form-control" maxlength="200" [value]="q"
+          aria-describedby="contract-keyword-help" />
+        <p id="contract-keyword-help" class="form-text mb-0">
+          {{language.t("Tìm theo số hợp đồng, mã hoặc tên nhân viên, mã hoặc tên loại hợp đồng.")}}
+        </p>
       </div>
+
+      <fieldset class="filter-period">
+        <legend>{{language.t("Khoảng hiệu lực")}}</legend>
+        <div class="filter-dates">
+          <div class="filter-field">
+            <label for="contract-from-date" class="form-label">{{language.t("Từ ngày")}}</label>
+            <input id="contract-from-date" #fromDate type="date" class="form-control" [value]="from"
+              aria-describedby="contract-date-help" [attr.aria-invalid]="dateRangeError ? 'true' : null" />
+          </div>
+          <div class="filter-field">
+            <label for="contract-to-date" class="form-label">{{language.t("Đến ngày")}}</label>
+            <input id="contract-to-date" #toDate type="date" class="form-control" [value]="to"
+              aria-describedby="contract-date-help" [attr.aria-invalid]="dateRangeError ? 'true' : null" />
+          </div>
+        </div>
+        <p id="contract-date-help" class="form-text mb-0">{{language.t("Lấy hợp đồng có thời gian hiệu lực giao với khoảng đã chọn. Có thể nhập một mốc ngày.")}}</p>
+        @if (dateRangeError) {
+          <p class="text-danger small mb-0 mt-2" role="alert">{{language.t(dateRangeError)}}</p>
+        }
+      </fieldset>
 
       <div class="filter-actions">
         <button
@@ -91,7 +115,7 @@
           type="button"
           class="btn btn-outline-secondary"
           [disabled]="loading || saving"
-          (click)="clearFilters(employee, status, keyword)"
+          (click)="clearFilters(employee, statusSelect, keyword, fromDate, toDate)"
         >
           {{language.t("Xóa lọc")}}
         </button>

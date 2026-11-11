@@ -25,12 +25,20 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
             select c from Contract c
             where (:employeeId is null or c.employee.employeeId = :employeeId)
               and (:status is null or c.status = :status)
-              and lower(c.contractNumber) like :pattern escape '!'
+              and (lower(c.contractNumber) like :pattern escape '!'
+                or lower(c.employee.employeeCode) like :pattern escape '!'
+                or lower(c.employee.fullName) like :pattern escape '!'
+                or lower(c.contractType.typeCode) like :pattern escape '!'
+                or lower(c.contractType.typeName) like :pattern escape '!')
+              and (:fromDate is null or c.endDate is null or c.endDate >= :fromDate)
+              and (:toDate is null or c.startDate <= :toDate)
             """)
     Page<Contract> search(
             @Param("employeeId") Long employeeId,
             @Param("status") ContractStatus status,
             @Param("pattern") String pattern,
+            @Param("fromDate") LocalDate from,
+            @Param("toDate") LocalDate to,
             Pageable pageable);
 
     @EntityGraph(attributePaths = { "employee", "contractType" })
@@ -38,11 +46,18 @@ public interface ContractRepository extends JpaRepository<Contract, Long> {
             select c from Contract c
             where (:employeeId is null or c.employee.employeeId = :employeeId)
               and (:status is null or c.status = :status)
-              and lower(c.contractNumber) like :pattern escape '!'
+              and (lower(c.contractNumber) like :pattern escape '!'
+                or lower(c.employee.employeeCode) like :pattern escape '!'
+                or lower(c.employee.fullName) like :pattern escape '!'
+                or lower(c.contractType.typeCode) like :pattern escape '!'
+                or lower(c.contractType.typeName) like :pattern escape '!')
+              and (:fromDate is null or c.endDate is null or c.endDate >= :fromDate)
+              and (:toDate is null or c.startDate <= :toDate)
               and c.employee.employeeId in :allowedEmployeeIds
             """)
     Page<Contract> searchScoped(@Param("employeeId") Long employeeId,
             @Param("status") ContractStatus status, @Param("pattern") String pattern,
+            @Param("fromDate") LocalDate from, @Param("toDate") LocalDate to,
             @Param("allowedEmployeeIds") java.util.List<Long> allowedEmployeeIds, Pageable pageable);
 
     @Query("""

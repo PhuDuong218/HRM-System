@@ -28,6 +28,11 @@ class ContractServiceTest {
     @Test void formerEmployeeIsRejected(){var e=employee(1);e.setEmploymentStatus(EmploymentStatus.DA_NGHI);when(employees.findByIdForUpdate(1L)).thenReturn(Optional.of(e));status(409,()->service.create(contractRequest(TODAY,null)));}
     @Test void suppliedEndIsReplacedByConfiguredEnd(){assertEquals(TODAY.plusMonths(36).minusDays(1),service.create(contractRequest(TODAY,TODAY.minusDays(1))).endDate());}
     @Test void closedPayrollBlocksCreation(){doThrow(new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,"closed")).when(history).assertMutable(1L,TODAY,TODAY.plusMonths(36).minusDays(1));status(409,()->service.create(contractRequest(TODAY,null)));verify(contracts,never()).saveAndFlush(any());}
-    @Test void invalidPagingIsRejected(){status(400,()->service.search(1L,null,null,-1,10));status(400,()->service.search(1L,null,null,0,101));status(400,()->service.search(0L,null,null,0,10));}
-    @Test void searchEscapesSqlServerWildcardsAndReturnsPaging(){when(contracts.search(any(),any(),anyString(),any())).thenReturn(new PageImpl<>(List.of(),PageRequest.of(2,5),11));var r=service.search(1L,null,"A_[%!]",2,5);assertEquals(11,r.totalElements());assertEquals(2,r.page());verify(contracts).search(eq(1L),isNull(),eq("%a!_![!%!!]%"),any());}
+    @Test void invalidPagingIsRejected(){status(400,()->service.search(1L,null,null,null,null,-1,10));status(400,()->service.search(1L,null,null,null,null,0,101));status(400,()->service.search(0L,null,null,null,null,0,10));}
+    @Test void searchEscapesSqlServerWildcardsAndReturnsPaging(){when(contracts.search(any(),any(),anyString(),any(),any(),any())).thenReturn(new PageImpl<>(List.of(),PageRequest.of(2,5),11));var r=service.search(1L,null,"A_[%!]",null,null,2,5);assertEquals(11,r.totalElements());assertEquals(2,r.page());verify(contracts).search(eq(1L),isNull(),eq("%a!_![!%!!]%"),isNull(),isNull(),any());}
+
+    @Test void reversedSearchDatesAreRejectedBeforeQuerying() {
+        status(400, () -> service.search(null, null, null, TODAY.plusDays(1), TODAY, 0, 10));
+        verifyNoInteractions(contracts);
+    }
 }

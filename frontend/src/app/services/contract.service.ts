@@ -22,11 +22,13 @@ import {
 export class ContractService {
   private http = inject(HttpClient);
 
-  search(page = 0, employeeId?: number, status?: ContractStatus, q?: string) {
+  search(page = 0, employeeId?: number, status?: ContractStatus, q?: string, from?: string, to?: string) {
     let params = new HttpParams().set("page", page).set("size", 10);
     if (employeeId) params = params.set("employeeId", employeeId);
     if (status) params = params.set("status", status);
     if (q?.trim()) params = params.set("q", q.trim());
+    if (from) params = params.set("from", from);
+    if (to) params = params.set("to", to);
 
     return this.http.get<PageResponse<ContractResponse>>(
       `${API_BASE_URL}/contracts`,

@@ -46,7 +46,8 @@ public class ContractService {
     }
 
     public PageResponse<ContractResponse> search(
-            Long employeeId, ContractStatus status, String q, int page, int size) {
+            Long employeeId, ContractStatus status, String q, LocalDate from, LocalDate to,
+            int page, int size) {
         if (page < 0 || size < 1 || size > 100) {
             throw error(HttpStatus.BAD_REQUEST, "page >= 0; size từ 1 đến 100");
         }
@@ -56,6 +57,9 @@ public class ContractService {
         if (q != null && q.length() > 50) {
             throw error(HttpStatus.BAD_REQUEST, "Từ khóa tối đa 50 ký tự");
         }
+        if (from != null && to != null && from.isAfter(to)) {
+            throw error(HttpStatus.BAD_REQUEST, "Từ ngày phải nhỏ hơn hoặc bằng đến ngày.");
+        }
         // Escape wildcard để tìm theo nội dung literal, gồm cả '[' của SQL Server.
         String term = q == null ? "" : q.trim().toLowerCase(Locale.ROOT);
         String pattern = "%" + term.replace("!", "!!").replace("%", "!%")
@@ -63,8 +67,8 @@ public class ContractService {
         var pageable = PageRequest.of(page, size,
                 Sort.by(Sort.Direction.DESC, "startDate", "contractId"));
         var result = PersonnelScopeService.isHr()
-                ? contracts.searchScoped(employeeId, status, pattern, personnelScope.employees(), pageable)
-                : contracts.search(employeeId, status, pattern, pageable);
+                ? contracts.searchScoped(employeeId, status, pattern, from, to, personnelScope.employees(), pageable)
+                : contracts.search(employeeId, status, pattern, from, to, pageable);
         return new PageResponse<>(result.getContent().stream().map(this::toResponse).toList(),
                 result.getNumber(), result.getSize(),
                 result.getTotalElements(), result.getTotalPages());
