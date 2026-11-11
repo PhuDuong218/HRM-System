@@ -4,6 +4,8 @@ import com.hrm.dto.*;
 import com.hrm.enums.ContractStatus;
 import com.hrm.service.ContractService;
 import jakarta.validation.Valid;
+import java.time.LocalDate;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import com.hrm.service.ContractLifecycleService;
@@ -37,9 +39,11 @@ public class ContractController {
             @RequestParam(required = false) Long employeeId,
             @RequestParam(required = false) ContractStatus status,
             @RequestParam(required = false) String q,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate from,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate to,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
-        return service.search(employeeId, status, q, page, size);
+        return service.search(employeeId, status, q, from, to, page, size);
     }
 
     @PostMapping("/{id}/renew")

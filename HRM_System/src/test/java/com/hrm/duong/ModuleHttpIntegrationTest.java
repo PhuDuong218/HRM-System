@@ -9,6 +9,8 @@ import com.hrm.repository.*;
 import com.hrm.service.*;
 import com.hrm.exception.*;
 import org.junit.jupiter.api.*;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.servlet.*;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
@@ -41,6 +43,23 @@ class ModuleHttpIntegrationTest {
     @Test void invalidDtoRejectedBeforeRepository() throws Exception {mvc.perform(post("/contracts").contentType("application/json").content(contractJson().replace("HD_HTTP",""))).andExpect(status().isBadRequest());verifyNoInteractions(contracts);}
     @Test void malformedJsonIs400() throws Exception {mvc.perform(post("/contracts").contentType("application/json").content("{" )).andExpect(status().isBadRequest()).andExpect(jsonPath("$.trang_thai").value(400));}
     @Test void invalidEnumAndQueryNumberAre400() throws Exception {mvc.perform(get("/contracts").param("status","UNKNOWN")).andExpect(status().isBadRequest());mvc.perform(get("/contracts").param("page","abc")).andExpect(status().isBadRequest());}
+    @Test void contractSearchBindsIsoDatesAndRejectsInvalidRanges() throws Exception {
+        var end = TODAY.plusDays(2);
+        when(contracts.search(eq(1L), eq(ContractStatus.DA_KY), eq("%hd%"), eq(TODAY), eq(end),
+                any(Pageable.class))).thenAnswer(call -> Page.empty(call.getArgument(5)));
+
+        mvc.perform(get("/contracts").param("employeeId", "1").param("status", "DA_KY")
+                        .param("q", "HD").param("from", TODAY.toString()).param("to", end.toString())
+                        .param("page", "1"))
+                .andExpect(status().isOk()).andExpect(jsonPath("$.page").value(1));
+        mvc.perform(get("/contracts").param("from", end.toString()).param("to", TODAY.toString()))
+                .andExpect(status().isBadRequest());
+        mvc.perform(get("/contracts").param("from", "31/02/2026"))
+                .andExpect(status().isBadRequest());
+        verify(contracts).search(eq(1L), eq(ContractStatus.DA_KY), eq("%hd%"), eq(TODAY), eq(end),
+                any(Pageable.class));
+        verifyNoMoreInteractions(contracts);
+    }
     @Test void forbiddenMethodIs405() throws Exception {mvc.perform(put("/contracts/3").contentType("application/json").content("{}")).andExpect(status().isMethodNotAllowed());}
     @Test void createDecisionIgnoresClientApprovalBecauseDtoHasNoSuchFields() throws Exception {mvc.perform(post("/employee-decisions").contentType("application/json").content("""
         {"employeeId":1,"decisionNumber":"QD_HTTP","decisionType":"KY_LUAT","content":"Synthetic","issuedDate":"2026-10-26","payrollEffect":"NONE","amount":null,"applyDate":null,"reason":"Test","disciplineForm":"KHIEN_TRACH","violationDate":"2026-10-25"}

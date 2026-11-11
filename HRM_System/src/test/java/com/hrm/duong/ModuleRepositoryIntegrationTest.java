@@ -260,11 +260,63 @@ class ModuleRepositoryIntegrationTest {
     @Test void contractSearchFiltersBeforePaginationAndCount(){
         jdbc.update("insert into dbo.contracts(contract_id,employee_id,contract_type_id,contract_number,signed_date,start_date,end_date,status,created_at) values (4,2,2,'OTHER',?,?,?,'DA_KY',CURRENT_TIMESTAMP)",TODAY,TODAY,TODAY.plusDays(30));
         tx.execute(s->{
-            var page=contracts.searchScoped(null,null,"%",List.of(1L),PageRequest.of(0,1));
+            var page=contracts.searchScoped(null,null,"%",null,null,List.of(1L),PageRequest.of(0,1));
             assertEquals(1,page.getTotalElements());assertEquals(1L,page.getContent().get(0).getEmployee().getEmployeeId());
-            assertEquals(0,contracts.searchScoped(2L,null,"%",List.of(1L),PageRequest.of(0,1)).getTotalElements());
-            assertEquals(0,contracts.searchScoped(null,null,"%",List.of(-1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,contracts.searchScoped(2L,null,"%",null,null,List.of(1L),PageRequest.of(0,1)).getTotalElements());
+            assertEquals(0,contracts.searchScoped(null,null,"%",null,null,List.of(-1L),PageRequest.of(0,1)).getTotalElements());
             return null;
+        });
+    }
+    @Test void contractKeywordMatchesContractNumberEmployeeAndTypeWithinOtherFilters() {
+        jdbc.update("update dbo.employees set employee_code='EMP-QA', full_name=? where employee_id=1", "Nguyễn Minh Khôi");
+        jdbc.update("update dbo.contract_types set type_code='FIXED-TERM', type_name=? where contract_type_id=2", "Xác định thời hạn");
+        jdbc.update("""
+                insert into dbo.contracts
+                    (contract_id, employee_id, contract_type_id, contract_number, signed_date, start_date, status, created_at)
+                values (4,2,2,'OTHER',?,?,'DA_KY',CURRENT_TIMESTAMP)
+                """, TODAY, TODAY);
+
+        var firstPage = PageRequest.of(0, 1);
+        tx.executeWithoutResult(transaction -> {
+            for (String pattern : List.of("%synthetic%", "%emp-qa%", "%minh khôi%", "%fixed-term%", "%thời hạn%")) {
+                var scoped = contracts.searchScoped(null, ContractStatus.DA_KY, pattern, TODAY, TODAY,
+                        List.of(1L), firstPage);
+                assertEquals(1, scoped.getTotalElements(), pattern);
+                assertEquals(3L, scoped.getContent().getFirst().getContractId(), pattern);
+            }
+            var all = contracts.search(null, null, "%thời hạn%", TODAY, TODAY, firstPage);
+            assertEquals(2, all.getTotalElements());
+            assertEquals(0, contracts.searchScoped(null, null, "%other%", null, null,
+                    List.of(1L), firstPage).getTotalElements());
+            assertEquals(0, contracts.search(null, ContractStatus.DA_KET_THUC, "%emp-qa%", TODAY, TODAY,
+                    firstPage).getTotalElements());
+            assertEquals(0, contracts.search(null, null, "%minh khôi%", TODAY.plusDays(31), null,
+                    firstPage).getTotalElements());
+        });
+    }
+
+    @Test void contractSearchIncludesDateBoundariesAndOpenEndedContractsBeforePagination() {
+        jdbc.update("""
+                insert into dbo.contracts
+                    (contract_id, employee_id, contract_type_id, contract_number, signed_date, start_date, status, created_at)
+                values (4,2,2,'OPEN',?,?,'DA_KY',CURRENT_TIMESTAMP)
+                """, TODAY, TODAY.plusDays(30));
+        var boundary = TODAY.plusDays(30);
+        var firstPage = PageRequest.of(0, 1);
+        tx.executeWithoutResult(status -> {
+            var both = contracts.search(null, ContractStatus.DA_KY, "%", boundary, boundary, firstPage);
+            assertEquals(2, both.getTotalElements());
+            assertEquals(2, both.getTotalPages());
+            var scoped = contracts.searchScoped(null, ContractStatus.DA_KY, "%", boundary, boundary,
+                    List.of(1L), firstPage);
+            assertEquals(1, scoped.getTotalElements());
+            assertEquals(3L, scoped.getContent().getFirst().getContractId());
+            var fromOnly = contracts.search(null, null, "%", boundary.plusDays(1), null, firstPage);
+            assertEquals(1, fromOnly.getTotalElements());
+            assertEquals(4L, fromOnly.getContent().getFirst().getContractId());
+            var toOnly = contracts.search(null, null, "%", null, boundary.minusDays(1), firstPage);
+            assertEquals(1, toOnly.getTotalElements());
+            assertEquals(3L, toOnly.getContent().getFirst().getContractId());
         });
     }
     @Test void decisionSearchFiltersBeforePaginationAndCount(){

@@ -120,6 +120,9 @@ export class ContractsPage implements OnInit {
   employeeId?: number;
   status?: ContractStatus;
   q = "";
+  from = "";
+  to = "";
+  dateRangeError = "";
 
   lifecycleMode: "renew" | "terminate" | null = null;
   lifecycleContract: ContractResponse | null = null;
@@ -169,6 +172,8 @@ export class ContractsPage implements OnInit {
       employeeId: this.employeeId ?? null,
       status: this.status ?? null,
       q: this.q.trim(),
+      from: this.from,
+      to: this.to,
     });
     const cached = this.contractPageCache.get(cacheKey);
 
@@ -186,7 +191,7 @@ export class ContractsPage implements OnInit {
     this.loading = true;
 
     this.listRequest = this.api
-      .search(page, this.employeeId, this.status, this.q)
+      .search(page, this.employeeId, this.status, this.q, this.from, this.to)
       .pipe(takeUntilDestroyed(this.destroyRef))
       .subscribe({
         next: (result) => {
@@ -221,10 +226,17 @@ export class ContractsPage implements OnInit {
     this.warningRefreshKey++;
   }
 
-  search(employeeIdText: string, statusText: string, q: string): void {
+  search(employeeIdText: string, statusText: string, q: string, from: string, to: string): void {
+    this.dateRangeError = "";
+    if (from && to && from > to) {
+      this.dateRangeError = "Từ ngày phải nhỏ hơn hoặc bằng đến ngày.";
+      return;
+    }
     this.employeeId = employeeIdText ? Number(employeeIdText) : undefined;
     this.status = statusText ? (statusText as ContractStatus) : undefined;
     this.q = q;
+    this.from = from;
+    this.to = to;
     this.load(0); // đổi bộ lọc thì quay về trang đầu
   }
 
@@ -232,13 +244,20 @@ export class ContractsPage implements OnInit {
     employee: HTMLSelectElement,
     status: HTMLSelectElement,
     keyword: HTMLInputElement,
+    from: HTMLInputElement,
+    to: HTMLInputElement,
   ): void {
     employee.value = "";
     status.value = "";
     keyword.value = "";
+    from.value = "";
+    to.value = "";
     this.employeeId = undefined;
     this.status = undefined;
     this.q = "";
+    this.from = "";
+    this.to = "";
+    this.dateRangeError = "";
     this.load(0);
   }
 
