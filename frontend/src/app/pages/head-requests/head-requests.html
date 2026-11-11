@@ -1,5 +1,9 @@
-<nav class="d-flex gap-2 mb-3"><a class="btn btn-primary" routerLink="/requests/head">Nghỉ phép / Nghỉ việc</a><a class="btn btn-outline-primary" routerLink="/department/reviews">OT / Giải trình công</a></nav><div class="d-flex gap-2 mb-3"><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=false">Duyệt đơn phòng ban</button><button class="btn btn-outline-primary" [disabled]="saving" (click)="ownLeaveOpen=true">Đơn nghỉ phép của tôi</button></div>
-@if(ownLeaveOpen){<app-my-leave-requests/>}@else{
+<nav class="d-flex flex-wrap gap-2 mb-3">
+  <button type="button" class="btn" [class.btn-primary]="requestView === 'department'" [class.btn-outline-primary]="requestView !== 'department'" [attr.aria-pressed]="requestView === 'department'" [disabled]="saving" routerLink="/requests/head">Duyệt đơn nghỉ phép / nghỉ việc</button>
+  <a class="btn btn-outline-primary" routerLink="/department/reviews">OT / Giải trình công</a>
+  <button type="button" class="btn" [class.btn-primary]="requestView === 'mine'" [class.btn-outline-primary]="requestView !== 'mine'" [attr.aria-pressed]="requestView === 'mine'" [disabled]="saving" routerLink="/requests/head" [queryParams]="{view: 'mine'}">Đơn nghỉ phép của tôi</button>
+</nav>
+@if(requestView === 'mine'){<app-my-leave-requests/>}@else{
 <hrm-feedback [error]="error" [success]="message"/>
 <app-page-header variant="directory" [resultCount]="total" [busy]="loading" title="Duyệt cấp 1 và tra cứu đơn" description="Trưởng phòng duyệt cấp 1 trong phòng ban phụ trách; HR/ADMIN duyệt cuối. Không tự duyệt đơn của mình." />
 <app-leave-workflow-guide stage="head"/>

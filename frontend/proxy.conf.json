@@ -1,4 +1,9 @@
 {
+  "/api/department-workspace": {
+    "target": "http://localhost:2005",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/leave-workspace": {
     "target": "http://localhost:2005",
     "secure": false,

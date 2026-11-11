@@ -22,8 +22,10 @@ public class AttendanceClockReviewService {
   if(expectedVersion==null||!expectedVersion.equals(row.version()))throw new ResponseStatusException(HttpStatus.CONFLICT,"Công đã thay đổi; tải lại trước khi đối soát.");
   String prefix=checkIn?"check_in":"check_out",actual=checkIn?"actual_start":"actual_end";
   String before=snapshot(attendanceId);
-  int count=db.update("UPDATE dbo.attendance_records SET "+prefix+"_reviewed_by=?,"+prefix+"_reviewed_at=SYSUTCDATETIME(),"+prefix+"_reviewed_value="+actual+" WHERE attendance_id=? AND row_version=? AND invalidated_at IS NULL",actor.accountId(),attendanceId,Base64.getDecoder().decode(expectedVersion));
-  if(count!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"Công đã thay đổi đồng thời.");
+  // SQL Server sessions may have NOCOUNT enabled; JDBC update counts then do not
+  // identify matched records. OUTPUT INTO works with triggers and preserves version checks.
+  Integer count=db.queryForObject("DECLARE @changed TABLE(id bigint); UPDATE dbo.attendance_records SET "+prefix+"_reviewed_by=?,"+prefix+"_reviewed_at=SYSUTCDATETIME(),"+prefix+"_reviewed_value="+actual+" OUTPUT INSERTED.attendance_id INTO @changed WHERE attendance_id=? AND row_version=? AND invalidated_at IS NULL; SELECT COUNT(*) FROM @changed",Integer.class,actor.accountId(),attendanceId,Base64.getDecoder().decode(expectedVersion));
+  if(count==null||count!=1)throw new ResponseStatusException(HttpStatus.CONFLICT,"Công đã thay đổi đồng thời.");
   db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json) VALUES(?,?,'attendance_records',?,?,?,?)",actor.accountId(),checkIn?"ATTENDANCE_REVIEW_CHECK_IN":"ATTENDANCE_REVIEW_CHECK_OUT",Long.toString(attendanceId),reason.trim(),before,snapshot(attendanceId));
   if(notifications!=null)notifications.publishRecord(attendanceId,checkIn?"ATTENDANCE_REVIEW_CHECK_IN":"ATTENDANCE_REVIEW_CHECK_OUT",actor.accountId());
   return portal.detail(actor,false,schedule);

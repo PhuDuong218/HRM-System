@@ -27,7 +27,7 @@ public class AttendancePortalService {
             String attendanceResult, String verificationStatus, Long createdBy, Long updatedBy,
             Long confirmedBy, LocalDateTime confirmedAt, String correctionReason,
             String source, List<String> anomalies, boolean canEdit, boolean canConfirm,
-            boolean canUnconfirm, Long entryRequestId, boolean canMarkAbsent, boolean canRequest, boolean canCheckIn, boolean canCheckOut, String version, String enteredByLabel, String updatedByLabel, String confirmedByLabel, boolean checkInReviewed,boolean checkOutReviewed,boolean canReviewCheckIn,boolean canReviewCheckOut,String checkInReviewer,LocalDateTime checkInReviewedAt,String checkOutReviewer,LocalDateTime checkOutReviewedAt) {}
+            boolean canUnconfirm, Long entryRequestId, boolean canMarkAbsent, boolean canRequest, boolean canCheckIn, boolean canCheckOut, String version, String enteredByLabel, String updatedByLabel, String confirmedByLabel, boolean checkInReviewed,boolean checkOutReviewed,boolean canReviewCheckIn,boolean canReviewCheckOut,String checkInReviewer,LocalDateTime checkInReviewedAt,String checkOutReviewer,LocalDateTime checkOutReviewedAt, String supplementRequestStatus) {}
     public record Stats(long waiting, long confirmed, long missing, long review, long openRequests) {}
     public record Search(List<Row> items, int page, int size, long totalElements, int totalPages, Stats stats) {}
     public record Break(LocalDateTime start, LocalDateTime end) {}
@@ -127,7 +127,10 @@ public class AttendancePortalService {
         (SELECT username FROM dbo.accounts WHERE account_id=ar.check_in_reviewed_by) check_in_reviewer,
         (SELECT username FROM dbo.accounts WHERE account_id=ar.check_out_reviewed_by) check_out_reviewer,
         CASE WHEN entered_account.employee_id=ar.employee_id THEN e.full_name COLLATE DATABASE_DEFAULT ELSE entered_account.username COLLATE DATABASE_DEFAULT END entered_by_label,
-        updated_account.username updated_by_label,confirmed_account.username confirmed_by_label
+        updated_account.username updated_by_label,confirmed_account.username confirmed_by_label,
+        (SELECT TOP (1) r.status FROM dbo.attendance_portal_requests r
+         WHERE r.schedule_id=s.schedule_id AND r.request_type IN ('MISSING_ATTENDANCE','MISSING_CHECKOUT')
+         ORDER BY r.submitted_at DESC,r.request_id DESC) supplement_request_status
       """;
     private boolean locked(LocalDate date){Long n=db.queryForObject("""
         SELECT COUNT_BIG(*) FROM dbo.payroll_periods p WITH(HOLDLOCK) JOIN dbo.payroll_batches b WITH(HOLDLOCK) ON b.period_id=p.period_id
@@ -170,7 +173,7 @@ public class AttendancePortalService {
         String source=id==null?"—":Boolean.TRUE.equals(db.queryForObject("SELECT CASE WHEN EXISTS(SELECT 1 FROM dbo.audit_logs WHERE target_table='attendance_records' AND target_record_key=? AND action='ATTENDANCE_SELF_CHECK_IN') THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END",Boolean.class,Long.toString(id)))?"Tự chấm công":"Nhập thủ công / dữ liệu cũ";
         return new Row(sid,id,rs.getLong("employee_id"),rs.getString("employee_label"),rs.getString("department_name"),rs.getString("shift_label"),date,ps,pe,rs.getInt("planned_break_minutes"),rs.getString("break_detail_status"),ai,ao,rs.getInt("actual_break_minutes"),result,verification,creator,updater,confirmer,rs.getObject("confirmed_at",LocalDateTime.class),rs.getString("correction_reason"),source,anomalies,
           access&&!periodLocked&&!pending&&id!=null&&"CHUA_XAC_NHAN".equals(verification),canConfirm,canUnconfirm,entryRequestId,access&&(id==null||!"VANG".equals(result)&&"CHUA_XAC_NHAN".equals(verification)&&(ai==null||ao==null))&&!periodLocked&&!pending&&now().isAfter(deadline(pe.toLocalDate(),"MISSING_ATTENDANCE")),request,
-          mine&&id==null&&AttendanceClockPolicy.checkIn(ps,pe,now()).allowed(),mine&&ai!=null&&ao==null&&"CHUA_XAC_NHAN".equals(verification)&&AttendanceClockPolicy.checkOut(ps,pe,ai,now()).allowed(),rs.getBytes("attendance_version")==null?null:Base64.getEncoder().encodeToString(rs.getBytes("attendance_version")),rs.getString("entered_by_label"),rs.getString("updated_by_label"),rs.getString("confirmed_by_label"),inReviewed,outReviewed,reviewAccess&&ai!=null&&!inReviewed,reviewAccess&&ao!=null&&!outReviewed,rs.getString("check_in_reviewer"),rs.getObject("check_in_reviewed_at",LocalDateTime.class),rs.getString("check_out_reviewer"),rs.getObject("check_out_reviewed_at",LocalDateTime.class));
+          mine&&id==null&&AttendanceClockPolicy.checkIn(ps,pe,now()).allowed(),mine&&ai!=null&&ao==null&&"CHUA_XAC_NHAN".equals(verification)&&AttendanceClockPolicy.checkOut(ps,pe,ai,now()).allowed(),rs.getBytes("attendance_version")==null?null:Base64.getEncoder().encodeToString(rs.getBytes("attendance_version")),rs.getString("entered_by_label"),rs.getString("updated_by_label"),rs.getString("confirmed_by_label"),inReviewed,outReviewed,reviewAccess&&ai!=null&&!inReviewed,reviewAccess&&ao!=null&&!outReviewed,rs.getString("check_in_reviewer"),rs.getObject("check_in_reviewed_at",LocalDateTime.class),rs.getString("check_out_reviewer"),rs.getObject("check_out_reviewed_at",LocalDateTime.class),mine?rs.getString("supplement_request_status"):null);
     }
     private void range(LocalDate from,LocalDate to,int page){if(from==null||to==null||to.isBefore(from)||to.isAfter(from.plusDays(366))||page<0||page>100000)throw error(HttpStatus.BAD_REQUEST,"Khoảng ngày tối đa 366 ngày, phân trang phải hợp lệ.");}
     private Scope pendingScope(AuthenticatedAccount p) {

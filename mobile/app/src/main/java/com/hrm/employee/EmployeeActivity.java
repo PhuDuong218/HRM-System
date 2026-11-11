@@ -1192,6 +1192,21 @@ public class EmployeeActivity extends AppCompatActivity {
         if(!out.isEmpty())box.addView(text(out,13,INK,true));
     }
 
+    private void supplementRequestBadge(LinearLayout box, JSONObject row) {
+        String status = str(row, "supplementRequestStatus");
+        String note;
+        switch (status) {
+            case "CHO_XU_LY": note = "Đã gửi yêu cầu bổ sung công · Chờ xử lý"; break;
+            case "DANG_XU_LY": note = "Yêu cầu bổ sung công · Đã tiếp nhận"; break;
+            case "DA_CHAP_NHAN": note = "Yêu cầu bổ sung công · Đã chấp nhận"; break;
+            case "TU_CHOI": note = "Yêu cầu bổ sung công · Đã từ chối"; break;
+            default: return;
+        }
+        if (!note.isEmpty()) {
+            badge(box, note, status);
+        }
+    }
+
     private void attendanceFacts(LinearLayout box, JSONObject row, JSONObject actual, boolean ot) {
         clockTimingFacts(box,str(ot?actual:row,ot?"requestedStart":"plannedStart"),str(ot?actual:row,ot?"requestedEnd":"plannedEnd"),str(actual,"actualStart"),str(actual,"actualEnd"));
         line(box, "Giờ vào thực tế", str(actual,"actualStart").isEmpty()?"Chưa check-in":time(str(actual,"actualStart")));
@@ -1200,6 +1215,7 @@ public class EmployeeActivity extends AppCompatActivity {
             String status = str(row, "verificationStatus");
             badge(box, "DA_XAC_NHAN".equals(status)?"Công đã được xác nhận":"Công chưa xác nhận toàn bộ",status.isEmpty()?"CHO":status);
             clockReviewFacts(box,row);
+            supplementRequestBadge(box, row);
             String result = str(row, "attendanceResult");
             if (!result.isEmpty())
                 badge(box, label(result), result);
