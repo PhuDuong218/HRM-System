@@ -109,6 +109,11 @@
       @else{<input class="form-control" [type]="field.type" [name]="field.key" [attr.name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required" [attr.maxlength]="field.max||null" [min]="field.min??0" [step]="field.key==='entitledHours'?'0.0001':'1'">}
       @if(f.controls[field.key]?.invalid&&f.controls[field.key]?.touched){<span class="text-danger small">{{field.label | translate}}{{ ' chưa hợp lệ.' | translate }}</span>}
      </label>
+     @if(kind === 'assignments' && field.key === 'employeeId'){
+      <label>{{ 'Phòng ban hiện tại' | translate }}
+       <input class="form-control" readonly [value]="currentTransferDepartment || (body['employeeId'] ? ('Chưa có phòng ban hiện tại' | translate) : '—')">
+      </label>
+     }
     }
     @if(invalidPeriod){<p class="text-danger small">{{ 'Ngày kết thúc kỳ (không bao gồm) phải sau ngày bắt đầu.' | translate }}</p>}
     @if(transferNeedsHeadWorkflow){<p class="alert alert-warning">{{ 'Nhân viên đang là trưởng phòng. Cần xử lý nhiệm kỳ trước khi điều chuyển.' | translate }} <a routerLink="/departments">{{ 'Quản lý trưởng phòng' | translate }}</a></p>}

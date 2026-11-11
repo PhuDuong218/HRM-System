@@ -101,6 +101,10 @@ export class PersonnelWorkspacePage extends ManagementPageBase {
  resetFilters(){if(this.saving)return;this.keyword='';this.departmentId=null;this.positionId=null;this.levelId=null;this.primaryFilter='';this.validity='';this.minimumRank=null;this.yearFrom=null;this.yearTo=null;this.asOf='';this.employeeId=null;this.status='';this.requestType='';this.recordId=null;this.table='';this.actorId=null;this.fromUtc='';this.toUtc='';this.filter();}
  get invalidPeriod(){return this.kind==='entitlements'&&!!this.body['periodStart']&&!!this.body['periodEnd']&&this.body['periodEnd']<=this.body['periodStart'];}
  get primarySelected(){const value=this.selected?.['isPrimary'];return value===true||value===1||value==='true'||value==='1';}
+ get currentTransferDepartment(): string | null {
+   const employee = this.options['employees']?.find(row => row['id'] === this.body['employeeId']);
+   return employee?.['currentDepartmentName'] || null;
+ }
  get transferNeedsHeadWorkflow(){if(this.kind!=='assignments')return false;const employee=this.options['employees']?.find(row=>row['id']===this.body['employeeId']);return !!employee&&!!this.options['positions']?.some(row=>row['id']===employee['currentPositionId']&&row['positionCode']==='TRUONG_PHONG');}
  fieldOptions(field:Field){const rows=this.options[field.options!]||[];if(this.kind==='assignments'&&field.key==='employeeId')return rows.filter(row=>row['employmentStatus']==='DANG_LAM');if(this.kind==='assignments'&&field.key==='positionId')return rows.filter(row=>row['positionCode']!=='TRUONG_PHONG');return rows;}
  startTransfer(row:PersonnelRow|null=null){if(this.saving)return;const employee=row?.['employeeId']??this.employeeId;this.open(null);this.body['employeeId']=employee;}

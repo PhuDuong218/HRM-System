@@ -62,6 +62,58 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     auditPages=0;
     auditText(row:Record<string,unknown>,key:string){return String(row[key]??'');}
     auditAction(row: Record<string, unknown>): string { return auditActionLabel(row['action']); }
+    private readonly auditDepartments = new Map<number, string>();
+    private readonly auditPositions = new Map<number, string>();
+
+    auditActor(entry: Record<string, unknown>): string {
+        return this.auditText(entry, 'actorName').trim() ||
+            (entry['actorAccountId'] == null ? '—' : '#' + entry['actorAccountId']);
+    }
+
+    employeeAuditFields(entry: Record<string, unknown>, key: string): [string, string][] {
+        let snapshot: Record<string, unknown>;
+        try {
+            const data = entry[key];
+            const value = typeof data === 'string' ? JSON.parse(data) : data;
+            if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+            snapshot = value;
+        } catch {
+            return [];
+        }
+        const fields: [string, string][] = [];
+        const add = (label: string, value: unknown) => {
+            if (value !== undefined && value !== null && value !== '') fields.push([label, String(value)]);
+        };
+        const name = (field: string, catalog: Map<number, string>) => {
+            const id = snapshot[field + 'Id'];
+            return snapshot[field + 'Name'] || catalog.get(Number(id)) || (id == null ? null : '#' + id);
+        };
+        const date = (value: unknown) => {
+            const text = String(value ?? '');
+            return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text.split('-').reverse().join('/') : text;
+        };
+        add('Phòng ban', name('department', this.auditDepartments));
+        add('Chức vụ', name('position', this.auditPositions));
+        add('Mã nhân viên', snapshot['employeeCode']);
+        add('Họ tên', snapshot['fullName']);
+        add('Ngày sinh', date(snapshot['birthDate']));
+        if ('gender' in snapshot) add('Giới tính', this.genderLabel(String(snapshot['gender'] ?? '')));
+        add('Ngày vào làm', date(snapshot['hireDate']));
+        add('Ngày thôi việc', date(snapshot['terminationDate'] ?? snapshot['endDate']));
+        const status = String(snapshot['employmentStatus'] ?? '');
+        add('Trạng thái', ({DANG_LAM: 'Đang làm', DA_NGHI: 'Đã nghỉ'} as Record<string, string>)[status] || status);
+        for (const [field, label] of [['email', 'Email'], ['phone', 'Số điện thoại']]) {
+            if (field in snapshot) add(label, snapshot[field] || 'Chưa cập nhật');
+        }
+        if (this.canReadPrivate) {
+            if ('address' in snapshot) add('Địa chỉ', snapshot['address'] || 'Chưa cập nhật');
+            if ('identityNumber' in snapshot) add('CCCD', snapshot['identityNumber'] || 'Chưa cập nhật');
+        }
+        add('Có hiệu lực từ', date(snapshot['effectiveFrom']));
+        add('Đến trước ngày', date(snapshot['effectiveTo']));
+        return fields;
+    }
+
     loadAudit(page=0){if(!this.selected||this.auditLoading)return;this.auditOpen=true;this.auditError='';this.auditLoading=true;
         this.auditRequest?.unsubscribe();this.auditRequest=this.api.audit(this.selected.employeeId,page).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.auditLoading=false)).subscribe({next:r=>{this.auditRows=r.content;this.auditPage=r.number;this.auditPages=r.totalPages;},error:e=>this.auditError=errorMessage(e)});}
     rows: Employee[] = [];
@@ -125,7 +177,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
                 error: () => this.employeeChoicesError = 'Không tải được danh sách chọn nhân viên.'});
     }
     loadChoices() { if(!this.canManage)return; this.choicesError = ''; for (const path of ['departments', 'positions'])
-        this.api.choices(path).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { const k = path === 'departments' ? 'department' : 'position'; const c = r.filter(x => x['isActive'] !== false).map(x => ({ id: Number(x[k + 'Id']), name: String(x[k + 'Name']) })); if (path === 'departments')
+        this.api.choices(path).pipe(takeUntilDestroyed(this.destroy)).subscribe({ next: r => { const k = path === 'departments' ? 'department' : 'position'; const catalog = path === 'departments' ? this.auditDepartments : this.auditPositions; catalog.clear(); for (const option of r) catalog.set(Number(option[k + 'Id']), String(option[k + 'Name'])); const c = r.filter(x => x['isActive'] !== false).map(x => ({ id: Number(x[k + 'Id']), name: String(x[k + 'Name']) })); if (path === 'departments')
                 this.departments = c;
             else
                 this.positions = c; }, error: e => this.choicesError = (path === 'positions' ? 'Danh mục chức vụ: ' : 'Danh mục phòng ban: ') + errorMessage(e) }); }

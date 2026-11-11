@@ -583,6 +583,8 @@ export const UI_EN: Record<string,string> = {
   "Bằng cấp và chứng chỉ": "Degrees and certificates",
   "Đơn nghỉ phép và nghỉ việc": "Leave and resignation requests",
   "Ngày hiệu lực": "Effective date",
+  "Phòng ban hiện tại": "Current department",
+  "Chưa có phòng ban hiện tại": "No current department",
   "Phòng ban mới": "New department",
   "Chức vụ mới": "New position",
   "Lý do điều chuyển": "Reason for transfer",
