@@ -24,7 +24,15 @@ interface PayrollSelection { rowKey: string; columnKey: string; label: string; b
 
 @Component({
   selector: 'app-reports',
-  standalone: true,imports:[SearchAssistDirective,HrmNotice,PageHeader,DetailFocusDirective,TranslatePipe],
+  standalone: true,
+  imports: [
+    SeniorityReport,
+    SearchAssistDirective,
+    HrmNotice,
+    PageHeader,
+    DetailFocusDirective,
+    TranslatePipe
+  ],
   templateUrl: './reports.html',
   styleUrl: './reports.css'
 })

@@ -6,6 +6,7 @@ import java.util.List;
 public class PayrollDetailViewDTO {
     private Long payrollDetailId;
     private Long employeeId;
+    private String employeeName;
     private BigDecimal totalGross;      // Tổng thu nhập
     private BigDecimal totalDeduction;  // Tổng khấu trừ
     private BigDecimal netSalary;       // Lương thực nhận
@@ -31,6 +32,14 @@ public class PayrollDetailViewDTO {
         public String getDirection() { return direction; }
         public BigDecimal getAmount() { return amount; }
         public String getExplanation() { return explanation; }
+    }
+
+    public String getEmployeeName() {
+        return employeeName;
+    }
+
+    public void setEmployeeName(String employeeName) {
+        this.employeeName = employeeName;
     }
 
     public Long getPayrollDetailId() { return payrollDetailId; }
