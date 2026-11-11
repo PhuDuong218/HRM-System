@@ -12,7 +12,7 @@ import java.time.*;import java.util.*;import com.hrm.security.AuthenticatedAccou
    case "assignments"->{select="a.assignment_id id,e.employee_id employeeId,e.employee_code employeeCode,e.full_name fullName,d.department_name department,p.position_name position,a.effective_from effectiveFrom,a.effective_to effectiveTo";base=" FROM dbo.employee_assignments a JOIN dbo.employees e ON e.employee_id=a.employee_id JOIN dbo.departments d ON d.department_id=a.department_id JOIN dbo.positions p ON p.position_id=a.position_id WHERE a.effective_from<=? AND (a.effective_to IS NULL OR a.effective_to>?)";date=TODAY;emp="e.employee_id";id="a.assignment_id";sort=id+" DESC";}
    case "schedules","attendance"->{select="s.schedule_id id,e.employee_id employeeId,e.employee_code employeeCode,e.full_name fullName,CONCAT(w.shift_code,N' - ',w.shift_name) shift,s.shift_id shiftId,s.work_date workDate,s.planned_start plannedStart,s.planned_end plannedEnd,s.planned_break_minutes breakMinutes,s.note,CASE WHEN s.cancelled_at IS NOT NULL THEN 'CANCELLED' ELSE 'ACTIVE' END scheduleStatus";base=" FROM dbo.work_schedules s JOIN dbo.employees e ON e.employee_id=s.employee_id LEFT JOIN dbo.work_shifts w ON w.shift_id=s.shift_id LEFT JOIN dbo.attendance_records ar ON ar.schedule_id=s.schedule_id AND ar.invalidated_at IS NULL WHERE s.work_date BETWEEN ? AND ?";if(kind.equals("attendance"))select+=",ar.attendance_id attendanceId,ar.actual_start actualStart,ar.actual_end actualEnd,ar.attendance_result result,COALESCE(ar.verification_status,'CHUA_CO_CONG') status,ar.check_in_reviewed_at checkInReviewedAt,ar.check_out_reviewed_at checkOutReviewedAt";date="s.work_date";emp="s.employee_id";id="s.schedule_id";sort="s.work_date DESC,"+id+" DESC";}
    case "overtime"->{select="o.overtime_id id,e.employee_id employeeId,e.employee_code employeeCode,e.full_name fullName,o.request_code code,o.requested_start plannedStart,o.requested_end plannedEnd,o.actual_start actualStart,o.actual_end actualEnd,o.status,o.reason,o.submitted_at submittedAt,o.processed_at processedAt,o.confirmed_at confirmedAt";base=" FROM dbo.overtime_requests o JOIN dbo.employees e ON e.employee_id=o.employee_id WHERE CAST(o.requested_start AS date) BETWEEN ? AND ?";date="CAST(o.requested_start AS date)";emp="o.employee_id";id="o.overtime_id";sort="o.submitted_at DESC,"+id+" DESC";}
-   case "reviews"->{select="source.kind,source.id,source.fingerprint,e.employee_id employeeId,e.employee_code employeeCode,e.full_name fullName,source.code,source.starts plannedStart,source.ends plannedEnd,source.reason,source.submitted submittedAt,source.sourceStatus,COALESCE(review.decision,'PENDING') status,review.reason reviewReason,review.decided_at decidedAt,reviewer.username reviewer";base=" FROM "+DepartmentReviewService.SOURCES+" JOIN dbo.employees e ON e.employee_id=source.employee_id LEFT JOIN dbo.department_workflow_reviews review ON review.source_type=source.kind AND review.source_id=source.id AND review.source_fingerprint=source.fingerprint LEFT JOIN dbo.accounts reviewer ON reviewer.account_id=review.reviewer_id WHERE CAST(source.starts AS date) BETWEEN ? AND ?";date="CAST(source.starts AS date)";emp="source.employee_id";id="source.id";sort="source.submitted DESC,source.kind,source.id DESC";}
+   case "reviews" -> throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Trưởng phòng chỉ duyệt đơn nghỉ phép và nghỉ việc.");
    default->throw new ResponseStatusException(HttpStatus.BAD_REQUEST,"Mục tra cứu không hợp lệ");
   }
   var args=new ArrayList<Object>();if(kind.equals("assignments")){args.add(to);args.add(from);}else{args.add(from);args.add(to);}
@@ -24,6 +24,30 @@ import java.time.*;import java.util.*;import com.hrm.security.AuthenticatedAccou
   long total=db.queryForObject("SELECT COUNT_BIG(*)"+base,Long.class,args.toArray());args.add((long)page*10);args.add(10);
   return new PageResponse<>(db.queryForList("SELECT "+select+base+" ORDER BY "+sort+" OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",args.toArray()),page,10,total,(int)((total+9)/10));
  }
+ public record CalendarLeave(LocalDate day, boolean maternity) {}
+
+ public List<CalendarLeave> calendarLeave(AuthenticatedAccount principal, long employeeId, LocalDate from, LocalDate to) {
+  if (employeeId <= 0 || from.isAfter(to) || to.isAfter(from.plusDays(41))) {
+   throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "Khoảng lịch không hợp lệ.");
+  }
+  String scope = access.predicate(principal, "r.employee_id", "d.day");
+  return db.query("""
+      WITH dates AS (
+        SELECT CAST(? AS date) day
+        UNION ALL SELECT DATEADD(day,1,day) FROM dates WHERE day<?
+      )
+      SELECT d.day, MAX(CASE WHEN t.type_code IN ('MATERNITY','THAI_SAN') THEN 1 ELSE 0 END) maternity
+      FROM dates d
+      JOIN dbo.leave_request_details l ON l.leave_start<DATEADD(day,1,CAST(d.day AS datetime2))
+        AND l.leave_end>CAST(d.day AS datetime2)
+      JOIN dbo.employee_requests r ON r.request_id=l.request_id
+      JOIN dbo.leave_types t ON t.leave_type_id=l.leave_type_id
+      WHERE r.employee_id=? AND r.status='DA_DUYET'
+        AND NOT EXISTS (SELECT 1 FROM dbo.employee_request_withdrawals w WHERE w.request_id=r.request_id)
+        AND """ + " " + scope + " GROUP BY d.day ORDER BY d.day",
+      (rs, row) -> new CalendarLeave(rs.getObject(1, LocalDate.class), rs.getBoolean(2)), from, to, employeeId);
+ }
+
  public Object summary(AuthenticatedAccount p,LocalDate from,LocalDate to,Long employee){return summary.summarizeDepartment(p,from,to,employee);}
  public Map<String,Object> personnel(AuthenticatedAccount p,long employee){access.employee(p,employee,access.today(),false);return Map.of("qualifications",db.queryForList("SELECT level.level_name qualification,eq.major,eq.institution,eq.graduation_year graduationYear,eq.certificate_number certificateNumber FROM dbo.employee_qualifications eq JOIN dbo.qualification_levels level ON level.qualification_level_id=eq.qualification_level_id WHERE eq.employee_id=? AND eq.is_deleted=0",employee),"contracts",db.queryForList("SELECT contract_number contractNumber,start_date startDate,end_date endDate,status FROM dbo.contracts WHERE employee_id=? ORDER BY start_date DESC",employee));}
  public Map<String,Object> detail(AuthenticatedAccount p,String kind,long id){

@@ -1,6 +1,5 @@
 <nav class="d-flex flex-wrap gap-2 mb-3">
   <button type="button" class="btn" [class.btn-primary]="requestView === 'department'" [class.btn-outline-primary]="requestView !== 'department'" [attr.aria-pressed]="requestView === 'department'" [disabled]="saving" routerLink="/requests/head">Duyệt đơn nghỉ phép / nghỉ việc</button>
-  <a class="btn btn-outline-primary" routerLink="/department/reviews">OT / Giải trình công</a>
   <button type="button" class="btn" [class.btn-primary]="requestView === 'mine'" [class.btn-outline-primary]="requestView !== 'mine'" [attr.aria-pressed]="requestView === 'mine'" [disabled]="saving" routerLink="/requests/head" [queryParams]="{view: 'mine'}">Đơn nghỉ phép của tôi</button>
 </nav>
 @if(requestView === 'mine'){<app-my-leave-requests/>}@else{
@@ -21,7 +20,27 @@
 @if(d.canCancelLeave){<button class="btn btn-outline-danger mt-3" [disabled]="saving||detailLoading" (click)="cancel()">Hủy đơn nghỉ phép</button>}
 @if(!d.canCancelLeave&&selected?.requestType==='NGHI_PHEP'){<p class="small text-muted">{{d.cancelLeaveBlocker}}</p>}
 @if(d.withdrawnAt){<p class="mt-3">Hủy bởi {{d.withdrawnBy}} · {{d.withdrawnAt|date:'dd/MM/yyyy HH:mm':'+0700'}}</p><p>Lý do hủy: {{d.withdrawalReason}}</p>}
-@if(d.evidenceReference){<app-leave-evidence [requestId]="selected!.requestId"/>}<h3 class="h6 mt-4">Lịch sử thao tác của đơn</h3>@for(log of d.history;track log.auditId){<article class="audit-entry"><strong>{{actionLabel(log.action)}}</strong><p class="small">{{log.actor||'Hệ thống'}} · {{log.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}}</p><p>{{log.reason||'Không có ghi chú bổ sung'}}</p>@if(log.beforeJson||log.afterJson){<details><summary class="small">Dữ liệu trước / sau</summary><pre>{{log.beforeJson||'—'}} → {{log.afterJson||'—'}}</pre></details>}</article>}@empty{<p class="small text-muted">Chưa có nhật ký được lưu cho đơn này. Dữ liệu cũ không tự sinh lịch sử.</p>}}
+@if(d.evidenceReference){<app-leave-evidence [requestId]="selected!.requestId"/>}<h3 class="h6 mt-4">Lịch sử thao tác của đơn</h3>@for(log of d.history;track log.auditId){<article class="audit-entry"><strong>{{actionLabel(log.action)}}</strong><p class="small">{{log.actor||'Hệ thống'}} · {{log.occurredAt|date:'dd/MM/yyyy HH:mm:ss':'+0700'}}</p><p>{{log.reason||'Không có ghi chú bổ sung'}}</p>@let changes = auditChanges(log.beforeJson, log.afterJson);
+@if(changes.length){
+  <details>
+    <summary class="small">{{log.beforeJson ? 'Thông tin thay đổi' : 'Thông tin ghi nhận'}}</summary>
+    <dl class="audit-fields mt-2 mb-0">
+      @for(change of changes; track change.key){
+        <dt>{{change.label}}</dt>
+        <dd>
+          @if(change.previous && change.current){
+            <span class="d-block">Trước: {{change.previous}}</span>
+            <span class="d-block">Sau: {{change.current}}</span>
+          }@else if(change.current){
+            {{change.current}}
+          }@else{
+            Đã bỏ thông tin: {{change.previous}}
+          }
+        </dd>
+      }
+    </dl>
+  </details>
+}</article>}@empty{<p class="small text-muted">Chưa có nhật ký được lưu cho đơn này. Dữ liệu cũ không tự sinh lịch sử.</p>}}
 </section></app-record-workspace>
 
 }

@@ -43,6 +43,12 @@ export class ReportService {
   getHrOverview() {
     return this.http.get<HrOverview>(`${API_BASE_URL}/overview/hr`).pipe(timeout(15000));
   }
+  getAttendanceStatus() {
+    return this.http.get<{workDate: string; present: number; absent: number; maternity: number; missing: number}>(
+      `${API_BASE_URL}/overview/attendance-status`
+    ).pipe(timeout(15000));
+  }
+
   getPendingOverview() {
     return this.http.get<PendingOverview>(`${API_BASE_URL}/overview/pending`).pipe(timeout(15000));
   }

@@ -134,7 +134,30 @@ export class AttendancePage implements OnInit {
     date(offset = 0): string { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }
     time(v: string | null | undefined): string { return v ? v.replace('T', ' ').slice(0, 19) : '—'; }
     utc(v: string | null | undefined): string { if (!v) return '—'; const d = new Date(v.endsWith('Z') ? v : v + 'Z'); return new Intl.DateTimeFormat('vi-VN', { dateStyle: 'short', timeStyle: 'short', timeZone: 'Asia/Ho_Chi_Minh' }).format(d); }
+    requestStatusBadge(status: string): string {
+        switch (status) {
+            case 'DA_CHAP_NHAN': return 'text-bg-success';
+            case 'TU_CHOI': return 'text-bg-danger';
+            case 'CHO_XU_LY': return 'text-bg-warning';
+            case 'DANG_XU_LY': return 'text-bg-primary';
+            default: return 'text-bg-secondary';
+        }
+    }
+
     label(value: string | null | undefined): string { return ({ CHUA_XAC_NHAN: 'Chưa xác nhận', DA_XAC_NHAN: 'Đã xác nhận', DI_LAM: 'Đi làm', VANG: 'Vắng', DI_MUON: 'Đi muộn', VE_SOM: 'Về sớm', THIEU_VAO: 'Thiếu giờ vào', THIEU_RA: 'Thiếu giờ ra', NGOAI_LICH: 'Giờ ngoài lịch', CHONG_LAN: 'Chồng lấn công khác', CHO_XU_LY: 'Chờ xử lý', DANG_XU_LY: 'Đã tiếp nhận', DA_CHAP_NHAN: 'Đã chấp nhận', TU_CHOI: 'Từ chối', UNCONFIRMED_CORRECTION:'Sửa công chưa xác nhận', MISSING_ATTENDANCE: 'Bổ sung giờ vào/ra', MISSING_CHECKOUT: 'Bổ sung check-out', CONFIRMED_CORRECTION: 'Sửa công đã xác nhận' } as Record<string, string>)[value ?? ''] ?? (value || 'Chưa có công'); }
+    requestActionLabel(action: string, request: AttendanceRequest): string {
+        const missingIn = !request.originalStart && !!request.proposedStart;
+        const missingOut = !request.originalEnd && !!request.proposedEnd;
+        const scope = request.proposedResult === 'DI_LAM' && (missingIn || missingOut)
+            ? 'bổ sung ' + (missingIn && missingOut ? 'check-in và check-out' : missingIn ? 'check-in' : 'check-out')
+            : 'điều chỉnh công';
+        if (action === 'ATTENDANCE_REQUEST_RECEIVED') return 'Tiếp nhận yêu cầu ' + scope;
+        if (action === 'ATTENDANCE_REQUEST_APPROVED') return 'Chấp nhận yêu cầu ' + scope;
+        if (action === 'ATTENDANCE_REQUEST_REJECTED') return 'Từ chối yêu cầu ' + scope;
+        if (action === 'ATTENDANCE_REQUEST_SEEDED') return 'Tạo yêu cầu kiểm thử';
+        return this.actionLabel(action);
+    }
+
     actionLabel(action: string): string { return ({ DEPARTMENT_APPROVE:'Đồng ý cấp phòng',DEPARTMENT_REJECT:'Không đồng ý cấp phòng', ATTENDANCE_REVIEW_CHECK_IN:'Đối soát check-in', ATTENDANCE_REVIEW_CHECK_OUT:'Đối soát check-out', ATTENDANCE_CREATE: 'Nhập công', ATTENDANCE_CORRECT: 'Sửa công', ATTENDANCE_CONFIRM: 'Xác nhận', ATTENDANCE_UNCONFIRM: 'Hủy xác nhận', ATTENDANCE_SELF_CHECK_IN: 'Check-in', ATTENDANCE_SELF_CHECK_OUT: 'Check-out', ATTENDANCE_REQUEST_SUBMITTED: 'Gửi yêu cầu', ATTENDANCE_REQUEST_RECEIVED: 'Tiếp nhận', ATTENDANCE_REQUEST_APPROVED: 'Chấp nhận', ATTENDANCE_REQUEST_REJECTED: 'Từ chối', ATTENDANCE_PORTAL_REQUEST_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_CORRECTION_APPLIED: 'Áp dụng điều chỉnh', ATTENDANCE_ACTUAL_BREAKS: 'Đối soát khoảng nghỉ thực tế' } as Record<string, string>)[action] ?? action; }
     shiftState(r: AttendanceRow): string { if (r.actualEnd) return 'Đã check-out'; if (r.actualStart) return r.anomalies.includes('THIEU_RA') ? 'Thiếu check-out' : 'Đã check-in'; if (r.canCheckIn) return 'Được check-in'; return this.context && r.plannedStart > this.context.serverNow ? 'Chưa đến giờ' : 'Chưa ghi nhận giờ vào'; }
 
@@ -270,6 +293,19 @@ export class AttendancePage implements OnInit {
         else if (this.mode === 'edit') this.mutate(this.api.correct(row.attendanceId!, data, row.version), `Đã sửa công ${this.employeeName(row)}.`, row);
     }
 
+    missingClockLabel(row: AttendanceRow): string {
+        return row.missingClockToRequest === 'IN' ? 'check-in'
+            : row.missingClockToRequest === 'OUT' ? 'check-out' : 'check-in và check-out';
+    }
+
+    async remindMissingClock(row: AttendanceRow): Promise<void> {
+        if (this.saving || !row.missingClockToRequest) return;
+        const part = this.missingClockLabel(row);
+        if (!(await this.actionDialogInPage.confirm(`Nhắc ${row.employeeLabel} bổ sung ${part} cho ca ngày ${row.workDate}?`))) return;
+        if (this.saving || this.detail?.row.scheduleId !== row.scheduleId) return;
+        this.mutate(this.api.remindMissingClock(row.scheduleId), `Đã gửi nhắc bổ sung ${part} cho ${this.employeeName(row)}.`, row);
+    }
+
     async confirm(row: AttendanceRow): Promise<void> { if (this.saving || !row.canConfirm) return; if ((await this.actionDialogInPage.confirm(`Xác nhận công của ${row.employeeLabel}, ngày ${row.workDate}?`))) this.mutate(this.api.verify(row.attendanceId!, true, '', row.version), `Đã xác nhận công ${this.employeeName(row)}.`, row); }
     async clock(row: AttendanceRow, checkIn: boolean): Promise<void> { if (this.saving || !(checkIn ? row.canCheckIn : row.canCheckOut)) return; if ((await this.actionDialogInPage.confirm(`${checkIn ? 'Check-in' : 'Check-out'} ca ${row.shift}? Thời gian được ghi nhận từ máy chủ.`))) this.mutate(this.api.clock(row.scheduleId, checkIn), `Đã ${checkIn ? 'check-in' : 'check-out'}.`, row); }
 
@@ -298,14 +334,14 @@ export class AttendancePage implements OnInit {
         this.api.request(id, this.requestsMine).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => { if (version !== this.requestVersion) return; this.requestDetail = d; if(this.detail?.row.scheduleId===d.current.row.scheduleId)this.detail=d.current; this.requestDetailLoading = false; this.acceptedStart=d.request.proposedStart ?? ''; this.adjustmentReason=''; this.acceptedEnd = d.request.proposedEnd ?? ''; this.decisionReason = ''; }, error: e => { if (version === this.requestVersion) { this.requestDetailLoading = false; this.actionError = this.api.message(e); } } });
     }
 
-    async receive(): Promise<void> { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if ((await this.actionDialogInPage.confirm('Tiếp nhận yêu cầu này để xử lý?'))) {if(this.requestStatus==='CHO_XU_LY')this.requestStatus='ACTIVE';this.mutate(this.api.receive(r.requestId), 'Đã tiếp nhận yêu cầu.', undefined, r.requestId);} }
+    async receive(): Promise<void> { const r = this.requestDetail?.request; if (!r?.canReceive || this.saving) return; if ((await this.actionDialogInPage.confirm(this.requestActionLabel('ATTENDANCE_REQUEST_RECEIVED', r) + '?'))) {if(this.requestStatus==='CHO_XU_LY')this.requestStatus='ACTIVE';this.mutate(this.api.receive(r.requestId), 'Đã ' + this.requestActionLabel('ATTENDANCE_REQUEST_RECEIVED', r).toLocaleLowerCase('vi-VN') + '.', undefined, r.requestId);} }
 
     async decide(approve: boolean): Promise<void> {
         const r = this.requestDetail?.request; if (!r?.canDecide || this.saving) return;
         const end = this.acceptedEnd || null;
         if (!approve && !this.decisionReason.trim() || this.decisionReason.length > 1000) { this.actionError = 'Từ chối hoặc duyệt giờ ra khác đề xuất phải nhập lý do, tối đa 1000 ký tự.'; return; }
         if(approve && ((this.acceptedStart||null)!==r.proposedStart || end!==r.proposedEnd) && !this.adjustmentReason.trim()){this.actionError='Nhập lý do điều chỉnh giờ riêng.';return;}
-        if ((await this.actionDialogInPage.confirm(approve ? 'Chấp nhận và áp dụng điều chỉnh công?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.'))) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim(), this.acceptedStart||null, this.adjustmentReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
+        if ((await this.actionDialogInPage.confirm(approve ? this.requestActionLabel('ATTENDANCE_REQUEST_APPROVED', r) + '?' : 'Từ chối yêu cầu? Công gốc sẽ được giữ nguyên.'))) this.mutate(this.api.decide(r.requestId, approve, end, this.decisionReason.trim(), this.acceptedStart||null, this.adjustmentReason.trim()), approve ? 'Đã chấp nhận và cập nhật công.' : 'Đã từ chối yêu cầu.', undefined, r.requestId);
     }
     async markAbsent(row: AttendanceRow): Promise<void> {
         if(!row.canMarkAbsent || this.saving)return;

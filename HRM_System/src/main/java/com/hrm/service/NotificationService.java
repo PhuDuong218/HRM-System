@@ -43,6 +43,14 @@ public class NotificationService {
   var row=rows.get(0);
   if("department_ot_requests".equals(row.get("reference_type"))){long reference=((Number)row.get("reference_id")).longValue();var actor=access.actor(p);var identity=new com.hrm.security.AuthenticatedAccount(actor.accountId(),actor.employeeId(),p.getName(),actor.role());var detail=departmentReviews.detail(identity,"OT",reference);detail.put("requestCode",detail.get("code"));detail.put("requestType","OT");detail.put("status",detail.get("sourceStatus"));return Map.of("referenceType","department_ot_requests","referenceId",reference,"detail",detail,"route","/department/reviews","reviewKind","OT");}
   if("department_workflow_reviews".equals(row.get("reference_type"))){long reference=((Number)row.get("reference_id")).longValue();var detail=departmentReviews.notification(reference,p,access);boolean ot="OT".equals(detail.get("source_type"));long source=((Number)detail.get("source_id")).longValue();var actor=access.actor(p);boolean mine=((Number)detail.get("employee_id")).longValue()==actor.employeeId();if(!mine&&"EMPLOYEE".equals(actor.role()))return Map.of("referenceType","department_workflow_reviews","referenceId",source,"detail",detail,"route","/department/reviews","reviewKind",ot?"OT":"ATTENDANCE");return Map.of("referenceType",ot?"overtime_requests":"attendance_portal_requests","referenceId",source,"detail",detail,"route",ot?"/overtime":"/attendance","mine",mine);}
+  if("attendance_schedules".equals(row.get("reference_type"))){
+   long schedule = ((Number)row.get("reference_id")).longValue();
+   var actor = access.actor(p);
+   var identity = new com.hrm.security.AuthenticatedAccount(actor.accountId(),actor.employeeId(),p.getName(),actor.role());
+   var record = attendance.detail(identity,true,schedule).row();
+   return Map.of("referenceType","attendance_records","referenceId",schedule,"scheduleId",schedule,"mine",true,
+       "detail",Map.of("requestCode","Công ngày "+record.workDate(),"reason","Bổ sung giờ chấm công còn thiếu"));
+  }
   if("attendance_records".equals(row.get("reference_type"))){
    long reference=((Number)row.get("reference_id")).longValue();var actor=access.actor(p);
    var identity=new com.hrm.security.AuthenticatedAccount(actor.accountId(),actor.employeeId(),p.getName(),actor.role());
@@ -57,7 +65,8 @@ public class NotificationService {
    var senders=db.queryForList("SELECT submitted_by FROM dbo.attendance_portal_requests WHERE request_id=?",Long.class,reference);
    if(senders.isEmpty())throw new ResponseStatusException(HttpStatus.NOT_FOUND,"Yêu cầu không còn tồn tại");
    if("EMPLOYEE".equals(actor.role())&&senders.get(0)!=actor.accountId()){
-    var detail=departmentReviews.detail(identity,"ATTENDANCE",reference);detail.put("requestCode",detail.get("code"));detail.put("requestType","ATTENDANCE_REQUEST");detail.put("status",detail.get("sourceStatus"));return Map.of("referenceType","department_workflow_reviews","referenceId",reference,"detail",detail,"route","/department/reviews","reviewKind","ATTENDANCE");}
+    throw new ResponseStatusException(HttpStatus.FORBIDDEN,"Yêu cầu công do ADMIN hoặc HR phụ trách xử lý.");
+   }
    var request=attendance.request(identity,senders.get(0)==actor.accountId(),reference).request();
    var detail=new LinkedHashMap<String,Object>();detail.put("requestCode",request.requestCode());detail.put("requestType","ATTENDANCE_REQUEST");detail.put("status",request.status());detail.put("reason",request.reason());detail.put("submittedAt",request.submittedAt()+"Z");detail.put("proposedStart",request.proposedStart());detail.put("proposedEnd",request.proposedEnd());detail.put("decisionReason",request.decisionReason());detail.put("receiver",request.receiver());detail.put("receivedAt",request.receivedAt()==null?null:request.receivedAt()+"Z");detail.put("processedAt",request.processedAt()==null?null:request.processedAt()+"Z");
    return Map.of("referenceType","attendance_portal_requests","referenceId",reference,"detail",detail,"mine",senders.get(0)==actor.accountId());

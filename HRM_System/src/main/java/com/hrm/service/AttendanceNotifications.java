@@ -23,7 +23,6 @@ public class AttendanceNotifications {
     try{permissions.requireAttendanceAccess(candidate,employee,date,AttendancePermissionService.MANAGE);recipients.add(candidate);}
     catch(ResponseStatusException e){if(e.getStatusCode().value()!=403)throw e;}
    }
-   recipients.addAll(db.queryForList("SELECT DISTINCT ac.account_id FROM dbo.employee_assignments member JOIN dbo.employee_assignments head ON head.department_id=member.department_id JOIN dbo.positions pos ON pos.position_id=head.position_id AND pos.position_code='TRUONG_PHONG' JOIN dbo.accounts ac ON ac.employee_id=head.employee_id AND ac.is_active=1 JOIN dbo.employees leader ON leader.employee_id=head.employee_id AND leader.employment_status='DANG_LAM' WHERE member.employee_id=? AND member.effective_from<=? AND (member.effective_to IS NULL OR member.effective_to>?) AND head.effective_from<=CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time') AND (head.effective_to IS NULL OR head.effective_to>CONVERT(date,SYSDATETIMEOFFSET() AT TIME ZONE 'SE Asia Standard Time')) AND head.employee_id<>?",Long.class,employee,date,date,employee));
   }else recipients.add(sender);
   String message=switch(action){case "SUBMITTED"->"Có yêu cầu bổ sung / điều chỉnh công đang chờ xử lý.";case "RECEIVED"->"Yêu cầu công của bạn đã được tiếp nhận.";case "APPROVED"->"Yêu cầu công của bạn đã được chấp thuận.";case "REJECTED"->"Yêu cầu công của bạn đã bị từ chối. Mở chi tiết để xem lý do.";default->throw new IllegalArgumentException("Invalid attendance event");};
   publisher.enqueue("attendance_portal_requests:"+id+":"+action,actor,"ATTENDANCE_"+action,"Cập nhật yêu cầu chấm công",message,"attendance_portal_requests",id,recipients);
@@ -45,6 +44,27 @@ public class AttendanceNotifications {
   var recipients=db.queryForList("SELECT account_id FROM dbo.accounts WHERE employee_id=? AND is_active=1",Long.class,row.get("employee_id"));
   publisher.enqueue("attendance_records:"+id+":"+action+":"+row.get("version"),actor,action,"Cập nhật chấm công",message+" Ngày ca: "+row.get("work_date")+".","attendance_records",id,recipients);
  }
+ public void remindMissingClock(long schedule, long employee, long actor, String missing,
+         java.time.LocalDateTime deadline) {
+  if (!publisher.enabled()) throw new ResponseStatusException(org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE,
+      "Chưa bật thông báo chấm công.");
+  var recipients = db.queryForList("""
+      SELECT a.account_id FROM dbo.accounts a JOIN dbo.roles r ON r.role_id=a.role_id
+      WHERE a.employee_id=? AND a.is_active=1 AND a.account_id<>? AND r.role_code IN ('EMPLOYEE','HR')
+      """, Long.class, employee, actor);
+  if (recipients.isEmpty()) throw new ResponseStatusException(org.springframework.http.HttpStatus.CONFLICT,
+      "Nhân viên chưa có tài khoản nhận thông báo.");
+  String portion = switch (missing) {
+   case "IN" -> "giờ check-in";
+   case "OUT" -> "giờ check-out";
+   default -> "giờ check-in và check-out";
+  };
+  String due = deadline.format(java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss"));
+  publisher.enqueue("attendance-reminder:"+schedule+":"+missing, actor, "ATTENDANCE_MISSING_CLOCK_REMINDER",
+      "Bổ sung "+portion, "Ca làm còn thiếu "+portion+". Vui lòng mở chi tiết ca và gửi đề xuất trước "+due+".",
+      "attendance_schedules", schedule, recipients);
+ }
+
  @Transactional("scheduleTransactionManager")
  public void reconcile(long id){
   if(!publisher.enabled())return;

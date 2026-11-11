@@ -83,7 +83,8 @@ export const routes: Routes = [
       { path: "schedules", loadComponent: () => import("./pages/schedules/schedules").then(m => m.SchedulesPage) },
       { path: "attendance", loadComponent: () => import("./pages/attendance/attendance").then(m => m.AttendancePage) },
       { path: "attendance/summary", loadComponent: () => import("./pages/attendance-summary/attendance-summary").then(m => m.AttendanceSummaryPage) },
-      ...['assignments','schedules','attendance','summary','overtime','reviews','reports'].map(area=>({path:'department/'+area,loadComponent:()=>import('./pages/department-workspace/department-workspace').then(m=>m.DepartmentWorkspacePage),data:{departmentArea:area}})),
+      {path:'department/reviews',redirectTo:'requests/head',pathMatch:'full'},
+      ...['assignments','schedules','attendance','summary','overtime','reports'].map(area=>({path:'department/'+area,loadComponent:()=>import('./pages/department-workspace/department-workspace').then(m=>m.DepartmentWorkspacePage),data:{departmentArea:area}})),
       {path:'requests/head' ,loadComponent:()=>import('./pages/head-requests/head-requests').then(m=>m.HeadRequestsPage)},
       {
         path: "requests",

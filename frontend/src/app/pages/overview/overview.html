@@ -53,12 +53,13 @@
     </article>
 
     <article class="chart-card">
-      <div class="chart-header"><div><p class="chart-kicker">02 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Trạng thái nhân sự') }}</h2><p>{{ language.t('Cơ cấu hồ sơ theo trạng thái làm việc.') }}</p></div><span class="chart-mark" aria-hidden="true">◉</span></div>
-      @if (employeeState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
-      @else if (employeeState === 'error') { <p [hrmNotice]="employeeError" noticeKind="error" class="chart-state error" role="status">{{ language.t(employeeError) }}</p> }
+      <div class="chart-header"><div><p class="chart-kicker">02 / {{ language.t('NHÂN SỰ') }}</p><h2>{{ language.t('Trạng thái nhân sự') }}</h2><p>{{ language.t('Tỷ lệ trên số nhân viên đã có một trong bốn trạng thái trong ngày.') }}</p></div><span class="chart-mark" aria-hidden="true">◉</span></div>
+      @if (attendanceStatus; as status) { <p class="small text-muted">{{ date(status.workDate) }}</p> }
+      @if (attendanceState === 'loading') { <p class="chart-state" role="status">{{ language.t('Đang tải dữ liệu…') }}</p> }
+      @else if (attendanceState === 'error') { <p [hrmNotice]="'Không tải được trạng thái chấm công.'" noticeKind="error" class="chart-state error" role="status">{{ language.t('Không tải được trạng thái chấm công.') }}</p> }
       @else if (!totalEmployees) { <p class="chart-state">{{ language.t('Chưa có dữ liệu để hiển thị.') }}</p> }
       @else {
-        <div class="donut-layout"><div class="donut" [style.background]="statusGradient" aria-hidden="true"><div><strong>{{ number(totalEmployees) }}</strong><small>{{ language.t('hồ sơ') }}</small></div></div>
+        <div class="donut-layout"><div class="donut" [style.background]="statusGradient" aria-hidden="true"><div><strong>{{ number(totalEmployees) }}</strong><small>{{ language.t('nhân viên') }}</small></div></div>
           <ul class="chart-legend">@for (row of statusItems; track $index) { <li><span class="legend-dot" [style.background]="row.color" aria-hidden="true"></span><span>{{ language.t(row.label) }}<small>{{ number(row.count / totalEmployees * 100) }}%</small></span><strong>{{ number(row.count) }}</strong></li> }</ul>
         </div>
       }

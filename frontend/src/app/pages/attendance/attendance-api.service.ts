@@ -9,7 +9,7 @@ export interface AttendanceRow {
   actualStart: string | null; actualEnd: string | null; actualBreakMinutes: number; attendanceResult: string | null;
   verificationStatus: string | null; createdBy: number | null; updatedBy: number | null; confirmedBy: number | null;
   confirmedAt: string | null; correctionReason: string | null; source: string; anomalies: string[];
-  checkInReviewed: boolean; checkOutReviewed: boolean; canReviewCheckIn: boolean; canReviewCheckOut: boolean; checkInReviewer: string | null; checkInReviewedAt: string | null; checkOutReviewer: string | null; checkOutReviewedAt: string | null; entryRequestId: number | null; canMarkAbsent: boolean; canEdit: boolean; canConfirm: boolean; canUnconfirm: boolean; canRequest: boolean; canCheckIn: boolean; canCheckOut: boolean; version: string | null; enteredByLabel: string | null; updatedByLabel: string | null; confirmedByLabel: string | null;
+  checkInReviewed: boolean; checkOutReviewed: boolean; canReviewCheckIn: boolean; canReviewCheckOut: boolean; checkInReviewer: string | null; checkInReviewedAt: string | null; checkOutReviewer: string | null; checkOutReviewedAt: string | null; entryRequestId: number | null; canMarkAbsent: boolean; canEdit: boolean; canConfirm: boolean; canUnconfirm: boolean; canRequest: boolean; missingClockToRequest: 'IN' | 'OUT' | 'BOTH' | null; canCheckIn: boolean; canCheckOut: boolean; version: string | null; enteredByLabel: string | null; updatedByLabel: string | null; confirmedByLabel: string | null;
 }
 export interface Stats { waiting: number; confirmed: number; missing: number; review: number; openRequests: number; }
 export interface Audit { action: string; actor: string; occurredAt: string; reason: string | null; }
@@ -47,6 +47,9 @@ export class AttendanceApiService {
   request(id: number, mine: boolean) { return this.http.get<RequestDetail>(`${this.url}/requests/${id}`, { params: this.params({mine}) }); }
   submitRequest(row: AttendanceRow, data: Correction) { return this.http.post<{requestId: number}>(`${this.url}/requests`, { scheduleId: row.scheduleId, type: row.attendanceId == null ? 'MISSING_ATTENDANCE' : row.verificationStatus === 'DA_XAC_NHAN' ? 'CONFIRMED_CORRECTION' : row.actualStart && !row.actualEnd ? 'MISSING_CHECKOUT' : 'UNCONFIRMED_CORRECTION', attendanceId: row.attendanceId, actualStart: data.actualStart, actualEnd: data.actualEnd, actualBreakMinutes: data.actualBreakMinutes, attendanceResult: data.attendanceResult, reason: data.correctionReason }); }
   receive(id: number) { return this.http.post<void>(`${this.url}/requests/${id}/receive`, {}); }
+  remindMissingClock(scheduleId: number) {
+    return this.http.post<void>(`${this.url}/schedules/${scheduleId}/remind-missing-clock`, {});
+  }
   reviewClock(row: AttendanceRow, side: 'in' | 'out', reason: string) { return this.http.post(`${this.url}/records/${row.attendanceId}/review-check-${side}`, {expectedVersion: row.version, reason}); }
   markAbsent(row: AttendanceRow, reason: string) { return this.http.post(`${this.url}/schedules/${row.scheduleId}/absence`, {reason}); }
   decide(id: number, approve: boolean, acceptedEnd: string | null, reason: string, acceptedStart: string | null, adjustmentReason: string) { return this.http.post<void>(`${this.url}/requests/${id}/decision`, {approve, acceptedEnd, reason, acceptedStart, adjustmentReason}); }

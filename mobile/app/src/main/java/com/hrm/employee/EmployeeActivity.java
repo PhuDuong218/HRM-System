@@ -1160,10 +1160,7 @@ public class EmployeeActivity extends AppCompatActivity {
             button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
             box.addView(text("Công đã được xác nhận",12,MUTED,false));
         }
-        if (section.equals("attendance") && !ot && row.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(row,"verificationStatus")))
-            button(box, "Yêu cầu điều chỉnh / bổ sung", false,
-                    () -> fetch("/api/attendance-workspace/schedules/" + row.optLong("scheduleId") + "?mine=true",
-                            d -> attendanceProposal(d.getJSONObject("row"))));
+        if (section.equals("attendance") && !ot) addAttendanceProposalAction(box, row);
         if (section.equals("attendance") && ot && str(o, "actualEnd").isEmpty())
             button(box, "Bổ sung công OT", false, () -> supplementCandidates(o.optLong("overtimeId")));
         outer.addView(content);
@@ -1365,10 +1362,7 @@ public class EmployeeActivity extends AppCompatActivity {
             button(box,"Yêu cầu điều chỉnh / bổ sung",false,()->{}).setEnabled(false);
             box.addView(text("Công đã được xác nhận",12,MUTED,false));
         }
-        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus")))
-            button(box, "Yêu cầu điều chỉnh / bổ sung", false,
-                    () -> fetch("/api/attendance-workspace/schedules/" + id + "?mine=true",
-                            d -> attendanceProposal(d.getJSONObject("row"))));
+        addAttendanceProposalAction(box, r);
     }
 
     private void attendanceDetail(JSONObject detail) throws Exception {
@@ -1398,7 +1392,12 @@ public class EmployeeActivity extends AppCompatActivity {
                 .append("\nXử lý: ").append(str(request,"processor")).append(" · ").append(utc(str(request,"processedAt")));
         }
         MaterialAlertDialogBuilder details = new MaterialAlertDialogBuilder(this).setTitle(str(r, "shift")).setMessage(info).setPositiveButton("Đóng", null);
-        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) details.setNeutralButton("Gửi yêu cầu điều chỉnh", (dialog, which) -> attendanceProposal(r));
+        if (r.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(r,"verificationStatus"))) {
+            details.setNeutralButton(attendanceProposalLabel(r), (dialog, which) -> attendanceProposal(r));
+        } else if (r.optBoolean("checkoutSupplementTooEarly")) {
+            info.append("\nCa còn trong giờ làm việc. Hãy check-out trực tiếp khi kết thúc làm việc.");
+            details.setMessage(info.toString());
+        }
         details.show();
     }
 
@@ -1605,7 +1604,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     }
                 }
             if (names.isEmpty()) {
-                toast("Không có công đủ điều kiện trong khoảng ngày đã chọn. Có thể bổ sung công cho lịch đã bắt đầu chưa có công, bổ sung giờ ra sau khi ca kết thúc hoặc điều chỉnh công đã xác nhận; bản ghi phải còn hạn, kỳ chưa khóa và chưa có yêu cầu đang mở.");
+                toast("Không có công đủ điều kiện trong khoảng ngày đã chọn. Chỉ bổ sung giờ ra sau khi ca kết thúc. Bản ghi phải còn hạn, kỳ chưa khóa và chưa có yêu cầu đang mở.");
                 return;
             }
             new MaterialAlertDialogBuilder(this).setTitle("Chọn bản ghi công cá nhân")
@@ -1805,32 +1804,68 @@ public class EmployeeActivity extends AppCompatActivity {
         return o;
     }
 
+    private String attendanceProposalLabel(JSONObject row) {
+        boolean missingIn = str(row, "actualStart").isEmpty();
+        boolean missingOut = str(row, "actualEnd").isEmpty();
+        if (missingIn && missingOut) return "Bổ sung check-in và check-out";
+        if (missingIn) return "Bổ sung check-in";
+        if (missingOut) return "Bổ sung check-out";
+        return "Yêu cầu điều chỉnh công";
+    }
+
+    private void addAttendanceProposalAction(LinearLayout box, JSONObject row) {
+        if (row.optBoolean("checkoutSupplementTooEarly")) {
+            button(box, attendanceProposalLabel(row), false, () -> {}).setEnabled(false);
+            box.addView(text("Ca còn trong giờ làm việc. Hãy check-out trực tiếp khi kết thúc làm việc.", 12, MUTED, false));
+        } else if (row.optBoolean("canRequest") && !"DA_XAC_NHAN".equals(str(row, "verificationStatus"))) {
+            button(box, attendanceProposalLabel(row), false,
+                    () -> fetch("/api/attendance-workspace/schedules/" + row.optLong("scheduleId") + "?mine=true",
+                            d -> attendanceProposal(d.getJSONObject("row"))));
+        }
+    }
+
     private void attendanceProposal(JSONObject r) {
         if("DA_XAC_NHAN".equals(str(r,"verificationStatus"))){toast("Công đã được xác nhận");return;}
+        if (r.optBoolean("checkoutSupplementTooEarly")) {
+            toast("Chỉ bổ sung check-out sau khi ca kết thúc. Hãy check-out trực tiếp.");
+            return;
+        }
         if (!r.optBoolean("canRequest")) {
             toast("Bản ghi không còn đủ điều kiện gửi yêu cầu.");
             return;
         }
         LinearLayout box = form();
-        boolean unrecorded = r.isNull("attendanceId");
+        boolean unrecorded = r.optLong("attendanceId") <= 0;
         boolean confirmed = str(r,"verificationStatus").equals("DA_XAC_NHAN");
         boolean missing = !unrecorded && !confirmed && !str(r,"actualStart").isEmpty() && str(r,"actualEnd").isEmpty();
+        boolean missingIn = str(r, "actualStart").isEmpty();
+        boolean missingOut = str(r, "actualEnd").isEmpty();
+        boolean supplement = missingIn || missingOut;
+        String requestLabel = attendanceProposalLabel(r);
+        if (supplement) {
+            box.addView(text("Loại yêu cầu", 13, INK, true));
+            Spinner type = new Spinner(this);
+            type.setAdapter(new ArrayAdapter<>(this, android.R.layout.simple_spinner_dropdown_item,
+                    new String[] { requestLabel }));
+            box.addView(type);
+        }
         box.addView(text(
-                unrecorded ? "Bổ sung giờ vào và giờ ra thực tế cho lịch chưa có công. Không nhập giờ tương lai. Công chỉ được ghi sau khi duyệt." : missing ? "Bổ sung giờ ra còn thiếu. Giữ nguyên giờ vào đã ghi nhận."
-                        : "Đề xuất điều chỉnh công. Công gốc chỉ thay đổi sau khi được duyệt.",
+                unrecorded ? "Nhập giờ vào và giờ ra thực tế."
+                        : missing ? "Nhập giờ ra thực tế. Giờ vào đã ghi nhận được giữ nguyên."
+                        : missingIn && !missingOut ? "Nhập giờ vào thực tế. Giờ ra đã ghi nhận được giữ nguyên."
+                        : "Công gốc chỉ thay đổi sau khi được duyệt.",
                 13, MUTED, false));
         Spinner result = new Spinner(this);
         result.setAdapter(new ArrayAdapter<String>(this, android.R.layout.simple_spinner_dropdown_item,
                 new String[] { "Đi làm", "Vắng" }));
-        result.setSelection(str(r, "attendanceResult").equals("VANG") ? 1 : 0);
-        result.setEnabled(!missing && !unrecorded);
-        box.addView(result);
+        result.setSelection(!supplement && str(r, "attendanceResult").equals("VANG") ? 1 : 0);
+        if (!supplement) box.addView(result);
         DateField start = new DateField(box, "Giờ vào đề nghị", str(r, "actualStart"), missing),
-                end = new DateField(box, "Giờ ra đề nghị", str(r, "actualEnd"), false);
+                end = new DateField(box, "Giờ ra đề nghị", str(r, "actualEnd"), missingIn && !missingOut);
         TextInputEditText rests = input(box, "Phút nghỉ thực tế", String.valueOf(r.optInt("actualBreakMinutes")),
                 InputType.TYPE_CLASS_NUMBER),
                 reason = input(box, "Lý do *", "", InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        dialog("Yêu cầu điều chỉnh công", box, "Gửi yêu cầu", d -> {
+        dialog(requestLabel, box, "Gửi yêu cầu", d -> {
             try {
                 if ((result.getSelectedItemPosition() == 0 && (start.value.isEmpty() || end.value.isEmpty()
                         || !LocalDateTime.parse(end.value).isAfter(LocalDateTime.parse(start.value))))

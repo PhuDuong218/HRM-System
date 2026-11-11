@@ -18,7 +18,6 @@ import org.springframework.web.server.ResponseStatusException;
  */
 @Service
 public class OvertimeService {
-    @org.springframework.beans.factory.annotation.Autowired(required=false) private DepartmentReviewService departmentReviews;
     private final JdbcTemplate db;
     private final OvertimePermissionService perms;
     private final OvertimeDailyLedger ledger;
@@ -132,7 +131,6 @@ public class OvertimeService {
                 Long.class, a.employeeId(), code, body.requestedStart(), body.requestedEnd(), body.reason().trim(),a.accountId());
         savePlanned(id,body,a.accountId());
         audit(a.accountId(), id, "OT_REGISTER", body.reason(), null);
-        if(departmentReviews!=null)departmentReviews.submittedOvertime(id,a.accountId());
         return load(id);
     }
 
@@ -151,7 +149,6 @@ public class OvertimeService {
                 body.requestedStart(), body.requestedEnd(), body.reason().trim(), id);
         savePlanned(id,body,a.accountId());
         audit(a.accountId(), id, "OT_EDIT", body.reason(), before);
-        if(departmentReviews!=null)departmentReviews.submittedOvertime(id,a.accountId());
         return load(id);
     }
 
@@ -161,7 +158,6 @@ public class OvertimeService {
         VerifiedActor a = perms.requireApprove(principal, v.employeeId(), v.requestedStart().toLocalDate());
         writable(v);
         need("CHO_DUYET".equals(v.status()), "Only pending requests can be decided");
-        if(approve&&departmentReviews!=null)departmentReviews.requireApproval("OT",id);
         if (!approve && (reason == null || reason.isBlank()))
             throw bad("Rejection reason required");
         if (approve)

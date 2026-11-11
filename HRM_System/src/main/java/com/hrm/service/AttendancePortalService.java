@@ -16,7 +16,6 @@ import org.springframework.web.server.ResponseStatusException;
 /** Attendance page API. All identities, scopes, clocks and action eligibility are server-owned. */
 @Service
 public class AttendancePortalService {
-    @org.springframework.beans.factory.annotation.Autowired(required=false) private DepartmentReviewService departmentReviews;
     @org.springframework.beans.factory.annotation.Autowired(required=false) private AttendanceNotifications notifications;
     public record Context(String role, boolean mine, boolean manage, LocalDateTime serverNow,
             int checkoutRequestDays, int correctionRequestDays) {}
@@ -27,7 +26,7 @@ public class AttendancePortalService {
             String attendanceResult, String verificationStatus, Long createdBy, Long updatedBy,
             Long confirmedBy, LocalDateTime confirmedAt, String correctionReason,
             String source, List<String> anomalies, boolean canEdit, boolean canConfirm,
-            boolean canUnconfirm, Long entryRequestId, boolean canMarkAbsent, boolean canRequest, boolean canCheckIn, boolean canCheckOut, String version, String enteredByLabel, String updatedByLabel, String confirmedByLabel, boolean checkInReviewed,boolean checkOutReviewed,boolean canReviewCheckIn,boolean canReviewCheckOut,String checkInReviewer,LocalDateTime checkInReviewedAt,String checkOutReviewer,LocalDateTime checkOutReviewedAt, String supplementRequestStatus) {}
+            boolean canUnconfirm, Long entryRequestId, boolean canMarkAbsent, boolean canRequest, boolean canCheckIn, boolean canCheckOut, String version, String enteredByLabel, String updatedByLabel, String confirmedByLabel, boolean checkInReviewed,boolean checkOutReviewed,boolean canReviewCheckIn,boolean canReviewCheckOut,String checkInReviewer,LocalDateTime checkInReviewedAt,String checkOutReviewer,LocalDateTime checkOutReviewedAt, String supplementRequestStatus, String missingClockToRequest, boolean checkoutSupplementTooEarly) {}
     public record Stats(long waiting, long confirmed, long missing, long review, long openRequests) {}
     public record Search(List<Row> items, int page, int size, long totalElements, int totalPages, Stats stats) {}
     public record Break(LocalDateTime start, LocalDateTime end) {}
@@ -163,7 +162,7 @@ public class AttendancePortalService {
           &&"CHUA_XAC_NHAN".equals(verification)&&("VANG".equals(result)||ai!=null&&ao!=null&&inReviewed&&outReviewed);
         boolean canUnconfirm=access&&id!=null&&!periodLocked&&!pending&&has(a,AttendancePermissionService.UNCONFIRM)&&"DA_XAC_NHAN".equals(verification)
           &&(!a.role().equals("HR")||!Objects.equals(confirmer,a.id()));
-        boolean request=mine&&!periodLocked&&!pending&&((id==null&&!now().isBefore(ps)&&!now().isAfter(deadline(pe.toLocalDate(),"MISSING_ATTENDANCE"))))||mine&&id!=null&&!periodLocked&&!pending&&(("CHUA_XAC_NHAN".equals(verification)&&(ai==null||ao!=null)&&!now().isBefore(ps)&&!now().isAfter(deadline(pe.toLocalDate(),"UNCONFIRMED_CORRECTION")))
+        boolean request=mine&&!periodLocked&&!pending&&((id==null&&now().isAfter(pe)&&!now().isAfter(deadline(pe.toLocalDate(),"MISSING_ATTENDANCE"))))||mine&&id!=null&&!periodLocked&&!pending&&(("CHUA_XAC_NHAN".equals(verification)&&(ao!=null||ai==null&&now().isAfter(pe))&&!now().isBefore(ps)&&!now().isAfter(deadline(pe.toLocalDate(),"UNCONFIRMED_CORRECTION")))
           ||("CHUA_XAC_NHAN".equals(verification)&&ai!=null&&ao==null&&now().isAfter(pe)&&!now().isAfter(deadline(pe.toLocalDate(),"MISSING_CHECKOUT"))));
         Long entryRequestId=null;
         if(access&&id==null&&has(a,AttendancePermissionService.CONFIRM)&&!Objects.equals(a.employee(),rs.getLong("employee_id"))){
@@ -173,8 +172,40 @@ public class AttendancePortalService {
         String source=id==null?"—":Boolean.TRUE.equals(db.queryForObject("SELECT CASE WHEN EXISTS(SELECT 1 FROM dbo.audit_logs WHERE target_table='attendance_records' AND target_record_key=? AND action='ATTENDANCE_SELF_CHECK_IN') THEN CAST(1 AS bit) ELSE CAST(0 AS bit) END",Boolean.class,Long.toString(id)))?"Tự chấm công":"Nhập thủ công / dữ liệu cũ";
         return new Row(sid,id,rs.getLong("employee_id"),rs.getString("employee_label"),rs.getString("department_name"),rs.getString("shift_label"),date,ps,pe,rs.getInt("planned_break_minutes"),rs.getString("break_detail_status"),ai,ao,rs.getInt("actual_break_minutes"),result,verification,creator,updater,confirmer,rs.getObject("confirmed_at",LocalDateTime.class),rs.getString("correction_reason"),source,anomalies,
           access&&!periodLocked&&!pending&&id!=null&&"CHUA_XAC_NHAN".equals(verification),canConfirm,canUnconfirm,entryRequestId,access&&(id==null||!"VANG".equals(result)&&"CHUA_XAC_NHAN".equals(verification)&&(ai==null||ao==null))&&!periodLocked&&!pending&&now().isAfter(deadline(pe.toLocalDate(),"MISSING_ATTENDANCE")),request,
-          mine&&id==null&&AttendanceClockPolicy.checkIn(ps,pe,now()).allowed(),mine&&ai!=null&&ao==null&&"CHUA_XAC_NHAN".equals(verification)&&AttendanceClockPolicy.checkOut(ps,pe,ai,now()).allowed(),rs.getBytes("attendance_version")==null?null:Base64.getEncoder().encodeToString(rs.getBytes("attendance_version")),rs.getString("entered_by_label"),rs.getString("updated_by_label"),rs.getString("confirmed_by_label"),inReviewed,outReviewed,reviewAccess&&ai!=null&&!inReviewed,reviewAccess&&ao!=null&&!outReviewed,rs.getString("check_in_reviewer"),rs.getObject("check_in_reviewed_at",LocalDateTime.class),rs.getString("check_out_reviewer"),rs.getObject("check_out_reviewed_at",LocalDateTime.class),mine?rs.getString("supplement_request_status"):null);
+          mine&&id==null&&AttendanceClockPolicy.checkIn(ps,pe,now()).allowed(),mine&&ai!=null&&ao==null&&"CHUA_XAC_NHAN".equals(verification)&&AttendanceClockPolicy.checkOut(ps,pe,ai,now()).allowed(),rs.getBytes("attendance_version")==null?null:Base64.getEncoder().encodeToString(rs.getBytes("attendance_version")),rs.getString("entered_by_label"),rs.getString("updated_by_label"),rs.getString("confirmed_by_label"),inReviewed,outReviewed,reviewAccess&&ai!=null&&!inReviewed,reviewAccess&&ao!=null&&!outReviewed,rs.getString("check_in_reviewer"),rs.getObject("check_in_reviewed_at",LocalDateTime.class),rs.getString("check_out_reviewer"),rs.getObject("check_out_reviewed_at",LocalDateTime.class),mine?rs.getString("supplement_request_status"):null,
+          access&&!periodLocked&&!pending?missingClockToRequest(id,verification,result,ai,ao,pe):null,
+          mine&&!periodLocked&&!pending&&ao==null&&(id==null||"CHUA_XAC_NHAN".equals(verification))
+            &&!now().isBefore(ps)&&!now().isAfter(pe));
     }
+    private String missingClockToRequest(Long id, String verification, String result,
+            LocalDateTime start, LocalDateTime end, LocalDateTime plannedEnd) {
+        if (now().isBefore(plannedEnd) || now().isAfter(deadline(plannedEnd.toLocalDate(), "MISSING_ATTENDANCE"))) {
+            return null;
+        }
+        if (id == null) return "BOTH";
+        if (!"CHUA_XAC_NHAN".equals(verification) || !"DI_LAM".equals(result)) return null;
+        if (start == null) return end == null ? "BOTH" : "IN";
+        return end == null && now().isAfter(plannedEnd) ? "OUT" : null;
+    }
+
+    @Transactional("scheduleTransactionManager")
+    public void remindMissingClock(AuthenticatedAccount principal, long scheduleId) {
+        Actor manager = actor(principal);
+        Row row = detail(principal, false, scheduleId).row();
+        employeeLock(row.employeeId());
+        row = detail(principal, false, scheduleId).row();
+        permissions.requireAttendanceAccess(manager.id(), row.employeeId(), row.workDate(), AttendancePermissionService.MANAGE);
+        String missing = row.missingClockToRequest();
+        if (missing == null) {
+            throw error(HttpStatus.CONFLICT, "Ca không còn đủ điều kiện gửi nhắc bổ sung công.");
+        }
+        if (notifications == null) {
+            throw error(HttpStatus.SERVICE_UNAVAILABLE, "Chưa bật thông báo chấm công.");
+        }
+        notifications.remindMissingClock(row.scheduleId(), row.employeeId(), manager.id(), missing,
+            deadline(row.plannedEnd().toLocalDate(), "MISSING_ATTENDANCE"));
+    }
+
     private void range(LocalDate from,LocalDate to,int page){if(from==null||to==null||to.isBefore(from)||to.isAfter(from.plusDays(366))||page<0||page>100000)throw error(HttpStatus.BAD_REQUEST,"Khoảng ngày tối đa 366 ngày, phân trang phải hợp lệ.");}
     private Scope pendingScope(AuthenticatedAccount p) {
         Scope scoped=scope(actor(p),false);
@@ -298,6 +329,13 @@ public class AttendancePortalService {
     public long submit(AuthenticatedAccount p,Proposal body){Actor a=actor(p);if(body==null)throw error(HttpStatus.BAD_REQUEST,"Thiếu đề xuất.");if(a.role().equals("ADMIN"))throw error(HttpStatus.FORBIDDEN,"ADMIN không gửi yêu cầu công cá nhân.");reason(body.reason());if("MISSING_ATTENDANCE".equals(body.type()))return submitMissing(p,a,body);AttendanceView original=attendance.get(body.attendanceId());if(!Objects.equals(a.employee(),original.employeeId()))throw error(HttpStatus.FORBIDDEN,"Chỉ gửi yêu cầu cho công của mình.");employeeLock(original.employeeId());attendanceLock(original.attendanceId());original=attendance.get(original.attendanceId());if("DA_XAC_NHAN".equals(original.verificationStatus()))throw error(HttpStatus.CONFLICT,"Công đã được xác nhận.");var d=detail(p,true,original.scheduleId());if(!d.row().canRequest())throw error(HttpStatus.CONFLICT,"Công không đủ điều kiện gửi yêu cầu hoặc đã hết hạn.");
         boolean missing="MISSING_CHECKOUT".equals(body.type()),unconfirmed="UNCONFIRMED_CORRECTION".equals(body.type());if(!missing&&!unconfirmed&&!"CONFIRMED_CORRECTION".equals(body.type()))throw error(HttpStatus.BAD_REQUEST,"Loại yêu cầu không hợp lệ.");
         if(missing&&(!"CHUA_XAC_NHAN".equals(original.verificationStatus())||original.actualStart()==null||original.actualEnd()!=null||!Objects.equals(body.actualStart(),original.actualStart())||!"DI_LAM".equals(body.attendanceResult()))||unconfirmed&&!"CHUA_XAC_NHAN".equals(original.verificationStatus())||!missing&&!unconfirmed&&!"DA_XAC_NHAN".equals(original.verificationStatus()))throw error(HttpStatus.CONFLICT,"Loại yêu cầu không khớp trạng thái công.");
+        if (original.actualStart()!=null && original.actualEnd()==null && !missing) {
+            throw error(HttpStatus.BAD_REQUEST, "Chọn bổ sung check-out và giữ nguyên giờ vào đã ghi nhận.");
+        }
+        if (original.actualStart()==null && original.actualEnd()!=null
+                && (!Objects.equals(body.actualEnd(),original.actualEnd()) || !"DI_LAM".equals(body.attendanceResult()))) {
+            throw error(HttpStatus.BAD_REQUEST, "Bổ sung check-in phải giữ nguyên giờ ra đã ghi nhận.");
+        }
         if(body.actualEnd()==null&&"DI_LAM".equals(body.attendanceResult()))throw error(HttpStatus.BAD_REQUEST,"Đề xuất đi làm phải có giờ ra.");
         LocalDateTime limit=deadline(!body.type().equals("CONFIRMED_CORRECTION")?d.row().plannedEnd().toLocalDate():original.workDate(),body.type());if(now().isAfter(limit))throw error(HttpStatus.CONFLICT,"Đã hết hạn gửi loại yêu cầu này.");writable(original.workDate());interval(original.employeeId(),original.attendanceId(),body.actualStart(),body.actualEnd(),body.actualBreakMinutes(),body.attendanceResult());
         Long id=db.queryForObject("""
@@ -308,7 +346,7 @@ public class AttendancePortalService {
           """,Long.class,"ATT-"+UUID.randomUUID().toString().substring(0,18),body.type(),body.actualStart(),body.actualEnd(),body.actualBreakMinutes(),body.attendanceResult(),body.reason().trim(),a.id(),limit,original.attendanceId());
         audit(a.id(),id,"ATTENDANCE_REQUEST_SUBMITTED",body.reason().trim());return id;}
     @Transactional("scheduleTransactionManager")
-    public void receive(AuthenticatedAccount p,long id){Actor a=actor(p);RequestDetail d=request(p,false,id);employeeLock(d.current().row().employeeId());requestLock(id);d=request(p,false,id);if(!d.request().canReceive())throw error(HttpStatus.FORBIDDEN,"Không được tiếp nhận yêu cầu này hoặc trạng thái đã thay đổi.");int n=db.update("UPDATE dbo.attendance_portal_requests SET status='DANG_XU_LY',received_by=?,received_at=SYSUTCDATETIME(),processing_deadline=? WHERE request_id=? AND status='CHO_XU_LY'",a.id(),processingDeadline(d.request().workDate()),id);if(n!=1)throw error(HttpStatus.CONFLICT,"Yêu cầu vừa được tiếp nhận.");audit(a.id(),id,"ATTENDANCE_REQUEST_RECEIVED","Tiếp nhận xử lý");}
+    public void receive(AuthenticatedAccount p,long id){Actor a=actor(p);RequestDetail d=request(p,false,id);employeeLock(d.current().row().employeeId());requestLock(id);d=request(p,false,id);if(!d.request().canReceive())throw error(HttpStatus.FORBIDDEN,"Không được tiếp nhận yêu cầu này hoặc trạng thái đã thay đổi.");Integer n=db.queryForObject("DECLARE @changed TABLE(id bigint); UPDATE dbo.attendance_portal_requests SET status='DANG_XU_LY',received_by=?,received_at=SYSUTCDATETIME(),processing_deadline=? OUTPUT INSERTED.request_id INTO @changed WHERE request_id=? AND status='CHO_XU_LY'; SELECT COUNT(*) FROM @changed",Integer.class,a.id(),processingDeadline(d.request().workDate()),id);if(n==null||n!=1)throw error(HttpStatus.CONFLICT,"Yêu cầu vừa được tiếp nhận.");audit(a.id(),id,"ATTENDANCE_REQUEST_RECEIVED","Tiếp nhận xử lý");}
     private LocalDateTime processingDeadline(LocalDate workDate){
         LocalDateTime payrollCutoff=workDate.plusMonths(1).withDayOfMonth(5).atTime(23,59,59);
         LocalDateTime sla=deadlinePolicy==null?null:deadlinePolicy.processingDeadline(now().toLocalDate());
@@ -317,7 +355,6 @@ public class AttendancePortalService {
     private void requestLock(long id){db.queryForObject("SELECT request_id FROM dbo.attendance_portal_requests WITH(UPDLOCK,HOLDLOCK) WHERE request_id=?",Long.class,id);}
     @Transactional("scheduleTransactionManager")
     public void decide(AuthenticatedAccount p,long id,Decision body){Actor a=actor(p);if(body==null)throw error(HttpStatus.BAD_REQUEST,"Thiếu quyết định.");RequestDetail d=request(p,false,id);employeeLock(d.current().row().employeeId());if(d.request().attendanceId()!=null)attendanceLock(d.request().attendanceId());requestLock(id);d=request(p,false,id);Request r=d.request();if(!r.canDecide())throw error(HttpStatus.FORBIDDEN,"Chỉ người tiếp nhận độc lập có quyền hoàn tất yêu cầu đang xử lý.");
-        if(body.approve()&&departmentReviews!=null)departmentReviews.requireApproval("ATTENDANCE",id);
         if(!body.approve())reason(body.reason());
         if(body.approve()&&r.requestType().equals("MISSING_ATTENDANCE")){
           approveMissing(p,a,r,body);
@@ -333,7 +370,7 @@ public class AttendancePortalService {
             recordWorkflowAudit(a,r.attendanceId(),"ATTENDANCE_UNCONFIRM",r.reason(),before,snapshot(r.attendanceId()));
             expected=db.queryForObject("SELECT row_version FROM dbo.attendance_records WHERE attendance_id=?",byte[].class,r.attendanceId());
           }
-          String correctionBefore=snapshot(r.attendanceId());int n=db.update("UPDATE dbo.attendance_records SET actual_start=?,actual_end=?,actual_break_minutes=?,attendance_result=?,correction_reason=?,updated_by=?,updated_at=SYSUTCDATETIME() WHERE attendance_id=? AND invalidated_at IS NULL AND row_version=?",acceptedStart,end,r.proposedBreakMinutes(),r.proposedResult(),r.reason(),a.id(),r.attendanceId(),expected);if(n!=1)throw error(HttpStatus.CONFLICT,"Công bị thay đổi đồng thời.");
+          String correctionBefore=snapshot(r.attendanceId());Integer n=db.queryForObject("DECLARE @changed TABLE(id bigint); UPDATE dbo.attendance_records SET actual_start=?,actual_end=?,actual_break_minutes=?,attendance_result=?,correction_reason=?,updated_by=?,updated_at=SYSUTCDATETIME() OUTPUT INSERTED.attendance_id INTO @changed WHERE attendance_id=? AND invalidated_at IS NULL AND row_version=?; SELECT COUNT(*) FROM @changed",Integer.class,acceptedStart,end,r.proposedBreakMinutes(),r.proposedResult(),r.reason(),a.id(),r.attendanceId(),expected);if(n==null||n!=1)throw error(HttpStatus.CONFLICT,"Công bị thay đổi đồng thời.");
           recordWorkflowAudit(a,r.attendanceId(),"ATTENDANCE_CORRECT",r.reason(),correctionBefore,snapshot(r.attendanceId()));
           confirmApproved(r.attendanceId(),a,r.reason());
           saveDecisionTimes(r,body);
@@ -381,14 +418,18 @@ public class AttendancePortalService {
     private void validateDecisionTimes(Request r,Decision body){
         if(!Objects.equals(acceptedStart(r,body),r.proposedStart())||!Objects.equals(acceptedEnd(r,body),r.proposedEnd()))reason(body.adjustmentReason());
         if(r.requestType().equals("MISSING_CHECKOUT")&&!Objects.equals(acceptedStart(r,body),r.originalStart()))throw error(HttpStatus.BAD_REQUEST,"Bổ sung check-out phải giữ nguyên giờ vào.");
+        if ("DI_LAM".equals(r.proposedResult()) && r.originalStart()==null && r.originalEnd()!=null
+                && !Objects.equals(acceptedEnd(r,body),r.originalEnd())) {
+            throw error(HttpStatus.BAD_REQUEST,"Bổ sung check-in phải giữ nguyên giờ ra đã ghi nhận.");
+        }
     }
     private void saveDecisionTimes(Request r,Decision body){db.update("UPDATE dbo.attendance_portal_requests SET accepted_start=?,adjustment_reason=? WHERE request_id=?",acceptedStart(r,body),body.adjustmentReason(),r.requestId());}
     private void recordWorkflowAudit(Actor actor,long attendanceId,String action,String why,String before,String after){db.update("INSERT dbo.audit_logs(actor_account_id,action,target_table,target_record_key,reason,before_data_json,after_data_json) VALUES(?,?,'attendance_records',?,?,?,?)",actor.id(),action,Long.toString(attendanceId),why,before,after);if(notifications!=null)notifications.publishRecord(attendanceId,action,actor.id());}
     private void confirmApproved(long id,Actor actor,String why){
         // The request reviewer was authorized and checked for independence before any writes.
         String before=snapshot(id);
-        int n=db.update("UPDATE dbo.attendance_records SET verification_status='DA_XAC_NHAN',confirmed_by=?,confirmed_at=SYSUTCDATETIME(),updated_by=?,updated_at=SYSUTCDATETIME(),check_in_reviewed_by=?,check_in_reviewed_at=SYSUTCDATETIME(),check_in_reviewed_value=actual_start,check_out_reviewed_by=?,check_out_reviewed_at=SYSUTCDATETIME(),check_out_reviewed_value=actual_end WHERE attendance_id=? AND verification_status='CHUA_XAC_NHAN' AND invalidated_at IS NULL",actor.id(),actor.id(),actor.id(),actor.id(),id);
-        if(n!=1)throw error(HttpStatus.CONFLICT,"Trạng thái công đã thay đổi.");
+        Integer n=db.queryForObject("DECLARE @changed TABLE(id bigint); UPDATE dbo.attendance_records SET verification_status='DA_XAC_NHAN',confirmed_by=?,confirmed_at=SYSUTCDATETIME(),updated_by=?,updated_at=SYSUTCDATETIME(),check_in_reviewed_by=?,check_in_reviewed_at=SYSUTCDATETIME(),check_in_reviewed_value=actual_start,check_out_reviewed_by=?,check_out_reviewed_at=SYSUTCDATETIME(),check_out_reviewed_value=actual_end OUTPUT INSERTED.attendance_id INTO @changed WHERE attendance_id=? AND verification_status='CHUA_XAC_NHAN' AND invalidated_at IS NULL; SELECT COUNT(*) FROM @changed",Integer.class,actor.id(),actor.id(),actor.id(),actor.id(),id);
+        if(n==null||n!=1)throw error(HttpStatus.CONFLICT,"Trạng thái công đã thay đổi.");
         recordWorkflowAudit(actor,id,"ATTENDANCE_CONFIRM",why,before,snapshot(id));
     }
     @Transactional("scheduleTransactionManager")

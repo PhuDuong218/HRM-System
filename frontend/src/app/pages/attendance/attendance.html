@@ -380,6 +380,12 @@
                 }
 
 
+                @if (d.row.missingClockToRequest) {
+                    <button type="button" class="btn btn-outline-primary" [disabled]="saving" (click)="remindMissingClock(d.row)">
+                        Gửi yêu cầu bổ sung {{missingClockLabel(d.row)}}
+                    </button>
+                }
+
                 @if(d.row.canMarkAbsent){<button type="button" class="btn btn-outline-warning" [disabled]="saving" (click)="markAbsent(d.row)">Ghi nhận vắng sau hạn giải trình</button>}
                 @if (d.row.canConfirm) { <button type="button" class="btn btn-outline-primary" [disabled]="saving"
                     (click)="confirm(d.row)">{{ "Xác nhận" | translate }}</button> }
@@ -585,7 +591,7 @@
                             <td>{{ utc(r.submittedAt) }}<div class="small">Hạn xử lý: {{
                                     r.processingDeadline?time(r.processingDeadline):'Trước đợt chốt ngày 3–5 tháng kế tiếp' }}</div>
                             </td>
-                            <td>{{ label(r.status) }}<div class="small">{{ r.receiver||'Chưa tiếp nhận' }}</div><div class="small">{{ utc(r.receivedAt) }}</div>
+                            <td><span class="badge" [ngClass]="requestStatusBadge(r.status)">{{ label(r.status) }}</span><div class="small">{{ r.receiver||'Chưa tiếp nhận' }}</div><div class="small">{{ utc(r.receivedAt) }}</div>
                             </td>
                             <td><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="saving"
                                     (click)="viewRequest(r)">{{ r.canDecide?'Xử lý':r.canReceive?'Tiếp nhận / Chi tiết':'Chi tiết' }}</button></td>
@@ -621,8 +627,8 @@
             @if (actionError) { <div [hrmNotice]="actionError" noticeKind="error" class="alert alert-warning" role="alert" [appDetailFocus]="actionError">{{ actionError }}</div> }
             @if (feedback) { <div [hrmNotice]="feedback" noticeKind="success" class="alert alert-success" role="status" aria-live="polite">{{ feedback }}</div> }
 
-            <p><strong>{{ d.request.employeeLabel }}</strong> · {{ label(d.request.requestType) }} · {{
-                label(d.request.status) }}</p>
+            <p><strong>{{ d.request.employeeLabel }}</strong> · {{ label(d.request.requestType) }} ·
+                <span class="badge" [ngClass]="requestStatusBadge(d.request.status)">{{ label(d.request.status) }}</span></p>
 
             <div class="row g-3 mb-3">
                 <div class="col-6">
@@ -688,7 +694,7 @@
                         maxlength="1000" [(ngModel)]="decisionReason"></textarea></div>
 
                 <div class="d-flex gap-2 mb-3"><button type="button" class="btn btn-primary"
-                        [disabled]="d.current.periodLocked" (click)="decide(true)">{{ "Chấp nhận" | translate }}</button><button
+                        [disabled]="d.current.periodLocked" (click)="decide(true)">{{ requestActionLabel("ATTENDANCE_REQUEST_APPROVED", d.request) | translate }}</button><button
                         type="button" class="btn btn-outline-danger" (click)="decide(false)">{{ "Từ chối" | translate }}</button></div>
 
             </fieldset>
@@ -697,7 +703,7 @@
 
             <h3 class="h6">{{ "Lịch sử xử lý" | translate }}</h3>
             <ul>@for (a of d.audit; track $index) { <li>{{ utc(a.occurredAt) }} · {{ a.actor }} · {{
-                    actionLabel(a.action) }}<div class="small text-break">{{ a.reason||'—' }}</div>
+                    requestActionLabel(a.action, d.request) }}<div class="small text-break">{{ a.reason||'—' }}</div>
                 </li> } @empty { <li>Chưa có lịch sử xử lý.</li> }</ul>
 
         </section>

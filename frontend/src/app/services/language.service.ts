@@ -256,6 +256,8 @@ const EN: Record<string, string> = {
   "Chưa xác định": "Unspecified",
   "Hiển thị tất cả nhóm, bao gồm hồ sơ chưa có phân công hiệu lực; cuộn ngang khi cần.": "Shows all groups, including records without an effective assignment; scroll horizontally if needed.",
   "Trạng thái nhân sự": "Employment status",
+  "Có lịch nhưng thiếu check-in/check-out": "Scheduled with missing check-in or check-out",
+  "Tỷ lệ trên số nhân viên đã có một trong bốn trạng thái trong ngày.": "Share of employees in the four statuses for the day.",
   "Cơ cấu hồ sơ theo trạng thái làm việc.": "Employee records by employment status.",
   "hồ sơ": "records",
   "HỢP ĐỒNG": "CONTRACTS",

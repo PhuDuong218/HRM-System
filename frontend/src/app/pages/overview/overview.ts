@@ -6,7 +6,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { Subscription } from 'rxjs';
+import { EMPTY, Subscription, catchError, exhaustMap, filter, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
 import { ContractReport, EmployeeReport, GroupRow, PendingItem, PendingOverview, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
@@ -25,7 +25,8 @@ export class OverviewPage implements OnInit {
   private destroyRef = inject(DestroyRef);
   private requests = new Subscription();
   private pendingRequest?: Subscription;
-  private readonly colors = ['#2c78ba', '#71bca9', '#e9b969', '#a28ac7', '#dc8f81', '#80a3c5'];
+  attendanceStatus: {workDate: string; present: number; absent: number; maternity: number; missing: number} | null = null;
+  attendanceState: LoadState = 'loading';
 
   today = '';
   fromDate = '';
@@ -56,6 +57,7 @@ export class OverviewPage implements OnInit {
   load(): void {
     this.requests.unsubscribe();
     this.requests = new Subscription();
+    this.attendanceStatus = null; this.attendanceState = 'loading';
     this.pending = null; this.pendingState = 'loading'; this.pendingError = '';
     this.isHr = this.isAdmin = false;
     this.today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -70,6 +72,7 @@ export class OverviewPage implements OnInit {
         this.isAdmin = profile.role === 'ADMIN';
         if (profile.role !== 'ADMIN' && profile.role !== 'HR') { this.failAll('Bạn chưa có quyền xem số liệu tổng quan.'); return; }
         this.loadPending();
+        this.pollAttendanceStatus();
         if (this.isHr) this.loadHrOverview();
         else this.loadReports();
       },
@@ -158,11 +161,28 @@ export class OverviewPage implements OnInit {
   get loading(): boolean { return [this.employeeState, this.contractState, this.workState, ...(this.isAdmin || this.isHr ? [this.pendingState] : [])].includes('loading'); }
   get departments(): GroupRow[] { return [...(this.employeeReport?.byDepartment || [])].sort((a, b) => b.employeeCount - a.employeeCount); }
   get departmentMax(): number { return this.axisMax(this.departments.reduce((max, row) => Math.max(max, row.employeeCount), 0)); }
-  get statusItems(): StatusItem[] {
-    return (this.employeeReport?.byStatus || []).map((row, index) => ({
-      label: row.groupCode === 'DANG_LAM' ? 'Đang làm việc' : row.groupCode === 'DA_NGHI' ? 'Đã nghỉ việc' : (row.groupName || row.groupCode || 'Chưa xác định'),
-      count: row.employeeCount, color: this.colors[index % this.colors.length]
+  private pollAttendanceStatus(): void {
+    this.requests.add(timer(0, 15000).pipe(
+      filter(() => !document.hidden),
+      exhaustMap(() => this.api.getAttendanceStatus().pipe(catchError(() => {
+        this.attendanceState = 'error';
+        return EMPTY;
+      }))),
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe(data => {
+      this.attendanceStatus = data;
+      this.attendanceState = 'ready';
     }));
+  }
+
+  get statusItems(): StatusItem[] {
+    const status = this.attendanceStatus;
+    return [
+      { label: 'Đi làm', count: status?.present ?? 0, color: '#194e96' },
+      { label: 'Vắng', count: status?.absent ?? 0, color: '#ce3050' },
+      { label: 'Nghỉ thai sản', count: status?.maternity ?? 0, color: '#bd3583' },
+      { label: 'Có lịch nhưng thiếu check-in/check-out', count: status?.missing ?? 0, color: '#e9b969' }
+    ];
   }
   get totalEmployees(): number { return this.statusItems.reduce((total, row) => total + row.count, 0); }
   get activeEmployees(): number { return (this.employeeReport?.byStatus || []).find(row => row.groupCode === 'DANG_LAM')?.employeeCount || 0; }
@@ -183,6 +203,7 @@ export class OverviewPage implements OnInit {
   date(value: string): string { const [year, month, day] = value.split('-'); return `${day}/${month}/${year}`; }
   private axisMax(...values: number[]): number { return Math.max(4, Math.ceil(Math.max(0, ...values) / 4) * 4); }
   private failAll(message: string): void {
+    this.attendanceState = 'error';
     this.employeeError = this.contractError = this.workError = message;
     this.employeeState = this.contractState = this.workState = 'error';
   }
