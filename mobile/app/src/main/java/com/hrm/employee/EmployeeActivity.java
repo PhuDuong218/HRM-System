@@ -483,6 +483,9 @@ public class EmployeeActivity extends AppCompatActivity {
             case "profile":
                 profile();
                 break;
+            case "salary":
+                salary();
+                break;
             default:
                 home();
         }
@@ -502,6 +505,10 @@ public class EmployeeActivity extends AppCompatActivity {
             navigation.setSelectedItemId(R.id.navRequests);
             category = "ot";
             page = 0;
+            render();
+        });
+        button(quick, "Phiếu lương của tôi", false, () -> {
+            section = "salary";
             render();
         });
         fetch("/api/attendance-workspace/records?mine=true&from=" + today() + "&to=" + today() + "&page=0", data -> {
@@ -2098,6 +2105,59 @@ public class EmployeeActivity extends AppCompatActivity {
                                 });
                             });
                         }).show());
+    }
+/**
+     * Màn hình tra cứu phiếu lương cá nhân của nhân viên trên Mobile
+     */
+    private void salary() {
+        title("Phiếu lương của tôi", "Tra cứu chi tiết thu nhập, các khoản khấu trừ và thực lĩnh.");
+        LinearLayout actions = card(null);
+        button(actions, "‹ Quay lại trang chủ", false, () -> {
+            section = "home";
+            render();
+        });
+
+        java.text.DecimalFormat fmt = new java.text.DecimalFormat("#,##0");
+
+        fetch("/api/payslips/my-payslips", data -> {
+            JSONArray items = data.optJSONArray("items");
+            if (items == null || items.length() == 0) {
+                LinearLayout emptyBox = card("Thông báo");
+                emptyBox.addView(text("Chưa có phiếu lương nào được công bố cho tài khoản của bạn.", 14, MUTED, false));
+                return;
+            }
+
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject p = items.getJSONObject(i);
+                String titleText = "Kỳ: " + str(p, "periodCode") + " (v" + p.optInt("versionNo", 1) + ") · " + str(p, "payslipNumber");
+                LinearLayout box = card(titleText);
+                badge(box, "Đã công bố", "DA_XAC_NHAN");
+
+                double net = p.optDouble("netSalary", 0);
+                double gross = p.optDouble("totalGross", 0);
+                double deduct = p.optDouble("totalDeduction", 0);
+
+                line(box, "THỰC LĨNH CHUYỂN KHOẢN (NET)", fmt.format(net) + " đ");
+                line(box, "Tổng thu nhập trước thuế (Gross)", fmt.format(gross) + " đ");
+                line(box, "Tổng khấu trừ (BHXH, BHYT & Thuế)", "-" + fmt.format(deduct) + " đ");
+
+                JSONArray lines = p.optJSONArray("lines");
+                if (lines != null && lines.length() > 0) {
+                    box.addView(text("Chi tiết các khoản mục:", 12, MUTED, true));
+                    for (int j = 0; j < lines.length(); j++) {
+                        JSONObject l = lines.getJSONObject(j);
+                        boolean isAdd = "ADD".equalsIgnoreCase(str(l, "direction"));
+                        String lineName = str(l, "name");
+                        double amount = l.optDouble("amount", 0);
+                        String expl = str(l, "explanation");
+
+                        String rowText = "• " + lineName + ": " + (isAdd ? "+" : "-") + fmt.format(amount) + " đ"
+                                + (expl.isEmpty() ? "" : " (" + expl + ")");
+                        box.addView(text(rowText, 13, isAdd ? 0xff16a34a : 0xffdc2626, false));
+                    }
+                }
+            }
+        });
     }
 
     private void editProfile() {

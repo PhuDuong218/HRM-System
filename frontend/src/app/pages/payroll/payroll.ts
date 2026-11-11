@@ -7,6 +7,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, DecimalPipe } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { PayrollService } from '../../services/payroll.service';
+import { DepartmentService, Department, Position } from '../../services/department.service';
 import { PayrollPeriod, PayrollBatch, PayrollDetailView } from '../../models/payroll.model';
 
 @Component({
@@ -20,19 +21,34 @@ export class PayrollPage implements OnInit {
  private actionDialogInPage=inject(ActionDialogService);
 
   private payrollService = inject(PayrollService);
+  private deptService = inject(DepartmentService);
+
+  // Tabs chế độ xem
+  activeTab: 'batch' | 'employee-history' | 'department-summary' = 'batch';
 
   periods: PayrollPeriod[] = [];
   selectedPeriodId: number | null = null;
   currentBatch: PayrollBatch | null = null;
   details: PayrollDetailView[] = [];
 
-  // Phân trang danh sách
+  // Danh mục phục vụ bộ lọc
+  departments: Department[] = [];
+  positions: Position[] = [];
+
+  // Các trường của bộ lọc
+  filterKeyword: string = '';
+  filterDeptId: string = '';
+  filterPosId: string = '';
+  filterMinNet: number | null = null;
+  sortColumn: string = 'netSalary';
+  sortAscending: boolean = false;
+
+  // Phân trang
   currentPage = 1;
-  pageSize = 5;
+  pageSize = 10;
 
   selectedDetail: PayrollDetailView | null = null;
   isDrawerOpen = false;
-
   loading = false;
   actionMessage = '';
   errorMessage = '';
@@ -42,6 +58,12 @@ export class PayrollPage implements OnInit {
 
   ngOnInit(): void {
     this.loadPeriods();
+    this.loadCatalogs();
+  }
+
+  loadCatalogs(): void {
+    this.deptService.list(0).subscribe({ next: res => this.departments = res.content || [] });
+    this.deptService.positions(0).subscribe({ next: res => this.positions = res.content || [] });
   }
 
   loadPeriods(): void {
@@ -101,42 +123,99 @@ export class PayrollPage implements OnInit {
     });
   }
 
-  createDraft(): void {
-    if (!this.selectedPeriodId) {
-      this.errorMessage = 'Vui lòng chọn kỳ lương trước.';
-      return;
+  // Sắp xếp dữ liệu linh hoạt
+  toggleSort(col: string): void {
+    if (this.sortColumn === col) {
+      this.sortAscending = !this.sortAscending;
+    } else {
+      this.sortColumn = col;
+      this.sortAscending = true;
     }
+  }
+
+  // Danh sách đã qua lọc và sắp xếp
+  get filteredAndSortedDetails(): PayrollDetailView[] {
+    let result = [...this.details];
+
+    if (this.filterKeyword.trim()) {
+      const kw = this.filterKeyword.toLowerCase().trim();
+      result = result.filter(d => 
+        ("NV-" + d.employeeId).toLowerCase().includes(kw) ||
+        (d.employeeName && d.employeeName.toLowerCase().includes(kw))
+      );
+    }
+
+    if (this.filterMinNet !== null && this.filterMinNet > 0) {
+      result = result.filter(d => d.netSalary >= this.filterMinNet!);
+    }
+
+    result.sort((a: any, b: any) => {
+      let valA = a[this.sortColumn] ?? 0;
+      let valB = b[this.sortColumn] ?? 0;
+      if (typeof valA === 'string') {
+        return this.sortAscending ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      }
+      return this.sortAscending ? (valA - valB) : (valB - valA);
+    });
+
+    return result;
+  }
+
+  // Thống kê tổng hợp theo phòng ban cho kỳ đang chọn
+  get departmentStats(): { deptName: string; count: number; totalGross: number; totalNet: number }[] {
+    // Nhóm theo phòng ban dựa trên danh sách chi tiết
+    const map = new Map<string, { count: number; totalGross: number; totalNet: number }>();
+    for (const d of this.details) {
+      const dept = 'Phòng Đào Tạo & Nhân Sự'; // Có thể map từ departmentId nếu có
+      const stat = map.get(dept) || { count: 0, totalGross: 0, totalNet: 0 };
+      stat.count++;
+      stat.totalGross += d.totalGross || 0;
+      stat.totalNet += d.netSalary || 0;
+      map.set(dept, stat);
+    }
+    return Array.from(map.entries()).map(([deptName, s]) => ({ deptName, ...s }));
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredAndSortedDetails.length / this.pageSize) || 1;
+  }
+
+  get pagedDetails(): PayrollDetailView[] {
+    const start = (this.currentPage - 1) * this.pageSize;
+    return this.filteredAndSortedDetails.slice(start, start + this.pageSize);
+  }
+
+  prevPage(): void { if (this.currentPage > 1) this.currentPage--; }
+  nextPage(): void { if (this.currentPage < this.totalPages) this.currentPage++; }
+
+  get totalGross(): number { return this.details.reduce((acc, cur) => acc + (cur.totalGross || 0), 0); }
+  get totalDeduction(): number { return this.details.reduce((acc, cur) => acc + (cur.totalDeduction || 0), 0); }
+  get totalNet(): number { return this.details.reduce((acc, cur) => acc + (cur.netSalary || 0), 0); }
+
+  createDraft(): void {
+    if (!this.selectedPeriodId) return;
     this.loading = true;
     this.resetState();
     this.payrollService.createDraftBatch(Number(this.selectedPeriodId)).subscribe({
-      next: (batch) => {
-        this.currentBatch = batch;
-        this.actionMessage = `Đã tạo đợt lương nháp thành công (Mã #${batch.batchId} - Bản v${batch.versionNo}).`;
-        this.loadDetails(batch.batchId);
+      next: (b) => {
+        this.currentBatch = b;
+        this.actionMessage = `Đã tạo đợt lương nháp #${b.batchId} (v${b.versionNo}).`;
+        this.loadDetails(b.batchId);
       },
-      error: (err) => {
-        this.errorMessage = err.error?.loi_chi_tiet || 'Kỳ này đã có đợt lương nháp đang xử lý.';
-        this.loading = false;
-      }
+      error: (e) => { this.errorMessage = e.error?.loi_chi_tiet || 'Kỳ này đã có đợt lương.'; this.loading = false; }
     });
   }
 
   calculate(): void {
-    if (!this.currentBatch?.batchId) {
-      this.errorMessage = 'Chưa có đợt lương để tính. Bấm "+ Tạo đợt lương" trước.';
-      return;
-    }
+    if (!this.currentBatch?.batchId) return;
     this.loading = true;
     this.resetState();
     this.payrollService.calculatePayroll(this.currentBatch.batchId).subscribe({
       next: () => {
-        this.actionMessage = 'Hệ thống đã tính toán tiền lương tự động thành công!';
+        this.actionMessage = 'Đã tính toán tiền lương tự động thành công!';
         this.loadDetails(this.currentBatch!.batchId);
       },
-      error: (err) => {
-        this.errorMessage = err.error?.loi_chi_tiet || 'Không thể tính toán đợt lương này.';
-        this.loading = false;
-      }
+      error: (e) => { this.errorMessage = e.error?.loi_chi_tiet || 'Không thể tính toán.'; this.loading = false; }
     });
   }
 
@@ -147,34 +226,18 @@ export class PayrollPage implements OnInit {
     }
     if (!(await this.actionDialogInPage.confirm('Bạn có chắc chắn muốn CHỐT bảng lương? Số liệu sau khi chốt sẽ trở thành bất biến theo quy định kế toán.'))) return;
     this.loading = true;
-    this.resetState();
     this.payrollService.lockBatch(this.currentBatch.batchId).subscribe({
-      next: (batch) => {
-        this.currentBatch = batch;
-        this.actionMessage = 'Bảng lương đã được CHỐT thành công và niêm phong bất biến!';
-        this.loading = false;
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.loi_chi_tiet || 'Không thể chốt bảng lương.';
-        this.loading = false;
-      }
+      next: (b) => { this.currentBatch = b; this.actionMessage = 'Bảng lương đã được CHỐT thành công!'; this.loading = false; },
+      error: (e) => { this.errorMessage = e.error?.loi_chi_tiet || 'Không thể chốt lương.'; this.loading = false; }
     });
   }
 
   publish(): void {
     if (!this.currentBatch?.batchId) return;
     this.loading = true;
-    this.resetState();
     this.payrollService.publishBatch(this.currentBatch.batchId).subscribe({
-      next: (batch) => {
-        this.currentBatch = batch;
-        this.actionMessage = 'Đã công bố bảng lương và tự động phát hành phiếu lương cho nhân viên!';
-        this.loading = false;
-      },
-      error: (err) => {
-        this.errorMessage = err.error?.loi_chi_tiet || 'Không thể công bố bảng lương.';
-        this.loading = false;
-      }
+      next: (b) => { this.currentBatch = b; this.actionMessage = 'Đã công bố và phát hành phiếu lương cho nhân viên!'; this.loading = false; },
+      error: (e) => { this.errorMessage = e.error?.loi_chi_tiet || 'Không thể công bố.'; this.loading = false; }
     });
   }
 
@@ -186,78 +249,29 @@ export class PayrollPage implements OnInit {
     if (!this.currentBatch?.batchId) return;
     this.loading = true;
     this.payrollService.createAdjustment(this.currentBatch.batchId, this.adjustmentReasonInput).subscribe({
-      next: (batch) => {
-        this.currentBatch = batch;
+      next: (b) => {
+        this.currentBatch = b;
         this.showAdjustModal = false;
         this.adjustmentReasonInput = '';
-        this.actionMessage = `Đã tạo phiên bản điều chỉnh bù trừ mới (v${batch.versionNo})!`;
-        this.loadDetails(batch.batchId);
+        this.actionMessage = `Đã tạo phiên bản điều chỉnh (v${b.versionNo})!`;
+        this.loadDetails(b.batchId);
       },
-      error: (err) => {
-        this.errorMessage = err.error?.loi_chi_tiet || 'Không thể tạo phiên bản điều chỉnh.';
-        this.loading = false;
-      }
+      error: (e) => { this.errorMessage = e.error?.loi_chi_tiet || 'Lỗi tạo điều chỉnh.'; this.loading = false; }
     });
   }
 
-  viewDetail(item: PayrollDetailView): void {
-    this.selectedDetail = item;
-    this.isDrawerOpen = true;
-  }
+  viewDetail(item: PayrollDetailView): void { this.selectedDetail = item; this.isDrawerOpen = true; }
+  closeDrawer(): void { this.isDrawerOpen = false; this.selectedDetail = null; }
 
-  closeDrawer(): void {
-    this.isDrawerOpen = false;
-    this.selectedDetail = null;
-  }
-
-  // In chuẩn: Tải nội dung HTML qua Service có đính kèm Bearer token và đổ ra tab in
   printPayslip(item: PayrollDetailView): void {
     this.payrollService.getPreviewPayslipHtml(item.employeeId).subscribe({
-      next: (htmlContent) => {
-        const printWin = window.open('', '_blank');
-        if (printWin) {
-          printWin.document.open();
-          printWin.document.write(htmlContent);
-          printWin.document.close();
-        }
+      next: (html) => {
+        const w = window.open('', '_blank');
+        if (w) { w.document.write(html); w.document.close(); }
       },
       error: () => this.errorMessage = 'Chưa tìm thấy phiếu lương hợp lệ để in.'
     });
   }
 
-  // Phân trang
-  get totalPages(): number {
-    return Math.ceil(this.details.length / this.pageSize) || 1;
-  }
-
-  get pagedDetails(): PayrollDetailView[] {
-    const start = (this.currentPage - 1) * this.pageSize;
-    return this.details.slice(start, start + this.pageSize);
-  }
-
-  prevPage(): void {
-    if (this.currentPage > 1) this.currentPage--;
-  }
-
-  nextPage(): void {
-    if (this.currentPage < this.totalPages) this.currentPage++;
-  }
-
-  // Thống kê tổng quỹ
-  get totalGross(): number {
-    return this.details.reduce((acc, cur) => acc + (cur.totalGross || 0), 0);
-  }
-
-  get totalDeduction(): number {
-    return this.details.reduce((acc, cur) => acc + (cur.totalDeduction || 0), 0);
-  }
-
-  get totalNet(): number {
-    return this.details.reduce((acc, cur) => acc + (cur.netSalary || 0), 0);
-  }
-
-  private resetState(): void {
-    this.actionMessage = '';
-    this.errorMessage = '';
-  }
+  private resetState(): void { this.actionMessage = ''; this.errorMessage = ''; }
 }

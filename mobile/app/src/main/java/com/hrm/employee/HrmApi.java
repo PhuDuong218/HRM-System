@@ -86,6 +86,27 @@ public final class HrmApi {
         }
     }
 
+    public JSONArray getArray(String path, String token) throws Exception {
+        if (baseUrl == null || baseUrl.trim().isEmpty())
+            throw new ApiException(0, "Chưa cấu hình địa chỉ máy chủ.");
+        HttpURLConnection connection = (HttpURLConnection) new URL(baseUrl + path).openConnection();
+        connection.setConnectTimeout(12000);
+        connection.setReadTimeout(15000);
+        connection.setRequestMethod("GET");
+        connection.setRequestProperty("Accept", "application/json");
+        if (token != null) connection.setRequestProperty("Authorization", "Bearer " + token);
+
+        int code = connection.getResponseCode();
+        InputStream stream = code >= 400 ? connection.getErrorStream() : connection.getInputStream();
+        if (stream == null) return new JSONArray();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(stream, StandardCharsets.UTF_8))) {
+            StringBuilder sb = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) sb.append(line);
+            return new JSONArray(sb.toString());
+        }
+    }
+
     public static String message(Exception error) {
         if (error instanceof ApiException)
             return error.getMessage();

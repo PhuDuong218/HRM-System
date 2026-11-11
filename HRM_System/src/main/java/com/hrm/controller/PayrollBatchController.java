@@ -15,6 +15,11 @@ import com.hrm.service.PersonnelScopeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.context.SecurityContextHolder;
+import com.hrm.security.AuthenticatedAccount;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -31,6 +36,7 @@ import java.util.HashSet;
 @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAuthority('PAYROLL_MANAGE')")
 public class PayrollBatchController {
 
+    private final com.hrm.repository.EmployeeRepository employeeRepository;
     private final PayrollBatchService batchService;
     private final PayrollExecutionService executionService;
     private final PayrollDetailRepository detailRepository;
@@ -38,15 +44,17 @@ public class PayrollBatchController {
     private final PersonnelScopeService personnelScope;
 
     public PayrollBatchController(PayrollBatchService batchService,
-                                  PayrollExecutionService executionService,
-                                  PayrollDetailRepository detailRepository,
-                                  PayrollLineRepository lineRepository,
-                                  PersonnelScopeService personnelScope) {
-        this.batchService = batchService;
-        this.executionService = executionService;
-        this.detailRepository = detailRepository;
-        this.lineRepository = lineRepository;
-        this.personnelScope = personnelScope;
+                              PayrollExecutionService executionService,
+                              PayrollDetailRepository detailRepository,
+                              PayrollLineRepository lineRepository,
+                              PersonnelScopeService personnelScope,
+                              com.hrm.repository.EmployeeRepository employeeRepository) {
+    this.batchService = batchService;
+    this.executionService = executionService;
+    this.detailRepository = detailRepository;
+    this.lineRepository = lineRepository;
+    this.personnelScope = personnelScope;
+    this.employeeRepository = employeeRepository;
     }
 
     @GetMapping
@@ -111,48 +119,54 @@ public class PayrollBatchController {
     }
 
     @GetMapping("/{batchId}/details")
-    @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
-    public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
-        List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
-        List<PayrollDetailViewDTO> result = new ArrayList<>();
-        Set<Long> allowedEmployees = PersonnelScopeService.isHr() ? new HashSet<>(personnelScope.employees()) : null;
+@PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
+public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
+    List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
+    List<PayrollDetailViewDTO> result = new ArrayList<>();
+    Set<Long> allowedEmployees = PersonnelScopeService.isHr() ? new HashSet<>(personnelScope.employees()) : null;
 
-        for (PayrollDetail d : details) {
-            if (allowedEmployees != null && !allowedEmployees.contains(d.getEmployeeId())) continue;
-            PayrollDetailViewDTO dto = new PayrollDetailViewDTO();
-            dto.setPayrollDetailId(d.getPayrollDetailId());
-            dto.setEmployeeId(d.getEmployeeId());
+    // Lấy danh sách ID nhân viên để truy vấn thông tin một lượt
+    List<Long> empIds = details.stream().map(PayrollDetail::getEmployeeId).toList();
+    var employeeMap = employeeRepository.findAllById(empIds).stream()
+            .collect(java.util.stream.Collectors.toMap(e -> e.getEmployeeId(), e -> e.getFullName()));
 
-            List<PayrollLine> lines = lineRepository.findByPayrollDetailIdOrderByLineNoAsc(d.getPayrollDetailId());
-            BigDecimal gross = BigDecimal.ZERO;
-            BigDecimal deduct = BigDecimal.ZERO;
-            List<PayrollDetailViewDTO.PayrollLineDTO> lineDTOs = new ArrayList<>();
+    for (PayrollDetail d : details) {
+        if (allowedEmployees != null && !allowedEmployees.contains(d.getEmployeeId())) continue;
+        PayrollDetailViewDTO dto = new PayrollDetailViewDTO();
+        dto.setPayrollDetailId(d.getPayrollDetailId());
+        dto.setEmployeeId(d.getEmployeeId());
+        dto.setEmployeeName(employeeMap.getOrDefault(d.getEmployeeId(), "Nhân viên #" + d.getEmployeeId()));
 
-            for (PayrollLine l : lines) {
-                lineDTOs.add(new PayrollDetailViewDTO.PayrollLineDTO(
-                        l.getComponentCodeSnapshot(),
-                        l.getComponentNameSnapshot(),
-                        l.getDirectionSnapshot(),
-                        l.getAmount(),
-                        l.getExplanation()
-                ));
+        List<PayrollLine> lines = lineRepository.findByPayrollDetailIdOrderByLineNoAsc(d.getPayrollDetailId());
+        BigDecimal gross = BigDecimal.ZERO;
+        BigDecimal deduct = BigDecimal.ZERO;
+        List<PayrollDetailViewDTO.PayrollLineDTO> lineDTOs = new ArrayList<>();
 
-                if ("DEDUCT".equalsIgnoreCase(l.getDirectionSnapshot())) {
-                    deduct = deduct.add(l.getAmount());
-                } else {
-                    gross = gross.add(l.getAmount());
-                }
+        for (PayrollLine l : lines) {
+            lineDTOs.add(new PayrollDetailViewDTO.PayrollLineDTO(
+                    l.getComponentCodeSnapshot(),
+                    l.getComponentNameSnapshot(),
+                    l.getDirectionSnapshot(),
+                    l.getAmount(),
+                    l.getExplanation()
+            ));
+
+            if ("DEDUCT".equalsIgnoreCase(l.getDirectionSnapshot())) {
+                deduct = deduct.add(l.getAmount());
+            } else {
+                gross = gross.add(l.getAmount());
             }
-
-            dto.setTotalGross(gross);
-            dto.setTotalDeduction(deduct);
-            dto.setNetSalary(gross.subtract(deduct));
-            dto.setLines(lineDTOs);
-            result.add(dto);
         }
 
-        return ResponseEntity.ok(result);
+        dto.setTotalGross(gross);
+        dto.setTotalDeduction(deduct);
+        dto.setNetSalary(gross.subtract(deduct));
+        dto.setLines(lineDTOs);
+        result.add(dto);
     }
+
+    return ResponseEntity.ok(result);
+}
 
     private Long currentActorAccountId() {
         var authentication = SecurityContextHolder.getContext().getAuthentication();

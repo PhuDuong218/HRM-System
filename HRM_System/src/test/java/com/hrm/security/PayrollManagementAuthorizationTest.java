@@ -27,6 +27,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.util.Arrays;
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
 class PayrollManagementAuthorizationTest {
@@ -34,7 +35,9 @@ class PayrollManagementAuthorizationTest {
     @EnableMethodSecurity
     static class MethodSecurity {}
 
+    PersonnelScopeService personnelScope;
     AnnotationConfigApplicationContext context;
+    com.hrm.repository.EmployeeRepository employeeRepository;
     PayrollBatchService service;
     PayrollPeriodService periods;
     PayrollDetailRepository details;
@@ -45,18 +48,23 @@ class PayrollManagementAuthorizationTest {
     PayrollPeriodController periodController;
 
     @BeforeEach void setUp() {
-        service=mock(PayrollBatchService.class); periods=mock(PayrollPeriodService.class);
-        details=mock(PayrollDetailRepository.class); lines=mock(PayrollLineRepository.class);
-        execution=mock(PayrollExecutionService.class);
-        scope=mock(PersonnelScopeService.class);
-        context=new AnnotationConfigApplicationContext();
-        context.register(MethodSecurity.class);
-        context.registerBean(PayrollBatchController.class,()->new PayrollBatchController(service,execution,details,lines,scope));
-        context.registerBean(PayrollPeriodController.class,()->new PayrollPeriodController(periods));
-        context.refresh();
-        batches=context.getBean(PayrollBatchController.class);
-        periodController=context.getBean(PayrollPeriodController.class);
-    }
+    service = mock(PayrollBatchService.class); 
+    periods = mock(PayrollPeriodService.class);
+    details = mock(PayrollDetailRepository.class); 
+    lines = mock(PayrollLineRepository.class);
+    execution = mock(PayrollExecutionService.class);
+    personnelScope = mock(PersonnelScopeService.class);
+    employeeRepository = mock(com.hrm.repository.EmployeeRepository.class);
+
+    context = new AnnotationConfigApplicationContext();
+    context.register(MethodSecurity.class);
+    context.registerBean(PayrollBatchController.class, () -> 
+        new PayrollBatchController(service, execution, details, lines, personnelScope, employeeRepository));
+    context.registerBean(PayrollPeriodController.class, () -> new PayrollPeriodController(periods));
+    context.refresh();
+    batches = context.getBean(PayrollBatchController.class);
+    periodController = context.getBean(PayrollPeriodController.class);
+}
     @AfterEach void cleanUp() { SecurityContextHolder.clearContext(); context.close(); }
     void login(String role,String... permissions) {
         var authorities=new java.util.ArrayList<SimpleGrantedAuthority>();

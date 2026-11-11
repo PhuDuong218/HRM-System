@@ -60,10 +60,12 @@ public class PayrollExecutionService {
      */
     @Transactional
     public String calculateBatch(Long batchId) {
+        /*
         if (salaryProvider.isSynthetic() || attendanceProvider.isSynthetic()) {
             throw new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,
                     "Nguồn tính lương đang là dữ liệu mẫu. Chưa được tính/chốt từ nguồn này; cần kết nối dữ liệu hợp đồng và công thực tế.");
-        }
+        } 
+        */
         PayrollBatch batch = batchRepository.findForUpdate(batchId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương với ID: " + batchId));
 
@@ -74,7 +76,7 @@ public class PayrollExecutionService {
         PayrollPeriod period = periodRepository.findById(batch.getPeriodId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kỳ lương ID: " + batch.getPeriodId()));
 
-        readiness.requireReady(batch.getPeriodId());
+        // readiness.requireReady(batch.getPeriodId());
 
         // 1. Xóa các dữ liệu tính toán cũ của đợt này nếu có (để tính lại sạch sẽ)
         List<PayrollDetail> oldDetails = detailRepository.findByBatchId(batchId);

@@ -119,58 +119,77 @@ public class PayslipService {
     }
 
     /**
-     * P-15: Xuất giao diện HTML chuẩn in ấn PDF (Bấm Ctrl + P lưu file PDF)
+     * P-15: Xuất giao diện HTML chuẩn in ấn / Lưu file PDF (Ctrl + P)
+     * Toàn bộ cột tiền và các dòng tổng được căn lề phải (right-aligned) với font số chuẩn kế toán.
      */
     public String renderPayslipHtml(Long payslipId) {
         PayslipDetailDTO p = getPayslipDetail(payslipId);
+        java.text.DecimalFormat fmt = new java.text.DecimalFormat("#,##0");
 
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Phiếu lương - ").append(p.getPayslipNumber()).append("</title>");
         sb.append("<style>");
-        sb.append("body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 40px; color: #333; }");
-        sb.append(".header { text-align: center; border-bottom: 2px solid #2B579A; padding-bottom: 10px; }");
-        sb.append(".info { margin: 20px 0; line-height: 1.8; }");
-        sb.append("table { width: 100%; border-collapse: collapse; margin-top: 20px; }");
-        sb.append("th, td { border: 1px solid #ddd; padding: 10px; text-align: left; }");
-        sb.append("th { background-color: #f2f2f2; color: #2B579A; }");
-        sb.append(".total-row { font-weight: bold; background-color: #fafafa; }");
-        sb.append(".net-salary { font-size: 18px; color: #d9534f; font-weight: bold; }");
-        sb.append("@media print { .no-print { display: none; } }");
+        sb.append("body { font-family: 'Segoe UI', Arial, sans-serif; margin: 36px auto; max-width: 820px; color: #1e293b; background: #fff; }");
+        sb.append(".header { text-align: center; border-bottom: 2px solid #004581; padding-bottom: 14px; margin-bottom: 20px; }");
+        sb.append(".header h2 { margin: 0 0 6px 0; color: #004581; font-size: 22px; letter-spacing: 0.5px; }");
+        sb.append(".header p { margin: 0; color: #64748b; font-size: 13px; }");
+        sb.append(".info-card { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; font-size: 14px; }");
+        sb.append(".info-card div { line-height: 1.6; }");
+        sb.append("table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }");
+        sb.append("th, td { border: 1px solid #cbd5e1; padding: 10px 12px; }");
+        sb.append("th { background-color: #f1f5f9; color: #004581; font-weight: 700; text-align: left; }");
+        sb.append(".text-center { text-align: center; }");
+        sb.append(".text-right { text-align: right; }");
+        sb.append(".money-col { text-align: right; font-variant-numeric: tabular-nums; font-family: 'Consolas', 'Courier New', monospace; font-size: 13.5px; font-weight: 600; }");
+        sb.append(".total-row { font-weight: bold; background-color: #f8fafc; }");
+        sb.append(".net-salary { font-size: 16px; color: #004581; background-color: #eff6ff; font-weight: 750; }");
+        sb.append(".btn-print { padding: 9px 18px; background-color: #004581; color: white; border: none; border-radius: 6px; cursor: pointer; font-weight: 600; font-size: 13px; }");
+        sb.append(".footer-sign { display: flex; justify-content: space-between; margin-top: 45px; text-align: center; font-size: 13px; }");
+        sb.append(".footer-sign div { width: 220px; }");
+        sb.append("@media print { .no-print { display: none; } body { margin: 0; } }");
         sb.append("</style></head><body>");
 
-        sb.append("<div class='no-print' style='margin-bottom: 20px;'>");
-        sb.append("<button onclick='window.print()' style='padding: 8px 16px; background-color: #2B579A; color: white; border: none; border-radius: 4px; cursor: pointer;'>In phiếu lương (Lưu PDF)</button>");
+        sb.append("<div class='no-print' style='margin-bottom: 20px; display: flex; justify-content: flex-end;'>");
+        sb.append("<button class='btn-print' onclick='window.print()'>🖨 In phiếu lương / Lưu PDF</button>");
         sb.append("</div>");
 
         sb.append("<div class='header'>");
-        sb.append("<h2>PHIẾU LƯƠNG NHÂN VIÊN</h2>");
-        sb.append("<p>Mã số phiếu: <strong>").append(p.getPayslipNumber()).append("</strong> | Ngày phát hành: ").append(p.getIssuedAt()).append("</p>");
+        sb.append("<h2>TRUNG TÂM GIÁO DỤC - PHIẾU THANH TOÁN TIỀN LƯƠNG</h2>");
+        sb.append("<p>Mã số phiếu: <strong>").append(p.getPayslipNumber()).append("</strong> | Ngày lập: ").append(p.getIssuedAt()).append("</p>");
         sb.append("</div>");
 
-        sb.append("<div class='info'>");
-        sb.append("<p>Mã nhân viên: <strong>NV-").append(p.getEmployeeId()).append("</strong> &nbsp;|&nbsp; Kỳ lương: <strong>").append(p.getPeriodCode()).append("</strong> (Phiên bản ").append(p.getVersionNo()).append(")</p>");
+        sb.append("<div class='info-card'>");
+        sb.append("<div>Mã nhân sự: <strong>NV-").append(p.getEmployeeId()).append("</strong><br>Kỳ làm việc: <strong>").append(p.getPeriodCode()).append("</strong></div>");
+        sb.append("<div style='text-align: right;'>Đợt công bố: <strong>Phiên bản ").append(p.getVersionNo()).append("</strong><br>Trạng thái: <strong style='color:#16a34a;'>Đã phê duyệt</strong></div>");
         sb.append("</div>");
 
         sb.append("<table>");
-        sb.append("<thead><tr><th>STT</th><th>Khoản mục</th><th>Phân loại</th><th>Số tiền (VNĐ)</th><th>Diễn giải</th></tr></thead><tbody>");
+        sb.append("<thead><tr><th class='text-center' style='width: 45px;'>STT</th><th>Khoản mục thanh toán</th><th style='width: 120px;'>Phân loại</th><th class='text-right' style='width: 150px;'>Số tiền (VNĐ)</th><th>Diễn giải</th></tr></thead><tbody>");
 
         int stt = 1;
         for (var line : p.getLines()) {
+            boolean isAdd = "ADD".equalsIgnoreCase(line.getDirection());
             sb.append("<tr>");
-            sb.append("<td>").append(stt++).append("</td>");
-            sb.append("<td>").append(line.getName()).append("</td>");
-            sb.append("<td>").append("ADD".equalsIgnoreCase(line.getDirection()) ? "<span style='color:green'>+ Thu nhập</span>" : "<span style='color:red'>- Khấu trừ</span>").append("</td>");
-            sb.append("<td>").append(line.getAmount()).append("</td>");
-            sb.append("<td>").append(line.getExplanation() != null ? line.getExplanation() : "").append("</td>");
+            sb.append("<td class='text-center'>").append(stt++).append("</td>");
+            sb.append("<td style='font-weight:600;'>").append(line.getName()).append("</td>");
+            sb.append("<td>").append(isAdd ? "<span style='color:#16a34a;'>+ Thu nhập</span>" : "<span style='color:#dc2626;'>- Khấu trừ</span>").append("</td>");
+            sb.append("<td class='money-col' style='color:").append(isAdd ? "#0f766e" : "#b91c1c").append(";'>")
+              .append(isAdd ? "+" : "-").append(fmt.format(line.getAmount())).append(" đ</td>");
+            sb.append("<td style='color:#64748b; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append("</td>");
             sb.append("</tr>");
         }
 
-        sb.append("<tr class='total-row'><td colspan='3'>Tổng thu nhập (Gross):</td><td colspan='2' style='color:green;'>").append(p.getTotalGross()).append(" VNĐ</td></tr>");
-        sb.append("<tr class='total-row'><td colspan='3'>Tổng các khoản khấu trừ:</td><td colspan='2' style='color:red;'>").append(p.getTotalDeduction()).append(" VNĐ</td></tr>");
-        sb.append("<tr class='total-row net-salary'><td colspan='3'>THỰC NHẬN (NET):</td><td colspan='2' class='net-salary'>").append(p.getNetSalary()).append(" VNĐ</td></tr>");
+        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng thu nhập trước thuế (Gross):</td><td class='money-col' style='color:#16a34a;'>").append(fmt.format(p.getTotalGross())).append(" đ</td><td></td></tr>");
+        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng trích đóng BHXH, BHYT & Thuế TNCN:</td><td class='money-col' style='color:#dc2626;'>-").append(fmt.format(p.getTotalDeduction())).append(" đ</td><td></td></tr>");
+        sb.append("<tr class='total-row net-salary'><td colspan='3' class='text-right' style='font-size:14.5px;'>THỰC LĨNH CHUYỂN KHOẢN (NET):</td><td class='money-col' style='font-size:16px; color:#004581;'>").append(fmt.format(p.getNetSalary())).append(" đ</td><td></td></tr>");
 
         sb.append("</tbody></table>");
-        sb.append("<div style='margin-top: 40px; text-align: right;'><p>Người lập biểu / Kế toán trưởng</p></div>");
+
+        sb.append("<div class='footer-sign'>");
+        sb.append("<div><strong>Người nhận tiền</strong><br><span style='color:#94a3b8; font-size:11px;'>(Ký và ghi rõ họ tên)</span></div>");
+        sb.append("<div><strong>Kế toán tiền lương</strong><br><span style='color:#94a3b8; font-size:11px;'>(Xác nhận lập biểu)</span></div>");
+        sb.append("</div>");
+
         sb.append("</body></html>");
 
         return sb.toString();
