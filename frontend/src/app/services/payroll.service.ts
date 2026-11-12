@@ -1,79 +1,105 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 import {
   PayrollPeriod,
   PayrollBatch,
   PayrollDetailView,
-  AdjustmentRequest
+  EmployeePayrollWorkDetail,
+  PeriodAllowanceOverview,
+  EmployeePayrollHistoryItem,
+  DepartmentPayrollCost,
+  PayrollReadinessReport
 } from '../models/payroll.model';
 
-@Injectable({
-  providedIn: 'root'
-})
+@Injectable({ providedIn: 'root' })
 export class PayrollService {
   private http = inject(HttpClient);
+  private periodUrl = `${API_BASE_URL}/payroll-periods`;
+  private batchUrl = `${API_BASE_URL}/payroll-batches`;
 
-  // 1. Quản lý kỳ lương
   getPeriods(): Observable<PayrollPeriod[]> {
-    return this.http.get<PayrollPeriod[]>(`${API_BASE_URL}/payroll-periods`);
+    return this.http.get<PayrollPeriod[]>(this.periodUrl);
   }
 
-  // 2. Tra cứu đợt lương mới nhất của một kỳ
-  getCurrentBatchByPeriod(periodId: number): Observable<PayrollBatch> {
-    return this.http.get<PayrollBatch>(`${API_BASE_URL}/payroll-batches/period/${periodId}/current`);
+  getBatchesByPeriod(periodId: number): Observable<PayrollBatch[]> {
+    return this.http.get<PayrollBatch[]>(`${this.batchUrl}/periods/${periodId}/batches`);
   }
 
-  // 3. Tạo đợt lương nháp (Draft)
   createDraftBatch(periodId: number): Observable<PayrollBatch> {
-    return this.http.post<PayrollBatch>(`${API_BASE_URL}/payroll-batches/draft`, { periodId });
+    return this.http.post<PayrollBatch>(`${this.batchUrl}/draft`, { periodId });
   }
 
-  // 4. Chạy động cơ tính lương tự động
-  calculatePayroll(batchId: number): Observable<string> {
-    return this.http.post<string>(`${API_BASE_URL}/payroll-batches/${batchId}/calculate`, {}, { responseType: 'text' as 'json' });
+  calculateBatch(batchId: number): Observable<string> {
+    return this.http.post(`${this.batchUrl}/${batchId}/calculate`, {}, { responseType: 'text' });
   }
 
-  // 5. Lấy bảng tổng hợp đối soát số liệu nhân viên
   getBatchDetails(batchId: number): Observable<PayrollDetailView[]> {
-    return this.http.get<PayrollDetailView[]>(`${API_BASE_URL}/payroll-batches/${batchId}/details`);
+    return this.http.get<PayrollDetailView[]>(`${this.batchUrl}/${batchId}/details`);
   }
 
-  // 6. Chốt bảng lương (Khóa bất biến)
   lockBatch(batchId: number): Observable<PayrollBatch> {
-    return this.http.post<PayrollBatch>(`${API_BASE_URL}/payroll-batches/${batchId}/lock`, {});
+    return this.http.post<PayrollBatch>(`${this.batchUrl}/${batchId}/lock`, {});
   }
 
-  // 7. Công bố bảng lương và phát hành phiếu
   publishBatch(batchId: number): Observable<PayrollBatch> {
-    return this.http.post<PayrollBatch>(`${API_BASE_URL}/payroll-batches/${batchId}/publish`, {});
+    return this.http.post<PayrollBatch>(`${this.batchUrl}/${batchId}/publish`, {});
   }
 
-  // 8. Tạo phiên bản điều chỉnh (Version 2+)
-  createAdjustment(batchId: number, reason: string): Observable<PayrollBatch> {
-    const body: AdjustmentRequest = { adjustmentReason: reason };
-    return this.http.post<PayrollBatch>(`${API_BASE_URL}/payroll-batches/${batchId}/adjust`, body);
+  createAdjustmentBatch(batchId: number, adjustmentReason: string): Observable<PayrollBatch> {
+    return this.http.post<PayrollBatch>(`${this.batchUrl}/${batchId}/adjust`, { adjustmentReason });
   }
 
-  // 9. Danh sách phiếu lương cá nhân
+  // 1. Minh chứng ngày công chi tiết của nhân viên
+  getEmployeeWorkDetails(batchId: number, employeeId: number): Observable<EmployeePayrollWorkDetail> {
+    return this.http.get<EmployeePayrollWorkDetail>(`${this.batchUrl}/${batchId}/employees/${employeeId}/work-details`);
+  }
+
+  // 2. Danh sách phụ cấp của tháng & phòng ban
+  getPeriodAllowances(periodId: number, departmentId?: number | null): Observable<PeriodAllowanceOverview> {
+    let params = new HttpParams();
+    if (departmentId) {
+      params = params.set('departmentId', String(departmentId));
+    }
+    return this.http.get<PeriodAllowanceOverview>(`${this.batchUrl}/periods/${periodId}/allowances`, { params });
+  }
+
+  // 4A. Bộ lọc & lịch sử lương nhân viên
+  getEmployeePayrollHistory(filters: {
+    employeeId?: number | null;
+    departmentId?: number | null;
+    keyword?: string;
+    status?: string;
+  }): Observable<EmployeePayrollHistoryItem[]> {
+    let params = new HttpParams();
+    if (filters.employeeId) params = params.set('employeeId', String(filters.employeeId));
+    if (filters.departmentId) params = params.set('departmentId', String(filters.departmentId));
+    if (filters.keyword?.trim()) params = params.set('keyword', filters.keyword.trim());
+    if (filters.status) params = params.set('status', filters.status);
+    return this.http.get<EmployeePayrollHistoryItem[]>(`${this.batchUrl}/history/employees`, { params });
+  }
+
+  // 4B. Chi phí lương theo phòng ban
+  getDepartmentCostSummary(periodId: number): Observable<DepartmentPayrollCost[]> {
+    return this.http.get<DepartmentPayrollCost[]>(`${this.batchUrl}/periods/${periodId}/department-costs`);
+  }
+
+  // 5. Kiểm tra điều kiện tính/chốt lương chi tiết tới từng nhân viên
+  checkBatchReadiness(batchId: number): Observable<PayrollReadinessReport> {
+    return this.http.get<PayrollReadinessReport>(`${this.batchUrl}/${batchId}/readiness`);
+  }
+
+  getDepartments(): Observable<Array<{ departmentId: number; departmentCode: string; departmentName: string }>> {
+    return this.http.get<Array<{ departmentId: number; departmentCode: string; departmentName: string }>>(`${API_BASE_URL}/departments`);
+  }
+
+  // Giữ lại 2 phương thức cho trang Phiếu lương cá nhân (PayslipsPage)
   getMyPayslips(): Observable<any[]> {
-    // The server resolves the employee from the authenticated session.
-    return this.http.get<any[]>(`${API_BASE_URL}/payslips/my-payslips`);
+    return this.http.get<any[]>(`${API_BASE_URL}/me/payslips`);
   }
 
-  // 10. Xem chi tiết 1 phiếu lương
-  getPayslipDetail(payslipId: number): Observable<any> {
-    return this.http.get<any>(`${API_BASE_URL}/payslips/${payslipId}`);
-  }
-
-  // 11. Tải HTML in ấn phiếu lương có bảo vệ bằng JWT token (Không hardcode cổng)
   getPayslipHtml(payslipId: number): Observable<string> {
     return this.http.get(`${API_BASE_URL}/payslips/${payslipId}/html`, { responseType: 'text' });
-  }
-
-  // 12. Tải HTML in ấn theo ID nhân viên
-  getPreviewPayslipHtml(employeeId: number): Observable<string> {
-    return this.http.get(`${API_BASE_URL}/payslips/preview/employee/${employeeId}/html`, { responseType: 'text' });
   }
 }
