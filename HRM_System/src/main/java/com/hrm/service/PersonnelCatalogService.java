@@ -37,6 +37,12 @@ public class PersonnelCatalogService {
     }
     @Transactional
     public <T> T qualification(Principal p,Long employeeId,Long id,String action,Supplier<T> operation,ToLongFunction<T> identify) {
+        return qualification(p, employeeId, id, action, operation, identify, null);
+    }
+
+    @Transactional
+    public <T> T qualification(Principal p, Long employeeId, Long id, String action,
+            Supplier<T> operation, ToLongFunction<T> identify, String reason) {
         var actor=access.manager(p);support.lock();
         Long owner=employeeId;
         if(owner==null) {
@@ -45,7 +51,7 @@ public class PersonnelCatalogService {
             owner=ids.get(0);
         }
         var before=jdbc.queryForList("SELECT employee_qualification_id FROM dbo.employee_qualifications WHERE employee_id=? AND is_primary=1",Long.class,owner);
-        T result=write(p,"employee_qualifications",id,action,operation,identify);
+        T result=write(p,"employee_qualifications",id,action,operation,identify,reason);
         var after=jdbc.queryForList("SELECT employee_qualification_id FROM dbo.employee_qualifications WHERE employee_id=? AND is_primary=1",Long.class,owner);
         if(!before.equals(after)) {
             long key=id==null?identify.applyAsLong(result):id;

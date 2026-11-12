@@ -15,6 +15,7 @@ export interface Employee {
     hireDate: string;
     employmentStatus: string;
     currentDepartmentName: string | null;
+    previousDepartmentName?: string | null;
     currentDepartmentId: number | null;
     currentPositionName: string | null;
     currentPositionId: number | null;

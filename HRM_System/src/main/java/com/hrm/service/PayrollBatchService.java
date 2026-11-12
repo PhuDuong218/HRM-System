@@ -93,6 +93,10 @@ public class PayrollBatchService {
         }
 
         readiness.requireReady(batch.getPeriodId());
+        if (detailRepository.hasProvisionalDraft(batchId)) {
+            throw new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,
+                    "Đợt này là bản đối soát theo chính sách tạm tính, chưa được chốt.");
+        }
 
         Long actor = actorAccountId != null ? actorAccountId : DEFAULT_ACTOR_ACCOUNT_ID;
 
@@ -117,7 +121,7 @@ public class PayrollBatchService {
         }
 
         if (batch.getPublishedAt() != null) {
-            throw new RuntimeException("Bảng lương này đã được công bố trước đó rồi!");
+            return toDTO(batch);
         }
 
         Long actor = actorAccountId != null ? actorAccountId : DEFAULT_ACTOR_ACCOUNT_ID;

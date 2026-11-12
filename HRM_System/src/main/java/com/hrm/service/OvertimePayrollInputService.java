@@ -41,6 +41,14 @@ public class OvertimePayrollInputService {
     }
 
     public PayrollInputs forPeriod(AuthenticatedAccount principal, long periodId) {
+        return readPeriod(principal, periodId, false);
+    }
+
+    PayrollInputs forPayrollPeriod(AuthenticatedAccount principal, long periodId) {
+        return readPeriod(principal, periodId, true);
+    }
+
+    private PayrollInputs readPeriod(AuthenticatedAccount principal, long periodId, boolean inclusiveEnd) {
         var actor = permissions.requirePayrollRead(principal);
         boolean admin = "ADMIN".equals(actor.roleCode());
         if (!admin && !"HR".equals(actor.roleCode()))
@@ -54,7 +62,7 @@ public class OvertimePayrollInputService {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Payroll period not found");
         String code = (String) periods.get(0)[0];
         LocalDate start = (LocalDate) periods.get(0)[1];
-        LocalDate end = (LocalDate) periods.get(0)[2];
+        LocalDate end = ((LocalDate) periods.get(0)[2]).plusDays(inclusiveEnd ? 1 : 0);
 
         // Confirmed requests may cross midnight. Compute each calendar day from
         // persisted

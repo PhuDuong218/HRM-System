@@ -30,17 +30,19 @@ public class PayslipService {
     private final PayrollDetailRepository detailRepository;
     private final PayrollLineRepository lineRepository;
     private final PayrollPeriodRepository periodRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbc;
 
     public PayslipService(PayslipRepository payslipRepository,
                           PayrollBatchRepository batchRepository,
                           PayrollDetailRepository detailRepository,
                           PayrollLineRepository lineRepository,
-                          PayrollPeriodRepository periodRepository) {
+                          PayrollPeriodRepository periodRepository, org.springframework.jdbc.core.JdbcTemplate jdbc) {
         this.payslipRepository = payslipRepository;
         this.batchRepository = batchRepository;
         this.detailRepository = detailRepository;
         this.lineRepository = lineRepository;
         this.periodRepository = periodRepository;
+        this.jdbc = jdbc;
     }
 
     /**
@@ -105,6 +107,13 @@ public class PayslipService {
     /**
      * P-15: Xem chi tiết 1 phiếu lương
      */
+    public Long publishedPayslipId(Long payrollDetailId) {
+        return payslipRepository.findByPayrollDetailId(payrollDetailId)
+            .map(Payslip::getPayslipId)
+            .orElseThrow(() -> new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND, "Chưa có phiếu lương đã phát hành cho bản ghi này."));
+    }
+
     public PayslipDetailDTO getPayslipDetail(Long payslipId) {
         Payslip payslip = payslipRepository.findById(payslipId)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu lương ID: " + payslipId));
@@ -115,6 +124,10 @@ public class PayslipService {
         PayrollBatch batch = batchRepository.findById(detail.getBatchId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương!"));
 
+        if (batch.getStatus() != BatchStatus.DA_CHOT || batch.getPublishedAt() == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                org.springframework.http.HttpStatus.NOT_FOUND, "Phiếu lương chưa được công bố.");
+        }
         return buildPayslipDetail(payslip, detail, batch);
     }
 
@@ -175,7 +188,7 @@ public class PayslipService {
             sb.append("<td>").append(isAdd ? "<span style='color:#16a34a;'>+ Thu nhập</span>" : "<span style='color:#dc2626;'>- Khấu trừ</span>").append("</td>");
             sb.append("<td class='money-col' style='color:").append(isAdd ? "#0f766e" : "#b91c1c").append(";'>")
               .append(isAdd ? "+" : "-").append(fmt.format(line.getAmount())).append(" đ</td>");
-            sb.append("<td style='color:#64748b; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append("</td>");
+            sb.append("<td style='color:#64748b; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append(line.getDeductionShareText() == null ? "" : " · " + line.getDeductionShareText()).append("</td>");
             sb.append("</tr>");
         }
 
@@ -222,10 +235,48 @@ public class PayslipService {
         dto.setEmployeeId(detail.getEmployeeId());
         dto.setPeriodCode(period != null ? period.getPeriodCode() : "");
         dto.setVersionNo(batch.getVersionNo());
+        for (var line : lineDTOs) line.describeDeductionShare(gross);
         dto.setTotalGross(gross);
         dto.setTotalDeduction(deduct);
         dto.setNetSalary(gross.subtract(deduct));
         dto.setLines(lineDTOs);
+        if (period != null) {
+            loadPayslipMetadata(dto, detail.getPayrollDetailId(), detail.getEmployeeId(),
+                period.getPeriodStart(), period.getPeriodEnd());
+        }
         return dto;
+    }
+
+    private void loadPayslipMetadata(PayslipDetailDTO dto, Long detailId, Long employeeId,
+                                     java.time.LocalDate start, java.time.LocalDate end) {
+        jdbc.query("""
+            SELECT
+                (SELECT TOP (1) p.position_name
+                 FROM dbo.employee_assignments a JOIN dbo.positions p ON p.position_id=a.position_id
+                 WHERE a.employee_id=? AND a.effective_from<=?
+                   AND (a.effective_to IS NULL OR a.effective_to>?)
+                 ORDER BY a.effective_from DESC, a.assignment_id DESC) AS position_name,
+                COALESCE(TRY_CONVERT(decimal(10,4), JSON_VALUE(s.snapshot_json, '$.actualWorkDays')),
+                    (SELECT COUNT(DISTINCT a.work_date)
+                     FROM dbo.attendance_records a
+                     JOIN dbo.work_schedules w ON w.schedule_id=a.schedule_id
+                     WHERE a.employee_id=? AND a.work_date BETWEEN ? AND ?
+                       AND a.verification_status='DA_XAC_NHAN' AND a.attendance_result='DI_LAM'
+                       AND a.actual_start IS NOT NULL AND a.actual_end IS NOT NULL
+                       AND a.invalidated_at IS NULL AND w.cancelled_at IS NULL)) AS actual_days,
+                TRY_CONVERT(decimal(10,4), COALESCE(JSON_VALUE(s.snapshot_json, '$.standardWorkDays'),
+                    JSON_VALUE(s.snapshot_json, '$.standardDays'))) AS standard_days
+            FROM (VALUES (1)) base(id)
+            OUTER APPLY (
+                SELECT TOP (1) CASE WHEN ISJSON(input_snapshot_json)=1 THEN input_snapshot_json END AS snapshot_json
+                FROM dbo.payroll_snapshots
+                WHERE payroll_detail_id=?
+                ORDER BY captured_at DESC
+            ) s
+            """, rs -> {
+                dto.setPositionName(rs.getString("position_name"));
+                dto.setActualWorkDays(rs.getBigDecimal("actual_days"));
+                dto.setStandardWorkDays(rs.getBigDecimal("standard_days"));
+            }, employeeId, end, start, employeeId, start, end, detailId);
     }
 }

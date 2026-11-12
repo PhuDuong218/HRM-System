@@ -12,7 +12,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 @Service
 public class OverviewAttendanceService {
-    public record Status(LocalDate workDate, long present, long absent, long maternity, long missing) {}
+    public record Status(LocalDate workDate, long present, long absent, long leave, long missing) {}
 
     private final JdbcTemplate db;
     private final OvertimePermissionService identities;
@@ -28,6 +28,10 @@ public class OverviewAttendanceService {
     }
 
     public Status get(AuthenticatedAccount principal) {
+        return get(principal, null);
+    }
+
+    public Status get(AuthenticatedAccount principal, LocalDate date) {
         var actor = identities.active(principal);
         boolean admin = "ADMIN".equals(actor.roleCode());
         if (!admin && !"HR".equals(actor.roleCode())) {
@@ -35,19 +39,18 @@ public class OverviewAttendanceService {
         }
         permissions.requirePermission(actor.accountId(), AttendancePermissionService.MANAGE);
         LocalDateTime now = LocalDateTime.now(clock);
-        LocalDate day = now.toLocalDate();
+        LocalDate day = date == null ? now.toLocalDate() : date;
+        if (day.isAfter(now.toLocalDate())) throw new ResponseStatusException(HttpStatus.BAD_REQUEST);
         return db.queryForObject("""
             WITH daily_status AS (
               SELECT CASE
                 WHEN EXISTS (
                   SELECT 1 FROM dbo.employee_requests r
                   JOIN dbo.leave_request_details l ON l.request_id=r.request_id
-                  JOIN dbo.leave_types t ON t.leave_type_id=l.leave_type_id
-                  WHERE r.employee_id=e.employee_id AND r.status='DA_DUYET'
-                    AND t.type_code IN ('MATERNITY','THAI_SAN')
+                  WHERE r.employee_id=e.employee_id AND r.request_type='NGHI_PHEP' AND r.status='DA_DUYET'
                     AND l.leave_start<DATEADD(day,1,CAST(? AS datetime2)) AND l.leave_end>CAST(? AS datetime2)
                     AND NOT EXISTS (SELECT 1 FROM dbo.employee_request_withdrawals w WHERE w.request_id=r.request_id)
-                ) THEN 'MATERNITY'
+                ) THEN 'LEAVE'
                 WHEN EXISTS (
                   SELECT 1 FROM dbo.work_schedules s
                   LEFT JOIN dbo.attendance_records a ON a.schedule_id=s.schedule_id AND a.invalidated_at IS NULL
@@ -81,7 +84,7 @@ public class OverviewAttendanceService {
             )
             SELECT COUNT_BIG(CASE WHEN status='PRESENT' THEN 1 END),
                    COUNT_BIG(CASE WHEN status='ABSENT' THEN 1 END),
-                   COUNT_BIG(CASE WHEN status='MATERNITY' THEN 1 END),
+                   COUNT_BIG(CASE WHEN status='LEAVE' THEN 1 END),
                    COUNT_BIG(CASE WHEN status='MISSING' THEN 1 END)
             FROM daily_status
             """, (rs, row) -> new Status(day, rs.getLong(1), rs.getLong(2), rs.getLong(3), rs.getLong(4)),

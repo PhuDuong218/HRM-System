@@ -9,6 +9,19 @@ import {
   AdjustmentRequest
 } from '../models/payroll.model';
 
+export interface PayslipDirectoryRow {
+  payslipId: number;
+  payslipNumber: string;
+  employeeId: number;
+  employeeCode: string;
+  employeeName: string;
+  periodCode: string;
+  periodStart: string;
+  periodEnd: string;
+  versionNo: number;
+}
+export interface PayslipDirectory { canSelectEmployee: boolean; rows: PayslipDirectoryRow[]; }
+
 @Injectable({
   providedIn: 'root'
 })
@@ -23,6 +36,10 @@ export class PayrollService {
   // 2. Tra cứu đợt lương mới nhất của một kỳ
   getCurrentBatchByPeriod(periodId: number): Observable<PayrollBatch> {
     return this.http.get<PayrollBatch>(`${API_BASE_URL}/payroll-batches/period/${periodId}/current`);
+  }
+
+  getBatchesByPeriod(periodId: number): Observable<PayrollBatch[]> {
+    return this.http.get<PayrollBatch[]>(`${API_BASE_URL}/payroll-batches/period/${periodId}`);
   }
 
   // 3. Tạo đợt lương nháp (Draft)
@@ -56,6 +73,10 @@ export class PayrollService {
     return this.http.post<PayrollBatch>(`${API_BASE_URL}/payroll-batches/${batchId}/adjust`, body);
   }
 
+  getPayslipDirectory(): Observable<PayslipDirectory> {
+    return this.http.get<PayslipDirectory>(`${API_BASE_URL}/payslips/directory`);
+  }
+
   // 9. Danh sách phiếu lương cá nhân
   getMyPayslips(): Observable<any[]> {
     // The server resolves the employee from the authenticated session.
@@ -70,6 +91,10 @@ export class PayrollService {
   // 11. Tải HTML in ấn phiếu lương có bảo vệ bằng JWT token (Không hardcode cổng)
   getPayslipHtml(payslipId: number): Observable<string> {
     return this.http.get(`${API_BASE_URL}/payslips/${payslipId}/html`, { responseType: 'text' });
+  }
+
+  getPayslipHtmlByPayrollDetail(detailId: number): Observable<string> {
+    return this.http.get(`${API_BASE_URL}/payslips/payroll-detail/${detailId}/html`, { responseType: 'text' });
   }
 
   // 12. Tải HTML in ấn theo ID nhân viên

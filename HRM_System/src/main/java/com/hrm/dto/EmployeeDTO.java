@@ -24,6 +24,10 @@ public class EmployeeDTO {
     // Thiết kế phẳng (Flatten) để Front-end dễ hiển thị trên Table
     private Long currentDepartmentId;
     private String currentDepartmentName;
+    private String previousDepartmentName;
+
+    public String getPreviousDepartmentName() { return previousDepartmentName; }
+    public void setPreviousDepartmentName(String name) { previousDepartmentName = name; }
     private Long currentPositionId;
     private String currentPositionName;
 

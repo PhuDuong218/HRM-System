@@ -9,6 +9,27 @@ class LeaveCancellationTest {
  Map<String,Object> row(String status){return new HashMap<>(Map.of("requestId",4L,"employeeId",70L,"requestType","NGHI_PHEP","status",status,"leaveStart",now.plusDays(1).toString(),"leaveEnd",now.plusDays(1).plusHours(4).toString()));}
  void rows(Map<String,Object> before){var after=new HashMap<>(before);after.put("status","DA_HUY");after.put("withdrawnAt",now.toString());when(db.queryForList(contains("r.request_id=? AND"),eq(4L))).thenReturn(List.of(before),List.of(after));when(db.queryForList(contains("SELECT employment_status"),eq(String.class),eq(70L))).thenReturn(List.of("DANG_LAM"));}
  @Test void policyRejectsStartedRejectedAndAlreadyCancelled(){assertNull(LeaveCancellationPolicy.blocker("NGHI_PHEP","CHO_DUYET",false,now.plusMinutes(1),now));assertNotNull(LeaveCancellationPolicy.blocker("NGHI_PHEP","CHO_DUYET",false,now,now));assertNotNull(LeaveCancellationPolicy.blocker("NGHI_PHEP","TU_CHOI",false,now.plusDays(1),now));assertNotNull(LeaveCancellationPolicy.blocker("NGHI_PHEP","DA_DUYET",true,now.plusDays(1),now));}
+ @Test void ownerCanWithdrawPastPendingLeaveBeforeDepartmentDecision() {
+  var before=row("CHO_DUYET");
+  before.put("leaveStart",now.minusDays(2).toString());
+  before.put("leaveEnd",now.minusDays(2).plusHours(4).toString());
+  rows(before);
+  when(stages.stage(4)).thenReturn(Map.of("stageStatus","PENDING"));
+  var result=service.withdraw(4,new Rejection("Sent by mistake"),p);
+  assertEquals("DA_HUY",result.get("status"));
+  verify(support).lock();
+  verify(support).audit(eq(5L),eq("REQUEST_WITHDRAW"),eq("employee_requests"),eq(4L),eq("Sent by mistake"),eq(before),any());
+  verifyNoInteractions(rules);
+ }
+
+ @Test void ownerCannotWithdrawAfterDepartmentApproval() {
+  rows(row("CHO_DUYET"));
+  when(stages.stage(4)).thenReturn(Map.of("stageStatus","APPROVED"));
+  var error=assertThrows(ResponseStatusException.class,()->service.withdraw(4,new Rejection("Sent by mistake"),p));
+  assertEquals(HttpStatus.CONFLICT,error.getStatusCode());
+  verify(db,never()).update(contains("INSERT dbo.employee_request_withdrawals"),any(Object[].class));
+ }
+
  @Test void ownerCancelsApprovedLeaveWithAuditAndMutableCheck(){var before=row("DA_DUYET");rows(before);var result=service.cancelLeave(4,new Rejection("Đổi kế hoạch"),p);assertEquals("DA_HUY",result.get("status"));assertEquals(false,result.get("canCancelLeave"));verify(rules).requireMutable(70,now.plusDays(1),now.plusDays(1).plusHours(4));verify(support).audit(eq(5L),eq("LEAVE_REQUEST_CANCEL"),eq("employee_requests"),eq(4L),eq("Đổi kế hoạch"),eq(before),any());verify(timeline).lockTimeline();}
  @Test void lockedPeriodBlocksCancellationBeforeWithdrawal(){rows(row("DA_DUYET"));doThrow(new ResponseStatusException(HttpStatus.CONFLICT,"Kỳ đã khóa")).when(rules).requireMutable(anyLong(),any(),any());assertThrows(ResponseStatusException.class,()->service.cancelLeave(4,new Rejection("Test"),p));verify(db,never()).update(contains("INSERT dbo.employee_request_withdrawals"),any(Object[].class));}
  @Test void headCannotCancelFinalApprovalForOthers(){rows(row("DA_DUYET"));when(access.actor(p)).thenReturn(new PersonnelAccessService.Actor(5,50,"EMPLOYEE"));when(stages.canRead(70,p)).thenReturn(true);assertEquals(409,assertThrows(ResponseStatusException.class,()->service.cancelLeave(4,new Rejection("Test"),p)).getStatusCode().value());}

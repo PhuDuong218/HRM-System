@@ -1493,7 +1493,8 @@ public class EmployeeActivity extends AppCompatActivity {
     private void ownLeaveRequests() {
         LinearLayout create=card("Nghỉ phép của tôi");
         create.addView(text("Nghỉ phép năm trừ quỹ giờ khi được duyệt. Nghỉ ốm và thai sản theo chính sách riêng, không trừ phép năm. Đơn được chuyển theo quy trình duyệt của trung tâm.",12,MUTED,false));
-        button(create,"Nộp đơn nghỉ phép",true,()->fetch("/api/me/leave-options",this::leaveForm));
+        button(create,"Nộp đơn nghỉ phép",true,()->fetch("/api/me/leave-options",options->leaveForm(options,false)));
+        button(create,"Bổ sung phép",false,()->fetch("/api/me/leave-options",options->leaveForm(options,true)));
         fetch("/employee-requests/mine?type=NGHI_PHEP&size=100", data->{
             JSONArray rows=data.optJSONArray("content");
             if(rows==null||rows.length()==0){card("Chưa có đơn nghỉ phép").addView(text("Các đơn mới sẽ xuất hiện ở đây sau khi gửi thành công.",13,MUTED,false));return;}
@@ -1502,7 +1503,7 @@ public class EmployeeActivity extends AppCompatActivity {
                 badge(box,str(request,"withdrawnAt").isEmpty()?label(str(request,"status")):"Đã rút / hủy",str(request,"status"));
                 line(box,"Thời gian nghỉ",time(str(request,"leaveStart"))+" → "+time(str(request,"leaveEnd")));
                 line(box,"Lý do",str(request,"reason"));
-                if(request.optBoolean("canCancelLeave"))button(box,"Hủy đơn nghỉ phép",false,()->cancelLeaveForm(request));
+                if(request.optBoolean("canCancelLeave"))button(box,"CHO_DUYET".equals(str(request,"status"))?"Rút đơn nghỉ phép":"Hủy đơn nghỉ phép",false,()->cancelLeaveForm(request));
                 else if(!str(request,"cancelLeaveBlocker").isEmpty())box.addView(text(str(request,"cancelLeaveBlocker"),12,MUTED,false));
                 if(!str(request,"withdrawnAt").isEmpty())line(box,"Hủy đơn",utc(str(request,"withdrawnAt"))+" · "+str(request,"withdrawnBy")+" · "+str(request,"withdrawalReason"));
                 button(box,"Chi tiết và kết quả",false,()->fetch("/employee-requests/"+request.optLong("requestId"),detail->{
@@ -1514,26 +1515,38 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
     private void cancelLeaveForm(JSONObject request){
-        LinearLayout box=form();box.addView(text("Hủy "+str(request,"requestCode")+" trước giờ bắt đầu nghỉ. Đơn đã duyệt được hoàn quỹ phép nếu đủ điều kiện.",13,INK,false));
+        boolean pending = "CHO_DUYET".equals(str(request,"status"));
+        String action = pending ? "Rút đơn nghỉ phép" : "Hủy đơn nghỉ phép";
+        LinearLayout box=form();
+        box.addView(text(pending ? "Bạn có thể rút đơn khi cấp trên chưa xử lý."
+                : "Đơn đã duyệt được hoàn quỹ phép nếu hủy hợp lệ.",13,INK,false));
         TextInputEditText reason=input(box,"Lý do hủy *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE);
-        dialog("Hủy đơn nghỉ phép",box,"Tiếp tục",dialog->{if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}write("/employee-requests/"+request.optLong("requestId")+"/cancel-leave","POST",json("reason",value(reason)),"Xác nhận hủy đơn nghỉ phép?",dialog);});
+        dialog(action,box,"Tiếp tục",dialog->{if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}write("/employee-requests/"+request.optLong("requestId")+(pending ? "/withdraw" : "/cancel-leave"),"POST",json("reason",value(reason)),"Xác nhận "+action.toLowerCase(java.util.Locale.ROOT)+"?",dialog);});
     }
-    private void leaveForm(JSONObject options) throws Exception {
+    private void leaveForm(JSONObject options, boolean retroactive) throws Exception {
         JSONArray types=options.optJSONArray("types");if(types==null||types.length()==0){toast("Chưa có loại nghỉ hoạt động. Liên hệ ADMIN.");return;}
         LinearLayout box=form();List<String> labels=new ArrayList<>();for(int i=0;i<types.length();i++)labels.add(types.getJSONObject(i).getString("typeName"));
         box.addView(text("Loại nghỉ",13,INK,true));Spinner type=new Spinner(this);type.setAdapter(new ArrayAdapter<>(this,android.R.layout.simple_spinner_dropdown_item,labels));box.addView(type);
-        DateField start=new DateField(box,"Bắt đầu nghỉ *",today().plusDays(1).atTime(8,0).toString(),false),end=new DateField(box,"Kết thúc nghỉ * (không gồm thời điểm này)",today().plusDays(1).atTime(17,0).toString(),false);
+        LocalDate initialDay = retroactive ? today().minusDays(1) : today();
+        box.addView(text(retroactive ? "Chọn khoảng nghỉ đã qua, trong hạn nộp bù của loại nghỉ." : "Chọn ngày nghỉ từ hôm nay trở đi.",12,MUTED,false));
+        DateField start=new DateField(box,"Bắt đầu nghỉ *",initialDay.atTime(8,0).toString(),false),end=new DateField(box,"Kết thúc nghỉ * (không gồm thời điểm này)",initialDay.atTime(17,0).toString(),false);
         TextView policy=text("",12,MUTED,false);box.addView(policy);
         TextInputEditText reason=input(box,"Lý do *","",InputType.TYPE_CLASS_TEXT|InputType.TYPE_TEXT_FLAG_MULTI_LINE),evidence=input(box,"Minh chứng đính kèm (JPG, PNG, PDF)","",InputType.TYPE_CLASS_TEXT);
         evidence.setKeyListener(null);leaveEvidenceTarget=evidence;button(box,"Chọn giấy khám bệnh / minh chứng",false,()->{if(!evidenceUploading)leaveEvidencePicker.launch("*/*");});
         Runnable update=()->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;String code=str(t,"typeCode");boolean maternity=code.equals("MATERNITY")||code.equals("THAI_SAN");policy.setText(maternity?"Chính sách trung tâm: nam tối đa "+options.optInt("maleDays",14)+" ngày lịch, nữ tối đa "+options.optInt("femaleMonths",6)+" tháng mỗi đơn. Cần minh chứng.":t.optBoolean("evidenceRequired")?"Loại nghỉ này cần tham chiếu giấy tờ minh chứng.":"Phép năm tính theo giờ làm việc được phân công, trừ quỹ khi được duyệt.");if(maternity){try{LocalDateTime from=LocalDateTime.parse(start.value);end.value=(str(options,"gender").equals("MALE")?from.plusDays(options.optInt("maleDays",14)):from.plusMonths(options.optInt("femaleMonths",6))).toString();end.edit.setText(time(end.value));}catch(Exception ignored){}}};
         type.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener(){public void onNothingSelected(android.widget.AdapterView<?> p){}public void onItemSelected(android.widget.AdapterView<?> p,View v,int position,long id){update.run();}});
         start.edit.addTextChangedListener(new android.text.TextWatcher(){public void beforeTextChanged(CharSequence s,int a,int c,int f){}public void onTextChanged(CharSequence s,int a,int b,int c){}public void afterTextChanged(android.text.Editable e){update.run();}});
-        dialog("Nộp đơn nghỉ phép",box,"Gửi đơn",d->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;
+        dialog(retroactive?"Bổ sung phép":"Nộp đơn nghỉ phép",box,"Gửi đơn",d->{JSONObject t=types.optJSONObject(type.getSelectedItemPosition());if(t==null)return;
             if(start.value.isEmpty()||end.value.isEmpty()||end.value.compareTo(start.value)<=0){end.edit.setError("Giờ kết thúc phải sau bắt đầu");end.edit.requestFocus();return;}
             if(value(reason).isEmpty()||value(reason).length()>1000){reason.setError("Nhập lý do tối đa 1000 ký tự");reason.requestFocus();return;}
             if(evidenceUploading){toast("Đợi tải minh chứng xong");return;}if(t.optBoolean("evidenceRequired")&&value(evidence).isEmpty()){evidence.setError("Cần đính kèm minh chứng");evidence.requestFocus();return;}
-            write("/employee-requests/leave","POST",json("leaveTypeId",t.optLong("leaveTypeId"),"leaveStart",start.value,"leaveEnd",end.value,"reason",value(reason),"evidenceReference",value(evidence)),"Gửi đơn nghỉ phép để xét duyệt?",d);
+            boolean pastDate = LocalDateTime.parse(start.value).toLocalDate().isBefore(today());
+            if (pastDate != retroactive) {
+                start.edit.setError(retroactive ? "Chọn ngày trước hôm nay" : "Ngày đã qua. Hãy chọn Bổ sung phép.");
+                start.edit.requestFocus();
+                return;
+            }
+            write("/employee-requests/leave","POST",json("leaveTypeId",t.optLong("leaveTypeId"),"leaveStart",start.value,"leaveEnd",end.value,"reason",value(reason),"evidenceReference",value(evidence),"retroactive",retroactive),retroactive?"Gửi đơn bổ sung phép để xét duyệt?":"Gửi đơn nghỉ phép để xét duyệt?",d);
         });
     }
 
@@ -2055,18 +2068,10 @@ public class EmployeeActivity extends AppCompatActivity {
         info.addView(text("Bạn có thể cập nhật thông tin liên hệ. Thông tin nhân sự khác vui lòng liên hệ HR.", 12, MUTED, false));
         button(info, "Chỉnh sửa hồ sơ", true, this::editProfile);
         LinearLayout income = card("Lương và phúc lợi");
-        button(income, "Phiếu lương cá nhân đã công bố", false, () -> fetch("/api/me/payslips", data -> {
-            JSONArray rows = data.optJSONArray("items");
-            StringBuilder message = new StringBuilder();
-            if (rows != null)
-                for (int i = 0; i < rows.length(); i++) {
-                    JSONObject r = rows.getJSONObject(i);
-                    message.append(str(r, "payslipNumber")).append(" · ").append(str(r, "periodCode")).append("\n");
-                }
-            new MaterialAlertDialogBuilder(this).setTitle("Phiếu lương của tôi")
-                    .setMessage(message.length() == 0 ? "Chưa có phiếu lương đã công bố." : message.toString())
-                    .setPositiveButton("Đóng", null).show();
-        }));
+        button(income, "Phiếu lương cá nhân đã công bố", false, () -> {
+            section = "salary";
+            render();
+        });
         button(income, "Khoản lương / phụ cấp đã công bố", false, () -> fetch("/api/me/salary", data -> {
             JSONArray rows = data.optJSONArray("items");
             StringBuilder value = new StringBuilder();
@@ -2117,47 +2122,135 @@ public class EmployeeActivity extends AppCompatActivity {
             render();
         });
 
-        java.text.DecimalFormat fmt = new java.text.DecimalFormat("#,##0");
-
-        fetch("/api/payslips/my-payslips", data -> {
-            JSONArray items = data.optJSONArray("items");
-            if (items == null || items.length() == 0) {
-                LinearLayout emptyBox = card("Thông báo");
-                emptyBox.addView(text("Chưa có phiếu lương nào được công bố cho tài khoản của bạn.", 14, MUTED, false));
+        fetch("/api/payslips/directory", data -> {
+            JSONArray rows = data.optJSONArray("rows");
+            if (rows == null || rows.length() == 0) {
+                card(null).addView(text("Chưa có phiếu lương được công bố.", 14, MUTED, false));
                 return;
             }
 
-            for (int i = 0; i < items.length(); i++) {
-                JSONObject p = items.getJSONObject(i);
-                String titleText = "Kỳ: " + str(p, "periodCode") + " (v" + p.optInt("versionNo", 1) + ") · " + str(p, "payslipNumber");
-                LinearLayout box = card(titleText);
-                badge(box, "Đã công bố", "DA_XAC_NHAN");
-
-                double net = p.optDouble("netSalary", 0);
-                double gross = p.optDouble("totalGross", 0);
-                double deduct = p.optDouble("totalDeduction", 0);
-
-                line(box, "THỰC LĨNH CHUYỂN KHOẢN (NET)", fmt.format(net) + " đ");
-                line(box, "Tổng thu nhập trước thuế (Gross)", fmt.format(gross) + " đ");
-                line(box, "Tổng khấu trừ (BHXH, BHYT & Thuế)", "-" + fmt.format(deduct) + " đ");
-
-                JSONArray lines = p.optJSONArray("lines");
-                if (lines != null && lines.length() > 0) {
-                    box.addView(text("Chi tiết các khoản mục:", 12, MUTED, true));
-                    for (int j = 0; j < lines.length(); j++) {
-                        JSONObject l = lines.getJSONObject(j);
-                        boolean isAdd = "ADD".equalsIgnoreCase(str(l, "direction"));
-                        String lineName = str(l, "name");
-                        double amount = l.optDouble("amount", 0);
-                        String expl = str(l, "explanation");
-
-                        String rowText = "• " + lineName + ": " + (isAdd ? "+" : "-") + fmt.format(amount) + " đ"
-                                + (expl.isEmpty() ? "" : " (" + expl + ")");
-                        box.addView(text(rowText, 13, isAdd ? 0xff16a34a : 0xffdc2626, false));
-                    }
-                }
+            LinearLayout picker = card("Kỳ lương");
+            String[] labels = new String[rows.length()];
+            for (int i = 0; i < rows.length(); i++) {
+                JSONObject row = rows.getJSONObject(i);
+                labels[i] = str(row, "periodCode") + " (v" + row.optInt("versionNo", 1) + ") · " + str(row, "payslipNumber");
             }
+            Spinner periods = new Spinner(this);
+            ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, labels);
+            adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+            periods.setAdapter(adapter);
+            picker.addView(periods);
+            LinearLayout details = card(null);
+            periods.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                @Override public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                    details.removeAllViews();
+                }
+
+                @Override public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                    details.removeAllViews();
+                    JSONObject row = rows.optJSONObject(position);
+                    if (row == null) return;
+                    fetch("/api/payslips/" + row.optLong("payslipId"), slip -> {
+                        if (periods.getSelectedItemPosition() == position) showSalaryDetails(details, row, slip);
+                    });
+                }
+            });
         });
+    }
+
+    private void showSalaryDetails(LinearLayout box, JSONObject row, JSONObject slip) throws Exception {
+        box.removeAllViews();
+        java.util.Locale locale = java.util.Locale.forLanguageTag("vi-VN");
+        java.text.NumberFormat money = java.text.NumberFormat.getIntegerInstance(locale);
+        java.text.NumberFormat days = java.text.NumberFormat.getNumberInstance(locale);
+        days.setMaximumFractionDigits(4);
+        box.addView(text("Phiếu lương kỳ " + str(slip, "periodCode"), 18, INK, true));
+        badge(box, "Đã công bố", "DA_XAC_NHAN");
+        salaryInfoRow(box, "Mã nhân viên", str(row, "employeeCode"),
+                "Họ và tên", str(row, "employeeName"));
+        salaryInfoRow(box, "Ngày công đi làm", salaryDays(slip, "actualWorkDays", days),
+                "Ngày công chuẩn", salaryDays(slip, "standardWorkDays", days));
+        String position = str(slip, "positionName");
+        line(box, "Chức vụ trong kỳ", position.isBlank() ? "Chưa có dữ liệu" : position);
+
+        double gross = slip.getDouble("totalGross");
+        salaryTotal(box, "Tổng thu nhập (Gross)", money.format(gross), 0xffedf5ff, INK);
+        salaryTotal(box, "Tổng khấu trừ", money.format(slip.getDouble("totalDeduction")), 0xfffff2ef, 0xffa12823);
+        salaryTotal(box, "Thực lĩnh (Net)", money.format(slip.getDouble("netSalary")), 0xffe7f5ed, 0xff126049);
+
+        JSONArray items = slip.optJSONArray("lines");
+        salaryItems(box, items, true, gross, money, locale);
+        salaryItems(box, items, false, gross, money, locale);
+    }
+
+    private void salaryInfoRow(LinearLayout box, String leftLabel, String leftValue,
+                               String rightLabel, String rightValue) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setBaselineAligned(false);
+        LinearLayout left = new LinearLayout(this);
+        left.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout right = new LinearLayout(this);
+        right.setOrientation(LinearLayout.VERTICAL);
+        LinearLayout.LayoutParams leftParams = new LinearLayout.LayoutParams(0, -2, 1);
+        leftParams.setMarginEnd(dp(12));
+        row.addView(left, leftParams);
+        row.addView(right, new LinearLayout.LayoutParams(0, -2, 1));
+        line(left, leftLabel, leftValue);
+        line(right, rightLabel, rightValue);
+        box.addView(row, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    private String salaryDays(JSONObject slip, String key, java.text.NumberFormat format) {
+        return slip.isNull(key) ? "Chưa có dữ liệu" : format.format(slip.optDouble(key)) + " ngày";
+    }
+
+    private void salaryTotal(LinearLayout box, String label, String amount, int background, int color) {
+        LinearLayout tile = new LinearLayout(this);
+        tile.setOrientation(LinearLayout.VERTICAL);
+        tile.setBackground(rounded(background, 10));
+        tile.setPadding(dp(12), dp(9), dp(12), dp(9));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.topMargin = dp(8);
+        tile.addView(text(label, 12, color, true));
+        tile.addView(text(amount + " ₫", 18, color, true));
+        box.addView(tile, params);
+    }
+
+    private void salaryItems(LinearLayout box, JSONArray items, boolean income, double gross,
+                             java.text.NumberFormat money, java.util.Locale locale) throws Exception {
+        int color = income ? 0xff126049 : 0xffa12823;
+        TextView heading = text(income ? "Các khoản thu nhập" : "Các khoản trừ vào lương", 15, color, true);
+        heading.setPadding(0, dp(16), 0, dp(6));
+        box.addView(heading);
+        java.text.NumberFormat percent = java.text.NumberFormat.getPercentInstance(locale);
+        percent.setMaximumFractionDigits(2);
+        boolean found = false;
+        for (int i = 0; items != null && i < items.length(); i++) {
+            JSONObject item = items.getJSONObject(i);
+            if (!(income ? "ADD" : "DEDUCT").equals(str(item, "direction"))) continue;
+            found = true;
+            double amount = item.getDouble("amount");
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setBaselineAligned(false);
+            TextView label = text(str(item, "name"), 13, INK, true);
+            TextView value = text((income ? "+" : "−") + money.format(amount) + " ₫", 15, color, true);
+            value.setGravity(android.view.Gravity.END);
+            LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, -2, 1);
+            labelParams.setMarginEnd(dp(8));
+            row.addView(label, labelParams);
+            row.addView(value, new LinearLayout.LayoutParams(0, -2, 1));
+            box.addView(row, new LinearLayout.LayoutParams(-1, -2));
+            String explanation = str(item, "explanation");
+            if (!explanation.isEmpty()) box.addView(text(explanation, 12, MUTED, false));
+            if (!income && gross > 0) {
+                box.addView(text("Tỷ trọng: " + percent.format(amount / gross) + " tổng thu nhập", 12, MUTED, false));
+            }
+            View spacer = new View(this);
+            box.addView(spacer, new LinearLayout.LayoutParams(1, dp(10)));
+        }
+        if (!found) box.addView(text("Không có khoản mục.", 12, MUTED, false));
     }
 
     private void editProfile() {

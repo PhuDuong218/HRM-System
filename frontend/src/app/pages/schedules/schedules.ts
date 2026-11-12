@@ -298,9 +298,19 @@ export class SchedulesPage implements OnInit {
     if (!this.formShift.selected.breaksVerified) { this.formError = 'Ca chưa có đủ giờ nghỉ chi tiết. Hãy bổ sung khoảng nghỉ tại Danh mục ca trước.'; return; }
     if (!/^\d{4}-\d{2}-\d{2}$/.test(this.formDate) || this.formNote.length > 1000) { this.formError = 'Ngày làm hoặc ghi chú không hợp lệ.'; return; }
     const creating = this.mode === 'create';
-    if (!(await this.actionDialogInPage.confirm(`${creating ? 'Thêm lịch làm việc' : 'Lưu thay đổi lịch'}?\n${this.formEmployee.text}\n${this.formShift.text}\nNgày: ${this.formDate}\nNghỉ: ${this.formBreakMinutes} phút`))) return;
     const body = { employeeId: this.formEmployee.selected.employeeId, shiftId: this.formShift.selected.shift.shiftId, workDate: this.formDate, note: this.formNote.trim() };
-    const request = creating ? this.http.post<Schedule>(`${this.url}/schedules`, body) : this.http.put<Schedule>(`${this.url}/schedules/${this.selected!.schedule.scheduleId}`, body);
+    const id = this.selected?.schedule.scheduleId;
+    const confirmation = [
+      creating ? 'Bạn có chắc muốn thêm lịch làm việc?' : 'Bạn có chắc muốn lưu thay đổi lịch?',
+      `Nhân viên: ${this.formEmployee.text}`,
+      `Ca: ${this.formShift.text}`,
+      `Bắt đầu: ${this.formStart}`,
+      `Kết thúc: ${this.formEnd}`,
+      `Nghỉ: ${this.formBreakMinutes} phút`,
+    ].join('\n');
+    if (!(await this.actionDialogInPage.confirm(confirmation))) return;
+
+    const request = creating ? this.http.post<Schedule>(`${this.url}/schedules`, body) : this.http.put<Schedule>(`${this.url}/schedules/${id}`, body);
     this.saving = true; this.formError = '';
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
       next: () => { this.mode = 'view'; this.selected = null; this.success = creating ? 'Đã thêm lịch làm việc.' : 'Đã cập nhật lịch làm việc.'; if(creating)this.sortDirection='desc';this.saving = false; this.load(); },

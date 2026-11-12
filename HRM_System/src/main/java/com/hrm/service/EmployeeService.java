@@ -160,7 +160,19 @@ public class EmployeeService {
                         assignment -> assignment,
                         (first, second) -> ASSIGNMENT_ORDER.compare(first, second) >= 0 ? first : second));
 
-        return employees.map(employee -> convertToSearchDTO(employee, assignments.get(employee.getEmployeeId())));
+        List<Long> retiredIds = employees.getContent().stream()
+            .filter(e -> e.getEmploymentStatus() == EmploymentStatus.DA_NGHI && e.getTerminationDate() != null)
+            .map(Employee::getEmployeeId).toList();
+        Map<Long, EmployeeAssignment> previous = retiredIds.isEmpty() ? Map.of()
+            : assignmentRepository.findAssignmentsBeforeTermination(retiredIds).stream().collect(Collectors.toMap(
+                a -> a.getEmployee().getEmployeeId(), a -> a,
+                (a, b) -> ASSIGNMENT_ORDER.compare(a, b) >= 0 ? a : b));
+        return employees.map(employee -> {
+            EmployeeDTO dto = convertToSearchDTO(employee, assignments.get(employee.getEmployeeId()));
+            EmployeeAssignment last = previous.get(employee.getEmployeeId());
+            if (last != null) dto.setPreviousDepartmentName(last.getDepartment().getDepartmentName());
+            return dto;
+        });
     }
 
     @Transactional(readOnly = true)
@@ -351,7 +363,15 @@ public class EmployeeService {
                                         || assignment.getEffectiveTo().isAfter(asOfDate)))
                         .max(ASSIGNMENT_ORDER)
                         .orElse(null);
-        return convertToSearchDTO(employee, currentAssignment);
+        EmployeeDTO dto = convertToSearchDTO(employee, currentAssignment);
+        if (employee.getEmploymentStatus() == EmploymentStatus.DA_NGHI && employee.getTerminationDate() != null
+                && employee.getAssignments() != null) {
+            employee.getAssignments().stream()
+                .filter(a -> !a.getEffectiveFrom().isAfter(employee.getTerminationDate()))
+                .max(ASSIGNMENT_ORDER)
+                .ifPresent(a -> dto.setPreviousDepartmentName(a.getDepartment().getDepartmentName()));
+        }
+        return dto;
     }
 
     private EmployeeDTO convertToSearchDTO(Employee employee, EmployeeAssignment assignment) {

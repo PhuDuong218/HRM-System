@@ -10,7 +10,7 @@ import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollLineRepository;
 import com.hrm.security.AuthenticatedAccount;
 import com.hrm.service.PayrollBatchService;
-import com.hrm.service.PayrollExecutionService;
+import com.hrm.service.DraftPayrollService;
 import com.hrm.service.PersonnelScopeService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
@@ -38,19 +38,19 @@ public class PayrollBatchController {
 
     private final com.hrm.repository.EmployeeRepository employeeRepository;
     private final PayrollBatchService batchService;
-    private final PayrollExecutionService executionService;
+    private final DraftPayrollService draftPayroll;
     private final PayrollDetailRepository detailRepository;
     private final PayrollLineRepository lineRepository;
     private final PersonnelScopeService personnelScope;
 
     public PayrollBatchController(PayrollBatchService batchService,
-                              PayrollExecutionService executionService,
+                              DraftPayrollService draftPayroll,
                               PayrollDetailRepository detailRepository,
                               PayrollLineRepository lineRepository,
                               PersonnelScopeService personnelScope,
                               com.hrm.repository.EmployeeRepository employeeRepository) {
     this.batchService = batchService;
-    this.executionService = executionService;
+    this.draftPayroll = draftPayroll;
     this.detailRepository = detailRepository;
     this.lineRepository = lineRepository;
     this.personnelScope = personnelScope;
@@ -91,7 +91,7 @@ public class PayrollBatchController {
     @PostMapping("/{batchId}/calculate")
     @PreAuthorize("hasRole('ADMIN') and hasAuthority('PAYROLL_MANAGE')")
     public ResponseEntity<String> calculatePayroll(@PathVariable Long batchId) {
-        return ResponseEntity.ok(executionService.calculateBatch(batchId));
+        return ResponseEntity.ok(draftPayroll.calculate(batchId));
     }
 
     // Keep the legacy query parameter compatible; the authenticated actor is authoritative.
@@ -122,20 +122,34 @@ public class PayrollBatchController {
 @PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAnyAuthority('PAYROLL_VIEW', 'PAYROLL_MANAGE')")
 public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable Long batchId) {
     List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
+    boolean provisional = !details.isEmpty() && detailRepository.hasProvisionalDraft(batchId);
     List<PayrollDetailViewDTO> result = new ArrayList<>();
     Set<Long> allowedEmployees = PersonnelScopeService.isHr() ? new HashSet<>(personnelScope.employees()) : null;
 
+    Set<Long> missingSalaryIds = new java.util.LinkedHashSet<>(detailRepository.findEmployeesMissingSalary(batchId));
+    if (allowedEmployees != null) missingSalaryIds.retainAll(allowedEmployees);
+
     // Lấy danh sách ID nhân viên để truy vấn thông tin một lượt
-    List<Long> empIds = details.stream().map(PayrollDetail::getEmployeeId).toList();
+    Set<Long> pendingIds = new java.util.LinkedHashSet<>(detailRepository.findDraftEmployeesWithConfirmedAttendance(batchId));
+    pendingIds.addAll(missingSalaryIds);
+    if (allowedEmployees != null) pendingIds.retainAll(allowedEmployees);
+
+    Set<Long> empIds = new HashSet<>(pendingIds);
+    details.forEach(detail -> empIds.add(detail.getEmployeeId()));
     var employeeMap = employeeRepository.findAllById(empIds).stream()
-            .collect(java.util.stream.Collectors.toMap(e -> e.getEmployeeId(), e -> e.getFullName()));
+            .collect(java.util.stream.Collectors.toMap(e -> e.getEmployeeId(), e -> e));
 
     for (PayrollDetail d : details) {
         if (allowedEmployees != null && !allowedEmployees.contains(d.getEmployeeId())) continue;
+        if (missingSalaryIds.contains(d.getEmployeeId())) continue;
         PayrollDetailViewDTO dto = new PayrollDetailViewDTO();
         dto.setPayrollDetailId(d.getPayrollDetailId());
         dto.setEmployeeId(d.getEmployeeId());
-        dto.setEmployeeName(employeeMap.getOrDefault(d.getEmployeeId(), "Nhân viên #" + d.getEmployeeId()));
+        var employee = employeeMap.get(d.getEmployeeId());
+        if (employee != null) {
+            dto.setEmployeeName(employee.getFullName());
+            dto.setEmployeeCode(employee.getEmployeeCode());
+        }
 
         List<PayrollLine> lines = lineRepository.findByPayrollDetailIdOrderByLineNoAsc(d.getPayrollDetailId());
         BigDecimal gross = BigDecimal.ZERO;
@@ -158,10 +172,26 @@ public ResponseEntity<List<PayrollDetailViewDTO>> getBatchDetails(@PathVariable 
             }
         }
 
+        if (lines.isEmpty() && pendingIds.contains(d.getEmployeeId())) continue;
+        pendingIds.remove(d.getEmployeeId());
+        for (var line : lineDTOs) line.describeDeductionShare(gross);
         dto.setTotalGross(gross);
         dto.setTotalDeduction(deduct);
         dto.setNetSalary(gross.subtract(deduct));
         dto.setLines(lineDTOs);
+        dto.setProvisional(provisional);
+        result.add(dto);
+    }
+
+    for (Long employeeId : pendingIds) {
+        var employee = employeeMap.get(employeeId);
+        if (employee == null) continue;
+        var dto = new PayrollDetailViewDTO();
+        dto.setEmployeeId(employeeId);
+        dto.setEmployeeName(employee.getFullName());
+        dto.setEmployeeCode(employee.getEmployeeCode());
+        dto.setMissingSalary(missingSalaryIds.contains(employeeId));
+        dto.setLines(List.of());
         result.add(dto);
     }
 

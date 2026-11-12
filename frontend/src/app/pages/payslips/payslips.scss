@@ -1,0 +1,27 @@
+.payslip-document { display: grid; gap: 18px; }
+.payslip-heading { display: flex; justify-content: space-between; align-items: flex-start; gap: 12px; }
+.payslip-heading h2 { margin: 0 0 5px; }
+.payslip-meta, .payslip-totals { display: grid; gap: 12px; margin: 0; }
+.payslip-meta { grid-template-columns: repeat(auto-fit, minmax(min(100%, 145px), 1fr)); }
+.payslip-meta dt, .payslip-totals dt { color: var(--bs-secondary-color); font-size: .78rem; }
+.payslip-meta dd, .payslip-totals dd { margin: 3px 0 0; overflow-wrap: anywhere; }
+.payslip-totals { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.payslip-totals > div, .payslip-group { border: 1px solid var(--bs-border-color); border-radius: 12px; }
+.payslip-totals > div { padding: 14px; background: var(--bs-tertiary-bg); }
+.payslip-totals dd { font-size: clamp(1rem, 2vw, 1.45rem); font-weight: 750; }
+.payslip-totals > div:nth-child(2) dd { color: var(--bs-danger-text-emphasis); }
+.payslip-totals .payslip-net { background: var(--bs-primary-bg-subtle); color: var(--bs-primary-text-emphasis); }
+.payslip-items { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; align-items: start; }
+.payslip-group { overflow: hidden; }
+.payslip-group h3 { margin: 0; padding: 12px 14px; font-size: 1rem; background: var(--bs-success-bg-subtle); color: var(--bs-success-text-emphasis); }
+.payslip-deductions h3 { background: var(--bs-danger-bg-subtle); color: var(--bs-danger-text-emphasis); }
+.payslip-group li { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; padding: 11px 14px; }
+.payslip-group li + li { border-top: 1px solid var(--bs-border-color); }
+.payslip-group li > div { min-width: 0; overflow-wrap: anywhere; }
+.payslip-group small { display: block; margin-top: 3px; color: var(--bs-secondary-color); }
+.payslip-group li > span { flex: 0 1 auto; min-width: 0; max-width: 48%; text-align: end; font-weight: 700; overflow-wrap: anywhere; color: var(--bs-success-text-emphasis); }
+.payslip-deductions li > span { color: var(--bs-danger-text-emphasis); }
+.payslip-totals dd, .payslip-group li > span { font-variant-numeric: tabular-nums; }
+@media (max-width: 767px) {
+  .payslip-totals, .payslip-items { grid-template-columns: minmax(0, 1fr); }
+}

@@ -4,7 +4,7 @@
 <hrm-feedback [error]="error" [success]="message"/>
 <app-page-header variant="directory" [resultCount]="total" [busy]="loading" [title]="config.title" [description]="config.description">
  @if(kind==='assignments'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="startTransfer()">{{ 'Điều chuyển nhân viên' | translate }}</button>}
- @if(kind==='certificates'||kind==='entitlements'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving||(kind==='certificates'&&!employeeId)" (click)="open(null)">{{ 'Thêm mới' | translate }}</button>}
+ @if(kind==='certificates'||kind==='entitlements'){<button type="button" hrmBtn="primary" hrmSize="md" [disabled]="saving" (click)="open(null)">{{ (kind==='certificates' ? 'Thêm mới bằng cấp / chứng chỉ' : 'Thêm mới') | translate }}</button>}
  @if(kind==='requests'&&admin){<button hrmBtn="danger-outline" hrmSize="md" [disabled]="saving" (click)="execute()">{{ 'Thực thi nghỉ việc đến hạn' | translate }}</button>}
 </app-page-header>
 @if(kind==='requests'||kind==='entitlements'){<app-leave-workflow-guide [stage]="kind==='requests'?'requests':'balances'"/>}
@@ -68,7 +68,7 @@
  <section recordDetail class="surface">@if(kind==='certificates'&&mode==='detail'){<label>{{"Lý do thay đổi"|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label>}
   <h2>{{(mode==='edit'?(selected?'Cập nhật':'Thêm mới'):'Chi tiết') | translate}} {{config.title.toLowerCase() | translate}}</h2>
   @if(mode==='detail'){
-   <dl class="detail-grid">@if(kind==="audit" && selected){<dt>{{ "Người thực hiện" | translate }}</dt><dd>{{auditActor(selected)}}</dd>}@for(entry of detailEntries();track entry[0]){@if(entry[0]!=="actorName"){<dt>{{labels[entry[0]] | translate}}</dt><dd>{{display(entry[0],entry[1]) | translate}}</dd>}}</dl>
+   <dl class="detail-grid" [class.request-detail-grid]="kind === 'requests'">@if(kind==="audit" && selected){<dt>{{ "Người thực hiện" | translate }}</dt><dd>{{auditActor(selected)}}</dd>}@for(entry of detailEntries();track entry[0]){@if(entry[0]!=="actorName"){<dt>{{labels[entry[0]] | translate}}</dt><dd>{{display(entry[0],entry[1]) | translate}}</dd>}}</dl>
    @if(kind==='certificates'&&primarySelected){<p class="primary-indicator">{{ 'Đang là trình độ chính' | translate }}</p><p class="selection-note">{{ 'Muốn thay đổi, hãy mở bằng cấp khác và chọn làm trình độ chính. Hệ thống giữ tối đa một trình độ chính cho mỗi nhân viên.' | translate }}</p>}
    @if(kind==='certificates'||kind==='entitlements'||kind==='assignments'){
     <div class="detail-actions">
@@ -76,6 +76,29 @@
      @if(kind==='certificates'||kind==='entitlements'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving||loading" (click)="mode='edit'">{{ 'Sửa' | translate }}</button>}
      @if(kind==='assignments'){<button hrmBtn="primary" hrmSize="md" [disabled]="saving||loading" (click)="startTransfer(selected)">{{ 'Điều chuyển nhân viên này' | translate }}</button>}
     </div>
+   }
+   @if(kind==='certificates' && selected){
+    <section class="mt-3 pt-3 border-top" aria-labelledby="qualification-history-title">
+     <h3 id="qualification-history-title" class="h6">Lịch sử thao tác</h3>
+     @if(qualificationHistoryLoading){<p role="status">Đang tải lịch sử…</p>}
+     @else if(qualificationHistoryError){<p role="alert" class="text-danger">{{qualificationHistoryError}}</p>}
+     @else {
+      @for(entry of qualificationHistory; track entry['auditId']){
+       <article class="border-bottom py-2">
+        <strong>{{display('action',entry['action']) | translate}}</strong>
+        <div class="small text-body-secondary">{{auditActor(entry)}} · {{entry['occurredAt'] | date:'dd/MM/yyyy HH:mm:ss':'+0700'}}</div>
+        @if(entry['reason']){<div>{{entry['reason']}}</div>}
+        @for(change of qualificationChanges(entry);track change.label){
+         <div class="small text-break">{{change.label | translate}}: {{change.before}} → {{change.after}}</div>
+        }
+       </article>
+      } @empty {<p class="text-body-secondary">Chưa ghi nhận thao tác.</p>}
+      @if(qualificationHistoryPages>1){
+       <app-pagination [page]="qualificationHistoryPage" [pages]="qualificationHistoryPages"
+         [busy]="qualificationHistoryLoading" (pageChange)="loadQualificationHistory(selected,$event)"/>
+      }
+     }
+    </section>
    }
    @if(kind==='audit'){
     <h3>{{ 'Trước thay đổi' | translate }}</h3><dl>@for(e of snapshot('beforeDataJson');track e[0]){<dt>{{e[0]}}</dt><dd>{{e[1]}}</dd>}</dl>
@@ -88,13 +111,79 @@
      <label>{{'Lý do hủy đơn'|translate}}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label><button class="mt-3" hrmBtn="danger-outline" hrmSize="md" [disabled]="saving||!note.trim()" (click)="cancelApproved()">{{'Hủy đơn nghỉ phép'|translate}}</button>
     }
     @if(selected?.['approvalStage']){<p>{{'Cấp duyệt trưởng phòng'|translate}}: <strong>{{display('stageStatus',selected?.['approvalStage']['stageStatus'])}}</strong></p>}
-    @if(selected?.['allocations']?.length){<h3>{{ 'Phân bổ giờ nghỉ' | translate }}</h3><div class="table-responsive"><table class="table"><thead><tr><th>{{ 'Lịch' | translate }}</th><th>{{ 'Giờ trừ' | translate }}</th></tr></thead><tbody>@for(a of selected?.['allocations'];track a['scheduleId']){<tr><td>{{a['scheduleId']}}</td><td>{{a['chargedHours']}}</td></tr>}</tbody></table></div>}
+    @if (selected?.['allocations']; as allocations) {
+      @if (allocations.length) {
+        <section class="mt-3 pt-3 border-top">
+          <h3>{{ 'Phân bổ giờ nghỉ' | translate }}</h3>
+          <div class="d-flex flex-wrap gap-2 mb-2">
+            <span class="badge text-bg-light border">{{ 'Tổng giờ nghỉ' | translate }}: {{ allocationHours(allocations) }}</span>
+            <span class="badge text-bg-light border">{{ 'Giờ trừ quỹ phép' | translate }}: {{ selected?.['withdrawnAt'] ? '0' : allocationHours(allocations, true) }}</span>
+          </div>
+          @if (selected?.['withdrawnAt']) {
+            <p class="small text-body-secondary">{{ 'Đơn đã hủy. Bảng bên dưới giữ lại số giờ nghỉ đã phân bổ.' | translate }}</p>
+          }
+          <div class="table-responsive">
+            <table class="table align-middle">
+              <thead><tr>
+                <th scope="col">{{ 'Ngày / Ca làm việc' | translate }}</th>
+                <th scope="col">{{ 'Giờ theo lịch' | translate }}</th>
+                <th scope="col">{{ 'Giờ nghỉ' | translate }}</th>
+              </tr></thead>
+              <tbody>
+                @for (a of allocations; track a['allocationId'] ?? a['scheduleId']) {
+                  <tr>
+                    <td>
+                      <strong>{{ display('workDate', a['workDate']) }}</strong>
+                      <div>{{ a['shiftName'] || a['shiftCode'] || '—' }}</div>
+                      <small class="text-body-secondary">{{ 'Mã lịch' | translate }} #{{ a['scheduleId'] }}</small>
+                    </td>
+                    <td>
+                      <div>{{ display('plannedStart', a['plannedStart']) }}</div>
+                      <div>→ {{ display('plannedEnd', a['plannedEnd']) }}</div>
+                    </td>
+                    <td class="text-nowrap">
+                      <strong>{{ a['chargedHours'] | number:'1.0-4' }} {{ 'giờ' | translate }}</strong>
+                      @if (a['entitlementId'] == null) {
+                        <div class="small text-body-secondary">{{ 'Không trừ quỹ phép' | translate }}</div>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        </section>
+      }
+    }
     @if(selected?.['status']==='CHO_DUYET'&&!selected?.['withdrawnAt']){
 @if(selected?.['approvalStage']?.['stageStatus']==='PENDING'){<p class="alert alert-info">{{'Đơn chưa hoàn tất cấp 1. Hệ thống sẽ kiểm tra nhiệm kỳ trưởng phòng trước khi cho duyệt cuối.'|translate}}</p>}
      <label>{{ 'Ghi chú duyệt / lý do từ chối' | translate }}<textarea class="form-control" [(ngModel)]="note" maxlength="1000" [disabled]="saving"></textarea></label>
      @if(selected?.['evidenceReference']){<app-leave-evidence [requestId]="$any(selected!['requestId'])"/>}@if(selected?.['requestType']==='NGHI_VIEC'){<label class="my-3">{{ 'Ngày làm cuối được duyệt' | translate }}<input class="form-control" type="date" [(ngModel)]="approvedDate" (ngModelChange)="exitReady=false" [disabled]="saving"></label><app-resignation-review [requestId]="selected!['requestId']" [lastWorkingDate]="approvedDate" [refreshToken]="exitRefresh" [busy]="saving" (readinessChange)="exitReady=$event" (processRequest)="processExitIssue($event)"/>}
      <div class="detail-actions"><button class="action-danger" hrmBtn="danger-outline" hrmSize="md" [disabled]="saving||loading||!note.trim()" (click)="decision(false)">{{ 'Từ chối' | translate }}</button><button hrmBtn="primary" hrmSize="md" [disabled]="saving||loading||(selected?.['requestType']==='NGHI_VIEC'&&(!approvedDate||!exitReady))" (click)="decision(true)">{{ 'Duyệt cuối' | translate }}</button></div>
     }
+    <section class="mt-3 pt-3 border-top" aria-labelledby="request-history-title">
+      <h3 id="request-history-title" class="h6">{{ 'Lịch sử thao tác của đơn' | translate }}</h3>
+      @if (selected?.['history']; as history) {
+        <ul class="list-unstyled mb-0">
+          @for (entry of history; track entry['auditId']) {
+            <li class="border-bottom py-2 text-break">
+              <strong>{{ display('action', entry['action']) | translate }}</strong>
+              <div class="small text-body-secondary">
+                {{ entry['occurredAt'] | date:'dd/MM/yyyy HH:mm:ss':'+0700' }}
+                · {{ entry['actor'] || ('Hệ thống' | translate) }}
+              </div>
+              @if (entry['reason']) { <div>{{ entry['reason'] }}</div> }
+            </li>
+          } @empty {
+            <li class="text-body-secondary">{{ 'Chưa ghi nhận thao tác.' | translate }}</li>
+          }
+        </ul>
+      } @else if (loading) {
+        <p role="status" class="mb-0">{{ 'Đang tải…' | translate }}</p>
+      } @else {
+        <p class="mb-0 text-body-secondary">{{ 'Không tải được lịch sử thao tác của đơn.' | translate }}</p>
+      }
+    </section>
    }
   }
   @if(mode==='edit'){
@@ -104,7 +193,7 @@
     @for(field of fields;track field.key){
      <label>{{field.label | translate}}{{field.required?' *':''}}
       @if(field.type==='select'){
-       <select class="form-select" [name]="field.key" [attr.name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required" [disabled]="kind==='entitlements'&&!!selected&&(field.key==='employeeId'||field.key==='leaveTypeId')"><option [ngValue]="null">{{ 'Chọn ' | translate }}{{field.label.toLowerCase() | translate}}</option>@for(o of fieldOptions(field);track o['id']){@if(o['isActive']!==false||o['id']===body[field.key]){<option [ngValue]="o['id']">{{o['label']}}</option>}}</select>
+       <select class="form-select" [name]="field.key" [attr.name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required" [disabled]="!!selected && ((kind==='certificates' && field.key==='employeeId') || (kind==='entitlements' && (field.key==='employeeId'||field.key==='leaveTypeId')))"><option [ngValue]="null">{{ 'Chọn ' | translate }}{{field.label.toLowerCase() | translate}}</option>@for(o of fieldOptions(field);track o['id']){@if(o['isActive']!==false||o['id']===body[field.key]){<option [ngValue]="o['id']">{{o['label']}}</option>}}</select>
       }@else if(field.type==='checkbox'){<input type="checkbox" [name]="field.key" [attr.name]="field.key" [(ngModel)]="body[field.key]">}
       @else{<input class="form-control" [type]="field.type" [name]="field.key" [attr.name]="field.key" [(ngModel)]="body[field.key]" [required]="!!field.required" [attr.maxlength]="field.max||null" [min]="field.min??0" [step]="field.key==='entitledHours'?'0.0001':'1'">}
       @if(f.controls[field.key]?.invalid&&f.controls[field.key]?.touched){<span class="text-danger small">{{field.label | translate}}{{ ' chưa hợp lệ.' | translate }}</span>}
@@ -117,7 +206,7 @@
     }
     @if(invalidPeriod){<p class="text-danger small">{{ 'Ngày kết thúc kỳ (không bao gồm) phải sau ngày bắt đầu.' | translate }}</p>}
     @if(transferNeedsHeadWorkflow){<p class="alert alert-warning">{{ 'Nhân viên đang là trưởng phòng. Cần xử lý nhiệm kỳ trước khi điều chuyển.' | translate }} <a routerLink="/departments">{{ 'Quản lý trưởng phòng' | translate }}</a></p>}
-    <div class="form-actions"><button type="button" hrmBtn="secondary" hrmSize="md" [disabled]="saving" (click)="cancelEdit()">{{ 'Hủy' | translate }}</button><button hrmBtn="primary" hrmSize="md" [disabled]="saving||f.invalid||invalidPeriod||transferNeedsHeadWorkflow">{{(saving?'Đang lưu…':'Lưu thay đổi') | translate}}</button></div>
+    <div class="form-actions"><button type="button" hrmBtn="secondary" hrmSize="md" [disabled]="saving" (click)="cancelEdit()">{{ 'Hủy' | translate }}</button><button type="submit" hrmBtn="primary" hrmSize="md" [disabled]="saving||f.invalid||invalidPeriod||transferNeedsHeadWorkflow">{{(saving?'Đang lưu…':kind==='certificates'&&!selected?'Lưu bằng cấp / chứng chỉ':'Lưu thay đổi') | translate}}</button></div>
    </fieldset></form>
   }
  </section>

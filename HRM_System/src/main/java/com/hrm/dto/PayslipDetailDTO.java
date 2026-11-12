@@ -5,6 +5,17 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class PayslipDetailDTO {
+    private String positionName;
+    private BigDecimal actualWorkDays;
+    private BigDecimal standardWorkDays;
+
+    public String getPositionName() { return positionName; }
+    public void setPositionName(String positionName) { this.positionName = positionName; }
+    public BigDecimal getActualWorkDays() { return actualWorkDays; }
+    public void setActualWorkDays(BigDecimal actualWorkDays) { this.actualWorkDays = actualWorkDays; }
+    public BigDecimal getStandardWorkDays() { return standardWorkDays; }
+    public void setStandardWorkDays(BigDecimal standardWorkDays) { this.standardWorkDays = standardWorkDays; }
+
     private Long payslipId;
     private String payslipNumber;
     private LocalDateTime issuedAt;

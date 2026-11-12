@@ -53,6 +53,14 @@ public class PayrollInputPreparationService {
     }
 
     public Preparation prepare(LocalDate from, LocalDate to) {
+        return prepare(from, to, false);
+    }
+
+    Preparation prepareDraft(LocalDate from, LocalDate to) {
+        return prepare(from, to, true);
+    }
+
+    private Preparation prepare(LocalDate from, LocalDate to, boolean draft) {
         if (from == null || to == null || to.isBefore(from) || ChronoUnit.DAYS.between(from, to) > 365)
             throw new BusinessException(HttpStatus.BAD_REQUEST, "Kỳ lương phải từ 1 đến 366 ngày");
         var period = periods.getByDates(from, to);
@@ -62,7 +70,7 @@ public class PayrollInputPreparationService {
             Long employeeId = employee.getEmployeeId();
             try {
                 // A business failure can mark the source transaction rollback-only. Keep it local to this employee.
-                ready.add(employeeRead.execute(status -> readEmployee(employeeId, period)));
+                ready.add(employeeRead.execute(status -> readEmployee(employeeId, period, draft)));
             } catch (SourceFailure failure) {
                 issues.add(new EmployeeIssue(employeeId, employee.getEmployeeCode(), failure.stage,
                         failure.cause.getStatus().value(), failure.cause.getMessage()));
@@ -71,7 +79,7 @@ public class PayrollInputPreparationService {
         return new Preparation(period, List.copyOf(ready), List.copyOf(issues));
     }
 
-    private EmployeeInput readEmployee(Long employeeId, AllowancePeriod period) {
+    private EmployeeInput readEmployee(Long employeeId, AllowancePeriod period, boolean draft) {
         var employee = read(Stage.EMPLOYMENT, () -> employees.findByIdForUpdate(employeeId)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Không có nhân viên")));
         var hire = employee.getHireDate();
@@ -87,7 +95,7 @@ public class PayrollInputPreparationService {
                     new BusinessException(HttpStatus.CONFLICT, "Quan hệ làm việc không còn giao với kỳ"));
         }
         var segments = read(Stage.SALARY, () -> salaryRates.getRatesForPeriod(employeeId, from, to));
-        var allowanceResult = read(Stage.ALLOWANCE, () -> allowances.calculate(employeeId, period.periodId()));
+        var allowanceResult = read(Stage.ALLOWANCE, () -> draft ? allowances.calculateForDraft(employeeId, period.periodId()) : allowances.calculate(employeeId, period.periodId()));
         var decisionResult = read(Stage.DECISION, () -> decisions.getForPeriod(employeeId, period.periodId()));
         return new EmployeeInput(employeeId, employee.getEmployeeCode(), employee.getFullName(), from, to,
                 segments, allowanceResult, decisionResult);

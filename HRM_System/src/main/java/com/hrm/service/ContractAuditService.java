@@ -16,6 +16,20 @@ public class ContractAuditService {
         this.jdbc = jdbc;
     }
 
+    public record HistoryEntry(long auditId, String occurredAt, String action, String actor, String reason) {}
+
+    public java.util.List<HistoryEntry> history(Long id) {
+        return jdbc.query("""
+                SELECT l.audit_id, CONVERT(varchar(23), l.occurred_at, 126) AS occurred_at,
+                       l.action, a.username AS actor, l.reason
+                FROM dbo.audit_logs l
+                LEFT JOIN dbo.accounts a ON a.account_id = l.actor_account_id
+                WHERE l.target_table = 'contracts' AND l.target_record_key = ?
+                ORDER BY l.occurred_at DESC, l.audit_id DESC
+                """, (rs, row) -> new HistoryEntry(rs.getLong("audit_id"), rs.getString("occurred_at"),
+                        rs.getString("action"), rs.getString("actor"), rs.getString("reason")), id.toString());
+    }
+
     public boolean hasRenewal(Long id) {
         Long count = jdbc.queryForObject("""
                 select count_big(*) from dbo.audit_logs

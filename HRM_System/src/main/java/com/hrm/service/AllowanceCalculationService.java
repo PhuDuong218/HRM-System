@@ -42,6 +42,14 @@ public class AllowanceCalculationService {
 
     @Transactional
     public AllowanceCalculationResult calculate(Long employeeId, Long periodId) {
+        return calculate(employeeId, periodId, false);
+    }
+
+    AllowanceCalculationResult calculateForDraft(Long employeeId, Long periodId) {
+        return calculate(employeeId, periodId, true);
+    }
+
+    private AllowanceCalculationResult calculate(Long employeeId, Long periodId, boolean draft) {
         var employee = employees.findByIdForUpdate(employeeId)
                 .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Không có nhân viên"));
         var period = periods.get(periodId);
@@ -67,8 +75,8 @@ public class AllowanceCalculationService {
                 if (employee.getHireDate() != null) from = max(from, employee.getHireDate());
                 if (employee.getTerminationDate() != null) to = min(to, employee.getTerminationDate());
                 if (to.isBefore(from)) continue;
-                if (!"CALENDAR_DAY_PRORATION".equals(periodPolicy) || policyVersion == null
-                        || policyVersion.isBlank() || "UNCONFIRMED".equalsIgnoreCase(policyVersion.trim())) {
+                if (!draft && (!"CALENDAR_DAY_PRORATION".equals(periodPolicy) || policyVersion == null
+                        || policyVersion.isBlank() || "UNCONFIRMED".equalsIgnoreCase(policyVersion.trim()))) {
                     throw bad("THEO_KY chưa có chính sách được xác nhận");
                 }
             }
@@ -90,7 +98,7 @@ public class AllowanceCalculationService {
                 numerator = unitAmount.multiply(coveredDays);
                 raw = decimalRatio(numerator, divisor);
                 source = "payroll_periods/" + period.periodId();
-                version = policyVersion;
+                version = draft ? "DRAFT-CALENDAR-DAY-PRORATION" : policyVersion;
             } else {
                 for (int i = 0; i < effectiveDays; i++) {
                     var day = days.get(from.plusDays(i));

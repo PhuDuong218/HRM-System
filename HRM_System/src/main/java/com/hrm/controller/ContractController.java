@@ -34,6 +34,11 @@ public class ContractController {
         return service.getOne(id);
     }
 
+    @GetMapping("/{id}/history")
+    public java.util.List<com.hrm.service.ContractAuditService.HistoryEntry> history(@PathVariable Long id) {
+        return service.history(id);
+    }
+
     @GetMapping
     public PageResponse<ContractResponse> search(
             @RequestParam(required = false) Long employeeId,

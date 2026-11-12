@@ -8,7 +8,7 @@ import com.hrm.dto.PayrollPeriodRequestDTO;
 import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollLineRepository;
 import com.hrm.service.PayrollBatchService;
-import com.hrm.service.PayrollExecutionService;
+import com.hrm.service.DraftPayrollService;
 import com.hrm.service.PayrollPeriodService;
 import com.hrm.service.PersonnelScopeService;
 import com.hrm.model.PayrollDetail;
@@ -42,7 +42,7 @@ class PayrollManagementAuthorizationTest {
     PayrollPeriodService periods;
     PayrollDetailRepository details;
     PayrollLineRepository lines;
-    PayrollExecutionService execution;
+    DraftPayrollService execution;
     PersonnelScopeService scope;
     PayrollBatchController batches;
     PayrollPeriodController periodController;
@@ -52,7 +52,7 @@ class PayrollManagementAuthorizationTest {
     periods = mock(PayrollPeriodService.class);
     details = mock(PayrollDetailRepository.class); 
     lines = mock(PayrollLineRepository.class);
-    execution = mock(PayrollExecutionService.class);
+    execution = mock(DraftPayrollService.class);
     personnelScope = mock(PersonnelScopeService.class);
     employeeRepository = mock(com.hrm.repository.EmployeeRepository.class);
 
@@ -124,10 +124,26 @@ class PayrollManagementAuthorizationTest {
         var allowed=mock(PayrollDetail.class);when(allowed.getEmployeeId()).thenReturn(1L);when(allowed.getPayrollDetailId()).thenReturn(11L);
         var outside=mock(PayrollDetail.class);when(outside.getEmployeeId()).thenReturn(2L);when(outside.getPayrollDetailId()).thenReturn(12L);
         when(details.findByBatchId(5L)).thenReturn(java.util.List.of(allowed,outside));
-        when(scope.employees()).thenReturn(java.util.List.of(1L));
+        when(personnelScope.employees()).thenReturn(java.util.List.of(1L));
         var result=batches.getBatchDetails(5L).getBody();
         assertNotNull(result);assertEquals(1,result.size());assertEquals(1L,result.get(0).getEmployeeId());
         verify(lines,never()).findByPayrollDetailIdOrderByLineNoAsc(12L);
+    }
+    @Test void hrSeesMissingSalaryOnlyForAssignedEmployeesEvenWithoutPayrollDetails() {
+        login("HR", "PAYROLL_VIEW");
+        var employee = mock(com.hrm.model.Employee.class);
+        when(employee.getEmployeeId()).thenReturn(1L);
+        when(employee.getEmployeeCode()).thenReturn("KTV00001");
+        when(personnelScope.employees()).thenReturn(java.util.List.of(1L));
+        when(details.findEmployeesMissingSalary(5L)).thenReturn(java.util.List.of(1L, 2L));
+        when(employeeRepository.findAllById(java.util.Set.of(1L))).thenReturn(java.util.List.of(employee));
+
+        var result = batches.getBatchDetails(5L).getBody();
+        assertNotNull(result);
+        assertEquals(1, result.size());
+        assertEquals("KTV00001", result.get(0).getEmployeeCode());
+        assertTrue(result.get(0).isMissingSalary());
+        assertNull(result.get(0).getNetSalary());
     }
     @Test void hrCannotRunWholeCenterPayrollOperations() {
         login("HR","PAYROLL_MANAGE");

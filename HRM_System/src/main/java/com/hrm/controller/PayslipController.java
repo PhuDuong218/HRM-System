@@ -48,6 +48,11 @@ public class PayslipController {
         return ResponseEntity.ok(payslipService.renderPayslipHtml(payslipId));
     }
 
+    @GetMapping(value = "/payroll-detail/{detailId}/html", produces = MediaType.TEXT_HTML_VALUE + ";charset=UTF-8")
+    public ResponseEntity<String> viewPayrollDetailHtml(@PathVariable Long detailId) {
+        return viewPayslipHtml(payslipService.publishedPayslipId(detailId));
+    }
+
     private AuthenticatedAccount currentActor() {
         var actor = PersonnelScopeService.current();
         if (actor == null) throw denied();

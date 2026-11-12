@@ -381,6 +381,37 @@
           <dt class="col-sm-4">{{language.t("Loại chấm dứt")}}</dt>
           <dd class="col-sm-8">{{language.t(terminationReasonLabel(c.reasonType))}}</dd>
         </dl>
+        <section class="salary-section" aria-labelledby="contract-history-title">
+          <div class="d-flex justify-content-between align-items-center gap-2 mb-2">
+            <h3 id="contract-history-title" class="mb-0">{{ language.t("Lịch sử thao tác hợp đồng") }}</h3>
+            <button type="button" class="btn btn-outline-secondary btn-sm"
+              [disabled]="contractHistoryLoading" (click)="loadContractHistory(c.contractId)">
+              {{ language.t("Tải lại") }}
+            </button>
+          </div>
+          @if (contractHistoryLoading) {
+            <p role="status">{{ language.t("Đang tải…") }}</p>
+          } @else if (contractHistoryError) {
+            <p class="text-danger" role="alert">{{ language.t(contractHistoryError) }}</p>
+          } @else {
+            <ul class="list-unstyled mb-0">
+              @for (entry of contractHistory; track entry.auditId) {
+                <li class="border-bottom py-2 text-break">
+                  <strong>{{ language.t(auditActionLabel(entry.action)) }}</strong>
+                  <div class="small text-body-secondary">
+                    {{ entry.occurredAt.slice(0, 10).split('-').reverse().join('/') }}
+                    {{ entry.occurredAt.slice(11, 19) }} · {{ entry.actor || language.t("Hệ thống") }}
+                  </div>
+                  @if (entry.reason) {
+                    <div>{{ entry.reason }}</div>
+                  }
+                </li>
+              } @empty {
+                <li class="text-body-secondary">{{ language.t("Chưa ghi nhận thao tác.") }}</li>
+              }
+            </ul>
+          }
+        </section>
         <section class="salary-section" aria-labelledby="salary-rate-title">
           <h3 id="salary-rate-title">Tra cứu mức lương theo kỳ</h3>
 

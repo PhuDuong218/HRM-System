@@ -56,6 +56,7 @@ const labels: Readonly<Record<string, string>> = {
   LEAVE_ACCRUAL_POLICY_UPDATE: 'Cập nhật chính sách cấp quỹ phép',
   LEAVE_ENTITLEMENT_CREATE: 'Cấp quỹ phép',
   LEAVE_ENTITLEMENT_UPDATE: 'Điều chỉnh quỹ phép',
+  LEAVE_REQUEST_RETROACTIVE_CREATE: 'Nộp đơn bổ sung phép',
   LEAVE_REQUEST_CREATE: 'Nộp đơn nghỉ phép',
   LEAVE_APPROVAL_CANCEL: 'Hủy đơn nghỉ phép đã duyệt',
   RESIGNATION_REQUEST_CREATE: 'Nộp đơn nghỉ việc',

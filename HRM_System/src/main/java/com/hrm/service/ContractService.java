@@ -41,6 +41,11 @@ public class ContractService {
         this.historyGuard = historyGuard; this.termPolicy=termPolicy;
     }
 
+    public java.util.List<ContractAuditService.HistoryEntry> history(Long id) {
+        require(id);
+        return audit.history(id);
+    }
+
     public ContractResponse getOne(Long id) {
         return toResponse(require(id));
     }

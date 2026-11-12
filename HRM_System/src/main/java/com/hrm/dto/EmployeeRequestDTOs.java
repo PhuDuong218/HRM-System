@@ -17,7 +17,8 @@ public final class EmployeeRequestDTOs {
      */
     public record Leave(@NotNull @Positive Long leaveTypeId, @NotNull LocalDateTime leaveStart,
             @NotNull LocalDateTime leaveEnd, @NotBlank @Size(max = 1000) String reason,
-            @Size(max=500) String evidenceReference) {
+            @Size(max=500) String evidenceReference, boolean retroactive) {
+        public Leave(Long type,LocalDateTime start,LocalDateTime end,String reason,String evidence){this(type,start,end,reason,evidence,false);}
         public Leave(Long type,LocalDateTime start,LocalDateTime end,String reason){this(type,start,end,reason,null);}
     }
 

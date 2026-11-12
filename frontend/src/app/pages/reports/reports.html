@@ -31,7 +31,7 @@
   }
 
   @if (exportError) { <div [hrmNotice]="exportError" noticeKind="error" class="alert alert-danger mt-3 mb-0" role="alert">{{ exportError | translate }}</div> }
-  <div #reportResults class="report-results" [style.min-height.px]="loading && loadingHeight ? loadingHeight : null" [attr.aria-busy]="loading">
+  <div #reportResults [appDetailFocus]="focusTarget && !loading && !['movement','department','trend','daily'].includes(focusTarget) ? focusTarget : null" class="report-results" [style.min-height.px]="loading && loadingHeight ? loadingHeight : null" [attr.aria-busy]="loading">
   @if (loading) {
     <div class="report-state muted" role="status">{{ 'Đang tải báo cáo…' | translate }}</div>
   } @else if (error) {
@@ -42,7 +42,7 @@
       <div class="summary-stat"><span class="status-dot active-dot" aria-hidden="true"></span><div><span>{{ 'Đang làm việc' | translate }}</span><strong>{{ number(employeeStatus('DANG_LAM')) }}</strong></div></div>
       <div class="summary-stat"><span class="status-dot retired-dot" aria-hidden="true"></span><div><span>{{ 'Đã nghỉ việc' | translate }}</span><strong>{{ number(employeeStatus('DA_NGHI')) }}</strong></div></div>
     </div>
-    <div class="employee-section-heading"><div><h3>{{ 'Biến động nhân sự trong kỳ' | translate }}</h3><p>{{ 'So sánh với kỳ liền trước tương ứng' | translate }}</p></div></div>
+    <div class="employee-section-heading" [appDetailFocus]="focusTarget === 'movement'"><div><h3>{{ 'Biến động nhân sự trong kỳ' | translate }}</h3><p>{{ 'So sánh với kỳ liền trước tương ứng' | translate }}</p></div></div>
     @if (movementLoading) { <p class="muted small" role="status">{{ 'Đang tải biến động nhân sự…' | translate }}</p> }
     @else if (movementError) { <div class="alert alert-warning" role="alert">{{ movementError | translate }}</div> }
     @else {
@@ -51,7 +51,7 @@
       @else if (comparisonError) { <p class="report-note" role="status">{{ comparisonError | translate }}</p> }
       @else if (previousFilters; as previous) { <div class="comparison-note"><span class="comparison-label">{{ 'Kỳ trước' | translate }}</span><strong>{{ date(previous.fromDate) }} – {{ date(previous.toDate) }}</strong></div> }
     }
-    <div class="employee-section-heading"><div><h3>{{ 'Cơ cấu nhân sự' | translate }}</h3><p>{{ 'So sánh số nhân viên trong từng nhóm' | translate }}</p></div><span>{{ 'Thanh biểu thị so với nhóm lớn nhất' | translate }}</span></div>
+    <div class="employee-section-heading" [appDetailFocus]="focusTarget === 'department'"><div><h3>{{ 'Cơ cấu nhân sự' | translate }}</h3><p>{{ 'So sánh số nhân viên trong từng nhóm' | translate }}</p></div><span>{{ 'Thanh biểu thị so với nhóm lớn nhất' | translate }}</span></div>
     <div class="group-grid">
       @for (group of employeeGroups; track group.label; let i = $index) {
         <article class="group-card" [class.group-teal]="i === 1" [class.group-violet]="i === 2" [class.group-amber]="i === 3">
@@ -113,6 +113,35 @@
     @else { <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã nhân viên</th><th>Nhân viên</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th></tr></thead><tbody>@for (item of details; track item.contractId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ date(item.startDate) }}</td><td>{{ date(item.endDate) }}</td></tr> }</tbody></table></div><div class="report-pagination"><span>{{ number(detailTotal) }} hợp đồng · Trang {{ detailPage + 1 }}/{{ detailPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage === 0" (click)="loadDetails(detailKind, detailPage - 1)">Trước</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage + 1 >= detailPages" (click)="loadDetails(detailKind, detailPage + 1)">Sau</button></div> }
     </section>
   } @else if (workReport; as report) {
+    @if (focusTarget === 'daily' || focusTarget === 'trend') {
+      <section class="surface mb-3" [appDetailFocus]="focusTarget">
+        @if (focusTarget === 'daily') {
+          <h3>Trạng thái nhân sự trong ngày</h3>
+          @if (overviewStatus; as status) {
+            <p>{{ date(status.workDate) }}</p>
+            <div class="metric-grid">
+              <div class="metric"><span>Đi làm</span><strong>{{ number(status.present) }}</strong></div>
+              <div class="metric"><span>Vắng</span><strong>{{ number(status.absent) }}</strong></div>
+              <div class="metric"><span>Nghỉ phép</span><strong>{{ number(status.leave) }}</strong></div>
+              <div class="metric"><span>Thiếu check-in/check-out</span><strong>{{ number(status.missing) }}</strong></div>
+            </div>
+          }
+        } @else {
+          <h3>Xu hướng tăng ca và đi muộn</h3>
+          @if (overviewMonths.length) {
+            <table class="table">
+              <thead><tr><th scope="col">Tháng</th><th scope="col">Đơn OT đã xác nhận</th><th scope="col">Lượt đi muộn</th></tr></thead>
+              <tbody>@for (month of overviewMonths; track month.month) {
+                <tr><th scope="row">{{ month.month }}</th><td>{{ number(month.overtime) }}</td><td>{{ number(month.late) }}</td></tr>
+              }</tbody>
+            </table>
+          }
+        }
+        @if (overviewDataError) { <p role="alert">Không tải được số liệu.</p> }
+        @else if (!overviewStatus && !overviewMonths.length) { <p role="status">Đang tải số liệu…</p> }
+      </section>
+    }
+
     <p class="period-label">{{ 'Kỳ báo cáo: ' | translate }}{{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
     <div class="metric-grid">
       <div class="metric"><span>{{ 'Bản ghi đi làm' | translate }}</span><strong>{{ number(report.confirmedWorkDays) }}</strong><small>{{ 'Đã xác nhận' | translate }}</small></div>
@@ -128,7 +157,7 @@
     <div class="batch-heading"><h3>{{ 'Theo dõi theo tháng' | translate }}</h3><span class="muted small">{{ 'Thanh biểu thị giờ tăng ca' | translate }}</span></div>
     @if (workTrendLoading) { <p class="report-note" role="status">{{ 'Đang tải số liệu theo tháng…' | translate }}</p> }
     @else if (workTrendError) { <p class="report-note" role="status">{{ workTrendError | translate }}</p> }
-    @else { <div class="trend-list">@for (month of workMonths; track month.label) { <div class="work-trend-row"><strong>{{ month.label }}</strong><span>{{ 'Đi làm: ' | translate }}{{ number(month.report.confirmedWorkDays) }} · {{ 'Vắng: ' | translate }}{{ number(month.report.confirmedAbsentDays) }} · {{ 'Nghỉ phép: ' | translate }}{{ number(month.report.approvedLeaveHours) }} {{ 'giờ' | translate }}</span><div class="trend-track"><span [style.width.%]="month.report.approvedOvertimeHours / workMax * 100"></span></div><strong>{{ number(month.report.approvedOvertimeHours) }} {{ 'giờ OT' | translate }}</strong></div> }</div> }
+    @else { <div class="trend-list" >@for (month of workMonths; track month.label) { <div class="work-trend-row"><strong>{{ month.label }}</strong><span>{{ 'Đi làm: ' | translate }}{{ number(month.report.confirmedWorkDays) }} · {{ 'Vắng: ' | translate }}{{ number(month.report.confirmedAbsentDays) }} · {{ 'Nghỉ phép: ' | translate }}{{ number(month.report.approvedLeaveHours) }} {{ 'giờ' | translate }}</span><div class="trend-track"><span [style.width.%]="month.report.approvedOvertimeHours / workMax * 100"></span></div><strong>{{ number(month.report.approvedOvertimeHours) }} {{ 'giờ OT' | translate }}</strong></div> }</div> }
   } @else if (payrollReport; as report) {
     <p class="period-label">{{ 'Kỳ báo cáo:' | translate }} {{ date(report.fromDate) }} – {{ date(report.toDate) }}</p>
     <div class="metric-grid payroll-metrics">

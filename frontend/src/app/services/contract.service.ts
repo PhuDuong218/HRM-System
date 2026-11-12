@@ -18,6 +18,14 @@ import {
   SalaryTermChangeRequest,
 } from "../models/contract.model";
 
+export interface ContractHistoryEntry {
+  auditId: number;
+  occurredAt: string;
+  action: string;
+  actor: string | null;
+  reason: string | null;
+}
+
 @Injectable({ providedIn: "root" })
 export class ContractService {
   private http = inject(HttpClient);
@@ -34,6 +42,10 @@ export class ContractService {
       `${API_BASE_URL}/contracts`,
       { params },
     );
+  }
+
+  history(id: number) {
+    return this.http.get<ContractHistoryEntry[]>(`${API_BASE_URL}/contracts/${id}/history`);
   }
 
   get(id: number) {

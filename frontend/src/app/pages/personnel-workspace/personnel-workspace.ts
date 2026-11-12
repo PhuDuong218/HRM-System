@@ -13,7 +13,7 @@ import {RowViewDirective} from '../../shared/row-view.directive';
 import {StatusBadge} from '../../shared/ui/status-badge';
 import {Feedback} from '../../shared/ui/feedback';
 import {HrmButton} from '../../shared/ui/button';
-import {formatDate} from '@angular/common';
+import {DatePipe,DecimalPipe,formatDate,formatNumber} from '@angular/common';
 import {LeaveWorkflowGuide} from '../../shared/leave-workflow-guide';
 import {ManagementPageBase} from '../../shared/management-page.base';
 import {PageHeader} from '../../shared/page-header';
@@ -37,7 +37,7 @@ const definitions={
  audit:{description:'Tra cứu ai đã thay đổi dữ liệu, thời điểm và lý do thực hiện.',title:'Lịch sử thay đổi',id:'auditId',columns:['occurredAt','action','targetTable','recordKey','actorName','reason'],fields:[]}
 };
 export const labels:Record<string,string>={entitlementId:'Mã quỹ phép',leaveTypeId:'Mã loại nghỉ',targetTable:'Đối tượng',recordKey:'Mã bản ghi',correlationId:'Mã liên kết giao dịch',employeeId:'Nhân viên',employeeCode:'Mã nhân viên',employeeName:'Họ tên',departmentName:'Phòng ban',positionName:'Chức vụ',effectiveFrom:'Có hiệu lực từ',effectiveTo:'Đến trước ngày',levelName:'Trình độ',major:'Chuyên ngành',institution:'Nơi đào tạo / cấp',graduationYear:'Năm tốt nghiệp',isPrimary:'Trình độ chính',leaveTypeName:'Loại nghỉ',periodStart:'Từ ngày',periodEnd:'Đến trước ngày',entitledHours:'Giờ phép được cấp',requestCode:'Mã đơn',requestType:'Loại đơn',status:'Trạng thái',submittedAt:'Ngày nộp',processedAt:'Ngày xử lý',processedBy:'Người xử lý',reason:'Lý do',rejectionReason:'Lý do từ chối',withdrawnAt:'Ngày rút',withdrawalReason:'Lý do rút',leaveStart:'Bắt đầu nghỉ',leaveEnd:'Kết thúc nghỉ',requestedLastWorkingDate:'Ngày làm cuối đề nghị',approvedLastWorkingDate:'Ngày làm cuối đã duyệt',executedAt:'Đã thực hiện lúc',occurredAt:'Thời điểm (UTC)',action:'Hành động',actorName:'Người thực hiện',actorAccountId:'Tài khoản thực hiện',noticeWarning:'Đối chiếu báo trước',decisionType:'Loại quyết định',decisionNumber:'Số quyết định',evidenceReference:'Tham chiếu minh chứng',issuedDate:'Ngày cấp',expiryDate:'Ngày hết hạn',validityStatus:'Thời hạn chứng chỉ',highest:'Trình độ cao nhất còn hạn',rankOrder:'Thứ bậc',certificateNumber:'Số chứng chỉ',chargedHours:'Giờ trừ phép',remainingHours:'Giờ phép còn',usedHours:'Giờ phép đã dùng'};
-@Component({standalone:true,imports:[LeaveEvidence,MyLeaveRequests,LeaveQuota,SearchAssistDirective,ResignationReview,EditFormDirective,HrmNotice,RowViewDirective,StatusBadge,Feedback,HrmButton,LeaveWorkflowGuide,RouterLink,PageHeader,Pagination,FormsModule,RecordWorkspace,TranslatePipe],templateUrl:'./personnel-workspace.html',styles:[`.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:20px 0}.editor{display:grid;gap:14px;min-width:0}label{display:grid;gap:6px}.detail-grid dt{color:#60788e;font-size:12px;margin-top:12px}.detail-grid dd{overflow-wrap:anywhere}.selected td{background:#eef5fd}td{overflow-wrap:anywhere;max-width:240px}`]})
+@Component({standalone:true,imports:[DatePipe,DecimalPipe,LeaveEvidence,MyLeaveRequests,LeaveQuota,SearchAssistDirective,ResignationReview,EditFormDirective,HrmNotice,RowViewDirective,StatusBadge,Feedback,HrmButton,LeaveWorkflowGuide,RouterLink,PageHeader,Pagination,FormsModule,RecordWorkspace,TranslatePipe],templateUrl:'./personnel-workspace.html',styles:[`.toolbar{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin:20px 0}.editor{display:grid;gap:14px;min-width:0}label{display:grid;gap:6px}.detail-grid dt{color:#60788e;font-size:12px;margin-top:12px}.detail-grid dd{overflow-wrap:anywhere}.request-detail-grid{display:grid;grid-template-columns:minmax(0,36%) minmax(0,1fr);column-gap:12px;row-gap:8px;align-items:baseline}.request-detail-grid dt,.request-detail-grid dd{margin:0;min-width:0;overflow-wrap:anywhere}.selected td{background:#eef5fd}td{overflow-wrap:anywhere;max-width:240px}`]})
 export class PersonnelWorkspacePage extends ManagementPageBase {
  ownNotificationId:number|null=null;ownRequestType="NGHI_PHEP";ownLeaveOpen=false;get isHr(){return this.auth.profile()?.role==='HR';}
  get showLegacyWorkspace(){return this.kind!=='entitlements'&&!(this.kind==='requests'&&this.ownLeaveOpen);}
@@ -57,7 +57,11 @@ export class PersonnelWorkspacePage extends ManagementPageBase {
  displayCode(value:unknown):string{return String(value??'');}
 
  private api=inject(PersonnelWorkspaceService);private destroy=inject(DestroyRef);private route=inject(ActivatedRoute);private request?:Subscription;
- kind:keyof typeof definitions='assignments';get config(){return definitions[this.kind];}get fields():Field[]{return this.config.fields;}
+ kind:keyof typeof definitions='assignments';get config(){return definitions[this.kind];}get fields():Field[]{
+   return this.kind==='certificates' && !this.selected
+    ? [{key:'employeeId',label:'Nhân viên',type:'select',options:'employees',required:true}, ...this.config.fields]
+    : this.config.fields;
+ }
  labels=labels;rows:PersonnelRow[]=[];selected:PersonnelRow|null=null;body:PersonnelRow={};options:Record<string,PersonnelRow[]>={};employeeId:number|null=null;page=0;pages=0;total=0;mode='';status='';requestType='';note='';approvedDate='';table='';recordId:number|null=null;balances:PersonnelRow[]=[];private balanceRequest?:Subscription;lookupError='';private auth=inject(AuthService);get admin(){return this.auth.profile()?.role==='ADMIN';}actorId:number|null=null;fromUtc='';toUtc='';
  tables=[['employees','Nhân viên'],['departments','Phòng ban'],['positions','Chức vụ'],['qualification_levels','Trình độ'],['employee_qualifications','Bằng cấp'],['leave_types','Loại nghỉ'],['leave_entitlements','Quỹ phép'],['employee_requests','Đơn từ'],['contracts','Hợp đồng'],['employee_decisions','Khen thưởng / Kỷ luật'],['accounts','Tài khoản'],['hr_department_scopes','Phạm vi phòng ban'],['payroll_batches','Đợt lương'],['work_schedules','Lịch làm việc'],['overtime_requests','Tăng ca'],['contract_types','Loại hợp đồng']];
  get auditTables(){return this.admin?this.tables:this.tables.filter(([key])=>['employees','departments','employee_qualifications','leave_entitlements','employee_requests','contracts','employee_decisions','work_schedules','overtime_requests'].includes(key));}
@@ -95,8 +99,54 @@ export class PersonnelWorkspacePage extends ManagementPageBase {
  }
  filter(){if(this.loading||this.saving)return;if(this.yearFrom&&this.yearTo&&this.yearFrom>this.yearTo){this.error='Năm bắt đầu phải nhỏ hơn hoặc bằng năm kết thúc';return;}this.applied={keyword:this.keyword,departmentId:this.departmentId,positionId:this.positionId,levelId:this.levelId,primaryFilter:this.primaryFilter,validity:this.validity,minimumRank:this.minimumRank,yearFrom:this.yearFrom,yearTo:this.yearTo,asOf:this.asOf,employeeId:this.employeeId,status:this.status,requestType:this.requestType,table:this.table,recordId:this.recordId,actorId:this.actorId,fromUtc:this.fromUtc,toUtc:this.toUtc};this.balanceRequest?.unsubscribe();this.rows=[];this.total=0;this.pages=0;this.close();this.balances=[];this.load(0);}
  open(row:PersonnelRow|null){if(this.saving)return;this.error='';this.message='';this.selected=row;this.note='';this.approvedDate='';this.exitReady=false;this.body=row?{...row}:{employeeId:this.employeeId,isPrimary:false};this.mode=row?'detail':'edit';
+ if(row&&this.kind==='certificates')this.loadQualificationHistory(row);
  if(row&&this.kind==='requests'){this.loading=true;this.detailRequest?.unsubscribe();this.detailRequest=this.api.get(`/employee-requests/${row['requestId']}`).pipe(takeUntilDestroyed(this.destroy),finalize(()=>this.loading=false)).subscribe({next:r=>{this.selected=r;if(r['requestType']==='NGHI_VIEC'){const draft=this.exitFlow.read(this.auth.profile()?.username||'',Number(r['requestId']));this.approvedDate=draft?.lastWorkingDate||r['approvedLastWorkingDate']||r['requestedLastWorkingDate']||'';if(draft)this.note=draft.note;}},error:e=>this.error=errorMessage(e)});}}
- close(){if(this.saving)return;this.detailRequest?.unsubscribe();this.mode='';this.selected=null;}
+ qualificationHistory: PersonnelRow[] = [];
+ qualificationHistoryError = '';
+ qualificationHistoryLoading = false;
+ private qualificationHistoryRequest?: Subscription;
+
+ loadQualificationHistory(row: PersonnelRow, page = 0): void {
+  this.qualificationHistoryRequest?.unsubscribe();
+  this.qualificationHistory = [];
+  this.qualificationHistoryError = '';
+  this.qualificationHistoryLoading = true;
+  this.qualificationHistoryRequest = this.api.page('/audit-logs', {
+   targetTable: 'employee_qualifications', recordKey: String(row['employeeQualificationId']), page, size: 10,
+  }).pipe(takeUntilDestroyed(this.destroy), finalize(() => this.qualificationHistoryLoading = false))
+   .subscribe({
+    next: result => {
+     this.qualificationHistory = result.content;
+     this.qualificationHistoryPage = page;
+     this.qualificationHistoryPages = result.totalPages;
+    },
+    error: error => this.qualificationHistoryError = errorMessage(error),
+   });
+ }
+
+ qualificationHistoryPage = 0;
+ qualificationHistoryPages = 0;
+
+ qualificationChanges(entry: PersonnelRow): { label: string; before: string; after: string }[] {
+  const fields = {
+   qualification_level_id: 'qualificationLevelId', major: 'major', institution: 'institution',
+   graduation_year: 'graduationYear', certificate_number: 'certificateNumber',
+   issued_date: 'issuedDate', expiry_date: 'expiryDate', is_primary: 'isPrimary',
+  };
+  try {
+   if (!entry['beforeDataJson'] || !entry['afterDataJson']) return [];
+   const before = JSON.parse(entry['beforeDataJson']) || {};
+   const after = JSON.parse(entry['afterDataJson'] || '{}') || {};
+   return Object.entries(fields).flatMap(([column, key]) => {
+    const oldValue = before[column] ?? before[key] ?? null;
+    const newValue = after[column] ?? after[key] ?? null;
+    if (oldValue === newValue || !(column in before || key in before || column in after || key in after)) return [];
+    return [{ label: labels[key] || 'Trình độ', before: this.display(key, oldValue), after: this.display(key, newValue) }];
+   });
+  } catch { return []; }
+ }
+
+ close(){if(this.saving)return;this.detailRequest?.unsubscribe();this.qualificationHistoryRequest?.unsubscribe();this.mode='';this.selected=null;}
  cancelEdit(){if(this.saving)return;if(this.selected){this.body={...this.selected};this.mode='detail';}else this.close();}
  resetFilters(){if(this.saving)return;this.keyword='';this.departmentId=null;this.positionId=null;this.levelId=null;this.primaryFilter='';this.validity='';this.minimumRank=null;this.yearFrom=null;this.yearTo=null;this.asOf='';this.employeeId=null;this.status='';this.requestType='';this.recordId=null;this.table='';this.actorId=null;this.fromUtc='';this.toUtc='';this.filter();}
  get invalidPeriod(){return this.kind==='entitlements'&&!!this.body['periodStart']&&!!this.body['periodEnd']&&this.body['periodEnd']<=this.body['periodStart'];}
@@ -116,7 +166,14 @@ export class PersonnelWorkspacePage extends ManagementPageBase {
   return accountId != null ? this.i18n.t('Tài khoản thực hiện') + ' #' + accountId
     : this.i18n.t('Không ghi nhận');
  }
- display(key:string,value:unknown):string{if(key==='action')return auditActionLabel(value);if(value===null||value===undefined||value==='')return '—';if(typeof value==='string'){try{if(key==='occurredAt')return formatDate(value,'dd/MM/yyyy HH:mm:ss','en','UTC');if(['submittedAt','processedAt','withdrawnAt','executedAt'].includes(key))return formatDate(value,'dd/MM/yyyy HH:mm','en','+0700');if(['periodStart','periodEnd'].includes(key))return /^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8,10)+'/'+value.slice(5,7)+'/'+value.slice(0,4):formatDate(value,'dd/MM/yyyy','en','+0700');}catch{/* Keep the original value if a legacy date cannot be parsed. */}}if(key==='targetTable')return this.tables.find(t=>t[0]===value)?.[1]||String(value);if(key==='employeeId'){return this.options['employees']?.find(e=>e['id']===Number(value))?.['label']||String(value);}const lookup:Record<string,string>={departmentId:'departments',positionId:'positions',qualificationLevelId:'levels',leaveTypeId:'leaveTypes'};if(lookup[key])return this.options[lookup[key]]?.find(o=>o['id']===Number(value))?.['label']||String(value);if(typeof value==='boolean')return this.i18n.t(value?'Có':'Không');const dictionary:Record<string,string>={PENDING:'Chờ trưởng phòng',APPROVED:'Đã duyệt cấp 1',REJECTED:'Từ chối',SKIPPED:'Chuyển thẳng HR/ADMIN',LEGACY:'Quy trình trước đây',NO_EXPIRY:'Không thời hạn',VALID:'Còn hạn',EXPIRING:'Sắp hết hạn (30 ngày)',EXPIRED:'Đã hết hạn',DA_HUY:'Đã hủy',CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',NGHI_PHEP:'Nghỉ phép',NGHI_VIEC:'Nghỉ việc'};return dictionary[String(value)]?this.i18n.t(dictionary[String(value)]):String(value);}
+ allocationHours(rows: PersonnelRow[], quotaOnly = false): string {
+  const hours = rows.reduce((sum, row) => {
+   if (quotaOnly && row['entitlementId'] == null) return sum;
+   return sum + Number(row['chargedHours'] ?? 0);
+  }, 0);
+  return formatNumber(hours, 'en', '1.0-4');
+ }
+ display(key:string,value:unknown):string{if(key==='action')return auditActionLabel(value);if(value===null||value===undefined||value==='')return '—';if(typeof value==='string'){try{if(['plannedStart','plannedEnd'].includes(key))return formatDate(value,'dd/MM/yyyy HH:mm','en');if(key==='occurredAt')return formatDate(value,'dd/MM/yyyy HH:mm:ss','en','UTC');if(['submittedAt','processedAt','withdrawnAt','executedAt'].includes(key))return formatDate(value,'dd/MM/yyyy HH:mm','en','+0700');if(['periodStart','periodEnd','workDate'].includes(key))return /^\d{4}-\d{2}-\d{2}$/.test(value)?value.slice(8,10)+'/'+value.slice(5,7)+'/'+value.slice(0,4):formatDate(value,'dd/MM/yyyy','en','+0700');}catch{/* Keep the original value if a legacy date cannot be parsed. */}}if(key==='targetTable')return this.tables.find(t=>t[0]===value)?.[1]||String(value);if(key==='employeeId'){return this.options['employees']?.find(e=>e['id']===Number(value))?.['label']||String(value);}const lookup:Record<string,string>={departmentId:'departments',positionId:'positions',qualificationLevelId:'levels',leaveTypeId:'leaveTypes'};if(lookup[key])return this.options[lookup[key]]?.find(o=>o['id']===Number(value))?.['label']||String(value);if(typeof value==='boolean')return this.i18n.t(value?'Có':'Không');const dictionary:Record<string,string>={PENDING:'Chờ trưởng phòng',APPROVED:'Đã duyệt cấp 1',REJECTED:'Từ chối',SKIPPED:'Chuyển thẳng HR/ADMIN',LEGACY:'Quy trình trước đây',NO_EXPIRY:'Không thời hạn',VALID:'Còn hạn',EXPIRING:'Sắp hết hạn (30 ngày)',EXPIRED:'Đã hết hạn',DA_HUY:'Đã hủy',CHO_DUYET:'Chờ duyệt',DA_DUYET:'Đã duyệt',TU_CHOI:'Từ chối',NGHI_PHEP:'Nghỉ phép',NGHI_VIEC:'Nghỉ việc'};return dictionary[String(value)]?this.i18n.t(dictionary[String(value)]):String(value);}
  detailEntries(){return Object.entries(this.selected||{}).filter(([k,v])=>!['beforeDataJson','afterDataJson','allocations'].includes(k)&&labels[k]&&v!==null);}
  snapshot(key:string):[string,string][]{const rows:[string,string][]=[];const flatten=(value:unknown,prefix='')=>{if(value&&typeof value==='object'){for(const [k,v] of Object.entries(value))flatten(v,prefix?(prefix+' / '+(this.i18n.t(labels[k]||k))):(this.i18n.t(labels[k]||k)));}else rows.push([prefix,this.display(prefix,value)]);};try{flatten(JSON.parse(this.selected?.[key]||'{}'));return rows;}catch{return [['Nội dung','Không đọc được dữ liệu lịch sử.']];}}
  save(form:NgForm){if(this.saving||form.invalid||this.transferNeedsHeadWorkflow)return;this.error='';const body:PersonnelRow={};for(const f of this.fields){let v=this.body[f.key];if(f.type==='number'&&v!==null&&v!==undefined&&v!=='')v=Number(v);body[f.key]=v===''||v===undefined?null:v;}
@@ -126,12 +183,23 @@ export class PersonnelWorkspacePage extends ManagementPageBase {
  if(this.kind==='entitlements'&&(!Number.isFinite(body['entitledHours'])||body['entitledHours']<=0)){this.error='Số giờ phép phải lớn hơn 0.';return;}
  if(this.kind==='entitlements'&&body['periodEnd']<=body['periodStart']){this.error='Ngày kết thúc kỳ (không bao gồm) phải sau ngày bắt đầu.';return;}
  let path='',method='POST';if(this.kind==='assignments'){const target=Number(body['employeeId']);if(!Number.isSafeInteger(target)||target<=0){this.error='Chọn nhân viên cần điều chuyển.';return;}delete body['employeeId'];path=`/employees/${target}/transfer`;method='PUT';}
- if(this.kind==='certificates'){path=this.selected?`/employee-qualifications/${this.selected['employeeQualificationId']}`:`/employees/${this.employeeId}/qualifications`;if(this.selected)method='PUT';}
+ if(this.kind==='certificates'){
+  const target = Number(this.selected?.['employeeId'] ?? body['employeeId']);
+  if(!Number.isSafeInteger(target)||target<=0){this.error='Chọn nhân viên cần thêm bằng cấp.';return;}
+  if(!String(body['reason'] ?? '').trim()){this.error='Nhập lý do thay đổi.';return;}
+  delete body['employeeId'];
+  path=this.selected?`/employee-qualifications/${this.selected['employeeQualificationId']}`:`/employees/${target}/qualifications`;
+  if(this.selected)method='PUT';
+  this.runCommand(this.api.write(method,path,body),row=>{
+   this.selected=row;this.body={...row};this.mode='detail';this.loadQualificationHistory(row);this.load(this.page);
+  },'Đã lưu bằng cấp và ghi lịch sử thao tác.');
+  return;
+ }
  if(this.kind==='entitlements'){path='/leave-entitlements'+(this.selected?'/'+this.selected['entitlementId']:'');if(this.selected)method='PUT';}
  this.write(method,path,body);}
  write(method:string,path:string,body:PersonnelRow={}){if(this.saving)return;this.runCommand(this.api.write(method,path,body).pipe(tap({error:()=>{if(path.endsWith('/approve')&&this.selected?.['requestType']==='NGHI_VIEC'){this.exitReady=false;this.exitRefresh++;}}})),()=>{if(this.kind==='requests'&&(/\/(approve|reject)$/.test(path)))this.exitFlow.clear(Number(this.selected?.['requestId']));this.close();this.load(this.page);});}
 
- primary(){if(!this.note.trim()){this.error="Nhập lý do thay đổi.";return;}if(!this.selected||this.saving||this.primarySelected)return;this.runCommand(this.api.write('PUT',`/employee-qualifications/${this.selected['employeeQualificationId']}/primary`,{reason:this.note.trim()}),row=>{this.selected=row;this.body={...row};this.mode='detail';this.load(0);},'Đã cập nhật trình độ chính và lưu lịch sử.');}
+ primary(){if(!this.note.trim()){this.error="Nhập lý do thay đổi.";return;}if(!this.selected||this.saving||this.primarySelected)return;this.runCommand(this.api.write('PUT',`/employee-qualifications/${this.selected['employeeQualificationId']}/primary`,{reason:this.note.trim()}),row=>{this.selected=row;this.body={...row};this.mode='detail';this.loadQualificationHistory(row);this.load(0);},'Đã cập nhật trình độ chính và lưu lịch sử.');}
  async removeCertificate(){if(!this.note.trim()){this.error="Nhập lý do thay đổi.";return;}if(this.selected&&(await this.confirmAction('Gỡ bằng cấp này khỏi hồ sơ? Lịch sử vẫn được giữ.')))this.write('DELETE',`/employee-qualifications/${this.selected['employeeQualificationId']}`,{reason:this.note.trim()});}
  async cancelApproved(){if(!this.selected?.['canCancelLeave']||this.saving)return;if(!this.note.trim()){this.error='Nhập lý do hủy đơn.';return;}if((await this.confirmAction('Xác nhận hủy đơn nghỉ phép? Quỹ đã dùng được hoàn lại nếu đủ điều kiện.')))this.write('POST',`/employee-requests/${this.selected['requestId']}/cancel-leave`,{reason:this.note.trim()});}
  async decision(approve:boolean){if(!this.selected||this.saving)return;if(approve&&this.selected['requestType']==='NGHI_VIEC'&&!this.exitReady){this.error='Hãy kiểm tra và hoàn tất các mục bàn giao trước khi duyệt cuối.';return;}if(!approve&&!this.note.trim()){this.error='Nhập lý do từ chối.';return;}if(approve&&this.selected['requestType']==='NGHI_VIEC'&&!this.approvedDate){this.error='Chọn ngày làm cuối được duyệt.';return;}if(!(await this.confirmAction(approve?'Xác nhận duyệt đơn?':'Xác nhận từ chối đơn?')))return;this.write('POST',`/employee-requests/${this.selected['requestId']}/${approve?'approve':'reject'}`,approve?{approvedLastWorkingDate:this.approvedDate||null,note:this.note.trim()||null}:{reason:this.note.trim()});}

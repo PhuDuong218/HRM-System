@@ -286,7 +286,7 @@ class EmployeeRequestWorkflowIntegrationTest {
         schedule(day.minusDays(1),0);
         fails(400,()->requests.leave(new Leave(type,day.minusDays(1).atTime(8,0),day.minusDays(1).atTime(17,0),"Retro"),worker));
         assertEquals(7,leaveRules.get(type).retroactiveDays());
-        long request=id(requests.leave(new Leave(type,day.minusDays(1).atTime(8,0),day.minusDays(1).atTime(17,0),"Retro","DOC-QA-1"),worker));
+        long request=id(requests.leave(new Leave(type,day.minusDays(1).atTime(8,0),day.minusDays(1).atTime(17,0),"Retro","DOC-QA-1",true),worker));
         assertEquals("DOC-QA-1",requests.detail(request,worker).get("evidenceReference"));requests.approve(request,new Decision(null,"verified"),admin);hours("9");
     });}
     @Test void crossPeriodLeaveChargesEachEntitlementSeparately(){rollback(()->{

@@ -31,5 +31,38 @@ export class DepartmentWorkspacePage {
  startEdit(row?:Row){if(this.saving)return;this.selected=row||{};this.detail=null;this.editing=true;this.detailError='';this.form={employeeId:row?.['employeeId']||null,shiftId:row?.['shiftId']||null,workDate:row?.['workDate']||this.date(new Date()),note:row?.['note']||''};}
  async cancelSchedule(){const id=this.selected?.['id'];if(!id||this.saving)return;const reason=await this.dialog.prompt('Nhập lý do hủy lịch trước khi ca bắt đầu');if(!reason?.trim())return;this.saving=true;this.http.post(API_BASE_URL+'/department-workspace/schedules/'+id+'/cancel',{reason}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:()=>{this.saving=false;this.close();this.message='Đã hủy lịch làm việc.';this.load(this.page);},error:e=>{this.saving=false;this.detailError=errorMessage(e);}});}
  get chosenShift(){return this.options.shifts.find(s=>s['shiftId']===this.form.shiftId);}
- async save(){if(this.saving)return;if(!this.form.employeeId||!this.form.shiftId||!this.form.workDate){this.detailError='Chọn nhân viên, ca và ngày làm việc';return;}if(!(await this.dialog.confirm('Lưu lịch làm việc trong phạm vi phòng ban?')))return;this.saving=true;const id=this.selected?.['id'];this.http.request(id?'PUT':'POST',API_BASE_URL+'/department-workspace/schedules'+(id?'/'+id:''),{body:this.form}).pipe(takeUntilDestroyed(this.destroy)).subscribe({next:()=>{this.saving=false;this.close();this.message='Đã lưu lịch làm việc.';this.load(0);},error:e=>{this.saving=false;this.detailError=errorMessage(e);}});}
+ async save() {
+  if (this.saving) return;
+  const body = {...this.form};
+  const employee = this.options.employees.find(e => e['employeeId'] === body.employeeId);
+  const shift = this.chosenShift;
+  if (!employee || !shift || !body.workDate) {
+   this.detailError = 'Chọn nhân viên, ca và ngày làm việc';
+   return;
+  }
+  const id = this.selected?.['id'];
+  const confirmation = [
+   id ? 'Bạn có chắc muốn lưu thay đổi lịch?' : 'Bạn có chắc muốn thêm lịch làm việc?',
+   `Nhân viên: ${employee['employeeCode']} - ${employee['fullName']}`,
+   `Ca: ${shift['shiftCode']} - ${shift['shiftName']}`,
+   `Ngày làm: ${body.workDate.split('-').reverse().join('/')}`,
+  ].join('\n');
+  if (!(await this.dialog.confirm(confirmation))) return;
+
+  this.saving = true;
+  this.http.request(id ? 'PUT' : 'POST', API_BASE_URL + '/department-workspace/schedules' + (id ? '/' + id : ''), {body})
+   .pipe(takeUntilDestroyed(this.destroy))
+   .subscribe({
+    next: () => {
+     this.saving = false;
+     this.close();
+     this.message = 'Đã lưu lịch làm việc.';
+     this.load(0);
+    },
+    error: e => {
+     this.saving = false;
+     this.detailError = errorMessage(e);
+    },
+   });
+ }
 }

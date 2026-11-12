@@ -44,7 +44,7 @@ public class LeaveRequestRules {
   if(maternity!=null)maternity.validate(employee,type,start,end);
   Rules rules=get(type);LocalDateTime reference=submitted==null?support.localNow():submitted;
   if(start.isBefore(support.localNow())){
-   if(start.isBefore(reference)&&(rules.retroactiveDays()==0||start.toLocalDate().isBefore(reference.toLocalDate().minusDays(rules.retroactiveDays()))))throw PersonnelWorkflowSupport.bad("Loại nghỉ không cho nộp bù hoặc vượt tối đa 7 ngày theo cấu hình");
+   if(start.toLocalDate().isBefore(reference.toLocalDate())&&(rules.retroactiveDays()==0||start.toLocalDate().isBefore(reference.toLocalDate().minusDays(rules.retroactiveDays()))))throw PersonnelWorkflowSupport.bad("Loại nghỉ không cho nộp bù hoặc vượt tối đa 7 ngày theo cấu hình");
    requireMutable(employee,start,end);
   }
   if(!start.isBefore(reference)&&Duration.between(reference,start).toHours()<rules.minimumNoticeHours())throw PersonnelWorkflowSupport.bad("Chưa đủ thời gian báo trước của loại nghỉ");

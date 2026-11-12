@@ -25,6 +25,7 @@ export interface HrOverview {
   contracts: ContractReport;
   work: WorkReport;
 }
+export interface OverviewMonth extends EmployeeMovement { overtime: number; late: number; }
 export interface PendingItem { count: number | null; state: 'READY' | 'DENIED' | 'ERROR'; }
 export interface PendingOverview { updatedAt: string; attendance: PendingItem; leave: PendingItem; overtimeApproval: PendingItem; overtimeActual: PendingItem; }
 export interface ReportDepartment { id: number; code: string; name: string; }
@@ -43,10 +44,14 @@ export class ReportService {
   getHrOverview() {
     return this.http.get<HrOverview>(`${API_BASE_URL}/overview/hr`).pipe(timeout(15000));
   }
-  getAttendanceStatus() {
-    return this.http.get<{workDate: string; present: number; absent: number; maternity: number; missing: number}>(
-      `${API_BASE_URL}/overview/attendance-status`
+  getAttendanceStatus(date?: string) {
+    return this.http.get<{workDate: string; present: number; absent: number; leave: number; missing: number}>(
+      `${API_BASE_URL}/overview/attendance-status`, { params: date ? { date } : {} }
     ).pipe(timeout(15000));
+  }
+
+  getOverviewTrends(date?: string) {
+    return this.http.get<OverviewMonth[]>(`${API_BASE_URL}/overview/trends`, { params: date ? { date } : {} }).pipe(timeout(15000));
   }
 
   getPendingOverview() {

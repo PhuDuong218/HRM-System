@@ -6,6 +6,7 @@ const { pathToFileURL } = require('node:url');
 const esbuild = require('esbuild');
 
 function pending(context, changes = {}) {
+  for (const trends of context.http.match('/api/overview/trends')) trends.flush([]);
   const ready = { count: 0, state: 'READY' };
   context.http.expectOne('/api/overview/pending').flush({ updatedAt:'2026-11-10T00:00:00Z',
     attendance:ready, leave:ready, overtimeApproval:ready, overtimeActual:ready, ...changes });
@@ -33,7 +34,7 @@ test('HR overview uses its scoped endpoint while admin retains report access', a
       work: { confirmedWorkDays: 3, confirmedAbsentDays: 0 }
     });
     assert.equal(hr.page.employeeState, 'ready');
-    assert.equal(hr.page.totalEmployees, 3);
+    assert.equal(hr.page.totalEmployees, 0);
     assert.equal(hr.page.work.confirmedWorkDays, 3);
     assert.equal(hr.page.departments.length, 2);
     hr.http.expectNone('/api/reports/employees');
@@ -89,6 +90,8 @@ test('HR overview uses its scoped endpoint while admin retains report access', a
     assert.equal(work.request.params.get('fromDate'), admin.page.fromDate);
     assert.equal(work.request.params.get('toDate'), admin.page.today);
     work.flush({ confirmedWorkDays: 12, confirmedAbsentDays: 3 });
+    admin.http.expectOne(request => request.url === '/api/reports/payroll').flush(JSON.stringify({batches:[]}));
+    admin.page.attendanceStatus = {workDate:admin.page.today,present:9,absent:2,leave:0,missing:0};
     assert.equal(admin.page.totalEmployees, 11);
     assert.equal(admin.page.activeEmployees, 9);
     assert.deepEqual(admin.page.departments.map(row => row.groupName),

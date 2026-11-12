@@ -8,6 +8,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import java.time.LocalDate;
 
 @RestController
 public class OverviewAttendanceController {
@@ -19,7 +21,7 @@ public class OverviewAttendanceController {
 
     @GetMapping("/api/overview/attendance-status")
     @PreAuthorize("hasAnyRole('ADMIN','HR')")
-    public ResponseEntity<OverviewAttendanceService.Status> status(@AuthenticationPrincipal AuthenticatedAccount actor) {
-        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.get(actor));
+    public ResponseEntity<OverviewAttendanceService.Status> status(@AuthenticationPrincipal AuthenticatedAccount actor, @RequestParam(required = false) LocalDate date) {
+        return ResponseEntity.ok().cacheControl(CacheControl.noStore()).body(service.get(actor, date));
     }
 }

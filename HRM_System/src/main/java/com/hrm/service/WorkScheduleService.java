@@ -141,17 +141,62 @@ public class WorkScheduleService {
         }
     }
 
-    private void assertNoOverlap(long emp, LocalDateTime start, LocalDateTime end, long excluding) {
-        Integer n = db.queryForObject(
-                "SELECT COUNT(1) FROM dbo.work_schedules WHERE cancelled_at IS NULL AND employee_id=? AND schedule_id<>? AND planned_start < ? AND planned_end > ?",
-                Integer.class,
-                emp,
-                excluding,
-                Timestamp.valueOf(end),
-                Timestamp.valueOf(start));
-        if (n != null && n > 0) {
-            throw new ResponseStatusException(HttpStatus.CONFLICT, "Lịch làm việc bị chồng lấn");
+    private void assertNoApprovedLeave(long employeeId, LocalDateTime start, LocalDateTime end) {
+        record LeaveConflict(String typeCode, LocalDateTime end) {}
+        var conflict = db.query("""
+                SELECT TOP (1) t.type_code, l.leave_end
+                FROM dbo.employee_requests r WITH (HOLDLOCK)
+                JOIN dbo.leave_request_details l WITH (HOLDLOCK) ON l.request_id = r.request_id
+                JOIN dbo.leave_types t ON t.leave_type_id = l.leave_type_id
+                WHERE r.employee_id = ? AND r.request_type = 'NGHI_PHEP' AND r.status = 'DA_DUYET'
+                  AND l.leave_start < ? AND l.leave_end > ?
+                  AND NOT EXISTS (
+                      SELECT 1 FROM dbo.employee_request_withdrawals w WITH (HOLDLOCK)
+                      WHERE w.request_id = r.request_id
+                  )
+                ORDER BY CASE WHEN t.type_code IN ('MATERNITY', 'THAI_SAN') THEN 0 ELSE 1 END,
+                         l.leave_end DESC, r.request_id DESC
+                """, rs -> rs.next()
+                    ? new LeaveConflict(rs.getString("type_code"), rs.getTimestamp("leave_end").toLocalDateTime())
+                    : null, employeeId, Timestamp.valueOf(end), Timestamp.valueOf(start));
+        if (conflict == null) return;
+
+        var dateFormat = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        if ("MATERNITY".equals(conflict.typeCode()) || "THAI_SAN".equals(conflict.typeCode())) {
+            var dateTimeFormat = java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss 'ngày' dd/MM/yyyy");
+            throw new ResponseStatusException(HttpStatus.CONFLICT,
+                    "Nhân viên đang được nghỉ thai sản. Ngày cuối nghỉ: "
+                            + conflict.end().minusNanos(1).format(dateFormat)
+                            + ". Vui lòng xếp ca bắt đầu từ " + conflict.end().format(dateTimeFormat) + " trở đi.");
         }
+
+        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Nhân viên có đơn nghỉ phép đã duyệt trùng với ca ngày " + start.format(dateFormat) + ".");
+    }
+
+    private void assertNoOverlap(long employeeId, LocalDateTime start, LocalDateTime end, long excluding) {
+        record ScheduleConflict(long id, String shiftCode, String shiftName, LocalDateTime start, LocalDateTime end) {}
+        var conflict = db.query("""
+                SELECT TOP (1) s.schedule_id, w.shift_code, w.shift_name, s.planned_start, s.planned_end
+                FROM dbo.work_schedules s
+                LEFT JOIN dbo.work_shifts w ON w.shift_id = s.shift_id
+                WHERE s.cancelled_at IS NULL AND s.employee_id = ? AND s.schedule_id <> ?
+                  AND s.planned_start < ? AND s.planned_end > ?
+                ORDER BY s.planned_start, s.schedule_id
+                """, rs -> rs.next() ? new ScheduleConflict(rs.getLong("schedule_id"),
+                        rs.getString("shift_code"), rs.getString("shift_name"),
+                        rs.getTimestamp("planned_start").toLocalDateTime(),
+                        rs.getTimestamp("planned_end").toLocalDateTime()) : null,
+                employeeId, excluding, Timestamp.valueOf(end), Timestamp.valueOf(start));
+        if (conflict == null) return;
+
+        var dateTime = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm");
+        var time = java.time.format.DateTimeFormatter.ofPattern("HH:mm");
+        var endFormat = conflict.start().toLocalDate().equals(conflict.end().toLocalDate()) ? time : dateTime;
+        String shift = conflict.shiftName() == null ? "" : conflict.shiftName() + " (" + conflict.shiftCode() + "), ";
+        throw new ResponseStatusException(HttpStatus.CONFLICT,
+                "Chồng lấn với " + shift + "lịch #" + conflict.id() + " từ "
+                        + conflict.start().format(dateTime) + " đến " + conflict.end().format(endFormat) + ".");
     }
 
     private void rejectStarted(LocalDateTime start) {
@@ -175,6 +220,7 @@ public class WorkScheduleService {
         if (v.shiftId() != null) {
             requireActiveShift(v.shiftId());
         }
+        assertNoApprovedLeave(v.employeeId(), v.plannedStart(), v.plannedEnd());
         assertNoOverlap(v.employeeId(), v.plannedStart(), v.plannedEnd(), -1);
 
         Long id = db.queryForObject(
@@ -220,6 +266,9 @@ public class WorkScheduleService {
         rejectStarted(v.plannedStart());
         if (!Objects.equals(previous.shiftId(), v.shiftId()) && v.shiftId() != null) {
             requireActiveShift(v.shiftId());
+        }
+        if (!previous.plannedStart().equals(v.plannedStart()) || !previous.plannedEnd().equals(v.plannedEnd())) {
+            assertNoApprovedLeave(v.employeeId(), v.plannedStart(), v.plannedEnd());
         }
         assertNoOverlap(v.employeeId(), v.plannedStart(), v.plannedEnd(), id);
 

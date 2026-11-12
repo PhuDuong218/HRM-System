@@ -2,6 +2,8 @@ import {MyEmployment} from '../../shared/my-employment';
 import {AuthService} from '../../services/auth.service';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {ActivatedRoute} from '@angular/router';
+import { auditActionLabel } from '../../shared/audit-action-label';
+import type { ContractHistoryEntry } from '../../services/contract.service';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
@@ -308,6 +310,7 @@ export class ContractsPage implements OnInit {
 
     this.selectedId = id;
     this.selected = null;
+    this.loadContractHistory(id);
     this.detailError = "";
     this.detailLoading = true;
 
@@ -342,6 +345,31 @@ export class ContractsPage implements OnInit {
       });
   }
 
+  contractHistory: ContractHistoryEntry[] = [];
+  contractHistoryLoading = false;
+  contractHistoryError = "";
+  readonly auditActionLabel = auditActionLabel;
+  private contractHistoryRequest?: Subscription;
+
+  loadContractHistory(contractId: number): void {
+    this.contractHistoryRequest?.unsubscribe();
+    this.contractHistory = [];
+    this.contractHistoryError = "";
+    this.contractHistoryLoading = true;
+    this.contractHistoryRequest = this.api.history(contractId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: (history) => {
+          this.contractHistory = history;
+          this.contractHistoryLoading = false;
+        },
+        error: (error: HttpErrorResponse) => {
+          this.contractHistoryError = this.readError(error, "Không tải được lịch sử thao tác hợp đồng.");
+          this.contractHistoryLoading = false;
+        },
+      });
+  }
+
   closeWorkspace(): void {
     if (this.saving || this.renewTypesLoading) return;
     this.cancelCreate();
@@ -354,6 +382,7 @@ export class ContractsPage implements OnInit {
     this.cancelLifecycle();
 
     this.detailRequest?.unsubscribe();
+    this.contractHistoryRequest?.unsubscribe();
     this.selectedId = null;
     this.selected = null;
     this.detailLoading = false;
@@ -628,12 +657,14 @@ export class ContractsPage implements OnInit {
   }
 
   //Phương thức chấm dứt
-  saveTerminate(event: Event): void {
+  private terminationConfirmationPending = false;
+
+  async saveTerminate(event: Event): Promise<void> {
     event.preventDefault();
 
     const contract = this.lifecycleContract;
 
-    if (!contract || this.lifecycleMode !== "terminate" || this.saving) {
+    if (!contract || this.lifecycleMode !== "terminate" || this.saving || this.terminationConfirmationPending) {
       return;
     }
 
@@ -667,6 +698,18 @@ export class ContractsPage implements OnInit {
       reasonType: selectedReason.value,
     };
 
+    const [year, month, day] = terminationDate.split("-");
+    this.terminationConfirmationPending = true;
+    let confirmed: boolean;
+    try {
+      confirmed = await this.actionDialogInPage.confirm(
+        `Bạn có chắc muốn chấm dứt hợp đồng ${contract.contractNumber}? Ngày cuối còn hiệu lực là ${day}/${month}/${year}. Loại chấm dứt: ${this.language.t(selectedReason.label)}.`,
+      );
+    } finally {
+      this.terminationConfirmationPending = false;
+    }
+    if (!confirmed || this.lifecycleContract !== contract || this.lifecycleMode !== "terminate" || this.saving) return;
+
     this.saving = true;
 
     this.api
@@ -679,6 +722,7 @@ export class ContractsPage implements OnInit {
           this.cancelLifecycle();
 
           this.selected = updated;
+          this.loadContractHistory(updated.contractId);
           this.resetSalaryRates();
           this.message = updated.status === "DA_KET_THUC"
             ? `Đã chấm dứt hồi tố; ngày cuối còn hiệu lực: ${updated.endDate}.`

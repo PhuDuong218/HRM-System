@@ -4,11 +4,12 @@ import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
 import {DetailFocusDirective} from '../../shared/detail-focus.directive';
 import {TranslatePipe} from '../../shared/translate.pipe';
+import { ActivatedRoute } from '@angular/router';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, ElementRef, OnInit, ViewChild, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription, from, map, mergeMap, toArray } from 'rxjs';
-import { ContractDetail, ContractReport, EmployeeGroupBy, EmployeeMovement, EmployeeReport, EmployeeReportDetail, GroupRow, PayrollAmounts, PayrollBatch, PayrollEmployee, PayrollLine, PayrollReport, Report, ReportDepartment, ReportFilters, ReportPage, ReportService, ReportType, WorkReport } from '../../services/report.service';
+import { ContractDetail, ContractReport, EmployeeGroupBy, EmployeeMovement, OverviewMonth, EmployeeReport, EmployeeReportDetail, GroupRow, PayrollAmounts, PayrollBatch, PayrollEmployee, PayrollLine, PayrollReport, Report, ReportDepartment, ReportFilters, ReportPage, ReportService, ReportType, WorkReport } from '../../services/report.service';
 import { formatMoney, sumMoney } from '../../services/report-format';
 import { LanguageService } from '../../services/language.service';
 
@@ -39,6 +40,7 @@ interface PayrollSelection { rowKey: string; columnKey: string; label: string; b
 export class ReportsPage implements OnInit {
   @ViewChild('reportResults') private reportResults?: ElementRef<HTMLElement>;
   private api = inject(ReportService);
+  private route = inject(ActivatedRoute, { optional: true });
   private language = inject(LanguageService, { optional: true });
   private destroyRef = inject(DestroyRef);
   private viewRequest?: Subscription;
@@ -126,7 +128,42 @@ export class ReportsPage implements OnInit {
   payrollLineLoading = false;
   payrollLineError = '';
 
+  focusTarget = '';
+  overviewStatus: {workDate: string; present: number; absent: number; leave: number; missing: number} | null = null;
+  overviewMonths: OverviewMonth[] = [];
+  overviewDataError = false;
+
+  private loadOverviewReport(filters: ReportFilters): void {
+    this.overviewStatus = null;
+    this.overviewMonths = [];
+    this.overviewDataError = false;
+    if (this.selected !== 'work') return;
+    if (this.focusTarget === 'daily') {
+      this.extraRequests.add(this.api.getAttendanceStatus(filters.toDate).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: data => { this.overviewStatus = data; },
+        error: () => { this.overviewDataError = true; }
+      }));
+    } else if (this.focusTarget === 'trend') {
+      this.extraRequests.add(this.api.getOverviewTrends(filters.toDate).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: data => { this.overviewMonths = data; },
+        error: () => { this.overviewDataError = true; }
+      }));
+    }
+  }
+
   ngOnInit(): void {
+    const params = this.route?.snapshot.queryParamMap;
+    const tab = this.tabs.find(item => item.id === params?.get('tab'));
+    if (tab) {
+      this.selected = tab.id;
+      const from = params?.get('from') ?? '';
+      const to = params?.get('to') ?? '';
+      if (/^\d{4}-\d{2}-\d{2}$/.test(from) && /^\d{4}-\d{2}-\d{2}$/.test(to) && from <= to) {
+        this.filters = { ...this.filters, fromDate: from, toDate: to };
+      }
+      this.focusTarget = params?.get('focus') ?? '';
+      if (this.selected === 'payroll' && params?.get('grouping') === 'month') this.payrollGranularity = 'month';
+    }
     this.loadDepartments();
     this.load();
     const timer = setInterval(() => this.refreshIfIdle(), 5 * 60_000);
@@ -156,6 +193,7 @@ export class ReportsPage implements OnInit {
     this.extraRequests.unsubscribe();
     this.extraRequests = new Subscription();
     this.detailRequest?.unsubscribe();
+    this.focusTarget = '';
     this.selected = type;
     this.exporting = false;
     this.exportError = '';
@@ -222,6 +260,7 @@ export class ReportsPage implements OnInit {
           this.payrollReport = result as PayrollReport;
           this.buildPayrollMatrix(payrollSelection);
         }
+        this.loadOverviewReport(filters);
         this.appliedFilters = filters;
         this.submittedFilters = submittedFilters;
         this.updatedAt = new Date();

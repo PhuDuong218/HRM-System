@@ -26,10 +26,13 @@ export interface PayrollLine {
   direction: 'ADD' | 'DEDUCT';
   amount: number;
   explanation?: string;
+  deductionShareText?: string;
 }
 
 export interface PayrollDetailView {
-  payrollDetailId: number;
+  payrollDetailId: number | null;
+  missingSalary?: boolean;
+  provisional?: boolean;
   employeeId: number;
   employeeCode?: string;
   employeeName?: string;
@@ -39,9 +42,9 @@ export interface PayrollDetailView {
   allowanceAmount?: number;
   insuranceAmount?: number;
   taxAmount?: number;
-  totalGross: number;
-  totalDeduction: number;
-  netSalary: number;
+  totalGross: number | null;
+  totalDeduction: number | null;
+  netSalary: number | null;
   lines: PayrollLine[];
 }
 

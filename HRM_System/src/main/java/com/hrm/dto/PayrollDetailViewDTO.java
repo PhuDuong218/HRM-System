@@ -7,6 +7,16 @@ public class PayrollDetailViewDTO {
     private Long payrollDetailId;
     private Long employeeId;
     private String employeeName;
+    private String employeeCode;
+    private boolean missingSalary;
+    private boolean provisional;
+    public boolean isProvisional() { return provisional; }
+    public void setProvisional(boolean provisional) { this.provisional = provisional; }
+
+    public String getEmployeeCode() { return employeeCode; }
+    public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+    public boolean isMissingSalary() { return missingSalary; }
+    public void setMissingSalary(boolean missingSalary) { this.missingSalary = missingSalary; }
     private BigDecimal totalGross;      // Tổng thu nhập
     private BigDecimal totalDeduction;  // Tổng khấu trừ
     private BigDecimal netSalary;       // Lương thực nhận
@@ -18,19 +28,38 @@ public class PayrollDetailViewDTO {
         private String direction;
         private BigDecimal amount;
         private String explanation;
+        private String deductionShareText;
 
         public PayrollLineDTO(String code, String name, String direction, BigDecimal amount, String explanation) {
             this.code = code;
             this.name = name;
             this.direction = direction;
             this.amount = amount;
-            this.explanation = explanation;
+            this.explanation = displayExplanation(explanation);
+        }
+
+        private static String displayExplanation(String explanation) {
+            if (explanation == null) return null;
+            return explanation.replaceAll("(?iu)hệ số nháp\\s+", "hệ số nhân ×")
+                .replace("Bảo hiểm tạm tính theo chính sách đồ án",
+                         "Mức đóng tham chiếu theo quy định: BHXH 8% · BHYT 1,5% · BHTN 1% trên căn cứ đóng tương ứng. Khoản trừ theo phiếu đã lưu.")
+                .replace("Thuế tạm tính theo chính sách đồ án",
+                         "Thuế TNCN đã khấu trừ theo phiếu đã lưu. Tỷ trọng trên tổng thu nhập khác với thuế suất.");
+        }
+
+        public void describeDeductionShare(BigDecimal gross) {
+            if (!"DEDUCT".equalsIgnoreCase(direction) || amount == null || gross.signum() <= 0) return;
+            String percent = amount.movePointRight(2).divide(gross, 2, java.math.RoundingMode.HALF_UP)
+                .stripTrailingZeros().toPlainString().replace('.', ',');
+            deductionShareText = percent + "% tổng thu nhập";
+
         }
 
         public String getCode() { return code; }
         public String getName() { return name; }
         public String getDirection() { return direction; }
         public BigDecimal getAmount() { return amount; }
+        public String getDeductionShareText() { return deductionShareText; }
         public String getExplanation() { return explanation; }
     }
 

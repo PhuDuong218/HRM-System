@@ -1,96 +1,114 @@
-<app-page-header variant="directory" title="Phiếu lương cá nhân" description="Tra cứu thu nhập, các khoản khấu trừ và thực lĩnh theo kỳ." />
+<app-page-header variant="directory" [title]="canSelectEmployee ? 'Tra cứu phiếu lương' : 'Phiếu lương cá nhân'" description="Tra cứu thu nhập, các khoản khấu trừ và thực lĩnh theo kỳ." />
 
 <section class="surface mb-4">
-  <div class="row align-items-center">
-    <div class="col-md-6">
-      <label class="form-label fw-bold mb-1">Chọn kỳ nhận lương:</label>
-      <select class="form-select" (change)="onSelectPayslip($event)">
-        @for (item of payslips; track item.payslipId) {
-          <option [value]="item.payslipId">
-            Kỳ: {{ item.periodCode }} (v{{ item.versionNo }}) — Số phiếu: {{ item.payslipNumber }}
-          </option>
-        } @empty {
-          <option value="">Chưa có phiếu lương được công bố</option>
-        }
+  <h2 class="mb-3">Tìm kiếm phiếu lương</h2>
+  <form class="row g-3 align-items-end" (ngSubmit)="search()">
+    @if (canSelectEmployee) {
+      <label class="col-sm-6 col-xl-3">Tìm theo mã hoặc tên nhân viên
+        <input class="form-control mt-1" name="employeeQuery" placeholder="Nhập một phần mã hoặc tên"
+               [ngModel]="employeeQuery" (ngModelChange)="employeeQuery = $event; employeeId = null">
+      </label>
+      <label class="col-sm-6 col-xl-3">Chọn nhân viên
+        <select class="form-select mt-1" name="employee" [(ngModel)]="employeeId">
+          <option [ngValue]="null">Tất cả nhân viên phù hợp</option>
+          @for (employee of employeeOptions; track employee.employeeId) {
+            <option [ngValue]="employee.employeeId">{{ employee.employeeCode }} — {{ employee.employeeName }}</option>
+          }
+        </select>
+      </label>
+    }
+    <label class="col-sm-6 col-xl-3">Kỳ lương
+      <select class="form-select mt-1" name="period" [(ngModel)]="periodCode">
+        <option value="">Tất cả kỳ đã công bố</option>
+        @for (period of periods; track period) { <option [value]="period">{{ period }}</option> }
       </select>
+    </label>
+    <label class="col-sm-6 col-xl-3">Số phiếu
+      <input class="form-control mt-1" name="slip" [(ngModel)]="slipQuery" placeholder="Nhập một phần số phiếu">
+    </label>
+    <div class="col-12 d-flex flex-wrap gap-2">
+      <button class="btn btn-primary" type="submit" [disabled]="loading">Tìm kiếm</button>
+      <button class="btn btn-outline-secondary" type="button" [disabled]="loading" (click)="resetFilters()">Xóa lọc</button>
     </div>
+  </form>
 
-    <div class="col-md-6 text-md-end pt-3">
-      <button class="btn btn-primary" [disabled]="!selectedPayslip" (click)="printCurrentPayslip()">
-        🖨 In phiếu lương (Lưu PDF)
-      </button>
+  @if (loading) { <p class="mt-3 mb-0" role="status">Đang tải danh sách phiếu lương…</p> }
+  @else if (payslips.length) {
+    <div class="row g-3 align-items-end mt-2">
+      <label class="col-lg-8">Chọn phiếu lương ({{ payslips.length }})
+        <select class="form-select mt-1" [ngModel]="selectedRow?.payslipId" (ngModelChange)="selectPayslip($event)">
+          @for (item of payslips; track item.payslipId) {
+            <option [ngValue]="item.payslipId">{{ item.periodCode }} (v{{ item.versionNo }}) · {{ item.employeeCode }} — {{ item.employeeName }} · {{ item.payslipNumber }}</option>
+          }
+        </select>
+      </label>
+      <div class="col-lg-4 text-lg-end">
+        <button class="btn btn-primary" type="button" [disabled]="!selectedPayslip || detailLoading" (click)="printCurrentPayslip()">In phiếu lương (Lưu PDF)</button>
+      </div>
     </div>
-  </div>
+  }
 
   @if (errorMessage) {
     <div [hrmNotice]="errorMessage" noticeKind="error" class="alert alert-warning mt-3 mb-0 py-2">{{ errorMessage }}</div>
   }
 </section>
 
-@if (selectedPayslip) {
-  <!-- 3 THẺ TỔNG QUAN -->
-  <div class="row g-3 mb-4">
-    <div class="col-md-4">
-      <div class="stat-card">
-        <span class="stat-title">TỔNG THU NHẬP (GROSS)</span>
-        <h3 class="stat-value text-dark-blue">{{ selectedPayslip.totalGross | number:'1.0-0' }} đ</h3>
+@if (detailLoading) {
+  <p class="surface" role="status">Đang tải chi tiết phiếu lương…</p>
+} @else if (selectedPayslip; as slip) {
+  <section class="surface payslip-document" aria-labelledby="payslip-heading">
+    <header class="payslip-heading">
+      <div>
+        <h2 id="payslip-heading">Phiếu lương kỳ {{ slip.periodCode }}</h2>
+        <p class="text-muted mb-0">{{ slip.payslipNumber }}</p>
       </div>
-    </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <span class="stat-title">TỔNG KHẤU TRỪ</span>
-        <h3 class="stat-value text-muted">{{ selectedPayslip.totalDeduction | number:'1.0-0' }} đ</h3>
-      </div>
-    </div>
-    <div class="col-md-4">
-      <div class="stat-card">
-        <span class="stat-title">THỰC LĨNH TAY (NET)</span>
-        <h3 class="stat-value text-dark-blue">{{ selectedPayslip.netSalary | number:'1.0-0' }} đ</h3>
-      </div>
-    </div>
-  </div>
+      <span class="badge rounded-pill text-bg-success">Đã công bố</span>
+    </header>
 
-  <!-- BẢNG BÓC TÁCH CHI TIẾT TỪNG KHOẢN -->
-  <section class="surface">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-      <h2 class="mb-0">Diễn giải các khoản thu nhập và trích trừ</h2>
-      <span class="badge text-bg-light">Số phiếu: {{ selectedPayslip.payslipNumber }}</span>
-    </div>
+    <dl class="payslip-meta">
+      <div><dt>Mã nhân viên</dt><dd>{{ selectedRow?.employeeCode || '—' }}</dd></div>
+      <div><dt>Họ và tên</dt><dd>{{ selectedRow?.employeeName || '—' }}</dd></div>
+      <div><dt>Chức vụ trong kỳ</dt><dd>{{ slip.positionName || 'Chưa có dữ liệu' }}</dd></div>
+      <div><dt>Ngày công đi làm</dt><dd>{{ workDays(slip.actualWorkDays) }}</dd></div>
+      <div><dt>Ngày công chuẩn</dt><dd>{{ workDays(slip.standardWorkDays) }}</dd></div>
+    </dl>
 
-    <div class="table-responsive">
-      <table class="table align-middle">
-        <thead>
-          <tr>
-            <th>Khoản mục</th>
-            <th>Loại</th>
-            <th class="text-end">Số tiền</th>
-            <th>Diễn giải chi tiết</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (line of selectedPayslip.lines; track line.code) {
-            <tr>
-              <td class="fw-bold">{{ line.name }}</td>
-              <td>
-                @if (line.direction === 'ADD') {
-                  <span class="badge text-bg-light text-primary border">Thu nhập (+)</span>
-                } @else {
-                  <span class="badge text-bg-light text-secondary border">Khấu trừ (-)</span>
-                }
-              </td>
-              <td class="text-end fw-bold" [class.text-dark-blue]="line.direction === 'ADD'" [class.text-muted]="line.direction === 'DEDUCT'">
-                {{ (line.direction === 'ADD' ? '+' : '-') }} {{ line.amount | number:'1.0-0' }} đ
-              </td>
-              <td class="text-muted small">{{ line.explanation || '—' }}</td>
-            </tr>
-          }
-        </tbody>
-      </table>
+    <dl class="payslip-totals">
+      <div><dt>Tổng thu nhập (Gross)</dt><dd>{{ money(slip.totalGross) }}</dd></div>
+      <div><dt>Tổng khấu trừ</dt><dd>{{ money(slip.totalDeduction) }}</dd></div>
+      <div class="payslip-net"><dt>Thực lĩnh (Net)</dt><dd>{{ money(slip.netSalary) }}</dd></div>
+    </dl>
+
+    <div class="payslip-items">
+      @for (group of [
+        { title: 'Các khoản thu nhập', items: earnings, sign: '+', deduction: false },
+        { title: 'Các khoản trừ vào lương', items: deductions, sign: '−', deduction: true }
+      ]; track group.title) {
+        <section class="payslip-group" [class.payslip-deductions]="group.deduction">
+          <h3>{{ group.title }}</h3>
+          <ul class="list-unstyled mb-0">
+            @for (item of group.items; track $index) {
+              <li>
+                <div><strong>{{ item.name }}</strong>
+                  @if (item.explanation) { <small>{{ item.explanation }}</small> }
+                </div>
+                <span>{{ group.sign }}{{ money(item.amount) }}
+                  @if (group.deduction && slip.totalGross > 0) {
+                    <small>Tỷ trọng: {{ deductionShare(item.amount, slip.totalGross) }} tổng thu nhập</small>
+                  }
+                </span>
+              </li>
+            } @empty {
+              <li class="text-muted">Không có khoản mục.</li>
+            }
+          </ul>
+        </section>
+      }
     </div>
   </section>
-} @else {
+} @else if (!loading && !errorMessage) {
   <section class="surface text-center py-5">
     <h3 class="text-muted">Chưa tìm thấy phiếu lương</h3>
-    <p class="muted mb-0">Phiếu lương sẽ tự động xuất hiện sau khi phòng Nhân sự CHỐT và CÔNG BỐ bảng lương.</p>
+    <p class="muted mb-0">Không có phiếu lương đã công bố phù hợp với bộ lọc.</p>
   </section>
 }

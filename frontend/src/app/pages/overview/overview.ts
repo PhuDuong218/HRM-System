@@ -1,3 +1,5 @@
+import { FormsModule } from '@angular/forms';
+import { formatMoney } from '../../services/report-format';
 import {SeniorityReport} from '../../shared/seniority-report';
 import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
@@ -5,30 +7,67 @@ import {HrmButton} from '../../shared/ui/button';
 import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { EMPTY, Subscription, catchError, exhaustMap, filter, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
-import { ContractReport, EmployeeReport, GroupRow, PendingItem, PendingOverview, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
+import { ContractReport, EmployeeReport, GroupRow, OverviewMonth, PayrollBatch, PayrollReport, PendingItem, PendingOverview, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
 
 @Component({
-  selector: 'app-overview', standalone: true, imports:[SeniorityReport,HrmNotice,PageHeader,HrmButton,RouterLink],
-  templateUrl: './overview.html', styleUrl: './overview.css'
+  selector: 'app-overview', standalone: true, imports:[SeniorityReport,HrmNotice,PageHeader,HrmButton,RouterLink,FormsModule],
+  templateUrl: './overview.html', styleUrl: './overview.scss'
 })
 export class OverviewPage implements OnInit {
   language = inject(LanguageService);
   private api = inject(ReportService);
+  private router = inject(Router, { optional: true });
   private auth = inject(AuthService);
   private destroyRef = inject(DestroyRef);
   private requests = new Subscription();
   private pendingRequest?: Subscription;
-  attendanceStatus: {workDate: string; present: number; absent: number; maternity: number; missing: number} | null = null;
+  attendanceStatus: {workDate: string; present: number; absent: number; leave: number; missing: number} | null = null;
   attendanceState: LoadState = 'loading';
+  months: OverviewMonth[] = [];
+  trendsState: LoadState = 'loading';
+  payroll: PayrollBatch | null = null;
+  payrollState: LoadState | 'denied' = 'loading';
+  readonly chartSeries = {
+    work: [{ key: 'overtime', label: 'Đơn OT đã xác nhận', color: '#087c70' },
+      { key: 'late', label: 'Lượt đi muộn', color: '#b05b04' }],
+    movement: [{ key: 'hired', label: 'Tuyển dụng', color: '#165b9e' },
+      { key: 'terminated', label: 'Nghỉ việc', color: '#a33d72' }]
+  } as const;
 
   today = '';
+  selectedPayrollId = 'latest';
+  batches: PayrollBatch[] = [];
+  openReport(event: MouseEvent, tab: string, focus: string): void {
+    if (!this.isAdmin || event.defaultPrevented || event.button !== 0 ||
+        event.ctrlKey || event.metaKey || event.altKey || event.shiftKey ||
+        (event.target instanceof Element && event.target.closest('a,button,input,select,label'))) return;
+    void this.router?.navigate(['/reports'], { queryParams: this.reportLink(tab, focus) });
+  }
+
+  reportLink(tab: string, focus: string): Record<string, string> {
+    const day = this.today;
+    const from = focus === 'movement' || focus === 'trend' ? (this.months[0] ? this.months[0].month + '-01' : day) : day;
+    if (tab === 'payroll' && this.payroll) {
+      return { tab, focus, from: this.payroll.periodStart, to: this.payroll.periodEnd, grouping: 'month' };
+    }
+    if (focus === 'movement' || focus === 'trend' || focus === 'daily') {
+      return { tab, focus, from, to: day };
+    }
+    return { tab, focus };
+  }
+
+  selectPayroll(id = this.selectedPayrollId): void {
+    const selected = this.batches.find(batch => String(batch.batchId) === id);
+    this.selectedPayrollId = selected ? id : 'latest';
+    this.payroll = selected ?? this.batches[0] ?? null;
+  }
   fromDate = '';
   filters!: ReportFilters;
   employeeReport: EmployeeReport | null = null;
@@ -58,6 +97,8 @@ export class OverviewPage implements OnInit {
     this.requests.unsubscribe();
     this.requests = new Subscription();
     this.attendanceStatus = null; this.attendanceState = 'loading';
+    this.months = []; this.trendsState = 'loading';
+    this.batches = []; this.payroll = null; this.payrollState = 'loading';
     this.pending = null; this.pendingState = 'loading'; this.pendingError = '';
     this.isHr = this.isAdmin = false;
     this.today = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
@@ -73,6 +114,8 @@ export class OverviewPage implements OnInit {
         if (profile.role !== 'ADMIN' && profile.role !== 'HR') { this.failAll('Bạn chưa có quyền xem số liệu tổng quan.'); return; }
         this.loadPending();
         this.pollAttendanceStatus();
+        this.loadTrends();
+        this.loadDashboardCharts();
         if (this.isHr) this.loadHrOverview();
         else this.loadReports();
       },
@@ -158,6 +201,59 @@ export class OverviewPage implements OnInit {
     }));
   }
 
+  private loadTrends(): void {
+    this.requests.add(this.api.getOverviewTrends().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+      next: months => { this.months = months; this.trendsState = 'ready'; },
+      error: () => { this.trendsState = 'error'; }
+    }));
+  }
+
+  private loadDashboardCharts(): void {
+    if (!this.isAdmin) {
+      this.payrollState = 'denied';
+      return;
+    }
+    this.requests.add(this.api.get('payroll', { ...this.filters, fromDate: '0001-01-01' })
+      .pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
+        next: report => {
+          const batches = (report as PayrollReport).batches;
+          this.batches = [...batches].sort((a, b) =>
+            b.periodEnd.localeCompare(a.periodEnd) || b.periodId - a.periodId || b.versionNo - a.versionNo);
+          this.selectPayroll();
+          this.payrollState = 'ready';
+        },
+        error: error => { this.payrollState = error.status === 403 ? 'denied' : 'error'; }
+      }));
+  }
+
+  seriesMax(series: typeof this.chartSeries.work | typeof this.chartSeries.movement): number {
+    return this.axisMax(...this.months.flatMap(month => series.map(item => month[item.key])));
+  }
+
+  readonly payrollColors = { net: '#1963a5', deductions: '#d38b13' };
+
+  get payrollGradient(): string {
+    const totals = this.payroll?.totals;
+    const net = Number(totals?.netPayroll);
+    const deductions = Number(totals?.deductions);
+    const gross = Number(totals?.grossPayroll);
+    if (!Number.isFinite(gross) || !Number.isFinite(net) || !Number.isFinite(deductions)
+        || gross <= 0 || net < 0 || deductions < 0 || Math.abs(net + deductions - gross) > 0.01) {
+      return 'var(--track)';
+    }
+    const boundary = Math.min(100, net / gross * 100);
+    return `conic-gradient(${this.payrollColors.net} 0% ${boundary}%, ${this.payrollColors.deductions} ${boundary}% 100%)`;
+  }
+
+  payrollPercent(value: string): number | null {
+    const gross = Number(this.payroll?.totals.grossPayroll);
+    return gross > 0 ? Number(value) / gross * 100 : null;
+  }
+
+  money(value: string): string {
+    return formatMoney(value.replace(/\.0+$/, '')) + ' ₫';
+  }
+
   get loading(): boolean { return [this.employeeState, this.contractState, this.workState, ...(this.isAdmin || this.isHr ? [this.pendingState] : [])].includes('loading'); }
   get departments(): GroupRow[] { return [...(this.employeeReport?.byDepartment || [])].sort((a, b) => b.employeeCount - a.employeeCount); }
   get departmentMax(): number { return this.axisMax(this.departments.reduce((max, row) => Math.max(max, row.employeeCount), 0)); }
@@ -180,8 +276,8 @@ export class OverviewPage implements OnInit {
     return [
       { label: 'Đi làm', count: status?.present ?? 0, color: '#194e96' },
       { label: 'Vắng', count: status?.absent ?? 0, color: '#ce3050' },
-      { label: 'Nghỉ thai sản', count: status?.maternity ?? 0, color: '#bd3583' },
-      { label: 'Có lịch nhưng thiếu check-in/check-out', count: status?.missing ?? 0, color: '#e9b969' }
+      { label: 'Nghỉ phép', count: status?.leave ?? 0, color: '#8d398c' },
+      { label: 'Có lịch nhưng thiếu check-in/check-out', count: status?.missing ?? 0, color: '#d38b13' }
     ];
   }
   get totalEmployees(): number { return this.statusItems.reduce((total, row) => total + row.count, 0); }
@@ -204,6 +300,8 @@ export class OverviewPage implements OnInit {
   private axisMax(...values: number[]): number { return Math.max(4, Math.ceil(Math.max(0, ...values) / 4) * 4); }
   private failAll(message: string): void {
     this.attendanceState = 'error';
+    this.trendsState = 'error';
+    this.payrollState = 'error';
     this.employeeError = this.contractError = this.workError = message;
     this.employeeState = this.contractState = this.workState = 'error';
   }

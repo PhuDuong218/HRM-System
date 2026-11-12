@@ -130,4 +130,11 @@ default List<EmployeeAssignment> findCurrentByEmployeeIds(
 
     @Query(value="SELECT a FROM EmployeeAssignment a JOIN FETCH a.employee JOIN FETCH a.department JOIN FETCH a.position WHERE a.employee.employeeId=:employeeId AND a.department.departmentId IN :departments",countQuery="SELECT COUNT(a) FROM EmployeeAssignment a WHERE a.employee.employeeId=:employeeId AND a.department.departmentId IN :departments")
     Page<EmployeeAssignment> findHistoryScoped(@Param("employeeId") Long employeeId,@Param("departments") Collection<Long> departments,Pageable pageable);
+    @org.springframework.data.jpa.repository.Query("""
+        select a from EmployeeAssignment a
+        join fetch a.employee e join fetch a.department join fetch a.position
+        where e.employeeId in :ids and a.effectiveFrom <= e.terminationDate
+        """)
+    List<EmployeeAssignment> findAssignmentsBeforeTermination(
+        @org.springframework.data.repository.query.Param("ids") List<Long> ids);
 }

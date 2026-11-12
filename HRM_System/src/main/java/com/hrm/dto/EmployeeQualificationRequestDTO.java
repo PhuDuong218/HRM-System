@@ -32,6 +32,12 @@ public class EmployeeQualificationRequestDTO {
     // POST mac dinh false. PUT null = khong doi trang thai chinh.
     private Boolean isPrimary;
 
+    @Size(max = 1000)
+    private String reason;
+
+    public String getReason() { return reason; }
+    public void setReason(String reason) { this.reason = reason; }
+
     public Long getQualificationLevelId() { return qualificationLevelId; }
     public void setQualificationLevelId(Long value) { this.qualificationLevelId = value; }
     public String getMajor() { return major; }
