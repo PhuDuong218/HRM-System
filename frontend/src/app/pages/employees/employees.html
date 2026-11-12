@@ -5,14 +5,25 @@
 </dialog>
 <app-page-header variant="directory" title="Nhân viên"
   description="Tra cứu hồ sơ, thông tin liên hệ và tình trạng làm việc." [resultCount]="total" [busy]="loading">
-  @if(canManage){
+  @if(canManage && !seniorityOpen){
     <button hrmBtn="primary" hrmSize="md" (click)="edit('create')" [disabled]="saving || detailLoading">
       <span aria-hidden="true">＋</span> {{ 'Thêm nhân viên' | translate }}
     </button>
   }
 </app-page-header>
 
-<app-record-workspace [open]="!!mode" [busy]="saving" (dismiss)="close()">
+@if (canManage && seniorityOpen) {
+  <section id="employee-seniority">
+    <div class="d-flex justify-content-end mb-2">
+      <button type="button" hrmBtn="secondary" hrmSize="sm" (click)="seniorityOpen = false">
+        {{ 'Quay lại danh sách nhân viên' | translate }}
+      </button>
+    </div>
+    <app-seniority-report />
+  </section>
+}
+<div [hidden]="canManage && seniorityOpen">
+<app-record-workspace [open]="!!mode && !seniorityOpen" [busy]="saving" (dismiss)="close()">
 <section recordList class="surface employee-directory">
 @if(canSearch){<form class="filter-bar employee-filters" (submit)="$event.preventDefault();search()">
 <label>{{ 'Chọn nhân viên' | translate }}
@@ -25,7 +36,18 @@
 @if(employeeChoicesError) { <span class="text-danger small" role="status">{{employeeChoicesError | translate}} <button type="button" class="btn btn-link p-0" (click)="loadEmployeeChoices()">{{'Thử lại' | translate}}</button></span> }
 </label>
 <label>{{ "Từ khóa" | translate }}<input hrmEmployeeSearch name="keyword" [disabled]="loading || saving" [(ngModel)]="keyword" class="form-control" [attr.placeholder]="&quot;Mã hoặc họ tên&quot; | translate" maxlength="200"></label><label>{{ "Trạng thái" | translate }}<select name="status" [disabled]="loading || saving" [(ngModel)]="status" class="form-select" ><option value="">{{ "Tất cả trạng thái" | translate }}</option><option value="DANG_LAM">{{ "Đang làm việc" | translate }}</option><option value="DA_NGHI">{{ "Đã nghỉ việc" | translate }}</option></select></label>@if(canManage){<label>{{ "Phòng ban" | translate }}<select name="department" [disabled]="loading || saving" [(ngModel)]="department" class="form-select" ><option value="">{{ "Tất cả phòng ban" | translate }}</option>@for(d of departments;track d.id){<option [value]="d.id">{{d.name}}</option>}</select></label><label>{{ 'Chức vụ' | translate }}<select name="position" class="form-select" [(ngModel)]="position" [disabled]="loading||saving"><option value="">{{ 'Tất cả' | translate }}</option>@for(p of positions;track p.id){<option [value]="p.id">{{p.name}}</option>}</select></label>}<div class="filter-actions"><button hrmBtn="primary" hrmSize="md" [disabled]="loading || saving">{{ "Tìm kiếm" | translate }}</button><button type="button" hrmBtn="secondary" hrmSize="md" (click)="reset()" [disabled]="loading || saving">{{ "Xem tất cả" | translate }}</button></div></form>}
-<div class="list-toolbar"><h2>{{ "Danh sách " | translate }}<span class="count">{{total}}</span></h2><button hrmBtn="secondary" hrmSize="sm" [disabled]="loading || saving" (click)="load(page)">{{ "Tải lại" | translate }}</button></div>
+<div class="list-toolbar">
+  <h2>{{ "Danh sách " | translate }}<span class="count">{{total}}</span></h2>
+  <div class="d-flex flex-wrap gap-2">
+    @if (canManage) {
+      <button type="button" hrmBtn="secondary" hrmSize="sm" [disabled]="saving" [attr.aria-expanded]="seniorityOpen"
+        aria-controls="employee-seniority" (click)="seniorityOpen = true">
+        {{ 'Thâm niên nhân sự' | translate }}
+      </button>
+    }
+    <button type="button" hrmBtn="secondary" hrmSize="sm" [disabled]="loading || saving" (click)="load(page)">{{ "Tải lại" | translate }}</button>
+  </div>
+</div>
 @if(loading){<p role="status">{{ "Đang tải danh sách nhân viên…" | translate }}</p>}
 <div class="table-responsive" [attr.aria-busy]="loading"><table class="table align-middle"><caption class="visually-hidden">{{ "Chọn Chi tiết để mở hồ sơ bên cạnh danh sách" | translate }}</caption><thead><tr><th>{{ "Nhân viên" | translate }}</th><th>{{ "Phòng ban / Chức vụ" | translate }}</th><th>{{ "Trạng thái" | translate }}</th><th><span class="visually-hidden">{{ "Thao tác" | translate }}</span></th></tr></thead><tbody>@for(r of rows;track r.employeeId){<tr (appRowView)="select(r)" [rowViewDisabled]="saving||loading||detailLoading" [class.selected-row]="selected?.employeeId===r.employeeId"><td [attr.data-label]="'Nhân viên' | translate"><div class="employee-identity"><span class="employee-avatar" aria-hidden="true">{{r.fullName.trim().slice(0,1).toUpperCase()}}</span><div><strong>{{r.fullName}}</strong><small>{{r.employeeCode}}</small></div></div></td><td [attr.data-label]="'Phòng ban / Chức vụ' | translate">@if(r.employmentStatus==='DA_NGHI'){<div>{{r.previousDepartmentName || 'Chưa có dữ liệu'}}<small>Phòng ban trước khi nghỉ</small></div>}@else{<div>{{(r.currentDepartmentName || 'Chưa phân công') | translate}}<small>{{r.currentPositionName || '—'}}</small></div>}</td><td [attr.data-label]="'Trạng thái' | translate"><span class="status" [class.retired]="r.employmentStatus==='DA_NGHI'">{{(r.employmentStatus==='DANG_LAM'?'Đang làm':'Đã nghỉ') | translate}}</span></td><td [attr.data-label]="'Thao tác' | translate"><button hrmBtn="secondary" hrmSize="sm" (click)="select(r)" [disabled]="saving" [attr.aria-label]="('Chi tiết' | translate)+' '+r.fullName" [attr.aria-pressed]="selected?.employeeId===r.employeeId">{{ "Chi tiết" | translate }}</button></td></tr>}@empty{<tr><td colspan="4" class="empty">{{(loading?'Đang tải…':'Không có nhân viên phù hợp. Hãy xóa bộ lọc hoặc tải lại.') | translate}}</td></tr>}</tbody></table></div>
 <app-pagination [page]="page" [pages]="pages" [busy]="loading||saving" (pageChange)="load($event)" />
@@ -83,3 +105,4 @@
 <div class="form-actions"><button type="button" hrmBtn="secondary" hrmSize="md" (click)="edit('detail')">{{ "Hủy" | translate }}</button><button hrmBtn="primary" hrmSize="md" [disabled]="saving || rehireForm.invalid">{{(saving?'Đang xử lý…':'Xác nhận tiếp nhận lại') | translate}}</button></div>
 </fieldset></form>}
 </section></app-record-workspace>
+</div>

@@ -1,10 +1,11 @@
+import { Pagination } from './pagination';
 import {Component,DestroyRef,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';import {FormsModule} from '@angular/forms';
 import {HttpClient,HttpParams,HttpErrorResponse} from '@angular/common/http';import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {API_BASE_URL} from '../services/api.config';import {ActionDialogService} from './ui/action-dialog';import {HrmNotice} from './ui/notice';
 interface Option{id:number;label:string;consumes?:boolean;}
 interface Quota{entitlementId:number;employeeId:number;employeeCode:string;employeeName:string;departmentName:string;leaveTypeId:number;leaveTypeName:string;periodStart:string;periodEnd:string;entitledHours:number;usedHours:number;remainingHours:number;version:string;createdAt:string;grantedBy:string;}
-@Component({selector:'app-leave-quota',standalone:true,imports:[CommonModule,FormsModule,HrmNotice],templateUrl:'./leave-quota.html'})
+@Component({selector:'app-leave-quota',standalone:true,imports: [Pagination,CommonModule,FormsModule,HrmNotice],templateUrl:'./leave-quota.html'})
 export class LeaveQuota {
  private http=inject(HttpClient);private destroy=inject(DestroyRef);private dialog=inject(ActionDialogService);private version=0;private detailVersion=0;
  year=new Date().getFullYear();department='';employee='';type='';q='';page=0;pages=0;total=0;loading=false;saving=false;error='';message='';

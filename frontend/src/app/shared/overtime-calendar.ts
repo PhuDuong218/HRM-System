@@ -1,3 +1,4 @@
+import { Pagination } from './pagination';
 import {SearchAssistDirective} from './search-assist.directive';
 import {ActionDialogService} from './ui/action-dialog';
 import {HrmNotice} from './ui/notice';
@@ -12,7 +13,7 @@ import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
 import {API_BASE_URL} from '../services/api.config';
 import {OtDetail,OtRow,OtBreak,OvertimeApiService} from '../pages/overtime/overtime-api.service';
 interface Slot {row:OtRow;canCheckIn:boolean;canCheckOut:boolean;}
-@Component({selector:'app-overtime-calendar',standalone:true,imports:[SearchAssistDirective,HrmNotice,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule],templateUrl:'./overtime-calendar.html'})
+@Component({selector:'app-overtime-calendar',standalone:true,imports: [Pagination,SearchAssistDirective,HrmNotice,DetailFocusDirective,OtSupplementPanelComponent,RowViewDirective,CommonModule,FormsModule],templateUrl:'./overtime-calendar.html'})
 export class OvertimeCalendarComponent implements OnChanges {
  protected actionDialogInPage=inject(ActionDialogService);
 

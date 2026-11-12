@@ -88,7 +88,7 @@
             <div class="table-responsive"><table class="table align-middle"><thead><tr><th>{{ 'Mã nhân viên' | translate }}</th><th>{{ 'Họ tên' | translate }}</th><th>{{ 'Phòng ban hiện tại' | translate }}</th><th>{{ 'Chức vụ hiện tại' | translate }}</th><th>{{ 'Trạng thái' | translate }}</th><th>{{ 'Ngày vào làm' | translate }}</th></tr></thead><tbody>
               @for (item of result.items; track item.employeeId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ item.departmentName || 'Chưa có phân công' }}</td><td>{{ item.positionName || 'Chưa có chức vụ' }}</td><td>{{ item.employmentStatus === 'DANG_LAM' ? 'Đang làm việc' : item.employmentStatus === 'DA_NGHI' ? 'Đã nghỉ việc' : item.employmentStatus }}</td><td>{{ date(item.hireDate) }}</td></tr> }
             </tbody></table></div>
-            <div class="report-pagination"><span>{{ number(result.totalElements) }} {{ 'nhân viên' | translate }} · {{ 'Trang' | translate }} {{ result.page + 1 }}/{{ result.totalPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page === 0" (click)="loadEmployeeDetails(selection.groupBy, selection.row, result.page - 1)">{{ 'Trước' | translate }}</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page + 1 >= result.totalPages" (click)="loadEmployeeDetails(selection.groupBy, selection.row, result.page + 1)">{{ 'Sau' | translate }}</button></div>
+            <app-pagination [page]="result.page" [pages]="result.totalPages" [busy]="employeeDetailLoading" (pageChange)="loadEmployeeDetails(selection.groupBy, selection.row, $event)" />
           }
         }
       </section>
@@ -110,7 +110,7 @@
     @if (detailLoading) { <p class="report-note" role="status">{{ 'Đang tải danh sách…' | translate }}</p> }
     @else if (detailError) { <div class="alert alert-warning" role="alert">{{ detailError | translate }}</div> }
     @else if (!details.length) { <p class="report-note">{{ 'Không có hợp đồng phù hợp.' | translate }}</p> }
-    @else { <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã nhân viên</th><th>Nhân viên</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th></tr></thead><tbody>@for (item of details; track item.contractId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ date(item.startDate) }}</td><td>{{ date(item.endDate) }}</td></tr> }</tbody></table></div><div class="report-pagination"><span>{{ number(detailTotal) }} hợp đồng · Trang {{ detailPage + 1 }}/{{ detailPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage === 0" (click)="loadDetails(detailKind, detailPage - 1)">Trước</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="detailPage + 1 >= detailPages" (click)="loadDetails(detailKind, detailPage + 1)">Sau</button></div> }
+    @else { <div class="table-responsive"><table class="table align-middle"><thead><tr><th>Mã nhân viên</th><th>Nhân viên</th><th>Ngày bắt đầu</th><th>Ngày kết thúc</th></tr></thead><tbody>@for (item of details; track item.contractId) { <tr><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td>{{ date(item.startDate) }}</td><td>{{ date(item.endDate) }}</td></tr> }</tbody></table></div><app-pagination [page]="detailPage" [pages]="detailPages" [busy]="detailLoading" (pageChange)="loadDetails(detailKind, $event)" /> }
     </section>
   } @else if (workReport; as report) {
     @if (focusTarget === 'daily' || focusTarget === 'trend') {
@@ -203,7 +203,7 @@
             <div class="table-responsive"><table class="table align-middle"><caption class="visually-hidden">{{ 'Lương nhân viên của' | translate }} {{ batch.periodCode }}, {{ 'phiên bản' | translate }} {{ batch.versionNo }}</caption><thead><tr><th>{{ 'Mã nhân viên' | translate }}</th><th>{{ 'Họ tên' | translate }}</th><th class="text-end">{{ 'Trước khấu trừ' | translate }}</th><th class="text-end">{{ 'Phụ cấp' | translate }}</th><th class="text-end">{{ 'Thưởng' | translate }}</th><th class="text-end">{{ 'Khấu trừ' | translate }}</th><th class="text-end">{{ 'Thực nhận' | translate }}</th><th>{{ 'Chi tiết' | translate }}</th></tr></thead><tbody>
               @for (item of result.items; track item.payrollDetailId) { <tr [class.table-active]="activePayrollEmployee?.payrollDetailId === item.payrollDetailId"><td>{{ item.employeeCode }}</td><td>{{ item.employeeName }}</td><td class="text-end amount">{{ money(item.totals.grossPayroll) }}</td><td class="text-end amount">{{ money(item.totals.allowances) }}</td><td class="text-end amount">{{ money(item.totals.bonuses) }}</td><td class="text-end amount">{{ money(item.totals.deductions) }}</td><td class="text-end amount">{{ money(item.totals.netPayroll) }}</td><td><button type="button" class="btn btn-sm btn-outline-primary" [attr.aria-label]="'Xem khoản lương của ' + item.employeeName" aria-controls="payroll-line-details" (click)="loadPayrollLines(item)">{{ 'Các khoản lương' | translate }}</button></td></tr> }
             </tbody></table></div>
-            <div class="report-pagination"><span>{{ number(result.totalElements) }} {{ 'nhân viên' | translate }} · {{ 'Trang' | translate }} {{ result.page + 1 }}/{{ result.totalPages }}</span><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page === 0" (click)="loadPayrollEmployees(batch, result.page - 1)">{{ 'Trước' | translate }}</button><button type="button" class="btn btn-outline-primary btn-sm" [disabled]="result.page + 1 >= result.totalPages" (click)="loadPayrollEmployees(batch, result.page + 1)">{{ 'Sau' | translate }}</button></div>
+            <app-pagination [page]="result.page" [pages]="result.totalPages" [busy]="payrollEmployeeLoading" (pageChange)="loadPayrollEmployees(batch, $event)" />
           }
         }
         @if (activePayrollEmployee; as employee) {
@@ -225,4 +225,3 @@
   </div>
 </section>
 
-@if(selected === 'employees'){<app-seniority-report />}

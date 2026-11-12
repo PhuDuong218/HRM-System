@@ -1,4 +1,4 @@
-import {SeniorityReport} from '../../shared/seniority-report';
+import { Pagination } from '../../shared/pagination';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
 import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
@@ -26,8 +26,7 @@ interface PayrollSelection { rowKey: string; columnKey: string; label: string; b
 @Component({
   selector: 'app-reports',
   standalone: true,
-  imports: [
-    SeniorityReport,
+  imports: [Pagination,
     SearchAssistDirective,
     HrmNotice,
     PageHeader,

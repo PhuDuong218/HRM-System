@@ -68,13 +68,12 @@
 .metric-expiring > span, .metric-expired > span { font-weight:700; }
 .metric-expiring > span, .metric-expiring strong { color:#135486; }
 .metric-expired > span, .metric-expired strong { color:#8b4e12; }
-.detail-switch, .report-pagination { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.detail-switch { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
 .contract-switch { display:inline-grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; max-width:100%; padding:4px; border:1px solid #c9d9e8; border-radius:11px; background:#eaf1f7; }
 .contract-switch button { min-height:36px; padding:7px 13px; border:0; border-radius:7px; background:transparent; color:#415d75; font:inherit; font-size:12px; font-weight:600; cursor:pointer; transition:background-color .15s,color .15s; }
 .contract-switch button:hover { background:#dce8f3; color:#173e60; }
 .contract-switch button.active { background:#07558e; color:#fff; box-shadow:0 1px 4px #123e6226; }
 .contract-switch button:focus-visible { outline:3px solid #8ab8e5; outline-offset:1px; }
-.report-pagination { justify-content:flex-end; color:#627891; font-size:12px; }
 .trend-list { display:grid; gap:12px; margin-top:16px; padding:16px; border:1px solid #e1eaf2; border-radius:10px; }
 .work-trend-row { display:grid; grid-template-columns:70px minmax(190px,2fr) minmax(80px,1fr) auto; gap:10px; align-items:center; font-size:12px; color:#415d75; }
 .trend-track { height:8px; overflow:hidden; border-radius:99px; background:#e8f2fb; }

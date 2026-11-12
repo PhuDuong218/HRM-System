@@ -1,3 +1,4 @@
+import { Pagination } from './pagination';
 import {Component,Input,Output,EventEmitter,OnInit,DestroyRef,inject} from '@angular/core';
 import {CommonModule} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
@@ -6,7 +7,7 @@ import {API_BASE_URL} from '../services/api.config';
 interface Contract {contractId:number;contractNumber:string;contractTypeName:string;signedDate:string;startDate:string;endDate:string|null;status:string;}
 interface Decision {decisionId:number;decisionNumber:string;decisionType:string;content:string;issuedDate:string;approvalStatus:string;payrollEffect:string;amount:number|null;applyDate:string|null;disciplineForm:string|null;violationDate:string|null;salaryIncreaseDelayMonths:number|null;}
 interface ContractDetail {contract:Contract;salaryTerms:Array<{salaryTermId:number;effectiveFrom:string;effectiveTo:string|null;baseSalary:number;payBasis:string}>;}
-@Component({selector:'app-my-employment',standalone:true,imports:[CommonModule],templateUrl:'./my-employment.html'})
+@Component({selector:'app-my-employment',standalone:true,imports: [Pagination,CommonModule],templateUrl:'./my-employment.html'})
 export class MyEmployment implements OnInit {
  @Input() kind:'contracts'|'decisions'='contracts';@Output() back=new EventEmitter<void>();
  private http=inject(HttpClient);private destroy=inject(DestroyRef);private version=0;private detailVersion=0;

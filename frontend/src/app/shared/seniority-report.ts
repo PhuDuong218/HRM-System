@@ -1,3 +1,4 @@
+import { Pagination } from './pagination';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { FormsModule } from '@angular/forms';
@@ -7,7 +8,7 @@ import { Subscription } from 'rxjs';
 import { API_BASE_URL } from '../services/api.config';
 interface TenureRow {employeeId:number;employeeCode:string;fullName:string;hireDate:string;endDate:string;status:string;tenure:{years:number;months:number;days:number;totalMonths:number}}
 interface TenureReport {asOf:string;totalEmployees:number;underOneYear:number;oneToFiveYears:number;fiveYearsOrMore:number;items:TenureRow[];page:number;totalPages:number}
-@Component({selector:'app-seniority-report',standalone:true,imports:[FormsModule,DatePipe],template:`
+@Component({selector:'app-seniority-report',standalone:true,imports: [Pagination,FormsModule,DatePipe],template:`
 <section class="surface p-3 mt-3" aria-label="Thống kê thâm niên">
  <h2 class="h5">Thâm niên nhân sự</h2>
  <p class="small text-muted">Tính theo ngày vào làm của đợt công tác hiện tại; dừng tại ngày nghỉ việc. Số liệu là căn cứ tham khảo, không tự phát sinh thưởng.</p>
@@ -24,7 +25,7 @@ interface TenureReport {asOf:string;totalEmployees:number;underOneYear:number;on
   @for(row of result.items;track row.employeeId){<tr><td>{{row.employeeCode}} – {{row.fullName}}</td><td>{{row.hireDate|date:'dd/MM/yyyy'}}</td><td>{{row.endDate|date:'dd/MM/yyyy'}}</td><td>{{row.tenure.years}} năm {{row.tenure.months}} tháng {{row.tenure.days}} ngày</td><td>{{row.tenure.totalMonths}}</td><td>{{row.status==='DA_NGHI'?'Đã nghỉ việc':'Đang làm việc'}}</td></tr>}
   @empty{<tr><td colspan="6">Không có nhân viên phù hợp trong phạm vi được cấp.</td></tr>}
   </tbody></table></div>
-  <div class="d-flex gap-2 align-items-center"><button class="btn btn-outline-secondary" [disabled]="loading||result.page===0" (click)="load(result.page-1)">Trước</button><span>Trang {{result.totalPages?result.page+1:0}} / {{result.totalPages}}</span><button class="btn btn-outline-secondary" [disabled]="loading||result.page+1>=result.totalPages" (click)="load(result.page+1)">Sau</button></div>
+  <app-pagination [page]="result.page" [pages]="result.totalPages" [busy]="loading" (pageChange)="load($event)" />
  }
 </section>`})
 export class SeniorityReport implements OnInit {

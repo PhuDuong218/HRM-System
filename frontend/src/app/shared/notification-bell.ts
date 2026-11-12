@@ -1,3 +1,4 @@
+import { Pagination } from './pagination';
 import {Component,DestroyRef,ElementRef,HostListener,OnInit,inject} from '@angular/core';
 import {Router} from '@angular/router';
 import {DatePipe} from '@angular/common';
@@ -7,7 +8,7 @@ import {EMPTY,Subject,catchError,distinctUntilChanged,filter,finalize,forkJoin,f
 import {API_BASE_URL} from '../services/api.config';
 interface Notice {id:number;title:string;message:string;eventType:string;referenceType:string;referenceId:number;isRead:boolean;createdAt:string}
 interface Inbox {items:Notice[];totalElements:number;page:number;totalPages:number;unreadCount:number;snapshotId:number}
-@Component({selector:'app-notification-bell',standalone:true,imports:[DatePipe],templateUrl:'./notification-bell.html',styleUrl:'./notification-bell.css'})
+@Component({selector:'app-notification-bell',standalone:true,imports: [Pagination,DatePipe],templateUrl:'./notification-bell.html',styleUrl:'./notification-bell.css'})
 export class NotificationBell implements OnInit {
  private router=inject(Router);private http=inject(HttpClient);private destroy=inject(DestroyRef);private element=inject<ElementRef<HTMLElement>>(ElementRef);private refresh=new Subject<void>();
  open=false;unread=0;onlyUnread=false;page=0;snapshotId:number|undefined;inbox:Inbox|null=null;loading=false;busy=false;error='';detail:Record<string,unknown>|null=null;

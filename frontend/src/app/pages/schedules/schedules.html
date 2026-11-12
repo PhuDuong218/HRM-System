@@ -253,11 +253,7 @@
         [value]="s.scheduleId">Lịch #{{ s.scheduleId }} — {{ displayTime(s.plannedStart) }} → {{
         displayTime(s.plannedEnd) }}</option> }
     </select></div>
-  @if (ownPages>1) { <div class="d-flex gap-2 align-items-center mb-3"><button type="button"
-      class="btn btn-outline-secondary btn-sm" [disabled]="ownLoading || ownPage===0"
-      (click)="ownGoPage(ownPage-1)">{{ "Lịch trước" | translate }}</button><span>{{ ownPage+1 }}/{{ ownPages }}</span><button type="button"
-      class="btn btn-outline-secondary btn-sm" [disabled]="ownLoading || ownPage+1>=ownPages"
-      (click)="ownGoPage(ownPage+1)">{{ "Lịch tiếp" | translate }}</button></div> }
+  @if (ownPages>1) { <app-pagination [page]="ownPage" [pages]="ownPages" [busy]="ownLoading" (pageChange)="ownGoPage($event)" /> }
   <div class="row g-3 mb-3">
     <div class="col-md-6"><label for="changeDate" class="form-label">{{ "Ngày làm mới *" | translate }}</label><input id="changeDate"
         type="date" class="form-control" [(ngModel)]="changeDate" [disabled]="requestBusy"></div>

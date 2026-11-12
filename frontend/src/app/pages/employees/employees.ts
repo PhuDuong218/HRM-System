@@ -1,3 +1,4 @@
+import {SeniorityReport} from '../../shared/seniority-report';
 import {PageHeader} from '../../shared/page-header';
 import { auditActionLabel } from '../../shared/audit-action-label';
 import {SearchAssistDirective} from '../../shared/search-assist.directive';
@@ -19,7 +20,7 @@ import { AuthService } from '../../services/auth.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { employeeFormErrors } from './employee-form.validation';
 const blank = (): EmployeeForm => ({ employeeCode: '', fullName: '', birthDate: '', email: '', phone: '', identityNumber: '', hireDate: '', address: '', departmentId: null, positionId: null });
-@Component({ selector: 'app-employees', standalone: true, imports:[SearchAssistDirective,EditFormDirective,HrmNotice,RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
+@Component({ selector: 'app-employees', standalone: true, imports:[SeniorityReport,SearchAssistDirective,EditFormDirective,HrmNotice,RowViewDirective,Feedback,HrmButton,PageHeader,Pagination,FormsModule, DatePipe, RecordWorkspace,TranslatePipe], templateUrl: './employees.html', styleUrl: './employees.css' })
 export class EmployeesPage extends ManagementPageBase implements OnInit {
     profileText(text:string){return this.i18n.current?.()==='en'?({
         'Hồ sơ đã thay đổi':'Employee profile has changed',
@@ -163,6 +164,7 @@ export class EmployeesPage extends ManagementPageBase implements OnInit {
     rehireDate = '';
     rehireReason = '';
     genderLabel(value?:string|null){return ({MALE:"Nam",FEMALE:"Nữ",OTHER:"Khác",UNDISCLOSED:"Không muốn cung cấp"} as Record<string,string>)[value||""]||"Chưa cung cấp";}
+    seniorityOpen = false;
     get admin() { return this.auth.profile()?.role === 'ADMIN'; }
     get canManage(){return ['ADMIN','HR'].includes(this.auth.profile()?.role||'');}
     get canSearch(){return this.canManage||!!this.auth.profile()?.departmentHead;}
