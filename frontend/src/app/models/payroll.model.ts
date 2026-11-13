@@ -28,6 +28,21 @@ export interface PayrollLineItem {
   deductionShareText?: string;
 }
 
+export type PayrollLine = PayrollLineItem;
+
+export interface PayslipDetail {
+  payslipId: number;
+  payslipNumber: string;
+  periodCode: string;
+  positionName: string | null;
+  actualWorkDays: number | null;
+  standardWorkDays: number | null;
+  totalGross: number;
+  totalDeduction: number;
+  netSalary: number;
+  lines: PayrollLine[];
+}
+
 export interface PayrollDetailView {
   payrollDetailId: number | null;
   missingSalary?: boolean;

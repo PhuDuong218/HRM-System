@@ -8,19 +8,37 @@ public class PayrollDetailViewDTO {
     private Long employeeId;
     private String employeeName;
     private String employeeCode;
+    private String departmentName;
+    private BigDecimal baseSalary;
+    private BigDecimal workDays;
+    private Long payslipId;
     private boolean missingSalary;
     private boolean provisional;
+    private BigDecimal totalGross;      // Tổng thu nhập
+    private BigDecimal totalDeduction;  // Tổng khấu trừ
+    private BigDecimal netSalary;       // Lương thực nhận
+    private List<PayrollLineDTO> lines; // Chi tiết từng khoản
+
     public boolean isProvisional() { return provisional; }
     public void setProvisional(boolean provisional) { this.provisional = provisional; }
 
     public String getEmployeeCode() { return employeeCode; }
     public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
+
+    public BigDecimal getBaseSalary() { return baseSalary; }
+    public void setBaseSalary(BigDecimal baseSalary) { this.baseSalary = baseSalary; }
+
+    public BigDecimal getWorkDays() { return workDays; }
+    public void setWorkDays(BigDecimal workDays) { this.workDays = workDays; }
+
+    public Long getPayslipId() { return payslipId; }
+    public void setPayslipId(Long payslipId) { this.payslipId = payslipId; }
+
     public boolean isMissingSalary() { return missingSalary; }
     public void setMissingSalary(boolean missingSalary) { this.missingSalary = missingSalary; }
-    private BigDecimal totalGross;      // Tổng thu nhập
-    private BigDecimal totalDeduction;  // Tổng khấu trừ
-    private BigDecimal netSalary;       // Lương thực nhận
-    private List<PayrollLineDTO> lines; // Chi tiết từng khoản
 
     public static class PayrollLineDTO {
         private String code;
@@ -48,11 +66,10 @@ public class PayrollDetailViewDTO {
         }
 
         public void describeDeductionShare(BigDecimal gross) {
-            if (!"DEDUCT".equalsIgnoreCase(direction) || amount == null || gross.signum() <= 0) return;
+            if (!"DEDUCT".equalsIgnoreCase(direction) || amount == null || gross == null || gross.signum() <= 0) return;
             String percent = amount.movePointRight(2).divide(gross, 2, java.math.RoundingMode.HALF_UP)
                 .stripTrailingZeros().toPlainString().replace('.', ',');
             deductionShareText = percent + "% tổng thu nhập";
-
         }
 
         public String getCode() { return code; }
@@ -63,14 +80,8 @@ public class PayrollDetailViewDTO {
         public String getExplanation() { return explanation; }
     }
 
-    public String getEmployeeName() {
-        return employeeName;
-    }
-
-    public void setEmployeeName(String employeeName) {
-        this.employeeName = employeeName;
-    }
-
+    public String getEmployeeName() { return employeeName; }
+    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
     public Long getPayrollDetailId() { return payrollDetailId; }
     public void setPayrollDetailId(Long payrollDetailId) { this.payrollDetailId = payrollDetailId; }
     public Long getEmployeeId() { return employeeId; }

@@ -29,8 +29,8 @@ public class AllowanceCalculationService {
 
     public AllowanceCalculationService(EmployeeRepository employees, EmployeeAllowanceRepository allowances,
             AllowancePeriodReader periods, AllowanceWorkSource workSource, SalaryRateService salaryRates,
-            @Value("${hrm.allowance.period-policy:UNCONFIRMED}") String periodPolicy,
-            @Value("${hrm.allowance.policy-version:UNCONFIRMED}") String policyVersion) {
+            @Value("${hrm.allowance.period-policy:CALENDAR_DAY_PRORATION}") String periodPolicy,
+            @Value("${hrm.allowance.policy-version:HRM-2026.1}") String policyVersion) {
         this.employees = employees;
         this.allowances = allowances;
         this.periods = periods;

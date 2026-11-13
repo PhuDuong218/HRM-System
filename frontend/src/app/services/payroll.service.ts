@@ -6,6 +6,7 @@ import {
   PayrollPeriod,
   PayrollBatch,
   PayrollDetailView,
+  PayslipDetail,
   EmployeePayrollWorkDetail,
   PeriodAllowanceOverview,
   EmployeePayrollHistoryItem,
@@ -53,13 +54,14 @@ export class PayrollService {
     return this.http.post<PayrollBatch>(`${this.batchUrl}/draft`, { periodId });
   }
 
-  // 2. Chạy tính lương tự động
-  calculateBatch(batchId: number): Observable<string> {
-    return this.http.post(`${this.batchUrl}/${batchId}/calculate`, {}, { responseType: 'text' });
+  // 2. Chạy tính lương tự động (hỗ trợ forceDemo để bỏ qua đơn chờ duyệt khi demo)
+  calculateBatch(batchId: number, forceDemo = false): Observable<string> {
+    const params = forceDemo ? new HttpParams().set('forceDemo', 'true') : undefined;
+    return this.http.post(`${this.batchUrl}/${batchId}/calculate`, {}, { params, responseType: 'text' });
   }
 
-  calculatePayroll(batchId: number): Observable<string> {
-    return this.calculateBatch(batchId);
+  calculatePayroll(batchId: number, forceDemo = false): Observable<string> {
+    return this.calculateBatch(batchId, forceDemo);
   }
 
   // 3. Chi tiết bảng lương theo đợt
@@ -67,9 +69,10 @@ export class PayrollService {
     return this.http.get<PayrollDetailView[]>(`${this.batchUrl}/${batchId}/details`);
   }
 
-  // 4. Khóa/Chốt bảng lương
-  lockBatch(batchId: number): Observable<PayrollBatch> {
-    return this.http.post<PayrollBatch>(`${this.batchUrl}/${batchId}/lock`, {});
+  // 4. Khóa/Chốt bảng lương (hỗ trợ forceDemo khi demo ngoài ngày 3-5 hoặc có đơn mẫu)
+  lockBatch(batchId: number, forceDemo = false): Observable<PayrollBatch> {
+    const params = forceDemo ? new HttpParams().set('forceDemo', 'true') : undefined;
+    return this.http.post<PayrollBatch>(`${this.batchUrl}/${batchId}/lock`, {}, { params });
   }
 
   // 5. Công bố bảng lương
@@ -86,7 +89,7 @@ export class PayrollService {
     return this.createAdjustmentBatch(batchId, adjustmentReason);
   }
 
-  // 7. Minh chứng ngày công chi tiết của nhân viên (Check-in, Check-out, OT, Đi trễ)
+  // 7. Minh chứng ngày công chi tiết của nhân viên (Check-in, Check-out, OT, Đi trễ, Lý do)
   getEmployeeWorkDetails(batchId: number, employeeId: number): Observable<EmployeePayrollWorkDetail> {
     return this.http.get<EmployeePayrollWorkDetail>(`${this.batchUrl}/${batchId}/employees/${employeeId}/work-details`);
   }
@@ -137,6 +140,10 @@ export class PayrollService {
 
   getMyPayslips(): Observable<any[]> {
     return this.http.get<any[]>(`${API_BASE_URL}/me/payslips`);
+  }
+
+  getPayslipDetail(payslipId: number): Observable<PayslipDetail> {
+    return this.http.get<PayslipDetail>(`${API_BASE_URL}/payslips/${payslipId}`);
   }
 
   getPayslipHtml(payslipId: number): Observable<string> {

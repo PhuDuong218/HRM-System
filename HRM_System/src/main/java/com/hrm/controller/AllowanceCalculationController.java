@@ -10,7 +10,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 public class AllowanceCalculationController {
     private final AllowanceCalculationService service;
     public AllowanceCalculationController(AllowanceCalculationService service) { this.service=service; }
-    @GetMapping("/employees/{employeeId}/allowance-calculations")
+    @GetMapping({"/employees/{employeeId}/allowance-calculations", "/api/employees/{employeeId}/allowance-calculations"})
     public AllowanceCalculationResult calculate(@PathVariable Long employeeId,@RequestParam Long periodId) {
         return service.calculate(employeeId,periodId);
     }

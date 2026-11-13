@@ -1,4 +1,12 @@
-<app-page-header variant="directory" title="Phụ cấp" description="Quản lý loại phụ cấp và thời hạn áp dụng cho từng nhân viên." />
+<app-page-header variant="directory" title="Phụ cấp" description="Quản lý loại phụ cấp, gán phụ cấp cho từng nhân viên, xem trước theo kỳ và xem tổng hợp phụ cấp của tháng & phòng ban." />
+
+<section class="surface mb-3 py-2 px-3 small text-muted">
+  <strong class="text-primary">📘 Hướng dẫn sử dụng trang Phụ cấp:</strong>
+  Chuyển đổi giữa 4 tab bên dưới để: <strong>(1) Loại phụ cấp</strong> — quản lý danh mục &amp; quy tắc chịu thuế/BHXH;
+  <strong>(2) Phụ cấp nhân viên</strong> — gán/đổi mức/kết thúc phụ cấp cho từng cá nhân;
+  <strong>(3) Xem trước theo kỳ</strong> — tính thử phụ cấp của 1 nhân viên trong kỳ;
+  <strong>(4) Phụ cấp tháng &amp; Phòng ban</strong> — xem toàn bộ danh sách phụ cấp của tháng và thống kê theo phòng ban.
+</section>
 
 @if (message) { <div [hrmNotice]="message" noticeKind="success" class="alert alert-success" role="status">{{ message | translate }}</div> }
 @if (error) { <div [hrmNotice]="error" noticeKind="error" class="alert alert-danger" role="alert">{{ error | translate }}</div> }
@@ -7,6 +15,7 @@
   <li class="nav-item"><button type="button"  [class.active]="tab==='types'" (click)="setTab('types')">{{ "Loại phụ cấp" | translate }}</button></li>
   <li class="nav-item"><button type="button"  [class.active]="tab==='assigned'" (click)="setTab('assigned')">{{ "Phụ cấp nhân viên" | translate }}</button></li>
   <li class="nav-item"><button type="button"  [class.active]="tab==='preview'" (click)="setTab('preview')">{{ "Xem trước theo kỳ" | translate }}</button></li>
+  <li class="nav-item"><button type="button"  [class.active]="tab==='overview'" (click)="setTab('overview')">{{ "Phụ cấp tháng & Phòng ban" | translate }}</button></li>
 </ul>
 
 <!-- ================= TAB 1: LOẠI PHỤ CẤP ================= -->
@@ -407,6 +416,134 @@
         </table>
       </div>
       <p class="form-text">{{ "Trạng thái làm tròn:" | translate }} <strong>{{ preview.roundingStatus }}</strong></p>
+    }
+  </section>
+}
+
+<!-- ================= TAB 4: PHỤ CẤP THÁNG & PHÒNG BAN ================= -->
+@if (tab === 'overview') {
+  <section class="surface mb-4">
+    <div class="mb-3 pb-2 border-bottom">
+      <h2 class="h5 mb-1">Danh sách phụ cấp theo tháng &amp; tổng hợp theo phòng ban</h2>
+      <p class="small text-muted mb-0">
+        Chọn kỳ lương và phòng ban để xem tổng hợp quỹ phụ cấp từng bộ phận và danh sách chi tiết từng nhân viên được hưởng trong tháng.
+      </p>
+    </div>
+
+    <div class="row g-3 align-items-end mb-4">
+      <div class="col-md-4">
+        <label class="form-label fw-bold mb-1">Kỳ lương:</label>
+        <select class="form-select" [(ngModel)]="overviewPeriodId" (ngModelChange)="loadOverview()">
+          @for (p of periods; track p.periodId) {
+            <option [ngValue]="p.periodId">{{ p.periodCode }} ({{ p.periodStart }} → {{ p.periodEnd }})</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-4">
+        <label class="form-label fw-bold mb-1">Phòng ban:</label>
+        <select class="form-select" [(ngModel)]="overviewDeptId" (ngModelChange)="loadOverview()">
+          <option [ngValue]="null">Tất cả phòng ban</option>
+          @for (d of departments; track d.departmentId) {
+            <option [ngValue]="d.departmentId">{{ d.departmentName }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-4 text-md-end">
+        @if (allowanceOverview) {
+          <div class="p-2 px-3 bg-light rounded border d-inline-block text-end">
+            <small class="text-muted d-block">Tổng quỹ phụ cấp kỳ {{ allowanceOverview.periodCode }}</small>
+            <strong class="text-primary fs-5">{{ allowanceOverview.totalCompanyAllowance | number:'1.0-0' }} đ</strong>
+          </div>
+        }
+      </div>
+    </div>
+
+    @if (overviewLoading) {
+      <p role="status">Đang tải danh sách phụ cấp của tháng &amp; phòng ban…</p>
+    } @else if (allowanceOverview) {
+      <h3 class="h6 fw-bold text-uppercase text-primary mb-2">1. Tổng hợp phụ cấp theo phòng ban</h3>
+      <div class="table-responsive mb-4">
+        <table class="table table-striped align-middle">
+          <thead>
+            <tr>
+              <th>Phòng ban</th>
+              <th class="text-center">Số nhân sự</th>
+              <th class="text-center">Số khoản</th>
+              <th>Chi tiết theo loại phụ cấp</th>
+              <th class="text-end">Tổng tiền phụ cấp</th>
+              <th class="text-end">Thao tác</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId) {
+              <tr [class.table-primary]="overviewDeptId === dept.departmentId">
+                <td class="fw-bold">{{ dept.departmentName }}</td>
+                <td class="text-center">{{ dept.employeeCount }} NV</td>
+                <td class="text-center">{{ dept.allowanceCount }}</td>
+                <td class="small">
+                  @for (entry of dept.amountByAllowanceType | keyvalue; track entry.key) {
+                    <span class="badge text-bg-light border me-1">{{ entry.key }}: {{ entry.value | number:'1.0-0' }} đ</span>
+                  }
+                </td>
+                <td class="text-end fw-bold text-primary">{{ dept.totalAllowanceAmount | number:'1.0-0' }} đ</td>
+                <td class="text-end">
+                  <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" (click)="filterOverviewByDept(dept.departmentId)">
+                    Xem danh sách
+                  </button>
+                </td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu phụ cấp phòng ban trong kỳ này.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="d-flex justify-content-between align-items-center mb-2">
+        <h3 class="h6 fw-bold text-uppercase text-primary mb-0">
+          2. Danh sách phụ cấp nhân viên trong tháng ({{ allowanceOverview.items.length }} khoản)
+        </h3>
+        @if (overviewDeptId !== null) {
+          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="filterOverviewByDept(null)">Xem tất cả phòng ban</button>
+        }
+      </div>
+      <div class="table-responsive">
+        <table class="table table-striped align-middle mb-0">
+          <thead>
+            <tr>
+              <th>Mã NV</th>
+              <th>Họ và tên nhân viên</th>
+              <th>Phòng ban</th>
+              <th>Loại phụ cấp</th>
+              <th>Cách tính</th>
+              <th>Hiệu lực</th>
+              <th class="text-end">Mức hưởng / kỳ</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (item of allowanceOverview.items; track item.employeeAllowanceId) {
+              <tr>
+                <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
+                <td class="fw-semibold">{{ item.fullName }}</td>
+                <td>{{ item.departmentName }}</td>
+                <td>
+                  <div class="fw-semibold">{{ item.allowanceName }}</div>
+                  <small class="text-muted">{{ item.isTaxable ? 'Chịu thuế TNCN' : 'Miễn thuế' }} · {{ item.countsForSocialInsurance ? 'Tính BHXH' : 'Không tính BHXH' }}</small>
+                </td>
+                <td class="small">{{ item.calculationBasis }}</td>
+                <td class="small">{{ item.effectiveFrom }} → {{ item.effectiveTo || 'Vô thời hạn' }}</td>
+                <td class="text-end fw-bold text-success">{{ item.estimatedPeriodAmount | number:'1.0-0' }} đ</td>
+              </tr>
+            } @empty {
+              <tr>
+                <td colspan="7" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
     }
   </section>
 }
