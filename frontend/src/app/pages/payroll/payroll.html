@@ -628,7 +628,7 @@
           </div>
 
           <div class="d-flex justify-content-end gap-2 mt-3">
-            <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="!currentBatch?.publishedAt || selectedDetail.payrollDetailId === null" (click)="printPayslip(selectedDetail)">
+            <button type="button" class="btn btn-outline-primary btn-sm" [disabled]="(!currentBatch?.publishedAt && currentBatch?.status !== 'CONG_BO') || selectedDetail.payrollDetailId === null" (click)="printPayslip(selectedDetail)">
               🖨 Mở bản in phiếu lương (PDF)
             </button>
             <button type="button" class="btn btn-secondary btn-sm" (click)="closeDrawer()">
@@ -686,7 +686,7 @@
     } @else if (allowanceOverview) {
       <!-- BẢNG 2A: PHỤ CẤP THEO PHÒNG BAN -->
       <h3 class="h6 fw-bold text-uppercase text-primary mb-2">1. Tổng hợp phụ cấp theo phòng ban ({{ allowanceOverview.departmentSummaries.length }} phòng ban)</h3>
-      <div class="table-responsive mb-4">
+      <div class="table-responsive mb-2">
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
@@ -700,9 +700,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId; let idx = $index) {
+            @for (dept of pagedAllowanceDepts; track dept.departmentId; let idx = $index) {
               <tr [class.table-primary]="selectedAllowanceDeptId === dept.departmentId">
-                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
+                <td class="text-center text-muted fw-semibold">{{ (allowanceDeptPage - 1) * pageSize + idx + 1 }}</td>
                 <td>
                   <div class="fw-bold">{{ dept.departmentName }}</div>
                   <small class="text-muted">Mã PB: {{ dept.departmentCode }}</small>
@@ -729,6 +729,11 @@
           </tbody>
         </table>
       </div>
+      @if (allowanceOverview.departmentSummaries.length > 0) {
+        <div class="mb-4">
+          <app-pagination [page]="allowanceDeptPage - 1" [pages]="allowanceDeptTotalPages" [busy]="loadingAllowances" (pageChange)="allowanceDeptPage = $event + 1" />
+        </div>
+      }
 
       <!-- BẢNG 2B: CHI TIẾT PHỤ CẤP NHÂN VIÊN TRONG THÁNG -->
       <div class="d-flex justify-content-between align-items-center mb-2">
@@ -756,9 +761,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of allowanceOverview.items; track item.employeeAllowanceId; let idx = $index) {
+            @for (item of pagedAllowanceItems; track item.employeeAllowanceId; let idx = $index) {
               <tr>
-                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
+                <td class="text-center text-muted fw-semibold">{{ (allowancePage - 1) * pageSize + idx + 1 }}</td>
                 <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
                 <td class="fw-semibold">{{ item.fullName }}</td>
                 <td>{{ item.departmentName }}</td>
@@ -783,6 +788,11 @@
           </tbody>
         </table>
       </div>
+      @if (allowanceOverview.items.length > 0) {
+        <div class="pt-3">
+          <app-pagination [page]="allowancePage - 1" [pages]="allowanceTotalPages" [busy]="loadingAllowances" (pageChange)="allowancePage = $event + 1" />
+        </div>
+      }
     }
   </section>
 }
@@ -878,9 +888,9 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of historyRows; track row.payrollDetailId; let idx = $index) {
+          @for (row of pagedHistoryRows; track row.payrollDetailId; let idx = $index) {
             <tr>
-              <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
+              <td class="text-center text-muted fw-semibold">{{ (historyPage - 1) * pageSize + idx + 1 }}</td>
               <td class="fw-bold">{{ row.periodCode }}</td>
               <td><code>v{{ row.versionNo }}</code></td>
               <td>
@@ -917,6 +927,11 @@
         </tbody>
       </table>
     </div>
+    @if (historyRows.length > 0) {
+      <div class="pt-3">
+        <app-pagination [page]="historyPage - 1" [pages]="historyTotalPages" [busy]="loadingHistory" (pageChange)="historyPage = $event + 1" />
+      </div>
+    }
   </section>
 }
 
@@ -966,9 +981,9 @@
           </tr>
         </thead>
         <tbody>
-          @for (dept of departmentCosts; track dept.departmentId; let idx = $index) {
+          @for (dept of pagedDepartmentCosts; track dept.departmentId; let idx = $index) {
             <tr>
-              <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
+              <td class="text-center text-muted fw-semibold">{{ (deptCostPage - 1) * pageSize + idx + 1 }}</td>
               <td>
                 <div class="fw-bold">{{ dept.departmentName }}</div>
                 <small class="text-muted">Mã PB: {{ dept.departmentCode }}</small>
@@ -991,6 +1006,11 @@
         </tbody>
       </table>
     </div>
+    @if (departmentCosts.length > 0) {
+      <div class="pt-3">
+        <app-pagination [page]="deptCostPage - 1" [pages]="deptCostTotalPages" [busy]="loadingDeptCosts" (pageChange)="deptCostPage = $event + 1" />
+      </div>
+    }
   </section>
 }
 

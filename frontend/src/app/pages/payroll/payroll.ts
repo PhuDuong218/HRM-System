@@ -67,7 +67,11 @@ export class PayrollPage implements OnInit {
 
   filterKeyword = '';
   currentPage = 1;
-  pageSize = 10;
+  allowanceDeptPage = 1;
+  allowancePage = 1;
+  historyPage = 1;
+  deptCostPage = 1;
+  pageSize = 30;
 
   showAdjustModal = false;
   adjustmentReasonInput = '';
@@ -417,36 +421,42 @@ export class PayrollPage implements OnInit {
       return;
     }
 
-    if (item.payslipId) {
-      window.open(`/api/payslips/${item.payslipId}/html`, '_blank');
+    const req$ =
+      item.payslipId && typeof (this.payrollService as any).getPayslipHtml === 'function'
+        ? this.payrollService.getPayslipHtml(item.payslipId)
+        : item.payrollDetailId != null && typeof (this.payrollService as any).getPayslipHtmlByPayrollDetail === 'function'
+          ? this.payrollService.getPayslipHtmlByPayrollDetail(item.payrollDetailId)
+          : null;
+
+    if (!req$) {
+      this.errorMessage = 'Chưa có thông tin phiếu lương để in.';
       return;
     }
 
-    if (item.payrollDetailId != null && typeof (this.payrollService as any).getPayslipHtmlByPayrollDetail === 'function') {
-      const printWindow = window.open('', '_blank');
-      if (!printWindow) {
-        this.errorMessage = 'Trình duyệt đang chặn cửa sổ in.';
-        return;
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.errorMessage = 'Trình duyệt đang chặn cửa sổ in.';
+      return;
+    }
+
+    req$.subscribe({
+      next: (html: string) => {
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+      },
+      error: () => {
+        printWindow.close();
+        this.errorMessage = 'Chưa tìm thấy phiếu lương đã phát hành cho phiên bản này.';
       }
-      (this.payrollService as any).getPayslipHtmlByPayrollDetail(item.payrollDetailId).subscribe({
-        next: (html: string) => {
-          printWindow.document.write(html);
-          printWindow.document.close();
-        },
-        error: () => {
-          printWindow.close();
-          this.errorMessage = 'Chưa tìm thấy phiếu lương đã phát hành cho phiên bản này.';
-        }
-      });
-      return;
-    }
-
-    this.errorMessage = 'Chưa có thông tin phiếu lương để in.';
+    });
   }
 
   loadPeriodAllowances(): void {
     if (!this.selectedPeriodId) return;
     this.loadingAllowances = true;
+    this.allowanceDeptPage = 1;
+    this.allowancePage = 1;
     this.payrollService.getPeriodAllowances(Number(this.selectedPeriodId), this.selectedAllowanceDeptId).subscribe({
       next: (data) => {
         this.allowanceOverview = data;
@@ -461,11 +471,13 @@ export class PayrollPage implements OnInit {
 
   filterAllowanceByDept(deptId: number | null): void {
     this.selectedAllowanceDeptId = deptId;
+    this.allowancePage = 1;
     this.loadPeriodAllowances();
   }
 
   loadEmployeeHistory(): void {
     this.loadingHistory = true;
+    this.historyPage = 1;
     this.payrollService
       .getEmployeePayrollHistory({
         departmentId: this.historyDeptId,
@@ -475,6 +487,7 @@ export class PayrollPage implements OnInit {
       .subscribe({
         next: (rows) => {
           this.historyRows = rows || [];
+          this.historyPage = 1;
           this.loadingHistory = false;
         },
         error: (err) => {
@@ -488,6 +501,7 @@ export class PayrollPage implements OnInit {
     this.historyDeptId = null;
     this.historyKeyword = '';
     this.historyStatus = '';
+    this.historyPage = 1;
     this.loadEmployeeHistory();
   }
 
@@ -495,6 +509,7 @@ export class PayrollPage implements OnInit {
     this.selectedPeriodId = Number(row.periodId);
     this.activeTab = 'batch';
     this.filterKeyword = row.employeeCode || '';
+    this.currentPage = 1;
     this.highlightedEmployeeId = row.employeeId;
     this.payrollService.getBatchesByPeriod(Number(row.periodId)).subscribe({
       next: (batches) => {
@@ -519,9 +534,11 @@ export class PayrollPage implements OnInit {
   loadDepartmentCosts(): void {
     if (!this.selectedPeriodId) return;
     this.loadingDeptCosts = true;
+    this.deptCostPage = 1;
     this.payrollService.getDepartmentCostSummary(Number(this.selectedPeriodId)).subscribe({
       next: (rows) => {
         this.departmentCosts = rows || [];
+        this.deptCostPage = 1;
         this.loadingDeptCosts = false;
       },
       error: (err) => {
@@ -585,6 +602,46 @@ export class PayrollPage implements OnInit {
   get pagedDetails(): PayrollDetailView[] {
     const start = (this.currentPage - 1) * this.pageSize;
     return this.filteredDetails.slice(start, start + this.pageSize);
+  }
+
+  get allowanceDeptTotalPages(): number {
+    const list = this.allowanceOverview?.departmentSummaries || [];
+    return Math.max(1, Math.ceil(list.length / this.pageSize));
+  }
+
+  get pagedAllowanceDepts(): NonNullable<PeriodAllowanceOverview['departmentSummaries']> {
+    const list = this.allowanceOverview?.departmentSummaries || [];
+    const start = (this.allowanceDeptPage - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  }
+
+  get allowanceTotalPages(): number {
+    const list = this.allowanceOverview?.items || [];
+    return Math.max(1, Math.ceil(list.length / this.pageSize));
+  }
+
+  get pagedAllowanceItems(): NonNullable<PeriodAllowanceOverview['items']> {
+    const list = this.allowanceOverview?.items || [];
+    const start = (this.allowancePage - 1) * this.pageSize;
+    return list.slice(start, start + this.pageSize);
+  }
+
+  get historyTotalPages(): number {
+    return Math.max(1, Math.ceil(this.historyRows.length / this.pageSize));
+  }
+
+  get pagedHistoryRows(): EmployeePayrollHistoryItem[] {
+    const start = (this.historyPage - 1) * this.pageSize;
+    return this.historyRows.slice(start, start + this.pageSize);
+  }
+
+  get deptCostTotalPages(): number {
+    return Math.max(1, Math.ceil(this.departmentCosts.length / this.pageSize));
+  }
+
+  get pagedDepartmentCosts(): DepartmentPayrollCost[] {
+    const start = (this.deptCostPage - 1) * this.pageSize;
+    return this.departmentCosts.slice(start, start + this.pageSize);
   }
 
   get totalGross(): number {
