@@ -34,6 +34,9 @@ public class PayrollReadinessGuard {
     private final PayrollBatchRepository batchRepository;
     private final PayrollPeriodRepository periodRepository;
 
+    @Autowired(required = false)
+    private PersonnelScopeService personnelScope;
+
     // Mở khóa cửa sổ ngày 03-05 đầu tháng kế tiếp theo mặc định để phục vụ Demo & kiểm thử mọi thời điểm
     @Value("${hrm.payroll.enforce-calculate-window:false}")
     private boolean enforceCalculateWindow = false;
@@ -448,6 +451,11 @@ public class PayrollReadinessGuard {
                     "/contracts"
             ));
         }, end, start, end, end, start, end, start);
+
+        if (PersonnelScopeService.isHr() && personnelScope != null) {
+            java.util.Set<Long> allowedIds = new java.util.HashSet<>(personnelScope.employees());
+            blockers.removeIf(b -> b.employeeId() != null && !allowedIds.contains(b.employeeId()));
+        }
 
         List<PayrollBlockerItemDTO> calcBlockers = blockers.stream()
                 .filter(b -> enforceCalculateWindow || !"CUA_SO_THOI_GIAN".equals(b.category()))

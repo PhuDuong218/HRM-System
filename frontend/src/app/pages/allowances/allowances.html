@@ -466,6 +466,7 @@
         <table class="table table-striped align-middle">
           <thead>
             <tr>
+              <th class="text-center" style="width: 56px;">STT</th>
               <th>Phòng ban</th>
               <th class="text-center">Số nhân sự</th>
               <th class="text-center">Số khoản</th>
@@ -475,8 +476,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId) {
+            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId; let idx = $index) {
               <tr [class.table-primary]="overviewDeptId === dept.departmentId">
+                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
                 <td class="fw-bold">{{ dept.departmentName }}</td>
                 <td class="text-center">{{ dept.employeeCount }} NV</td>
                 <td class="text-center">{{ dept.allowanceCount }}</td>
@@ -494,7 +496,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu phụ cấp phòng ban trong kỳ này.</td>
+                <td colspan="7" class="text-center text-muted py-3">Chưa có dữ liệu phụ cấp phòng ban trong kỳ này.</td>
               </tr>
             }
           </tbody>
@@ -513,6 +515,7 @@
         <table class="table table-striped align-middle mb-0">
           <thead>
             <tr>
+              <th class="text-center" style="width: 56px;">STT</th>
               <th>Mã NV</th>
               <th>Họ và tên nhân viên</th>
               <th>Phòng ban</th>
@@ -523,8 +526,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of allowanceOverview.items; track item.employeeAllowanceId) {
+            @for (item of allowanceOverview.items; track item.employeeAllowanceId; let idx = $index) {
               <tr>
+                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
                 <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
                 <td class="fw-semibold">{{ item.fullName }}</td>
                 <td>{{ item.departmentName }}</td>
@@ -538,7 +542,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
+                <td colspan="8" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
               </tr>
             }
           </tbody>

@@ -64,7 +64,7 @@
     🎁 Phụ cấp tháng &amp; phòng ban
   </button>
   <button type="button" class="btn" [class.btn-primary]="activeTab === 'employee-history'" [class.btn-outline-secondary]="activeTab !== 'employee-history'" (click)="switchTab('employee-history')">
-    👤 Bộ lọc &amp; Lịch sử nhân viên
+    👤 Lịch sử lương nhân viên
   </button>
   <button type="button" class="btn" [class.btn-primary]="activeTab === 'department-summary'" [class.btn-outline-secondary]="activeTab !== 'department-summary'" (click)="switchTab('department-summary')">
     🏢 Chi phí theo phòng ban
@@ -690,6 +690,7 @@
         <table class="table table-hover align-middle">
           <thead class="table-light">
             <tr>
+              <th class="text-center" style="width: 56px;">STT</th>
               <th>Phòng ban</th>
               <th class="text-center">Số nhân sự hưởng</th>
               <th class="text-center">Số khoản phụ cấp</th>
@@ -699,8 +700,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId) {
+            @for (dept of allowanceOverview.departmentSummaries; track dept.departmentId; let idx = $index) {
               <tr [class.table-primary]="selectedAllowanceDeptId === dept.departmentId">
+                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
                 <td>
                   <div class="fw-bold">{{ dept.departmentName }}</div>
                   <small class="text-muted">Mã PB: {{ dept.departmentCode }}</small>
@@ -721,7 +723,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="6" class="text-center text-muted py-3">Chưa có dữ liệu phụ cấp phòng ban trong kỳ này.</td>
+                <td colspan="7" class="text-center text-muted py-3">Chưa có dữ liệu phụ cấp phòng ban trong kỳ này.</td>
               </tr>
             }
           </tbody>
@@ -743,6 +745,7 @@
         <table class="table table-hover align-middle mb-0">
           <thead class="table-light">
             <tr>
+              <th class="text-center" style="width: 56px;">STT</th>
               <th>Mã NV</th>
               <th>Họ và tên nhân viên</th>
               <th>Phòng ban</th>
@@ -753,8 +756,9 @@
             </tr>
           </thead>
           <tbody>
-            @for (item of allowanceOverview.items; track item.employeeAllowanceId) {
+            @for (item of allowanceOverview.items; track item.employeeAllowanceId; let idx = $index) {
               <tr>
+                <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
                 <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
                 <td class="fw-semibold">{{ item.fullName }}</td>
                 <td>{{ item.departmentName }}</td>
@@ -773,7 +777,7 @@
               </tr>
             } @empty {
               <tr>
-                <td colspan="7" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
+                <td colspan="8" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
               </tr>
             }
           </tbody>
@@ -784,12 +788,12 @@
 }
 
 <!-- ======================================================================= -->
-<!-- TAB 3: BỘ LỌC & LỊCH SỬ NHÂN VIÊN                                       -->
+<!-- TAB 3: LỊCH SỬ LƯƠNG NHÂN VIÊN                                          -->
 <!-- ======================================================================= -->
 @if (activeTab === 'employee-history') {
   <section class="surface mb-4">
     <div class="mb-3 pb-2 border-bottom">
-      <h2 class="h5 mb-1">👤 Bộ lọc &amp; Lịch sử lương nhân viên qua các kỳ</h2>
+      <h2 class="h5 mb-1">👤 Lịch sử lương nhân viên</h2>
       <p class="small text-muted mb-0">
         <strong>Hướng dẫn sử dụng:</strong> Trang này giúp kế toán và quản lý tra cứu toàn bộ lịch sử thu nhập (Ngày công, Giờ tăng ca OT, Tổng Gross, Khấu trừ, Thực lĩnh Net) của bất kỳ nhân viên hoặc phòng ban nào qua tất cả các tháng và các phiên bản điều chỉnh (<code>v1</code>, <code>v2</code>...). Bấm nút <strong>"Xem chi tiết ↗"</strong> ở bất kỳ dòng nào để mở ngay phiếu giải trình công &amp; lương của nhân viên ở kỳ đó.
       </p>
@@ -859,6 +863,7 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
+            <th class="text-center" style="width: 56px;">STT</th>
             <th>Kỳ lương</th>
             <th>Phiên bản</th>
             <th>Trạng thái</th>
@@ -873,8 +878,9 @@
           </tr>
         </thead>
         <tbody>
-          @for (row of historyRows; track row.payrollDetailId) {
+          @for (row of historyRows; track row.payrollDetailId; let idx = $index) {
             <tr>
+              <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
               <td class="fw-bold">{{ row.periodCode }}</td>
               <td><code>v{{ row.versionNo }}</code></td>
               <td>
@@ -905,7 +911,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="11" class="text-center text-muted py-4">Không tìm thấy dữ liệu lịch sử lương phù hợp bộ lọc.</td>
+              <td colspan="12" class="text-center text-muted py-4">Không tìm thấy dữ liệu lịch sử lương phù hợp bộ lọc.</td>
             </tr>
           }
         </tbody>
@@ -946,6 +952,7 @@
       <table class="table table-hover align-middle mb-0">
         <thead class="table-light">
           <tr>
+            <th class="text-center" style="width: 56px;">STT</th>
             <th>Phòng ban</th>
             <th class="text-center">Nhân sự</th>
             <th class="text-end">Lương công</th>
@@ -959,8 +966,9 @@
           </tr>
         </thead>
         <tbody>
-          @for (dept of departmentCosts; track dept.departmentId) {
+          @for (dept of departmentCosts; track dept.departmentId; let idx = $index) {
             <tr>
+              <td class="text-center text-muted fw-semibold">{{ idx + 1 }}</td>
               <td>
                 <div class="fw-bold">{{ dept.departmentName }}</div>
                 <small class="text-muted">Mã PB: {{ dept.departmentCode }}</small>
@@ -977,7 +985,7 @@
             </tr>
           } @empty {
             <tr>
-              <td colspan="10" class="text-center text-muted py-4">Chưa có dữ liệu chi phí phòng ban cho kỳ này (hãy chạy Tính lương trước).</td>
+              <td colspan="11" class="text-center text-muted py-4">Chưa có dữ liệu chi phí phòng ban cho kỳ này (hãy chạy Tính lương trước).</td>
             </tr>
           }
         </tbody>
