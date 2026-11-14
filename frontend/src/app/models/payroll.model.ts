@@ -17,16 +17,23 @@ export interface PayrollBatch {
 }
 
 export interface PayrollLineItem {
-  code: string;
+  lineId?: number;
+  code?: string;
   name: string;
-  direction: 'ADD' | 'DEDUCT';
+  componentCode?: string;
+  componentName?: string;
+  direction: 'ADD' | 'DEDUCT' | string;
   quantity?: number;
   unitRate?: number;
   multiplier?: number;
   amount: number;
   explanation?: string;
   deductionShareText?: string;
+  [key: string]: any;
 }
+
+// Export PayrollLine cho trang payslips.ts và các màn hình liên quan
+export type PayrollLine = PayrollLineItem;
 
 export interface PayrollDetailView {
   payrollDetailId: number | null;
@@ -49,7 +56,26 @@ export interface PayrollDetailView {
   netSalary: number | null;
 
   payslipId?: number | null;
-  lines: PayrollLineItem[];
+  lines: PayrollLine[];
+}
+
+// --- 0. CHI TIẾT PHIẾU LƯƠNG CÁ NHÂN (DÙNG CHO PAYSLIPS) ---
+export interface PayslipDetail {
+  payslipId: number;
+  payslipNumber?: string;
+  employeeId: number;
+  employeeCode?: string;
+  employeeName?: string;
+  periodCode?: string;
+  periodStart?: string;
+  periodEnd?: string;
+  versionNo?: number;
+  totalGross?: number;
+  totalDeduction?: number;
+  netSalary?: number;
+  publishedAt?: string;
+  lines?: PayrollLine[];
+  [key: string]: any;
 }
 
 // --- 1. MINH CHỨNG NGÀY CÔNG ---

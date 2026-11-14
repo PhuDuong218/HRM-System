@@ -139,6 +139,11 @@ export class PayrollService {
     return this.http.get<any[]>(`${API_BASE_URL}/me/payslips`);
   }
 
+  // Chi tiết 1 phiếu lương theo ID
+  getPayslipDetail(payslipId: number): Observable<any> {
+    return this.http.get<any>(`${API_BASE_URL}/payslips/${payslipId}`);
+  }
+
   getPayslipHtml(payslipId: number): Observable<string> {
     return this.http.get(`${API_BASE_URL}/payslips/${payslipId}/html`, { responseType: 'text' });
   }
