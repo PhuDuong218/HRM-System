@@ -5,10 +5,19 @@ import java.time.LocalDateTime;
 import java.util.List;
 
 public class PayslipDetailDTO {
+    private String employeeCode;
+    private String employeeName;
+    private String departmentName;
     private String positionName;
     private BigDecimal actualWorkDays;
     private BigDecimal standardWorkDays;
 
+    public String getEmployeeCode() { return employeeCode; }
+    public void setEmployeeCode(String employeeCode) { this.employeeCode = employeeCode; }
+    public String getEmployeeName() { return employeeName; }
+    public void setEmployeeName(String employeeName) { this.employeeName = employeeName; }
+    public String getDepartmentName() { return departmentName; }
+    public void setDepartmentName(String departmentName) { this.departmentName = departmentName; }
     public String getPositionName() { return positionName; }
     public void setPositionName(String positionName) { this.positionName = positionName; }
     public BigDecimal getActualWorkDays() { return actualWorkDays; }

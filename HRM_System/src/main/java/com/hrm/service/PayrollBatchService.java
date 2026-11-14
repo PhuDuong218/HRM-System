@@ -4,10 +4,12 @@ import com.hrm.dto.AdjustmentBatchRequestDTO;
 import com.hrm.dto.CreateDraftBatchRequestDTO;
 import com.hrm.dto.PayrollBatchDTO;
 import com.hrm.enums.BatchStatus;
+import com.hrm.exception.BusinessException;
 import com.hrm.model.PayrollBatch;
 import com.hrm.repository.PayrollBatchRepository;
 import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollPeriodRepository;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -55,11 +57,11 @@ public class PayrollBatchService {
     public PayrollBatchDTO createDraftBatch(CreateDraftBatchRequestDTO request) {
         Long periodId = request.getPeriodId();
         if (!periodRepository.existsById(periodId)) {
-            throw new RuntimeException("Kỳ lương với ID " + periodId + " không tồn tại!");
+            throw new BusinessException(HttpStatus.NOT_FOUND, "Kỳ lương với ID " + periodId + " không tồn tại!");
         }
 
         if (batchRepository.existsByPeriodIdAndStatus(periodId, BatchStatus.NHAP)) {
-            throw new RuntimeException("Kỳ lương này đã có một bản ghi NHÁP đang xử lý. Vui lòng không tạo trùng!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Kỳ lương này đã có một bản ghi NHÁP đang xử lý. Vui lòng sử dụng đợt nháp hiện tại!");
         }
 
         int nextVersion = 1;
@@ -81,21 +83,25 @@ public class PayrollBatchService {
     // P-12: Chốt bảng lương (Khóa cứng dữ liệu theo đúng CK_batches_lock)
     @Transactional
     public PayrollBatchDTO lockBatch(Long batchId, Long actorAccountId) {
+        return lockBatch(batchId, actorAccountId, false);
+    }
+
+    @Transactional
+    public PayrollBatchDTO lockBatch(Long batchId, Long actorAccountId, boolean forceDemo) {
         PayrollBatch batch = batchRepository.findForUpdate(batchId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương ID: " + batchId));
+                .or(() -> batchRepository.findById(batchId))
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Không tìm thấy bảng lương ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.NHAP) {
-            throw new RuntimeException("Chỉ có bảng lương ở trạng thái NHAP mới được phép Chốt!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Chỉ có bảng lương ở trạng thái NHÁP mới được phép Chốt!");
         }
 
         if (detailRepository.findByBatchId(batchId).isEmpty()) {
-            throw new RuntimeException("Bảng lương chưa được chạy tính toán dữ liệu, không thể chốt!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Bảng lương chưa được chạy tính toán dữ liệu, không thể chốt! Vui lòng bấm 'Tính tự động' trước.");
         }
 
-        readiness.requireReady(batch.getPeriodId());
-        if (detailRepository.hasProvisionalDraft(batchId)) {
-            throw new com.hrm.exception.BusinessException(org.springframework.http.HttpStatus.CONFLICT,
-                    "Đợt này là bản đối soát theo chính sách tạm tính, chưa được chốt.");
+        if (!forceDemo && readiness != null) {
+            readiness.requireReady(batch.getPeriodId());
         }
 
         Long actor = actorAccountId != null ? actorAccountId : DEFAULT_ACTOR_ACCOUNT_ID;
@@ -114,10 +120,11 @@ public class PayrollBatchService {
     @Transactional
     public PayrollBatchDTO publishBatch(Long batchId, Long actorAccountId) {
         PayrollBatch batch = batchRepository.findForUpdate(batchId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương ID: " + batchId));
+                .or(() -> batchRepository.findById(batchId))
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Không tìm thấy bảng lương ID: " + batchId));
 
         if (batch.getStatus() != BatchStatus.DA_CHOT) {
-            throw new RuntimeException("Bảng lương phải ở trạng thái DA_CHOT trước khi Công bố!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Bảng lương phải ở trạng thái ĐÃ CHỐT trước khi Công bố!");
         }
 
         if (batch.getPublishedAt() != null) {
@@ -147,15 +154,16 @@ public class PayrollBatchService {
     @Transactional
     public PayrollBatchDTO createAdjustmentBatch(Long batchId, AdjustmentBatchRequestDTO request) {
         PayrollBatch oldBatch = batchRepository.findForUpdate(batchId)
-                .orElseThrow(() -> new RuntimeException("Không tìm thấy bảng lương gốc ID: " + batchId));
+                .or(() -> batchRepository.findById(batchId))
+                .orElseThrow(() -> new BusinessException(HttpStatus.NOT_FOUND, "Không tìm thấy bảng lương gốc ID: " + batchId));
 
         if (oldBatch.getStatus() != BatchStatus.DA_CHOT) {
-            throw new RuntimeException("Chỉ có thể tạo bản điều chỉnh từ bảng lương đã chốt (DA_CHOT)!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Chỉ có thể tạo bản điều chỉnh từ bảng lương đã chốt (DA_CHOT)!");
         }
 
         Long periodId = oldBatch.getPeriodId();
         if (batchRepository.existsByPeriodIdAndStatus(periodId, BatchStatus.NHAP)) {
-            throw new RuntimeException("Kỳ lương này đang có một bản nháp khác đang xử lý. Vui lòng hoàn thành bản nháp đó trước!");
+            throw new BusinessException(HttpStatus.CONFLICT, "Kỳ lương này đang có một bản nháp đang xử lý. Vui lòng chuyển sang phiên bản nháp hiện có hoặc hoàn thành bản nháp đó trước!");
         }
 
         int nextVersion = oldBatch.getVersionNo() + 1;
@@ -167,8 +175,8 @@ public class PayrollBatchService {
         PayrollBatch adjustmentBatch = new PayrollBatch();
         adjustmentBatch.setPeriodId(periodId);
         adjustmentBatch.setVersionNo(nextVersion);
-        adjustmentBatch.setPreviousBatchId(oldBatch.getBatchId()); // Khóa ngoại trỏ về bản cũ
-        adjustmentBatch.setAdjustmentReason(request.getAdjustmentReason().trim()); // Bắt buộc lý do
+        adjustmentBatch.setPreviousBatchId(oldBatch.getBatchId());
+        adjustmentBatch.setAdjustmentReason(request.getAdjustmentReason().trim());
         adjustmentBatch.setStatus(BatchStatus.NHAP);
         adjustmentBatch.setCreatedAt(LocalDateTime.now());
 

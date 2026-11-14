@@ -13,7 +13,10 @@ import { FormsModule } from '@angular/forms';
 import { TranslatePipe } from '../../shared/translate.pipe';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { SelectedRowScrollDirective } from '../../shared/selected-row-scroll.directive';
+import { CommonModule } from '@angular/common';
 import { AllowanceService } from '../../services/allowance.service';
+import { PayrollService } from '../../services/payroll.service';
+import { PeriodAllowanceOverview } from '../../models/payroll.model';
 import { Employee, EmployeeService, errorMessage } from '../../services/employee.service';
 import {
   AllowanceBasis,
@@ -25,13 +28,13 @@ import {
   PayrollPeriod,
 } from '../../models/allowance.model';
 
-type Tab = 'types' | 'assigned' | 'preview';
+type Tab = 'types' | 'assigned' | 'preview' | 'overview';
 type AssignMode = 'create' | 'edit' | 'change' | 'end';
 
 @Component({
   selector: 'app-allowances',
   standalone: true,
-  imports:[RowViewDirective,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
+  imports:[CommonModule, RowViewDirective,SearchAssistDirective,EditFormDirective,HrmNotice,PageHeader,FormsModule, TranslatePipe, RecordWorkspace, SelectedRowScrollDirective],
   templateUrl: './allowances.html',
   styleUrls: ['../work-module.css', '../module-list.css'],
 })
@@ -39,6 +42,7 @@ export class AllowancesPage implements OnInit {
  private actionDialogInPage=inject(ActionDialogService);
 
   private api = inject(AllowanceService);
+  private payrollService = inject(PayrollService);
   private personnel = inject(EmployeeService);
   private destroyRef = inject(DestroyRef);
 
@@ -92,9 +96,26 @@ export class AllowancesPage implements OnInit {
   previewLoading = false;
   previewError = '';
 
+  // ===== Tổng hợp phụ cấp tháng & phòng ban =====
+  departments: Array<{ departmentId: number; departmentCode: string; departmentName: string }> = [];
+  overviewPeriodId: number | null = null;
+  overviewDeptId: number | null = null;
+  allowanceOverview: PeriodAllowanceOverview | null = null;
+  overviewLoading = false;
+
   ngOnInit(): void {
     this.loadTypes();
     this.loadEmployees();
+    this.loadDepartments();
+  }
+
+  private loadDepartments(): void {
+    this.payrollService.getDepartments()
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: list => (this.departments = list || []),
+        error: () => (this.departments = [])
+      });
   }
 
   private loadEmployees(): void {
@@ -106,6 +127,9 @@ export class AllowancesPage implements OnInit {
         next: result => {
           this.employees = Array.isArray(result) ? result : result.content;
           this.employeesLoading = false;
+          if (!this.employeeId && this.employees.length > 0) {
+            this.employeeId = this.employees[0].employeeId;
+          }
         },
         error: error => {
           this.employeesLoading = false;
@@ -129,8 +153,10 @@ export class AllowancesPage implements OnInit {
     if (tab === 'assigned' && this.employeeId && this.rowsLoadedEmployeeId !== this.employeeId) {
       this.loadRows();
     }
-    if (tab === 'preview' && !this.periodsLoaded && !this.periodsLoading) {
+    if ((tab === 'preview' || tab === 'overview') && !this.periodsLoaded && !this.periodsLoading) {
       this.loadPeriods();
+    } else if (tab === 'overview' && this.overviewPeriodId) {
+      this.loadOverview();
     }
   }
 
@@ -513,12 +539,41 @@ export class AllowancesPage implements OnInit {
         this.periods = periods;
         this.periodsLoading = false;
         this.periodsLoaded = true;
+        if (this.periods.length > 0) {
+          if (!this.periodId) this.periodId = this.periods[0].periodId;
+          if (!this.overviewPeriodId) this.overviewPeriodId = this.periods[0].periodId;
+          if (this.tab === 'overview') this.loadOverview();
+          if (this.tab === 'preview' && this.employeeId && this.periodId) this.runPreview();
+        }
       },
       error: (error: HttpErrorResponse) => {
         this.periodsLoading = false;
         this.periodsError = this.fail(error, 'Không tải được danh sách kỳ lương.');
       },
     });
+  }
+
+  loadOverview(): void {
+    if (!this.overviewPeriodId) return;
+    this.overviewLoading = true;
+    this.error = '';
+    this.payrollService.getPeriodAllowances(Number(this.overviewPeriodId), this.overviewDeptId)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe({
+        next: data => {
+          this.allowanceOverview = data;
+          this.overviewLoading = false;
+        },
+        error: (e: HttpErrorResponse) => {
+          this.overviewLoading = false;
+          this.error = this.fail(e, 'Không tải được tổng hợp phụ cấp của tháng & phòng ban.');
+        }
+      });
+  }
+
+  filterOverviewByDept(deptId: number | null): void {
+    this.overviewDeptId = deptId;
+    this.loadOverview();
   }
 
   runPreview(): void {

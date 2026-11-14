@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -22,6 +23,7 @@ public class PayrollPeriodService {
 
     public List<PayrollPeriodDTO> getAllPeriods() {
         return repository.findAll().stream()
+                .sorted(Comparator.comparing(PayrollPeriod::getPeriodStart, Comparator.nullsLast(Comparator.reverseOrder())))
                 .map(this::toDTO)
                 .collect(Collectors.toList());
     }
@@ -34,9 +36,8 @@ public class PayrollPeriodService {
 
     @Transactional
     public PayrollPeriodDTO createPeriod(PayrollPeriodRequestDTO request) {
-        // Kiểm tra hợp lệ: start_date < end_date
         if (!request.getPeriodStart().isBefore(request.getPeriodEnd())) {
-            throw new RuntimeException("Ngày bắt đầu kỳ (" + request.getPeriodStart() 
+            throw new RuntimeException("Ngày bắt đầu kỳ (" + request.getPeriodStart()
                     + ") phải trước ngày kết thúc (" + request.getPeriodEnd() + ")!");
         }
 
@@ -60,7 +61,6 @@ public class PayrollPeriodService {
         PayrollPeriod entity = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kỳ lương với ID: " + id));
 
-        // Kiểm tra hợp lệ: start_date < end_date
         if (!request.getPeriodStart().isBefore(request.getPeriodEnd())) {
             throw new RuntimeException("Ngày bắt đầu kỳ phải trước ngày kết thúc!");
         }

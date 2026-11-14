@@ -32,9 +32,6 @@ export interface PayrollLineItem {
   [key: string]: any;
 }
 
-// Export PayrollLine cho trang payslips.ts và các màn hình liên quan
-export type PayrollLine = PayrollLineItem;
-
 export interface PayrollDetailView {
   payrollDetailId: number | null;
   missingSalary?: boolean;

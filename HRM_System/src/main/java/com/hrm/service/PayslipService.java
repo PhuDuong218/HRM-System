@@ -36,7 +36,8 @@ public class PayslipService {
                           PayrollBatchRepository batchRepository,
                           PayrollDetailRepository detailRepository,
                           PayrollLineRepository lineRepository,
-                          PayrollPeriodRepository periodRepository, org.springframework.jdbc.core.JdbcTemplate jdbc) {
+                          PayrollPeriodRepository periodRepository,
+                          org.springframework.jdbc.core.JdbcTemplate jdbc) {
         this.payslipRepository = payslipRepository;
         this.batchRepository = batchRepository;
         this.detailRepository = detailRepository;
@@ -104,9 +105,6 @@ public class PayslipService {
         return list;
     }
 
-    /**
-     * P-15: Xem chi tiết 1 phiếu lương
-     */
     public Long publishedPayslipId(Long payrollDetailId) {
         return payslipRepository.findByPayrollDetailId(payrollDetailId)
             .map(Payslip::getPayslipId)
@@ -131,23 +129,24 @@ public class PayslipService {
         return buildPayslipDetail(payslip, detail, batch);
     }
 
-    /**
-     * P-15: Xuất giao diện HTML chuẩn in ấn / Lưu file PDF (Ctrl + P)
-     * Toàn bộ cột tiền và các dòng tổng được căn lề phải (right-aligned) với font số chuẩn kế toán.
-     */
     public String renderPayslipHtml(Long payslipId) {
         PayslipDetailDTO p = getPayslipDetail(payslipId);
         java.text.DecimalFormat fmt = new java.text.DecimalFormat("#,##0");
 
+        String empCode = (p.getEmployeeCode() != null && !p.getEmployeeCode().isBlank()) ? p.getEmployeeCode() : ("NV-" + p.getEmployeeId());
+        String empName = (p.getEmployeeName() != null && !p.getEmployeeName().isBlank()) ? p.getEmployeeName() : ("Nhân viên #" + p.getEmployeeId());
+        String deptName = (p.getDepartmentName() != null && !p.getDepartmentName().isBlank()) ? p.getDepartmentName() : "—";
+        String posName = (p.getPositionName() != null && !p.getPositionName().isBlank()) ? p.getPositionName() : "Nhân viên";
+
         StringBuilder sb = new StringBuilder();
         sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Phiếu lương - ").append(p.getPayslipNumber()).append("</title>");
         sb.append("<style>");
-        sb.append("body { font-family: 'Segoe UI', Arial, sans-serif; margin: 36px auto; max-width: 820px; color: #1e293b; background: #fff; }");
+        sb.append("body { font-family: 'Segoe UI', Arial, sans-serif; margin: 36px auto; max-width: 840px; color: #1e293b; background: #fff; }");
         sb.append(".header { text-align: center; border-bottom: 2px solid #004581; padding-bottom: 14px; margin-bottom: 20px; }");
         sb.append(".header h2 { margin: 0 0 6px 0; color: #004581; font-size: 22px; letter-spacing: 0.5px; }");
         sb.append(".header p { margin: 0; color: #64748b; font-size: 13px; }");
-        sb.append(".info-card { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 18px; margin-bottom: 20px; font-size: 14px; }");
-        sb.append(".info-card div { line-height: 1.6; }");
+        sb.append(".info-card { display: flex; justify-content: space-between; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; font-size: 14px; }");
+        sb.append(".info-card div { line-height: 1.7; }");
         sb.append("table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 13px; }");
         sb.append("th, td { border: 1px solid #cbd5e1; padding: 10px 12px; }");
         sb.append("th { background-color: #f1f5f9; color: #004581; font-weight: 700; text-align: left; }");
@@ -168,16 +167,18 @@ public class PayslipService {
 
         sb.append("<div class='header'>");
         sb.append("<h2>TRUNG TÂM GIÁO DỤC - PHIẾU THANH TOÁN TIỀN LƯƠNG</h2>");
-        sb.append("<p>Mã số phiếu: <strong>").append(p.getPayslipNumber()).append("</strong> | Ngày lập: ").append(p.getIssuedAt()).append("</p>");
+        sb.append("<p>Mã số phiếu: <strong>").append(p.getPayslipNumber()).append("</strong> | Ngày phát hành: ").append(p.getIssuedAt()).append("</p>");
         sb.append("</div>");
 
         sb.append("<div class='info-card'>");
-        sb.append("<div>Mã nhân sự: <strong>NV-").append(p.getEmployeeId()).append("</strong><br>Kỳ làm việc: <strong>").append(p.getPeriodCode()).append("</strong></div>");
-        sb.append("<div style='text-align: right;'>Đợt công bố: <strong>Phiên bản ").append(p.getVersionNo()).append("</strong><br>Trạng thái: <strong style='color:#16a34a;'>Đã phê duyệt</strong></div>");
+        sb.append("<div>Họ và tên nhân viên: <strong>").append(empName).append("</strong> (Mã NV: <strong>").append(empCode).append("</strong>)<br>")
+          .append("Phòng ban: <strong>").append(deptName).append("</strong> · Chức vụ: <strong>").append(posName).append("</strong></div>");
+        sb.append("<div style='text-align: right;'>Kỳ làm việc: <strong>").append(p.getPeriodCode()).append("</strong> (Đợt V").append(p.getVersionNo()).append(")<br>")
+          .append("Trạng thái: <strong style='color:#16a34a;'>Đã chốt & Công bố</strong></div>");
         sb.append("</div>");
 
         sb.append("<table>");
-        sb.append("<thead><tr><th class='text-center' style='width: 45px;'>STT</th><th>Khoản mục thanh toán</th><th style='width: 120px;'>Phân loại</th><th class='text-right' style='width: 150px;'>Số tiền (VNĐ)</th><th>Diễn giải</th></tr></thead><tbody>");
+        sb.append("<thead><tr><th class='text-center' style='width: 45px;'>STT</th><th>Khoản mục thanh toán</th><th style='width: 120px;'>Phân loại</th><th class='text-right' style='width: 150px;'>Số tiền (VNĐ)</th><th>Diễn giải & Lý do chi tiết</th></tr></thead><tbody>");
 
         int stt = 1;
         for (var line : p.getLines()) {
@@ -188,18 +189,18 @@ public class PayslipService {
             sb.append("<td>").append(isAdd ? "<span style='color:#16a34a;'>+ Thu nhập</span>" : "<span style='color:#dc2626;'>- Khấu trừ</span>").append("</td>");
             sb.append("<td class='money-col' style='color:").append(isAdd ? "#0f766e" : "#b91c1c").append(";'>")
               .append(isAdd ? "+" : "-").append(fmt.format(line.getAmount())).append(" đ</td>");
-            sb.append("<td style='color:#64748b; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append(line.getDeductionShareText() == null ? "" : " · " + line.getDeductionShareText()).append("</td>");
+            sb.append("<td style='color:#475569; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append(line.getDeductionShareText() == null ? "" : " · " + line.getDeductionShareText()).append("</td>");
             sb.append("</tr>");
         }
 
-        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng thu nhập trước thuế (Gross):</td><td class='money-col' style='color:#16a34a;'>").append(fmt.format(p.getTotalGross())).append(" đ</td><td></td></tr>");
-        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng trích đóng BHXH, BHYT & Thuế TNCN:</td><td class='money-col' style='color:#dc2626;'>-").append(fmt.format(p.getTotalDeduction())).append(" đ</td><td></td></tr>");
+        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng thu nhập (Gross):</td><td class='money-col' style='color:#16a34a;'>").append(fmt.format(p.getTotalGross())).append(" đ</td><td></td></tr>");
+        sb.append("<tr class='total-row'><td colspan='3' class='text-right'>Tổng khấu trừ (BHXH, BHYT, BHTN, Thuế TNCN & Phạt):</td><td class='money-col' style='color:#dc2626;'>-").append(fmt.format(p.getTotalDeduction())).append(" đ</td><td></td></tr>");
         sb.append("<tr class='total-row net-salary'><td colspan='3' class='text-right' style='font-size:14.5px;'>THỰC LĨNH CHUYỂN KHOẢN (NET):</td><td class='money-col' style='font-size:16px; color:#004581;'>").append(fmt.format(p.getNetSalary())).append(" đ</td><td></td></tr>");
 
         sb.append("</tbody></table>");
 
         sb.append("<div class='footer-sign'>");
-        sb.append("<div><strong>Người nhận tiền</strong><br><span style='color:#94a3b8; font-size:11px;'>(Ký và ghi rõ họ tên)</span></div>");
+        sb.append("<div><strong>Người nhận tiền</strong><br><span style='color:#94a3b8; font-size:11px;'>(").append(empName).append(")</span></div>");
         sb.append("<div><strong>Kế toán tiền lương</strong><br><span style='color:#94a3b8; font-size:11px;'>(Xác nhận lập biểu)</span></div>");
         sb.append("</div>");
 
@@ -240,7 +241,7 @@ public class PayslipService {
         dto.setTotalDeduction(deduct);
         dto.setNetSalary(gross.subtract(deduct));
         dto.setLines(lineDTOs);
-        if (period != null) {
+        if (period != null && jdbc != null) {
             loadPayslipMetadata(dto, detail.getPayrollDetailId(), detail.getEmployeeId(),
                 period.getPeriodStart(), period.getPeriodEnd());
         }
@@ -251,6 +252,13 @@ public class PayslipService {
                                      java.time.LocalDate start, java.time.LocalDate end) {
         jdbc.query("""
             SELECT
+                e.employee_code,
+                e.full_name,
+                (SELECT TOP (1) d.department_name
+                 FROM dbo.employee_assignments a JOIN dbo.departments d ON d.department_id=a.department_id
+                 WHERE a.employee_id=? AND a.effective_from<=?
+                   AND (a.effective_to IS NULL OR a.effective_to>?)
+                 ORDER BY a.effective_from DESC, a.assignment_id DESC) AS department_name,
                 (SELECT TOP (1) p.position_name
                  FROM dbo.employee_assignments a JOIN dbo.positions p ON p.position_id=a.position_id
                  WHERE a.employee_id=? AND a.effective_from<=?
@@ -266,17 +274,21 @@ public class PayslipService {
                        AND a.invalidated_at IS NULL AND w.cancelled_at IS NULL)) AS actual_days,
                 TRY_CONVERT(decimal(10,4), COALESCE(JSON_VALUE(s.snapshot_json, '$.standardWorkDays'),
                     JSON_VALUE(s.snapshot_json, '$.standardDays'))) AS standard_days
-            FROM (VALUES (1)) base(id)
+            FROM dbo.employees e
             OUTER APPLY (
                 SELECT TOP (1) CASE WHEN ISJSON(input_snapshot_json)=1 THEN input_snapshot_json END AS snapshot_json
                 FROM dbo.payroll_snapshots
                 WHERE payroll_detail_id=?
                 ORDER BY captured_at DESC
             ) s
+            WHERE e.employee_id=?
             """, rs -> {
+                dto.setEmployeeCode(rs.getString("employee_code"));
+                dto.setEmployeeName(rs.getString("full_name"));
+                dto.setDepartmentName(rs.getString("department_name"));
                 dto.setPositionName(rs.getString("position_name"));
                 dto.setActualWorkDays(rs.getBigDecimal("actual_days"));
                 dto.setStandardWorkDays(rs.getBigDecimal("standard_days"));
-            }, employeeId, end, start, employeeId, start, end, detailId);
+            }, employeeId, end, start, employeeId, end, start, employeeId, start, end, detailId, employeeId);
     }
 }
