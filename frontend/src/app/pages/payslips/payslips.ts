@@ -1,4 +1,4 @@
-import { PayrollLine } from '../../models/payroll.model';
+import { PayrollLineItem } from '../../models/payroll.model';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Subscription } from 'rxjs';
 import {HrmNotice} from '../../shared/ui/notice';
@@ -17,7 +17,7 @@ interface PayslipDetails {
   totalGross: number;
   totalDeduction: number;
   netSalary: number;
-  lines: PayrollLine[];
+  lines: PayrollLineItem[];
 }
 
 @Component({
@@ -58,10 +58,10 @@ export class PayslipsPage implements OnInit {
   money(value: number): string { return this.currency.format(value); }
   workDays(value: number | null): string { return value == null ? 'Chưa có dữ liệu' : this.days.format(value); }
 
-  get earnings(): PayrollLine[] {
+  get earnings(): PayrollLineItem[] {
     return this.selectedPayslip?.lines.filter(line => line.direction === 'ADD') ?? [];
   }
-  get deductions(): PayrollLine[] {
+  get deductions(): PayrollLineItem[] {
     return this.selectedPayslip?.lines.filter(line => line.direction === 'DEDUCT') ?? [];
   }
 
@@ -119,7 +119,21 @@ export class PayslipsPage implements OnInit {
     this.detailLoading = id !== null && this.selectedRow !== null;
     if (id === null || !this.selectedRow) return;
     this.detailRequest = this.payrollService.getPayslipDetail(id).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: detail => { this.selectedPayslip = detail; this.detailLoading = false; },
+      next: detail => {
+        this.selectedPayslip = {
+          ...detail,
+          payslipNumber: detail.payslipNumber ?? this.selectedRow?.payslipNumber ?? '',
+          periodCode: detail.periodCode ?? this.selectedRow?.periodCode ?? '',
+          positionName: detail.positionName ?? null,
+          actualWorkDays: detail.actualWorkDays ?? null,
+          standardWorkDays: detail.standardWorkDays ?? null,
+          totalGross: detail.totalGross ?? 0,
+          totalDeduction: detail.totalDeduction ?? 0,
+          netSalary: detail.netSalary ?? 0,
+          lines: (detail.lines ?? []).map(line => ({ ...line, name: line.name ?? '', amount: Number(line.amount ?? 0) }))
+        };
+        this.detailLoading = false;
+      },
       error: () => { this.errorMessage = 'Không tải được chi tiết phiếu lương.'; this.detailLoading = false; }
     });
   }

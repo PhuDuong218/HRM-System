@@ -39,6 +39,9 @@ export interface PayrollDetailView {
   employeeId: number;
   employeeCode?: string;
   employeeName?: string;
+  positionName?: string | null;
+  actualWorkDays?: number | null;
+  standardWorkDays?: number | null;
   departmentName?: string;
 
   baseSalary?: number;
@@ -53,7 +56,7 @@ export interface PayrollDetailView {
   netSalary: number | null;
 
   payslipId?: number | null;
-  lines: PayrollLine[];
+  lines: PayrollLineItem[];
 }
 
 // --- 0. CHI TIẾT PHIẾU LƯƠNG CÁ NHÂN (DÙNG CHO PAYSLIPS) ---
@@ -71,7 +74,7 @@ export interface PayslipDetail {
   totalDeduction?: number;
   netSalary?: number;
   publishedAt?: string;
-  lines?: PayrollLine[];
+  lines?: PayrollLineItem[];
   [key: string]: any;
 }
 

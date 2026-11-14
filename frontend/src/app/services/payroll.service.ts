@@ -146,6 +146,10 @@ export class PayrollService {
     return this.http.get(`${API_BASE_URL}/payslips/${payslipId}/html`, { responseType: 'text' });
   }
 
+  getPayslipDetail(payslipId: number): Observable<PayslipDetail> {
+    return this.http.get<PayslipDetail>(`${API_BASE_URL}/payslips/${payslipId}`);
+  }
+
   getPayslipHtmlByPayrollDetail(detailId: number): Observable<string> {
     return this.http.get(`${API_BASE_URL}/payslips/payroll-detail/${detailId}/html`, { responseType: 'text' });
   }
