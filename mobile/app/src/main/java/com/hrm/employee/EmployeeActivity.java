@@ -103,11 +103,36 @@ public class EmployeeActivity extends AppCompatActivity {
             section = id == R.id.navSchedule ? "schedule"
                     : id == R.id.navAttendance ? "attendance"
                             : id == R.id.navRequests ? "requests" : id == R.id.navProfile ? "profile" : "home";
+            if (id == R.id.navProfile) {
+                profileSubPage = "hub";
+            }
             category = "regular";
             attendanceCalendarOpen = false;
             page = 0;
             render();
             return true;
+        });
+        getOnBackPressedDispatcher().addCallback(this, new androidx.activity.OnBackPressedCallback(true) {
+            @Override
+            public void handleOnBackPressed() {
+                if (writing) return;
+                if ("profile".equals(section) && !"hub".equals(profileSubPage)) {
+                    profileSubPage = "edit_profile".equals(profileSubPage) && profileEditFromAccountInfo
+                            ? "account_info"
+                            : "hub";
+                    profileEditFromAccountInfo = false;
+                    render();
+                    return;
+                }
+                if ("salary".equals(section) && navigation.getSelectedItemId() == R.id.navProfile) {
+                    section = "profile";
+                    render();
+                    return;
+                }
+                setEnabled(false);
+                getOnBackPressedDispatcher().onBackPressed();
+                setEnabled(true);
+            }
         });
         findViewById(R.id.employeeRefresh).setOnClickListener(v -> {
             if (!writing)
@@ -2058,69 +2083,12 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
-    private boolean profileInfoOpen = false;
-    private boolean profileSalaryOpen = true;
-    private boolean profileSalaryItemsOpen = false;
-    private boolean profileDocsOpen = false;
-    private boolean profileAccountOpen = false;
-
-    private LinearLayout dropdownCard(String heading, String subtitle, boolean initialOpen,
-                                      java.util.function.Consumer<Boolean> onToggle) {
-        MaterialCardView card = new MaterialCardView(this);
-        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
-        cardParams.bottomMargin = dp(12);
-        card.setLayoutParams(cardParams);
-        card.setRadius(dp(14));
-        card.setCardElevation(0);
-        card.setStrokeColor(0xffe2e9f2);
-        card.setStrokeWidth(dp(1));
-        card.setCardBackgroundColor(Color.WHITE);
-
-        LinearLayout root = column();
-        root.setPadding(dp(16), dp(14), dp(16), dp(12));
-
-        LinearLayout header = new LinearLayout(this);
-        header.setOrientation(LinearLayout.HORIZONTAL);
-        header.setGravity(Gravity.CENTER_VERTICAL);
-
-        LinearLayout titleWrap = new LinearLayout(this);
-        titleWrap.setOrientation(LinearLayout.VERTICAL);
-        TextView titleView = text(heading, 15, INK, true);
-        ((LinearLayout.LayoutParams) titleView.getLayoutParams()).bottomMargin = dp(2);
-        titleWrap.addView(titleView);
-        if (subtitle != null && !subtitle.isEmpty()) {
-            TextView subView = text(subtitle, 12, MUTED, false);
-            ((LinearLayout.LayoutParams) subView.getLayoutParams()).bottomMargin = 0;
-            titleWrap.addView(subView);
-        }
-        header.addView(titleWrap, new LinearLayout.LayoutParams(0, -2, 1));
-
-        TextView toggleBadge = text(initialOpen ? "▲ Thu gọn" : "▼ Xem", 12, BLUE, true);
-        toggleBadge.setPadding(dp(10), dp(5), dp(10), dp(5));
-        toggleBadge.setBackground(rounded(0xffeaf2fb, 8));
-        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(-2, -2);
-        badgeParams.setMarginStart(dp(8));
-        header.addView(toggleBadge, badgeParams);
-
-        LinearLayout content = column();
-        content.setPadding(0, dp(12), 0, 0);
-        content.setVisibility(initialOpen ? View.VISIBLE : View.GONE);
-
-        header.setOnClickListener(v -> {
-            boolean nowOpen = content.getVisibility() != View.VISIBLE;
-            content.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
-            toggleBadge.setText(nowOpen ? "▲ Thu gọn" : "▼ Xem");
-            if (onToggle != null) {
-                onToggle.accept(nowOpen);
-            }
-        });
-
-        root.addView(header, new LinearLayout.LayoutParams(-1, -2));
-        root.addView(content, new LinearLayout.LayoutParams(-1, -2));
-        card.addView(root);
-        body.addView(card);
-        return content;
-    }
+    private String profileSubPage = "hub";
+    private boolean profileEditFromAccountInfo = false;
+    private boolean profileSoundEnabled = true;
+    private boolean profileSecurityLockEnabled = false;
+    private String profileGuideQuery = "";
+    private String upgradeTier = "plus";
 
     private String initialsOf(String fullName) {
         if (fullName == null || fullName.trim().isEmpty()) return "NV";
@@ -2131,146 +2099,1457 @@ public class EmployeeActivity extends AppCompatActivity {
         return (first + last).toUpperCase(Locale.ROOT);
     }
 
-    private void profile() {
-        JSONObject p = session.profile();
-        title("Hồ sơ của tôi", "Bấm vào từng mục bên dưới để xổ ra xem chi tiết thông tin cá nhân, lương và phụ cấp.");
+    private String formatDateVi(String raw) {
+        if (raw == null || raw.isEmpty()) return "—";
+        try {
+            return LocalDate.parse(raw.length() >= 10 ? raw.substring(0, 10) : raw)
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
+        } catch (Exception e) {
+            return raw;
+        }
+    }
 
-        // Thẻ tóm tắt định danh nhân viên gọn đẹp ở đầu trang
-        LinearLayout summaryCard = card(null);
-        LinearLayout topRow = new LinearLayout(this);
-        topRow.setOrientation(LinearLayout.HORIZONTAL);
-        topRow.setGravity(Gravity.CENTER_VERTICAL);
+    private void addProfileSubHeader(String pageTitle, Runnable onBack) {
+        findViewById(R.id.employeeHeader).setVisibility(View.GONE);
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setPadding(0, dp(4), 0, dp(16));
 
-        TextView avatar = text(initialsOf(str(p, "fullName")), 18, Color.WHITE, true);
-        avatar.setGravity(Gravity.CENTER);
-        avatar.setBackground(rounded(BLUE, 26));
-        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(52), dp(52));
-        avatarParams.setMarginEnd(dp(14));
-        topRow.addView(avatar, avatarParams);
+        TextView backIcon = text("‹", 28, 0xff111827, false);
+        backIcon.setGravity(Gravity.CENTER_VERTICAL);
+        backIcon.setPadding(dp(4), 0, dp(14), dp(2));
+        ((LinearLayout.LayoutParams) backIcon.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) backIcon.getLayoutParams()).width = -2;
 
-        LinearLayout idCol = new LinearLayout(this);
-        idCol.setOrientation(LinearLayout.VERTICAL);
-        TextView nameTv = text(str(p, "fullName").isEmpty() ? "Nhân viên" : str(p, "fullName"), 17, INK, true);
-        ((LinearLayout.LayoutParams) nameTv.getLayoutParams()).bottomMargin = dp(2);
-        idCol.addView(nameTv);
-        TextView deptPosTv = text(
-                (str(p, "departmentName").isEmpty() ? "Chưa phân công" : str(p, "departmentName"))
-                        + " · "
-                        + (str(p, "positionName").isEmpty() ? "Nhân viên" : str(p, "positionName")),
-                13, MUTED, false);
-        ((LinearLayout.LayoutParams) deptPosTv.getLayoutParams()).bottomMargin = dp(4);
-        idCol.addView(deptPosTv);
-        badge(idCol, (str(p, "employeeCode").isEmpty() ? "NV" : str(p, "employeeCode")) + " · Đang làm việc", "DA_XAC_NHAN");
-        topRow.addView(idCol, new LinearLayout.LayoutParams(0, -2, 1));
-        summaryCard.addView(topRow);
+        TextView titleTv = text(pageTitle, 20, 0xff111827, true);
+        ((LinearLayout.LayoutParams) titleTv.getLayoutParams()).bottomMargin = 0;
 
-        // 1. DROPDOWN: THÔNG TIN CÁ NHÂN & LIÊN HỆ
-        LinearLayout info = dropdownCard(
-                "👤 Thông tin cá nhân & Liên hệ",
-                "Mã nhân viên, phòng ban, ngày sinh, điện thoại, email, địa chỉ",
-                profileInfoOpen,
-                open -> profileInfoOpen = open
-        );
-        salaryInfoRow(info, "Mã nhân viên", str(p, "employeeCode"), "Tên đăng nhập", str(p, "username"));
-        salaryInfoRow(info, "Phòng ban", str(p, "departmentName"), "Chức vụ", str(p, "positionName"));
-        salaryInfoRow(info, "Ngày vào làm", str(p, "hireDate"), "Ngày sinh", str(p, "birthDate"));
-        salaryInfoRow(info, "Điện thoại", str(p, "phone"), "Email", str(p, "email"));
-        line(info, "Địa chỉ liên hệ", str(p, "address"));
-        info.addView(text("Bạn có thể cập nhật thông tin liên hệ. Thông tin nhân sự khác vui lòng liên hệ HR.", 12, MUTED, false));
-        button(info, "✏️ Chỉnh sửa thông tin liên hệ", true, this::editProfile);
+        bar.addView(backIcon);
+        bar.addView(titleTv, new LinearLayout.LayoutParams(0, -2, 1));
+        bar.setOnClickListener(v -> {
+            if (!writing) onBack.run();
+        });
+        body.addView(bar, new LinearLayout.LayoutParams(-1, -2));
+    }
 
-        // 2. DROPDOWN: LƯƠNG VÀ PHÚC LỢI
-        LinearLayout income = dropdownCard(
-                "💰 Lương và phúc lợi",
-                "Xem phiếu lương đã công bố, các khoản trừ đi trễ, khoản lương & phụ cấp",
-                profileSalaryOpen,
-                open -> profileSalaryOpen = open
-        );
-        button(income, "📄 Phiếu lương cá nhân đã công bố", true, () -> {
-            section = "salary";
-            render();
+    private void addProfileSectionLabel(String labelText) {
+        TextView label = text(labelText, 15, 0xff7b8798, true);
+        label.setPadding(dp(2), dp(8), dp(2), dp(6));
+        ((LinearLayout.LayoutParams) label.getLayoutParams()).bottomMargin = 0;
+        body.addView(label);
+    }
+
+    private LinearLayout profileWhiteCard() {
+        MaterialCardView card = new MaterialCardView(this);
+        LinearLayout.LayoutParams p = new LinearLayout.LayoutParams(-1, -2);
+        p.bottomMargin = dp(12);
+        card.setLayoutParams(p);
+        card.setRadius(dp(16));
+        card.setCardElevation(0);
+        card.setStrokeColor(0xffedf1f7);
+        card.setStrokeWidth(dp(1));
+        card.setCardBackgroundColor(Color.WHITE);
+        LinearLayout box = column();
+        card.addView(box);
+        body.addView(card);
+        return box;
+    }
+
+    private void addProfileMenuRow(LinearLayout cardBox, String iconText, String rowTitle, String rowSubtitle,
+                                   int titleColor, String rightValue, boolean showDivider, Runnable onClick) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(16), dp(14), dp(16), dp(14));
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setOnClickListener(v -> {
+            if (!writing && onClick != null) onClick.run();
         });
 
-        LinearLayout publishedItemsContainer = column();
-        publishedItemsContainer.setVisibility(profileSalaryItemsOpen ? View.VISIBLE : View.GONE);
-        publishedItemsContainer.setPadding(0, dp(8), 0, 0);
-
-        final MaterialButton[] salaryItemsBtnHolder = new MaterialButton[1];
-        salaryItemsBtnHolder[0] = button(income,
-                profileSalaryItemsOpen ? "▲ Thu gọn Khoản lương / phụ cấp đã công bố" : "▼ Khoản lương / phụ cấp đã công bố",
-                false, () -> {
-                    profileSalaryItemsOpen = !profileSalaryItemsOpen;
-                    if (salaryItemsBtnHolder[0] != null) {
-                        salaryItemsBtnHolder[0].setText(profileSalaryItemsOpen
-                                ? "▲ Thu gọn Khoản lương / phụ cấp đã công bố"
-                                : "▼ Khoản lương / phụ cấp đã công bố");
-                    }
-                    if (profileSalaryItemsOpen) {
-                        publishedItemsContainer.setVisibility(View.VISIBLE);
-                        loadPublishedSalaryAndAllowances(publishedItemsContainer);
-                    } else {
-                        publishedItemsContainer.setVisibility(View.GONE);
-                    }
-                });
-        income.addView(publishedItemsContainer);
-        if (profileSalaryItemsOpen) {
-            loadPublishedSalaryAndAllowances(publishedItemsContainer);
+        if (iconText != null && !iconText.isEmpty()) {
+            TextView icon = text(iconText, 17, titleColor == 0xffdc2626 ? 0xffdc2626 : 0xff64748b, false);
+            icon.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams ip = new LinearLayout.LayoutParams(dp(28), dp(28));
+            ip.setMarginEnd(dp(12));
+            ip.bottomMargin = 0;
+            icon.setLayoutParams(ip);
+            row.addView(icon);
         }
 
-        // 3. DROPDOWN: HỢP ĐỒNG VÀ QUYẾT ĐỊNH
-        final boolean[] docsLoaded = {false};
-        LinearLayout docs = dropdownCard(
-                "📑 Hợp đồng và quyết định",
-                "Tra cứu hợp đồng lao động và các quyết định khen thưởng / kỷ luật",
-                profileDocsOpen,
-                open -> profileDocsOpen = open
-        );
-        Runnable loadDocs = () -> {
-            if (docsLoaded[0]) return;
-            docsLoaded[0] = true;
-            loadMyContractsAndDecisions(docs);
-        };
-        if (profileDocsOpen) {
-            loadDocs.run();
-        } else {
-            docs.addView(text("Đang tải dữ liệu hợp đồng & quyết định...", 13, MUTED, false));
-            // Tải ngay khi người dùng mở dropdown Hợp đồng và quyết định
-            View headerView = ((LinearLayout) docs.getParent()).getChildAt(0);
-            headerView.setOnClickListener(v -> {
-                boolean nowOpen = docs.getVisibility() != View.VISIBLE;
-                docs.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
-                profileDocsOpen = nowOpen;
-                TextView badgeTv = (TextView) ((LinearLayout) headerView).getChildAt(1);
-                badgeTv.setText(nowOpen ? "▲ Thu gọn" : "▼ Xem");
-                if (nowOpen) loadDocs.run();
+        LinearLayout center = new LinearLayout(this);
+        center.setOrientation(LinearLayout.VERTICAL);
+        TextView t = text(rowTitle, 15, titleColor, false);
+        ((LinearLayout.LayoutParams) t.getLayoutParams()).bottomMargin = (rowSubtitle != null && !rowSubtitle.isEmpty()) ? dp(2) : 0;
+        center.addView(t);
+        if (rowSubtitle != null && !rowSubtitle.isEmpty()) {
+            TextView sub = text(rowSubtitle, 12, 0xff8c98a9, false);
+            ((LinearLayout.LayoutParams) sub.getLayoutParams()).bottomMargin = 0;
+            center.addView(sub);
+        }
+        row.addView(center, new LinearLayout.LayoutParams(0, -2, 1));
+
+        if (rightValue != null && !rightValue.isEmpty()) {
+            TextView rv = text(rightValue, 14, 0xff1f2937, false);
+            LinearLayout.LayoutParams rvp = new LinearLayout.LayoutParams(-2, -2);
+            rvp.setMarginEnd(dp(6));
+            rvp.bottomMargin = 0;
+            rv.setLayoutParams(rvp);
+            row.addView(rv);
+        }
+
+        TextView chevron = text("›", 20, 0xff94a3b8, false);
+        ((LinearLayout.LayoutParams) chevron.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) chevron.getLayoutParams()).width = -2;
+        row.addView(chevron);
+
+        cardBox.addView(row, new LinearLayout.LayoutParams(-1, -2));
+        if (showDivider) {
+            View div = new View(this);
+            div.setBackgroundColor(0xfff1f5f9);
+            LinearLayout.LayoutParams dpLayout = new LinearLayout.LayoutParams(-1, dp(1));
+            dpLayout.setMarginStart(dp(16));
+            dpLayout.setMarginEnd(dp(16));
+            cardBox.addView(div, dpLayout);
+        }
+    }
+
+    private void addFeatureBadgeRow(LinearLayout cardBox, String iconText, String rowTitle, String rowSubtitle,
+                                    boolean showDivider, Runnable onClick) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(14), dp(13), dp(14), dp(13));
+        row.setClickable(true);
+        row.setFocusable(true);
+        row.setOnClickListener(v -> {
+            if (!writing && onClick != null) onClick.run();
+        });
+
+        TextView badgeIcon = text(iconText, 17, 0xff2563eb, true);
+        badgeIcon.setGravity(Gravity.CENTER);
+        badgeIcon.setBackground(rounded(0xffeef2ff, 12));
+        LinearLayout.LayoutParams bip = new LinearLayout.LayoutParams(dp(42), dp(42));
+        bip.setMarginEnd(dp(14));
+        bip.bottomMargin = 0;
+        badgeIcon.setLayoutParams(bip);
+        row.addView(badgeIcon);
+
+        LinearLayout center = new LinearLayout(this);
+        center.setOrientation(LinearLayout.VERTICAL);
+        TextView t = text(rowTitle, 15, 0xff111827, true);
+        ((LinearLayout.LayoutParams) t.getLayoutParams()).bottomMargin = dp(2);
+        center.addView(t);
+        if (rowSubtitle != null && !rowSubtitle.isEmpty()) {
+            TextView sub = text(rowSubtitle, 13, 0xff8c98a9, false);
+            sub.setMaxLines(2);
+            sub.setEllipsize(android.text.TextUtils.TruncateAt.END);
+            ((LinearLayout.LayoutParams) sub.getLayoutParams()).bottomMargin = 0;
+            center.addView(sub);
+        }
+        row.addView(center, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView chevron = text("›", 20, 0xff94a3b8, false);
+        ((LinearLayout.LayoutParams) chevron.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) chevron.getLayoutParams()).width = -2;
+        row.addView(chevron);
+
+        cardBox.addView(row, new LinearLayout.LayoutParams(-1, -2));
+        if (showDivider) {
+            View div = new View(this);
+            div.setBackgroundColor(0xfff1f5f9);
+            LinearLayout.LayoutParams dpLayout = new LinearLayout.LayoutParams(-1, dp(1));
+            dpLayout.setMarginStart(dp(14));
+            dpLayout.setMarginEnd(dp(14));
+            cardBox.addView(div, dpLayout);
+        }
+    }
+
+    private LinearLayout buildProfileSummaryHeaderCard(JSONObject p, boolean showChevron, Runnable onClick) {
+        LinearLayout cardBox = profileWhiteCard();
+        cardBox.setPadding(dp(16), dp(16), dp(16), dp(16));
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        if (onClick != null) {
+            cardBox.setClickable(true);
+            cardBox.setFocusable(true);
+            cardBox.setOnClickListener(v -> {
+                if (!writing) onClick.run();
             });
         }
 
-        // 4. DROPDOWN: TÀI KHOẢN & BẢO MẬT
-        LinearLayout account = dropdownCard(
-                "🔐 Tài khoản & Bảo mật",
-                "Đổi mật khẩu đăng nhập hoặc đăng xuất khỏi thiết bị",
-                profileAccountOpen,
-                open -> profileAccountOpen = open
-        );
-        button(account, "🔑 Đổi mật khẩu", false, this::changePassword);
-        button(account, "🚪 Đăng xuất", false,
-                () -> new MaterialAlertDialogBuilder(this).setTitle("Đăng xuất?")
-                        .setMessage("Kết thúc phiên đăng nhập trên ứng dụng?").setNegativeButton("Hủy", null)
-                        .setPositiveButton("Đăng xuất", (d, w) -> {
-                            writing = true;
-                            executor.execute(() -> {
-                                try {
-                                    api.logout(session.token());
-                                } catch (Exception ignored) {
-                                }
-                                runOnUiThread(() -> {
-                                    writing = false;
-                                    session.clearSession();
-                                    signOutLocal();
-                                });
-                            });
-                        }).show());
+        // Avatar tròn giống mẫu tham khảo
+        FrameLayout avatarWrap = new FrameLayout(this);
+        avatarWrap.setBackground(rounded(0xfff59e0b, 30));
+        TextView avatarTv = text(initialsOf(str(p, "fullName")), 19, 0xff111827, true);
+        avatarTv.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) avatarTv.getLayoutParams()).bottomMargin = 0;
+        avatarWrap.addView(avatarTv, new FrameLayout.LayoutParams(-1, -1));
+        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(dp(58), dp(58));
+        ap.setMarginEnd(dp(14));
+        row.addView(avatarWrap, ap);
+
+        LinearLayout infoCol = new LinearLayout(this);
+        infoCol.setOrientation(LinearLayout.VERTICAL);
+        String fullName = str(p, "fullName").isEmpty() ? "Nhân viên" : str(p, "fullName");
+        TextView nameTv = text(fullName, 17, 0xff111827, true);
+        ((LinearLayout.LayoutParams) nameTv.getLayoutParams()).bottomMargin = dp(2);
+        infoCol.addView(nameTv);
+
+        String emailOrUser = !str(p, "email").isEmpty() ? str(p, "email") : str(p, "username");
+        TextView emailTv = text(emailOrUser, 14, 0xff7b8798, false);
+        emailTv.setSingleLine(true);
+        emailTv.setEllipsize(android.text.TextUtils.TruncateAt.END);
+        ((LinearLayout.LayoutParams) emailTv.getLayoutParams()).bottomMargin = dp(2);
+        infoCol.addView(emailTv);
+
+        String hireDate = formatDateVi(str(p, "hireDate"));
+        android.text.SpannableString dateSpan = new android.text.SpannableString("Ngày vào làm: " + hireDate);
+        dateSpan.setSpan(new android.text.style.ForegroundColorSpan(0xff111827), 14, dateSpan.length(), 0);
+        TextView dateTv = text("", 13, 0xff8c98a9, false);
+        dateTv.setText(dateSpan);
+        ((LinearLayout.LayoutParams) dateTv.getLayoutParams()).bottomMargin = 0;
+        infoCol.addView(dateTv);
+
+        row.addView(infoCol, new LinearLayout.LayoutParams(0, -2, 1));
+
+        if (showChevron) {
+            TextView chev = text("›", 22, 0xff94a3b8, false);
+            ((LinearLayout.LayoutParams) chev.getLayoutParams()).bottomMargin = 0;
+            ((LinearLayout.LayoutParams) chev.getLayoutParams()).width = -2;
+            row.addView(chev);
+        }
+
+        cardBox.addView(row);
+        return cardBox;
+    }
+
+    private void profile() {
+        switch (profileSubPage) {
+            case "account_info":
+                profileAccountInfoPage();
+                break;
+            case "edit_profile":
+                profileEditPage();
+                break;
+            case "upgrade_plan":
+                profileUpgradePlanPage();
+                break;
+            case "manage_plan":
+                profileManagePlanPage();
+                break;
+            case "salary_items":
+                profileSalaryItemsPage();
+                break;
+            case "contracts":
+                profileContractsAndDecisionsPage();
+                break;
+            case "settings":
+                profileSettingsPage();
+                break;
+            case "guide":
+                profileGuidePage();
+                break;
+            case "feedback":
+                profileFeedbackPage();
+                break;
+            default:
+                profileHubPage();
+                break;
+        }
+    }
+
+    /**
+     * Màn hình chính "Cá nhân" (Hồ sơ) theo đúng mẫu tham khảo Hình 7
+     */
+    private void profileHubPage() {
+        findViewById(R.id.employeeHeader).setVisibility(View.GONE);
+        JSONObject p = session.profile();
+
+        // Thanh tiêu đề trên cùng: "Cá nhân" bên trái + 3 nút tròn bên phải (giống Hình 7)
+        LinearLayout topBar = new LinearLayout(this);
+        topBar.setOrientation(LinearLayout.HORIZONTAL);
+        topBar.setGravity(Gravity.CENTER_VERTICAL);
+        topBar.setPadding(0, dp(4), 0, dp(14));
+
+        TextView pageTitle = text("Cá nhân", 24, 0xff111827, true);
+        ((LinearLayout.LayoutParams) pageTitle.getLayoutParams()).bottomMargin = 0;
+        topBar.addView(pageTitle, new LinearLayout.LayoutParams(0, -2, 1));
+
+        topBar.addView(circleActionButton("📋", "Sao chép mã NV", () -> copySupportInfo(p)));
+        topBar.addView(circleActionButton("🔄", "Tải lại hồ sơ", this::refreshProfileData));
+        topBar.addView(circleActionButton("✎", "Chỉnh sửa thông tin", () -> {
+            profileEditFromAccountInfo = false;
+            profileSubPage = "edit_profile";
+            render();
+        }));
+        body.addView(topBar, new LinearLayout.LayoutParams(-1, -2));
+
+        // 1. Thẻ thông tin cá nhân trên cùng (bấm vào mở trang < Thông tin tài khoản giống Hình 6 & 7)
+        buildProfileSummaryHeaderCard(p, true, () -> {
+            profileSubPage = "account_info";
+            render();
+        });
+
+        // 2. Banner vàng kim nổi bật "NÂNG CẤP ỨNG DỤNG / Gói trọn đời" (giống hệt Hình 7 -> bấm vào mở trang Nâng cấp gói Plus / Premium)
+        LinearLayout goldBanner = new LinearLayout(this);
+        goldBanner.setOrientation(LinearLayout.HORIZONTAL);
+        goldBanner.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable goldBg = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
+                new int[]{0xffeab308, 0xfffef08a, 0xffeab308});
+        goldBg.setCornerRadius(dp(16));
+        goldBanner.setBackground(goldBg);
+        goldBanner.setPadding(dp(16), dp(14), dp(16), dp(14));
+        LinearLayout.LayoutParams gbp = new LinearLayout.LayoutParams(-1, -2);
+        gbp.bottomMargin = dp(10);
+        goldBanner.setLayoutParams(gbp);
+        goldBanner.setClickable(true);
+        goldBanner.setFocusable(true);
+        goldBanner.setOnClickListener(v -> {
+            upgradeTier = "plus";
+            profileSubPage = "upgrade_plan";
+            render();
+        });
+
+        LinearLayout goldTextCol = new LinearLayout(this);
+        goldTextCol.setOrientation(LinearLayout.VERTICAL);
+        TextView gt1 = text("NÂNG CẤP ỨNG DỤNG", 16, Color.WHITE, true);
+        ((LinearLayout.LayoutParams) gt1.getLayoutParams()).bottomMargin = dp(2);
+        TextView gt2 = text("Gói trọn đời", 14, Color.WHITE, false);
+        ((LinearLayout.LayoutParams) gt2.getLayoutParams()).bottomMargin = 0;
+        goldTextCol.addView(gt1);
+        goldTextCol.addView(gt2);
+        goldBanner.addView(goldTextCol, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView diamond = text("💎   ›", 20, Color.WHITE, true);
+        ((LinearLayout.LayoutParams) diamond.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) diamond.getLayoutParams()).width = -2;
+        goldBanner.addView(diamond);
+        body.addView(goldBanner);
+
+        // 3. Pill bar viền vàng nhạt "👑 Quản lý gói nâng cấp" (giống hệt Hình 7 -> bấm vào mở trang < Quản lý gói nâng cấp)
+        LinearLayout pillBar = new LinearLayout(this);
+        pillBar.setOrientation(LinearLayout.HORIZONTAL);
+        pillBar.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable pillBg = rounded(0xfffff9db, 24);
+        pillBg.setStroke(dp(1), 0xffe5c158);
+        pillBar.setBackground(pillBg);
+        pillBar.setPadding(dp(16), dp(11), dp(16), dp(11));
+        LinearLayout.LayoutParams pbp = new LinearLayout.LayoutParams(-1, -2);
+        pbp.bottomMargin = dp(14);
+        pillBar.setLayoutParams(pbp);
+        pillBar.setClickable(true);
+        pillBar.setFocusable(true);
+        pillBar.setOnClickListener(v -> {
+            profileSubPage = "manage_plan";
+            render();
+        });
+        TextView crownTitle = text("👑   Quản lý gói nâng cấp", 15, 0xff111827, true);
+        ((LinearLayout.LayoutParams) crownTitle.getLayoutParams()).bottomMargin = 0;
+        pillBar.addView(crownTitle, new LinearLayout.LayoutParams(0, -2, 1));
+        TextView pillChev = text("›", 20, 0xff111827, true);
+        ((LinearLayout.LayoutParams) pillChev.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) pillChev.getLayoutParams()).width = -2;
+        pillBar.addView(pillChev);
+        body.addView(pillBar);
+
+        // 4. Mục "Quản lý" — 4 ô icon ngang trong thẻ trắng (Thông báo: Bật/Tắt thông báo nhảy trên màn hình chính với icon khác nhau!)
+        addProfileSectionLabel("Quản lý");
+        LinearLayout manageCard = profileWhiteCard();
+        manageCard.setPadding(dp(8), dp(14), dp(8), dp(14));
+        LinearLayout gridRow = new LinearLayout(this);
+        gridRow.setOrientation(LinearLayout.HORIZONTAL);
+        gridRow.addView(buildNotificationToggleGridItem(), new LinearLayout.LayoutParams(0, -2, 1));
+        gridRow.addView(quickGridItem("📄", "Phiếu lương", () -> {
+            section = "salary";
+            render();
+        }), new LinearLayout.LayoutParams(0, -2, 1));
+        gridRow.addView(quickGridItem("💰", "Phụ cấp", () -> {
+            profileSubPage = "salary_items";
+            render();
+        }), new LinearLayout.LayoutParams(0, -2, 1));
+        gridRow.addView(quickGridItem("📑", "Hợp đồng", () -> {
+            profileSubPage = "contracts";
+            render();
+        }), new LinearLayout.LayoutParams(0, -2, 1));
+        manageCard.addView(gridRow);
+
+        // 5. Mục "Lương và phúc lợi" — Thẻ trắng danh sách có icon bên trái + › bên phải
+        addProfileSectionLabel("Lương và phúc lợi");
+        LinearLayout salaryGroup = profileWhiteCard();
+        addProfileMenuRow(salaryGroup, "📄", "Phiếu lương cá nhân đã công bố",
+                "Xem thu nhập, phạt đi trễ từng phút & bảng công 22 ngày", 0xff111827, null, true, () -> {
+                    section = "salary";
+                    render();
+                });
+        addProfileMenuRow(salaryGroup, "🏦", "Khoản lương / phụ cấp đã công bố",
+                "Định mức phụ cấp hợp đồng & chi tiết các khoản lương theo kỳ", 0xff111827, null, true, () -> {
+                    profileSubPage = "salary_items";
+                    render();
+                });
+        addProfileMenuRow(salaryGroup, "📑", "Hợp đồng và quyết định",
+                "Hợp đồng lao động, quyết định khen thưởng & kỷ luật", 0xff111827, null, false, () -> {
+                    profileSubPage = "contracts";
+                    render();
+                });
+
+        // 6. Mục "Ứng dụng" — Giống hệt Hình 7 (Cài đặt chung, Góp ý cho ứng dụng, Hướng dẫn sử dụng)
+        addProfileSectionLabel("Ứng dụng");
+        LinearLayout appGroup = profileWhiteCard();
+        addProfileMenuRow(appGroup, "⚙️", "Cài đặt chung", null, 0xff111827, null, true, () -> {
+            profileSubPage = "settings";
+            render();
+        });
+        addProfileMenuRow(appGroup, "✉️", "Góp ý cho ứng dụng", null, 0xff111827, null, true, () -> {
+            profileSubPage = "feedback";
+            render();
+        });
+        addProfileMenuRow(appGroup, "✨", "Hướng dẫn sử dụng", null, 0xff111827, null, false, () -> {
+            profileSubPage = "guide";
+            render();
+        });
+
+        // 7. Mục "Tài khoản" — Giống Hình 6 (Thông tin tài khoản, Chỉnh sửa hồ sơ, Đổi mật khẩu, Đăng xuất)
+        addProfileSectionLabel("Tài khoản");
+        LinearLayout accountGroup = profileWhiteCard();
+        addProfileMenuRow(accountGroup, "👤", "Thông tin tài khoản & Nhân sự",
+                "Xem đầy đủ mã NV, ngày sinh, địa chỉ, phòng ban", 0xff111827, null, true, () -> {
+                    profileSubPage = "account_info";
+                    render();
+                });
+        addProfileMenuRow(accountGroup, "✏️", "Chỉnh sửa hồ sơ",
+                "Cập nhật số điện thoại, email, địa chỉ liên hệ", 0xff111827, null, true, () -> {
+                    profileEditFromAccountInfo = false;
+                    profileSubPage = "edit_profile";
+                    render();
+                });
+        addProfileMenuRow(accountGroup, "🔑", "Đổi mật khẩu", null, 0xff111827, null, true, this::changePassword);
+        addProfileMenuRow(accountGroup, "🚪", "Đăng xuất", null, 0xffdc2626, null, false, this::confirmSignOut);
+    }
+
+    private View circleActionButton(String icon, String contentDesc, Runnable onClick) {
+        TextView btn = text(icon, 16, 0xff1e293b, true);
+        btn.setGravity(Gravity.CENTER);
+        btn.setContentDescription(contentDesc);
+        android.graphics.drawable.GradientDrawable bg = rounded(Color.WHITE, 20);
+        bg.setStroke(dp(1), 0xffe2e8f0);
+        btn.setBackground(bg);
+        LinearLayout.LayoutParams lp = new LinearLayout.LayoutParams(dp(40), dp(40));
+        lp.setMarginStart(dp(8));
+        lp.bottomMargin = 0;
+        btn.setLayoutParams(lp);
+        btn.setOnClickListener(v -> {
+            if (!writing) onClick.run();
+        });
+        return btn;
+    }
+
+    private LinearLayout quickGridItem(String iconText, String labelText, Runnable onClick) {
+        LinearLayout col = new LinearLayout(this);
+        col.setOrientation(LinearLayout.VERTICAL);
+        col.setGravity(Gravity.CENTER_HORIZONTAL);
+        col.setPadding(dp(4), dp(4), dp(4), dp(4));
+        col.setClickable(true);
+        col.setFocusable(true);
+        col.setOnClickListener(v -> {
+            if (!writing && onClick != null) onClick.run();
+        });
+
+        TextView iconBox = text(iconText, 18, 0xff334155, false);
+        iconBox.setGravity(Gravity.CENTER);
+        iconBox.setBackground(rounded(0xfff1f5f9, 14));
+        LinearLayout.LayoutParams ibp = new LinearLayout.LayoutParams(dp(48), dp(48));
+        ibp.bottomMargin = dp(8);
+        iconBox.setLayoutParams(ibp);
+        col.addView(iconBox);
+
+        TextView lbl = text(labelText, 13, 0xff1f2937, false);
+        lbl.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) lbl.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) lbl.getLayoutParams()).width = -2;
+        col.addView(lbl);
+        return col;
+    }
+
+    private LinearLayout buildNotificationToggleGridItem() {
+        LinearLayout col = new LinearLayout(this);
+        col.setOrientation(LinearLayout.VERTICAL);
+        col.setGravity(Gravity.CENTER_HORIZONTAL);
+        col.setPadding(dp(4), dp(4), dp(4), dp(4));
+        col.setClickable(true);
+        col.setFocusable(true);
+
+        boolean enabled = MobileNotifications.isPopupEnabled(this);
+
+        TextView iconBox = text(enabled ? "🔔" : "🔕", 19, enabled ? 0xff1d4ed8 : 0xff94a3b8, false);
+        iconBox.setGravity(Gravity.CENTER);
+        android.graphics.drawable.GradientDrawable boxBg = rounded(enabled ? 0xffdbeafe : 0xfff1f5f9, 14);
+        boxBg.setStroke(dp(1), enabled ? 0xff3b82f6 : 0xffcbd5e1);
+        iconBox.setBackground(boxBg);
+        LinearLayout.LayoutParams ibp = new LinearLayout.LayoutParams(dp(48), dp(48));
+        ibp.bottomMargin = dp(8);
+        iconBox.setLayoutParams(ibp);
+        col.addView(iconBox);
+
+        TextView lbl = text(enabled ? "Thông báo" : "Tắt TB nhảy", 13, enabled ? 0xff1d4ed8 : 0xff64748b, enabled);
+        lbl.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) lbl.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) lbl.getLayoutParams()).width = -2;
+        col.addView(lbl);
+
+        col.setOnClickListener(v -> {
+            boolean nextState = !MobileNotifications.isPopupEnabled(this);
+            MobileNotifications.setPopupEnabled(this, nextState);
+            if (nextState && android.os.Build.VERSION.SDK_INT >= 33) {
+                if (checkSelfPermission("android.permission.POST_NOTIFICATIONS") != android.content.pm.PackageManager.PERMISSION_GRANTED) {
+                    requestPermissions(new String[]{"android.permission.POST_NOTIFICATIONS"}, 1001);
+                }
+            }
+            iconBox.setText(nextState ? "🔔" : "🔕");
+            iconBox.setTextColor(nextState ? 0xff1d4ed8 : 0xff94a3b8);
+            android.graphics.drawable.GradientDrawable newBg = rounded(nextState ? 0xffdbeafe : 0xfff1f5f9, 14);
+            newBg.setStroke(dp(1), nextState ? 0xff3b82f6 : 0xffcbd5e1);
+            iconBox.setBackground(newBg);
+            lbl.setText(nextState ? "Thông báo" : "Tắt TB nhảy");
+            lbl.setTextColor(nextState ? 0xff1d4ed8 : 0xff64748b);
+            lbl.setTypeface(null, nextState ? Typeface.BOLD : Typeface.NORMAL);
+            toast(nextState
+                    ? "🔔 Đã BẬT thông báo nhảy trên màn hình chính điện thoại."
+                    : "🔕 Đã TẮT thông báo nhảy trên màn hình chính (vẫn lưu trong hộp thư thông báo).");
+        });
+
+        return col;
+    }
+
+    /**
+     * Trang "< Nâng cấp gói" (HRM Plus / HRM Premium)
+     */
+    private void profileUpgradePlanPage() {
+        findViewById(R.id.employeeHeader).setVisibility(View.GONE);
+        body.setPadding(0, 0, 0, 0);
+
+        boolean isPremium = "premium".equalsIgnoreCase(upgradeTier);
+
+        // 1. KHỐI BANNER XANH DƯƠNG TRÊN CÙNG (Giống hệt mẫu tham khảo)
+        LinearLayout hero = new LinearLayout(this);
+        hero.setOrientation(LinearLayout.VERTICAL);
+        android.graphics.drawable.GradientDrawable heroBg = new android.graphics.drawable.GradientDrawable(
+                android.graphics.drawable.GradientDrawable.Orientation.TOP_BOTTOM,
+                new int[]{0xff1e62d0, 0xff2563eb});
+        hero.setBackground(heroBg);
+        hero.setPadding(dp(16), dp(14), dp(16), dp(22));
+
+        // Thanh điều hướng trong banner xanh: nút tròn "<" bên trái | "Nâng cấp gói" ở giữa | nút tròn "🎧" bên phải
+        LinearLayout navRow = new LinearLayout(this);
+        navRow.setOrientation(LinearLayout.HORIZONTAL);
+        navRow.setGravity(Gravity.CENTER_VERTICAL);
+        LinearLayout.LayoutParams nrp = new LinearLayout.LayoutParams(-1, -2);
+        nrp.bottomMargin = dp(18);
+        navRow.setLayoutParams(nrp);
+
+        TextView backBtn = text("‹", 24, Color.WHITE, false);
+        backBtn.setGravity(Gravity.CENTER);
+        backBtn.setBackground(rounded(0xff4f86e8, 20));
+        LinearLayout.LayoutParams bbp = new LinearLayout.LayoutParams(dp(38), dp(38));
+        bbp.bottomMargin = 0;
+        backBtn.setLayoutParams(bbp);
+        backBtn.setOnClickListener(v -> {
+            profileSubPage = "hub";
+            render();
+        });
+        navRow.addView(backBtn);
+
+        TextView navTitle = text("Nâng cấp gói", 18, Color.WHITE, true);
+        navTitle.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) navTitle.getLayoutParams()).bottomMargin = 0;
+        navRow.addView(navTitle, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView supportBtn = text("🎧", 16, Color.WHITE, false);
+        supportBtn.setGravity(Gravity.CENTER);
+        supportBtn.setBackground(rounded(0xff4f86e8, 20));
+        LinearLayout.LayoutParams sbp = new LinearLayout.LayoutParams(dp(38), dp(38));
+        sbp.bottomMargin = 0;
+        supportBtn.setLayoutParams(sbp);
+        supportBtn.setOnClickListener(v -> toast("Bộ phận CSKH & Tư vấn gói nâng cấp 24/7."));
+        navRow.addView(supportBtn);
+        hero.addView(navRow);
+
+        // Nội dung giới thiệu gói + hình minh họa màn hình máy tính / kim cương bên phải
+        LinearLayout heroBody = new LinearLayout(this);
+        heroBody.setOrientation(LinearLayout.HORIZONTAL);
+        heroBody.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout heroTextCol = new LinearLayout(this);
+        heroTextCol.setOrientation(LinearLayout.VERTICAL);
+        TextView planHeading = text(isPremium ? "HRM Premium" : "HRM Plus", 20, Color.WHITE, true);
+        ((LinearLayout.LayoutParams) planHeading.getLayoutParams()).bottomMargin = dp(6);
+        heroTextCol.addView(planHeading);
+
+        String planDescText = isPremium
+                ? "Giải pháp toàn diện cho doanh nghiệp cần công cụ quản lý nâng cao, tự động hóa và báo cáo chuyên sâu."
+                : "Lý tưởng cho cá nhân và đội nhóm nhỏ muốn loại bỏ các giới hạn cơ bản và làm việc hiệu quả hơn.";
+        TextView planDesc = text(planDescText, 14, 0xffdbeafe, false);
+        ((LinearLayout.LayoutParams) planDesc.getLayoutParams()).bottomMargin = 0;
+        heroTextCol.addView(planDesc);
+        heroBody.addView(heroTextCol, new LinearLayout.LayoutParams(0, -2, 1));
+
+        // Hình minh họa màn hình máy tính (kèm kim cương vàng khi chọn Premium)
+        FrameLayout monitorGraphic = new FrameLayout(this);
+        monitorGraphic.setBackground(rounded(0xff3b82f6, 16));
+        monitorGraphic.setPadding(dp(10), dp(10), dp(10), dp(10));
+        TextView monitorIcon = text(isPremium ? "💎\n🖥️" : "🖥️", isPremium ? 24 : 36, Color.WHITE, true);
+        monitorIcon.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) monitorIcon.getLayoutParams()).bottomMargin = 0;
+        monitorGraphic.addView(monitorIcon, new FrameLayout.LayoutParams(-1, -1));
+        LinearLayout.LayoutParams mgp = new LinearLayout.LayoutParams(dp(88), dp(82));
+        mgp.setMarginStart(dp(12));
+        heroBody.addView(monitorGraphic, mgp);
+
+        hero.addView(heroBody);
+        body.addView(hero, new LinearLayout.LayoutParams(-1, -2));
+
+        // 2. KHỐI NỘI DUNG TRẮNG BÊN DƯỚI
+        LinearLayout mainBox = column();
+        mainBox.setBackgroundColor(Color.WHITE);
+        mainBox.setPadding(dp(16), dp(18), dp(16), dp(20));
+
+        // Thanh chuyển đổi Tab "Plus" | "Premium" dạng viên thuốc (Pill Segmented Control)
+        LinearLayout tabPill = new LinearLayout(this);
+        tabPill.setOrientation(LinearLayout.HORIZONTAL);
+        tabPill.setBackground(rounded(0xffeaeef4, 24));
+        tabPill.setPadding(dp(4), dp(4), dp(4), dp(4));
+        LinearLayout.LayoutParams tpp = new LinearLayout.LayoutParams(-1, -2);
+        tpp.setMarginStart(dp(24));
+        tpp.setMarginEnd(dp(24));
+        tpp.bottomMargin = dp(18);
+        tabPill.setLayoutParams(tpp);
+
+        TextView plusTab = text("Plus", 15, !isPremium ? 0xff111827 : 0xff7b8798, true);
+        plusTab.setGravity(Gravity.CENTER);
+        plusTab.setPadding(0, dp(9), 0, dp(9));
+        if (!isPremium) plusTab.setBackground(rounded(Color.WHITE, 20));
+        ((LinearLayout.LayoutParams) plusTab.getLayoutParams()).bottomMargin = 0;
+        plusTab.setOnClickListener(v -> {
+            if (isPremium) {
+                upgradeTier = "plus";
+                render();
+            }
+        });
+
+        TextView premiumTab = text("Premium", 15, isPremium ? 0xff111827 : 0xff7b8798, true);
+        premiumTab.setGravity(Gravity.CENTER);
+        premiumTab.setPadding(0, dp(9), 0, dp(9));
+        if (isPremium) premiumTab.setBackground(rounded(Color.WHITE, 20));
+        ((LinearLayout.LayoutParams) premiumTab.getLayoutParams()).bottomMargin = 0;
+        premiumTab.setOnClickListener(v -> {
+            if (!isPremium) {
+                upgradeTier = "premium";
+                render();
+            }
+        });
+
+        tabPill.addView(plusTab, new LinearLayout.LayoutParams(0, -2, 1));
+        tabPill.addView(premiumTab, new LinearLayout.LayoutParams(0, -2, 1));
+        mainBox.addView(tabPill);
+
+        // Thẻ Giá gói nâng cấp (Plus: 300,000 đ / 600,000 đ nền xanh nhạt | Premium: 400,000 đ / 800,000 đ nền vàng kim)
+        LinearLayout priceCard = new LinearLayout(this);
+        priceCard.setOrientation(LinearLayout.HORIZONTAL);
+        priceCard.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable priceBg = rounded(isPremium ? 0xfffde047 : 0xffeef5ff, 14);
+        priceBg.setStroke(dp(1.5f), isPremium ? 0xffca8a04 : 0xff2563eb);
+        priceCard.setBackground(priceBg);
+        priceCard.setPadding(dp(16), dp(14), dp(16), dp(14));
+        LinearLayout.LayoutParams pcp = new LinearLayout.LayoutParams(-1, -2);
+        pcp.bottomMargin = dp(18);
+        priceCard.setLayoutParams(pcp);
+
+        LinearLayout priceLeft = new LinearLayout(this);
+        priceLeft.setOrientation(LinearLayout.VERTICAL);
+        TextView pl1 = text("Gói nâng cấp chỉ", 16, 0xff111827, true);
+        ((LinearLayout.LayoutParams) pl1.getLayoutParams()).bottomMargin = dp(4);
+        TextView pl2 = text(isPremium ? "Tiết kiệm 400,000 đ" : "Tiết kiệm 300,000 đ", 14, isPremium ? 0xff854d0e : 0xff7b8798, false);
+        ((LinearLayout.LayoutParams) pl2.getLayoutParams()).bottomMargin = 0;
+        priceLeft.addView(pl1);
+        priceLeft.addView(pl2);
+
+        LinearLayout priceRight = new LinearLayout(this);
+        priceRight.setOrientation(LinearLayout.VERTICAL);
+        priceRight.setGravity(Gravity.END);
+        TextView pr1 = text(isPremium ? "400,000 đ" : "300,000 đ", 18, 0xff111827, true);
+        pr1.setGravity(Gravity.END);
+        ((LinearLayout.LayoutParams) pr1.getLayoutParams()).bottomMargin = dp(4);
+        TextView pr2 = text(isPremium ? "800,000 đ" : "600,000 đ", 14, isPremium ? 0xff854d0e : 0xff7b8798, false);
+        pr2.setGravity(Gravity.END);
+        pr2.setPaintFlags(pr2.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
+        ((LinearLayout.LayoutParams) pr2.getLayoutParams()).bottomMargin = 0;
+        priceRight.addView(pr1);
+        priceRight.addView(pr2);
+
+        priceCard.addView(priceLeft, new LinearLayout.LayoutParams(0, -2, 1));
+        priceCard.addView(priceRight, new LinearLayout.LayoutParams(-2, -2));
+        mainBox.addView(priceCard);
+
+        // Danh sách tính năng kèm dấu tích xanh lá (✔) bên phải giống hệt ảnh tham khảo
+        TextView featCountTv = text(isPremium ? "Bao gồm 22 tính năng:" : "Bao gồm 8 tính năng:", 15, 0xff7b8798, false);
+        ((LinearLayout.LayoutParams) featCountTv.getLayoutParams()).bottomMargin = dp(12);
+        mainBox.addView(featCountTv);
+
+        String[][] features = isPremium
+                ? new String[][]{
+                        {"📱", "+9 tính năng của gói Plus", ""},
+                        {"🔍", "Quản lý công việc theo ca", ""},
+                        {"✈️", "Gửi yêu cầu tăng ca", ""},
+                        {"💵", "Tùy chỉnh tiền lương", ""},
+                        {"👛", "Quản lý phép năm", "Cấu hình quota ngày phép năm, tích lũy phép tự động hàng tháng và báo cáo số ngày nghỉ phép của nhân viên."},
+                        {"👤", "Giới hạn thời gian chấm công", ""},
+                        {"🌙", "Hỗ trợ chấm công qua đêm", ""},
+                        {"📱", "Phạt tiền khi quên chấm ca", ""},
+                        {"🔄", "Hỗ trợ kỹ thuật 24/7", ""}
+                }
+                : new String[][]{
+                        {"🚫", "Trải nghiệm không quảng cáo", "Tính năng chỉ áp dụng cho chủ nhóm, không áp dụng cho nhân viên tham gia."},
+                        {"📊", "Xuất file Excel không giới hạn", ""},
+                        {"📈", "Xem thống kê toàn diện", ""},
+                        {"💻", "Thêm danh mục thoải mái", ""},
+                        {"🖼️", "Lưu trữ ảnh không giới hạn", ""},
+                        {"👤", "Phân quyền chấm công nâng cao", "Thiết lập và quản lý vai trò nhân viên một cách chi tiết."},
+                        {"📱", "Sử dụng trên mọi thiết bị", ""},
+                        {"☁️", "Sao lưu dữ liệu tự động & an toàn", ""}
+                };
+
+        for (String[] f : features) {
+            LinearLayout fRow = new LinearLayout(this);
+            fRow.setOrientation(LinearLayout.HORIZONTAL);
+            fRow.setGravity(Gravity.CENTER_VERTICAL);
+            fRow.setPadding(0, dp(10), 0, dp(10));
+
+            TextView fIcon = text(f[0], 22, 0xff2563eb, false);
+            fIcon.setGravity(Gravity.CENTER);
+            LinearLayout.LayoutParams fip = new LinearLayout.LayoutParams(dp(40), dp(40));
+            fip.setMarginEnd(dp(12));
+            fip.bottomMargin = 0;
+            fIcon.setLayoutParams(fip);
+            fRow.addView(fIcon);
+
+            LinearLayout fCenter = new LinearLayout(this);
+            fCenter.setOrientation(LinearLayout.VERTICAL);
+            TextView ft = text(f[1], 15, 0xff111827, true);
+            ((LinearLayout.LayoutParams) ft.getLayoutParams()).bottomMargin = f[2].isEmpty() ? 0 : dp(3);
+            fCenter.addView(ft);
+            if (!f[2].isEmpty()) {
+                TextView fs = text(f[2], 13, 0xff64748b, false);
+                ((LinearLayout.LayoutParams) fs.getLayoutParams()).bottomMargin = 0;
+                fCenter.addView(fs);
+            }
+            fRow.addView(fCenter, new LinearLayout.LayoutParams(0, -2, 1));
+
+            TextView checkBadge = text("✓", 13, Color.WHITE, true);
+            checkBadge.setGravity(Gravity.CENTER);
+            checkBadge.setBackground(rounded(0xff22c55e, 12));
+            LinearLayout.LayoutParams cbp = new LinearLayout.LayoutParams(dp(24), dp(24));
+            cbp.setMarginStart(dp(10));
+            cbp.bottomMargin = 0;
+            checkBadge.setLayoutParams(cbp);
+            fRow.addView(checkBadge);
+
+            mainBox.addView(fRow);
+        }
+
+        // 3. KHỐI CHÂN TRANG ĐĂNG KÝ GÓI (Giống hệt ảnh tham khảo)
+        View footerDivider = new View(this);
+        footerDivider.setBackgroundColor(0xffe2e8f0);
+        LinearLayout.LayoutParams fdp = new LinearLayout.LayoutParams(-1, dp(1));
+        fdp.topMargin = dp(12);
+        fdp.bottomMargin = dp(14);
+        mainBox.addView(footerDivider, fdp);
+
+        TextView onceNote = text("Duy nhất một lần thanh toán, toàn quyền sử dụng\ntrọn bộ tính năng vĩnh viễn.", 12, 0xff8c98a9, false);
+        onceNote.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) onceNote.getLayoutParams()).bottomMargin = dp(10);
+        mainBox.addView(onceNote);
+
+        LinearLayout linksRow = new LinearLayout(this);
+        linksRow.setOrientation(LinearLayout.HORIZONTAL);
+        linksRow.setGravity(Gravity.CENTER);
+        LinearLayout.LayoutParams lrp = new LinearLayout.LayoutParams(-1, -2);
+        lrp.bottomMargin = dp(14);
+        linksRow.setLayoutParams(lrp);
+
+        String[] linkNames = new String[]{"Khôi phục", "Điều khoản", "Bảo mật"};
+        for (int i = 0; i < linkNames.length; i++) {
+            final String ln = linkNames[i];
+            TextView ltv = text(ln, 13, 0xff1e40af, false);
+            ltv.setPaintFlags(ltv.getPaintFlags() | android.graphics.Paint.UNDERLINE_TEXT_FLAG);
+            ((LinearLayout.LayoutParams) ltv.getLayoutParams()).bottomMargin = 0;
+            ((LinearLayout.LayoutParams) ltv.getLayoutParams()).width = -2;
+            ltv.setOnClickListener(v -> toast("Đã chọn: " + ln));
+            linksRow.addView(ltv);
+            if (i + 1 < linkNames.length) {
+                TextView dot = text("  ·  ", 13, 0xff94a3b8, false);
+                ((LinearLayout.LayoutParams) dot.getLayoutParams()).bottomMargin = 0;
+                ((LinearLayout.LayoutParams) dot.getLayoutParams()).width = -2;
+                linksRow.addView(dot);
+            }
+        }
+        mainBox.addView(linksRow);
+
+        MaterialButton subscribeBtn = new MaterialButton(this);
+        subscribeBtn.setText(isPremium ? "Đăng ký gói Premium" : "Đăng ký gói Plus");
+        subscribeBtn.setAllCaps(false);
+        subscribeBtn.setTextSize(16);
+        subscribeBtn.setTextColor(isPremium ? 0xff111827 : Color.WHITE);
+        subscribeBtn.setTypeface(null, Typeface.BOLD);
+        subscribeBtn.setCornerRadius(dp(12));
+        subscribeBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isPremium ? 0xfffacc15 : 0xff1d61e7));
+        LinearLayout.LayoutParams subParams = new LinearLayout.LayoutParams(-1, dp(52));
+        subscribeBtn.setLayoutParams(subParams);
+        subscribeBtn.setOnClickListener(v -> {
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle(isPremium ? "Đăng ký HRM Premium" : "Đăng ký HRM Plus")
+                    .setMessage("Gói nâng cấp: " + (isPremium ? "HRM Premium (400,000 đ - Trọn đời)" : "HRM Plus (300,000 đ - Trọn đời)")
+                            + "\n\nVui lòng xác nhận thanh toán để mở khóa toàn bộ tính năng nâng cao.")
+                    .setNegativeButton("Đóng", null)
+                    .setPositiveButton("Thanh toán ngay", (d, w) -> toast("Tính năng cổng thanh toán đang được kết nối."))
+                    .show();
+        });
+        mainBox.addView(subscribeBtn);
+
+        body.addView(mainBox, new LinearLayout.LayoutParams(-1, -2));
+    }
+
+    /**
+     * Trang "< Quản lý gói nâng cấp" — Giống hệt Hình 5 (tiêu đề + nút đồng bộ ⇄ bên phải + hộp trống ở giữa màn hình)
+     */
+    private void profileManagePlanPage() {
+        findViewById(R.id.employeeHeader).setVisibility(View.GONE);
+
+        LinearLayout bar = new LinearLayout(this);
+        bar.setOrientation(LinearLayout.HORIZONTAL);
+        bar.setGravity(Gravity.CENTER_VERTICAL);
+        bar.setPadding(0, dp(4), 0, dp(16));
+
+        TextView backIcon = text("‹", 28, 0xff111827, false);
+        backIcon.setGravity(Gravity.CENTER_VERTICAL);
+        backIcon.setPadding(dp(4), 0, dp(14), dp(2));
+        ((LinearLayout.LayoutParams) backIcon.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) backIcon.getLayoutParams()).width = -2;
+        backIcon.setOnClickListener(v -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        TextView titleTv = text("Quản lý gói nâng cấp", 20, 0xff111827, true);
+        ((LinearLayout.LayoutParams) titleTv.getLayoutParams()).bottomMargin = 0;
+        titleTv.setOnClickListener(v -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        bar.addView(backIcon);
+        bar.addView(titleTv, new LinearLayout.LayoutParams(0, -2, 1));
+        bar.addView(circleActionButton("⇄", "Đồng bộ gói nâng cấp", () -> toast("Đã kiểm tra và đồng bộ trạng thái gói nâng cấp.")));
+        body.addView(bar, new LinearLayout.LayoutParams(-1, -2));
+
+        // Hộp rỗng minh họa ở giữa trang giống hệt ảnh tham khảo
+        LinearLayout emptyBox = new LinearLayout(this);
+        emptyBox.setOrientation(LinearLayout.VERTICAL);
+        emptyBox.setGravity(Gravity.CENTER);
+        emptyBox.setPadding(dp(24), dp(80), dp(24), dp(80));
+
+        TextView sparklesTop = text("   ✦       🐝\n      ╭───╯", 16, 0xff94a3b8, false);
+        sparklesTop.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) sparklesTop.getLayoutParams()).bottomMargin = dp(2);
+        emptyBox.addView(sparklesTop);
+
+        TextView boxArt = text("📦", 84, 0xffcbd5e1, false);
+        boxArt.setGravity(Gravity.CENTER);
+        boxArt.setAlpha(0.75f);
+        ((LinearLayout.LayoutParams) boxArt.getLayoutParams()).bottomMargin = dp(8);
+        emptyBox.addView(boxArt);
+
+        TextView sparklesBottom = text("✦                  ✖", 15, 0xff94a3b8, false);
+        sparklesBottom.setGravity(Gravity.CENTER);
+        ((LinearLayout.LayoutParams) sparklesBottom.getLayoutParams()).bottomMargin = dp(16);
+        emptyBox.addView(sparklesBottom);
+
+        body.addView(emptyBox, new LinearLayout.LayoutParams(-1, -2));
+    }
+    private void profileAccountInfoPage() {
+        JSONObject p = session.profile();
+        addProfileSubHeader("Thông tin tài khoản", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        // Thẻ tóm tắt trên cùng giống Hình 6
+        buildProfileSummaryHeaderCard(p, false, null);
+
+        // Thẻ đầy đủ 9 trường thông tin hồ sơ nhân sự (không mất bất kỳ thông tin nào)
+        addProfileSectionLabel("Hồ sơ nhân sự chi tiết");
+        LinearLayout detailCard = profileWhiteCard();
+        String[][] fields = new String[][]{
+                {"Mã nhân viên", str(p, "employeeCode")},
+                {"Họ và tên", str(p, "fullName")},
+                {"Tên đăng nhập", str(p, "username")},
+                {"Phòng ban", str(p, "departmentName")},
+                {"Chức vụ", str(p, "positionName")},
+                {"Ngày vào làm", formatDateVi(str(p, "hireDate"))},
+                {"Ngày sinh", formatDateVi(str(p, "birthDate"))},
+                {"Số điện thoại", str(p, "phone")},
+                {"Email", str(p, "email")},
+                {"Địa chỉ liên hệ", str(p, "address")}
+        };
+        for (int i = 0; i < fields.length; i++) {
+            LinearLayout row = new LinearLayout(this);
+            row.setOrientation(LinearLayout.HORIZONTAL);
+            row.setGravity(Gravity.CENTER_VERTICAL);
+            row.setPadding(dp(16), dp(12), dp(16), dp(12));
+            TextView k = text(fields[i][0], 14, 0xff64748b, false);
+            ((LinearLayout.LayoutParams) k.getLayoutParams()).bottomMargin = 0;
+            String valStr = (fields[i][1] == null || fields[i][1].isEmpty()) ? "—" : fields[i][1];
+            TextView v = text(valStr, 14, 0xff111827, true);
+            v.setGravity(Gravity.END);
+            ((LinearLayout.LayoutParams) v.getLayoutParams()).bottomMargin = 0;
+            row.addView(k, new LinearLayout.LayoutParams(0, -2, 1));
+            row.addView(v, new LinearLayout.LayoutParams(0, -2, 1));
+            detailCard.addView(row);
+            if (i + 1 < fields.length) {
+                View div = new View(this);
+                div.setBackgroundColor(0xfff1f5f9);
+                LinearLayout.LayoutParams dlp = new LinearLayout.LayoutParams(-1, dp(1));
+                dlp.setMarginStart(dp(16));
+                dlp.setMarginEnd(dp(16));
+                detailCard.addView(div, dlp);
+            }
+        }
+
+        // Mục "Tùy chọn" giống Hình 6
+        addProfileSectionLabel("Tùy chọn");
+        LinearLayout optCard = profileWhiteCard();
+        addProfileMenuRow(optCard, "👤", "Chỉnh sửa thông tin", null, 0xff111827, null, true, () -> {
+            profileEditFromAccountInfo = true;
+            profileSubPage = "edit_profile";
+            render();
+        });
+        addProfileMenuRow(optCard, "🏦", "Khoản lương / phụ cấp đã công bố", null, 0xff111827, null, true, () -> {
+            profileSubPage = "salary_items";
+            render();
+        });
+        addProfileMenuRow(optCard, "🛡️", "Sao chép thông tin hỗ trợ", null, 0xff111827, "📋", false, () -> copySupportInfo(p));
+
+        // Mục "Dữ liệu" giống Hình 6
+        addProfileSectionLabel("Dữ liệu");
+        LinearLayout dataCard = profileWhiteCard();
+        addProfileMenuRow(dataCard, "⚠️", "Làm mới dữ liệu ứng dụng", null, 0xffd97706, "🔄", false, this::refreshProfileData);
+
+        // Mục "Tài khoản" giống Hình 6
+        addProfileSectionLabel("Tài khoản");
+        LinearLayout accCard = profileWhiteCard();
+        addProfileMenuRow(accCard, "🔑", "Đổi mật khẩu", null, 0xff111827, null, true, this::changePassword);
+        addProfileMenuRow(accCard, "🚪", "Đăng xuất", null, 0xffdc2626, null, false, this::confirmSignOut);
+    }
+
+    /**
+     * Trang con "< Chỉnh sửa thông tin" — Giống hệt Hình 5 (ô nhập trắng bo góc + icon bên phải + nút Lưu xanh dương dưới đáy)
+     */
+    private void profileEditPage() {
+        JSONObject p = session.profile();
+        addProfileSubHeader("Chỉnh sửa thông tin", () -> {
+            profileSubPage = profileEditFromAccountInfo ? "account_info" : "hub";
+            profileEditFromAccountInfo = false;
+            render();
+        });
+
+        // Trường Họ và tên (hiển thị giống Hình 5, chỉ đọc vì do HR quản lý)
+        addStyledFieldLabel("Họ và tên", true);
+        EditText fullNameEdit = addStyledInputBox(str(p, "fullName"), "👤", InputType.TYPE_CLASS_TEXT, false);
+
+        addStyledFieldLabel("Số điện thoại", false);
+        EditText phoneEdit = addStyledInputBox(str(p, "phone"), "📞", InputType.TYPE_CLASS_PHONE, true);
+
+        addStyledFieldLabel("Email", true);
+        EditText emailEdit = addStyledInputBox(str(p, "email"), "✉️",
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS, true);
+
+        addStyledFieldLabel("Địa chỉ liên hệ", false);
+        EditText addressEdit = addStyledInputBox(str(p, "address"), "📍",
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE, true);
+
+        TextView helperTv = text("Bạn có thể cập nhật Số điện thoại, Email và Địa chỉ. Thông tin nhân sự khác (Họ tên, Phòng ban, Chức vụ) vui lòng liên hệ HR.", 12, 0xff7b8798, false);
+        helperTv.setPadding(dp(2), dp(6), dp(2), dp(6));
+        body.addView(helperTv);
+
+        TextView notice = text("", 13, 0xffdc2626, false);
+        body.addView(notice);
+
+        MaterialButton saveBtn = new MaterialButton(this);
+        saveBtn.setText("Lưu");
+        saveBtn.setAllCaps(false);
+        saveBtn.setTextSize(16);
+        saveBtn.setTextColor(Color.WHITE);
+        saveBtn.setCornerRadius(dp(12));
+        saveBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff1d61e7));
+        LinearLayout.LayoutParams sbp = new LinearLayout.LayoutParams(-1, dp(52));
+        sbp.topMargin = dp(18);
+        saveBtn.setLayoutParams(sbp);
+
+        saveBtn.setOnClickListener(v -> {
+            if (writing) return;
+            String e = emailEdit.getText() == null ? "" : emailEdit.getText().toString().trim();
+            String ph = (phoneEdit.getText() == null ? "" : phoneEdit.getText().toString().trim()).replaceAll("[\\s().-]", "");
+            String a = addressEdit.getText() == null ? "" : addressEdit.getText().toString().trim();
+            if (ph.startsWith("+84")) ph = "0" + ph.substring(3);
+            final String normalizedPhone = ph;
+
+            if (e.length() > 254 || (!e.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(e).matches())) {
+                emailEdit.setError("Email không hợp lệ");
+                emailEdit.requestFocus();
+                return;
+            }
+            if (!ph.matches("^(?:0[35789][0-9]{8})?$")) {
+                phoneEdit.setError("Nhập số điện thoại Việt Nam gồm 10 chữ số");
+                phoneEdit.requestFocus();
+                return;
+            }
+            if (a.length() > 500) {
+                addressEdit.setError("Địa chỉ tối đa 500 ký tự");
+                addressEdit.requestFocus();
+                return;
+            }
+
+            phoneEdit.setText(normalizedPhone);
+            emailEdit.setEnabled(false);
+            phoneEdit.setEnabled(false);
+            addressEdit.setEnabled(false);
+            saveBtn.setEnabled(false);
+            notice.setTextColor(MUTED);
+            notice.setText("Đang lưu thay đổi…");
+            writing = true;
+            String token = session.token();
+            executor.execute(() -> {
+                try {
+                    JSONObject updated = api.send("/api/me/profile", "PUT", token,
+                            json("email", e, "phone", normalizedPhone, "address", a));
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        session.signIn(token, updated);
+                        toast("Đã cập nhật hồ sơ cá nhân.");
+                        profileSubPage = profileEditFromAccountInfo ? "account_info" : "hub";
+                        profileEditFromAccountInfo = false;
+                        render();
+                    });
+                } catch (Exception error) {
+                    runOnUiThread(() -> {
+                        if (isDestroyed()) return;
+                        writing = false;
+                        emailEdit.setEnabled(true);
+                        phoneEdit.setEnabled(true);
+                        addressEdit.setEnabled(true);
+                        saveBtn.setEnabled(true);
+                        notice.setTextColor(0xffdc2626);
+                        if (error instanceof HrmApi.ApiException && ((HrmApi.ApiException) error).status == 401) {
+                            session.clearSession();
+                            signOutLocal();
+                            return;
+                        }
+                        notice.setText(HrmApi.message(error));
+                    });
+                }
+            });
+        });
+
+        body.addView(saveBtn);
+    }
+
+    private void addStyledFieldLabel(String labelText, boolean required) {
+        String full = required ? (labelText + " *") : labelText;
+        android.text.SpannableString span = new android.text.SpannableString(full);
+        if (required) {
+            span.setSpan(new android.text.style.ForegroundColorSpan(0xffdc2626), full.length() - 1, full.length(), 0);
+        }
+        TextView tv = text("", 15, 0xff111827, true);
+        tv.setText(span);
+        tv.setPadding(dp(2), dp(10), dp(2), dp(6));
+        ((LinearLayout.LayoutParams) tv.getLayoutParams()).bottomMargin = 0;
+        body.addView(tv);
+    }
+
+    private EditText addStyledInputBox(String initialValue, String rightIcon, int inputType, boolean editable) {
+        LinearLayout box = new LinearLayout(this);
+        box.setOrientation(LinearLayout.HORIZONTAL);
+        box.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable bg = rounded(editable ? Color.WHITE : 0xfff8fafc, 12);
+        bg.setStroke(dp(1), 0xffe2e8f0);
+        box.setBackground(bg);
+        box.setPadding(dp(14), dp(4), dp(12), dp(4));
+        LinearLayout.LayoutParams bp = new LinearLayout.LayoutParams(-1, -2);
+        bp.bottomMargin = dp(4);
+        box.setLayoutParams(bp);
+
+        EditText edit = new EditText(this);
+        edit.setText(initialValue);
+        edit.setTextSize(15);
+        edit.setTextColor(editable ? 0xff111827 : 0xff64748b);
+        edit.setBackground(null);
+        edit.setInputType(inputType);
+        edit.setEnabled(editable);
+        edit.setPadding(0, dp(10), dp(8), dp(10));
+        box.addView(edit, new LinearLayout.LayoutParams(0, -2, 1));
+
+        if (rightIcon != null && !rightIcon.isEmpty()) {
+            View vLine = new View(this);
+            vLine.setBackgroundColor(0xffe2e8f0);
+            LinearLayout.LayoutParams vlp = new LinearLayout.LayoutParams(dp(1), dp(22));
+            vlp.setMarginEnd(dp(10));
+            box.addView(vLine, vlp);
+
+            TextView ic = text(rightIcon, 16, 0xff475569, false);
+            ((LinearLayout.LayoutParams) ic.getLayoutParams()).bottomMargin = 0;
+            ((LinearLayout.LayoutParams) ic.getLayoutParams()).width = -2;
+            box.addView(ic);
+        }
+
+        body.addView(box);
+        return edit;
+    }
+
+    /**
+     * Trang con "< Khoản lương / phụ cấp đã công bố" — Giống phong cách Hình 1 & Hình 4
+     */
+    private void profileSalaryItemsPage() {
+        addProfileSubHeader("Khoản lương & Phụ cấp", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        LinearLayout topShortcut = profileWhiteCard();
+        addFeatureBadgeRow(topShortcut, "📄", "Mở Phiếu lương cá nhân đã công bố",
+                "Xem bảng lương đầy đủ, các khoản phạt đi trễ & 22 dòng ngày công", false, () -> {
+                    section = "salary";
+                    render();
+                });
+
+        LinearLayout container = column();
+        body.addView(container);
+        loadPublishedSalaryAndAllowances(container);
+    }
+
+    /**
+     * Trang con "< Hợp đồng và quyết định" — Giống phong cách Hình 1
+     */
+    private void profileContractsAndDecisionsPage() {
+        addProfileSubHeader("Hợp đồng & Quyết định", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+        LinearLayout container = column();
+        body.addView(container);
+        loadMyContractsAndDecisions(container);
+    }
+
+    /**
+     * Trang con "< Cài đặt chung" — Giống hệt Hình 3
+     */
+    private void profileSettingsPage() {
+        addProfileSubHeader("Cài đặt chung", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        addProfileSectionLabel("Hiển thị");
+        LinearLayout displayCard = profileWhiteCard();
+        addProfileMenuRow(displayCard, null, "Chế độ nền tối", null, 0xff111827, "Hệ thống", false,
+                () -> toast("Đang sử dụng giao diện sáng tiêu chuẩn theo hệ thống."));
+
+        addProfileSectionLabel("Ngôn ngữ");
+        LinearLayout langCard = profileWhiteCard();
+        addProfileMenuRow(langCard, null, "Ngôn ngữ", null, 0xff111827, "🇻🇳 Tiếng Việt", false,
+                () -> toast("Ngôn ngữ mặc định: Tiếng Việt."));
+
+        addProfileSectionLabel("Đơn vị tiền tệ");
+        LinearLayout currCard = profileWhiteCard();
+        addProfileMenuRow(currCard, null, "Đơn vị tiền tệ", null, 0xff111827, "₫", false,
+                () -> toast("Đơn vị tiền tệ: Đồng Việt Nam (₫)."));
+
+        addProfileSectionLabel("Thông báo");
+        LinearLayout notifCard = profileWhiteCard();
+        addProfileSwitchRow(notifCard, "Bật âm thanh", profileSoundEnabled, checked -> {
+            profileSoundEnabled = checked;
+            toast(checked ? "Đã bật âm thanh thông báo." : "Đã tắt âm thanh thông báo.");
+        });
+
+        addProfileSectionLabel("Bảo mật");
+        LinearLayout secCard = profileWhiteCard();
+        addProfileSwitchRow(secCard, "Mã bảo vệ", profileSecurityLockEnabled, checked -> {
+            profileSecurityLockEnabled = checked;
+            if (checked) {
+                changePassword();
+            }
+        });
+    }
+
+    private void addProfileSwitchRow(LinearLayout cardBox, String titleText, boolean initialChecked,
+                                     java.util.function.Consumer<Boolean> onChanged) {
+        LinearLayout row = new LinearLayout(this);
+        row.setOrientation(LinearLayout.HORIZONTAL);
+        row.setGravity(Gravity.CENTER_VERTICAL);
+        row.setPadding(dp(16), dp(12), dp(16), dp(12));
+
+        TextView lbl = text(titleText, 15, 0xff111827, false);
+        ((LinearLayout.LayoutParams) lbl.getLayoutParams()).bottomMargin = 0;
+        row.addView(lbl, new LinearLayout.LayoutParams(0, -2, 1));
+
+        Switch sw = new Switch(this);
+        sw.setChecked(initialChecked);
+        sw.setOnCheckedChangeListener((btn, isChecked) -> {
+            if (onChanged != null) onChanged.accept(isChecked);
+        });
+        row.addView(sw, new LinearLayout.LayoutParams(-2, -2));
+        cardBox.addView(row);
+    }
+
+    /**
+     * Trang con "< Hướng dẫn sử dụng" — Giống hệt Hình 1 (có thanh tìm kiếm + danh sách icon xanh nhạt bên trái)
+     */
+    private void profileGuidePage() {
+        addProfileSubHeader("Hướng dẫn sử dụng", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        // Ô tìm kiếm bo tròn giống Hình 1
+        LinearLayout searchBox = new LinearLayout(this);
+        searchBox.setOrientation(LinearLayout.HORIZONTAL);
+        searchBox.setGravity(Gravity.CENTER_VERTICAL);
+        android.graphics.drawable.GradientDrawable sbg = rounded(Color.WHITE, 24);
+        sbg.setStroke(dp(1), 0xffe2e8f0);
+        searchBox.setBackground(sbg);
+        searchBox.setPadding(dp(14), dp(2), dp(14), dp(2));
+        LinearLayout.LayoutParams slp = new LinearLayout.LayoutParams(-1, -2);
+        slp.bottomMargin = dp(14);
+        searchBox.setLayoutParams(slp);
+
+        TextView sIcon = text("🔍", 15, 0xff94a3b8, false);
+        ((LinearLayout.LayoutParams) sIcon.getLayoutParams()).bottomMargin = 0;
+        ((LinearLayout.LayoutParams) sIcon.getLayoutParams()).width = -2;
+        sIcon.setPadding(0, 0, dp(8), 0);
+        searchBox.addView(sIcon);
+
+        EditText searchInput = new EditText(this);
+        searchInput.setHint("Tìm tính năng, ví dụ: phiếu lương, chấm công");
+        searchInput.setHintTextColor(0xff94a3b8);
+        searchInput.setTextSize(14);
+        searchInput.setTextColor(0xff111827);
+        searchInput.setBackground(null);
+        searchInput.setSingleLine(true);
+        searchInput.setText(profileGuideQuery);
+        searchInput.setPadding(0, dp(10), 0, dp(10));
+        searchBox.addView(searchInput, new LinearLayout.LayoutParams(0, -2, 1));
+        body.addView(searchBox);
+
+        LinearLayout listContainer = column();
+        body.addView(listContainer);
+
+        final String[][][] guideSections = new String[][][]{
+                {
+                        {"CHẤM CÔNG", "", "", ""},
+                        {"👤", "Tự chấm công cá nhân", "Chấm công vào / ra ca cho chính mình mỗi ngày",
+                                "Vào tab Chấm công ở thanh điều hướng dưới cùng để thực hiện Check-in khi bắt đầu ca và Check-out khi kết thúc ca làm việc."},
+                        {"⏰", "Quên ra ca / Chấm công bù", "Gửi yêu cầu bổ sung giờ khi quên check-in hoặc check-out",
+                                "Khi quên bấm giờ vào hoặc giờ ra, bạn chọn bản ghi công cần bổ sung trong mục Chấm công hoặc Đơn của tôi để gửi đề xuất duyệt."},
+                        {"🔎", "Tra soát chấm công & Lịch công", "Xem đi trễ, về sớm, nghỉ phép, ngày lễ theo tháng",
+                                "Bấm nút Xem lịch trong mục Chấm công để xem lưới lịch tháng với màu sắc phân biệt ngày đi làm, đi muộn, nghỉ phép và OT."},
+                        {"📅", "Xếp ca / Lịch làm việc", "Theo dõi ca làm việc được phân công trong tuần / tháng",
+                                "Mở tab Lịch ở thanh dưới cùng để tra cứu toàn bộ ca làm việc được phân công và giờ quy định của từng ca."},
+                        {"⚡", "Đăng ký và theo dõi tăng ca (OT)", "Tạo đơn tăng ca, check-out OT và bổ sung giờ OT",
+                                "Vào mục Đơn của tôi → chọn tab OT để tạo đơn đăng ký làm thêm giờ hoặc gửi yêu cầu bổ sung giờ OT trong hạn 3 ngày."}
+                },
+                {
+                        {"LƯƠNG & HỒ SƠ", "", "", ""},
+                        {"📄", "Phiếu lương cá nhân đã công bố", "Xem thu nhập Gross, khấu trừ, thực lĩnh Net và in PDF",
+                                "Khi phòng Nhân sự / Kế toán chốt và công bố lương, bạn mở mục Phiếu lương cá nhân đã công bố để xem chi tiết từng kỳ và lưu bản in PDF."},
+                        {"⚠️", "Xem khoản phạt đi trễ & 22 ngày công", "Xem chi tiết trừ đi trễ từng phút và bảng công trong phiếu lương",
+                                "Trong Phiếu lương của tôi, bấm vào nút '▼ Xem chi tiết từng ngày công' ngay dưới dòng Lương theo ngày công để xem giờ vào/ra từng ngày và lý do phạt đi trễ."},
+                        {"🏦", "Khoản lương / phụ cấp đã công bố", "Tra cứu phụ cấp định mức hợp đồng và lịch sử khoản lương",
+                                "Mở mục Khoản lương / phụ cấp đã công bố trong Hồ sơ để xem các khoản phụ cấp đang hưởng và bảng tổng hợp theo từng kỳ lương."},
+                        {"✏️", "Cập nhật thông tin liên hệ", "Thay đổi số điện thoại, email, địa chỉ cá nhân",
+                                "Vào mục Cá nhân → Chỉnh sửa thông tin để cập nhật số điện thoại (10 chữ số), email và địa chỉ liên hệ của bạn."}
+                }
+        };
+
+        Runnable renderGuideList = () -> {
+            listContainer.removeAllViews();
+            String q = profileGuideQuery.trim().toLowerCase(Locale.ROOT);
+            for (String[][] sec : guideSections) {
+                String secHeader = sec[0][0];
+                List<String[]> matched = new ArrayList<>();
+                for (int i = 1; i < sec.length; i++) {
+                    String[] item = sec[i];
+                    if (q.isEmpty() || item[1].toLowerCase(Locale.ROOT).contains(q)
+                            || item[2].toLowerCase(Locale.ROOT).contains(q)
+                            || item[3].toLowerCase(Locale.ROOT).contains(q)) {
+                        matched.add(item);
+                    }
+                }
+                if (matched.isEmpty()) continue;
+                TextView sh = text(secHeader, 13, 0xff8c98a9, true);
+                sh.setPadding(dp(2), dp(6), dp(2), dp(6));
+                ((LinearLayout.LayoutParams) sh.getLayoutParams()).bottomMargin = 0;
+                listContainer.addView(sh);
+
+                MaterialCardView card = new MaterialCardView(this);
+                LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2);
+                cp.bottomMargin = dp(12);
+                card.setLayoutParams(cp);
+                card.setRadius(dp(16));
+                card.setCardElevation(0);
+                card.setStrokeColor(0xffedf1f7);
+                card.setStrokeWidth(dp(1));
+                card.setCardBackgroundColor(Color.WHITE);
+                LinearLayout box = column();
+                card.addView(box);
+                listContainer.addView(card);
+
+                for (int i = 0; i < matched.size(); i++) {
+                    String[] item = matched.get(i);
+                    addFeatureBadgeRow(box, item[0], item[1], item[2], i + 1 < matched.size(), () -> {
+                        new MaterialAlertDialogBuilder(this)
+                                .setTitle(item[0] + " " + item[1])
+                                .setMessage(item[3])
+                                .setPositiveButton("Đã hiểu", null)
+                                .show();
+                    });
+                }
+            }
+        };
+
+        renderGuideList.run();
+        searchInput.addTextChangedListener(new android.text.TextWatcher() {
+            @Override public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+            @Override public void onTextChanged(CharSequence s, int start, int before, int count) {
+                profileGuideQuery = s == null ? "" : s.toString();
+                renderGuideList.run();
+            }
+            @Override public void afterTextChanged(android.text.Editable s) {}
+        });
+    }
+
+    /**
+     * Trang con "< Góp ý cho ứng dụng" — Giống hệt Hình 2
+     */
+    private void profileFeedbackPage() {
+        addProfileSubHeader("Góp ý cho ứng dụng", () -> {
+            profileSubPage = "hub";
+            render();
+        });
+
+        TextView desc = text(
+                "Yêu cầu của bạn sẽ được gửi đến đội ngũ phát triển HRM Center. Chúng tôi sẽ xem xét kỹ lưỡng yêu cầu của bạn và sớm lên kế hoạch tích hợp vào ứng dụng.",
+                14, 0xff334155, false);
+        desc.setPadding(dp(2), 0, dp(2), dp(8));
+        body.addView(desc);
+
+        addStyledFieldLabel("Tiêu đề", true);
+        EditText titleEdit = addStyledInputBox("", null, InputType.TYPE_CLASS_TEXT, true);
+        titleEdit.setHint("Nhập tiêu đề góp ý");
+        titleEdit.setHintTextColor(0xff94a3b8);
+
+        addStyledFieldLabel("Góp ý", true);
+        EditText contentEdit = addStyledInputBox("", null,
+                InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE, true);
+        contentEdit.setHint("Nội dung góp ý");
+        contentEdit.setHintTextColor(0xff94a3b8);
+        contentEdit.setMinLines(5);
+        contentEdit.setGravity(Gravity.TOP | Gravity.START);
+
+        MaterialButton sendBtn = new MaterialButton(this);
+        sendBtn.setText("Gửi");
+        sendBtn.setAllCaps(false);
+        sendBtn.setTextSize(16);
+        sendBtn.setTextColor(Color.WHITE);
+        sendBtn.setCornerRadius(dp(12));
+        sendBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(0xff1d61e7));
+        LinearLayout.LayoutParams sbp = new LinearLayout.LayoutParams(-1, dp(52));
+        sbp.topMargin = dp(24);
+        sendBtn.setLayoutParams(sbp);
+        sendBtn.setOnClickListener(v -> {
+            String t = titleEdit.getText() == null ? "" : titleEdit.getText().toString().trim();
+            String c = contentEdit.getText() == null ? "" : contentEdit.getText().toString().trim();
+            if (t.isEmpty()) {
+                titleEdit.setError("Vui lòng nhập tiêu đề góp ý");
+                titleEdit.requestFocus();
+                return;
+            }
+            if (c.isEmpty()) {
+                contentEdit.setError("Vui lòng nhập nội dung góp ý");
+                contentEdit.requestFocus();
+                return;
+            }
+            toast("Cảm ơn bạn! Góp ý \"" + t + "\" đã được ghi nhận.");
+            profileSubPage = "hub";
+            render();
+        });
+        body.addView(sendBtn);
+    }
+
+    private void copySupportInfo(JSONObject p) {
+        String info = "Mã NV: " + str(p, "employeeCode")
+                + " | Họ tên: " + str(p, "fullName")
+                + " | Tài khoản: " + str(p, "username")
+                + " | Phòng ban: " + str(p, "departmentName");
+        android.content.ClipboardManager cm = (android.content.ClipboardManager) getSystemService(CLIPBOARD_SERVICE);
+        if (cm != null) {
+            cm.setPrimaryClip(android.content.ClipData.newPlainText("HRM Support Info", info));
+            toast("Đã sao chép thông tin hỗ trợ vào bộ nhớ tạm.");
+        }
+    }
+
+    private void refreshProfileData() {
+        if (writing) return;
+        loading.setVisibility(View.VISIBLE);
+        String token = session.token();
+        executor.execute(() -> {
+            try {
+                JSONObject fresh = api.me(token);
+                runOnUiThread(() -> {
+                    if (isDestroyed()) return;
+                    loading.setVisibility(View.GONE);
+                    session.signIn(token, fresh);
+                    toast("Đã làm mới dữ liệu hồ sơ.");
+                    render();
+                });
+            } catch (Exception e) {
+                runOnUiThread(() -> {
+                    if (isDestroyed()) return;
+                    loading.setVisibility(View.GONE);
+                    toast(HrmApi.message(e));
+                });
+            }
+        });
+    }
+
+    private void confirmSignOut() {
+        new MaterialAlertDialogBuilder(this).setTitle("Đăng xuất?")
+                .setMessage("Kết thúc phiên đăng nhập trên ứng dụng?").setNegativeButton("Hủy", null)
+                .setPositiveButton("Đăng xuất", (d, w) -> {
+                    writing = true;
+                    executor.execute(() -> {
+                        try {
+                            api.logout(session.token());
+                        } catch (Exception ignored) {
+                        }
+                        runOnUiThread(() -> {
+                            writing = false;
+                            session.clearSession();
+                            signOutLocal();
+                        });
+                    });
+                }).show();
     }
 
     /**
@@ -2575,9 +3854,7 @@ public class EmployeeActivity extends AppCompatActivity {
      * Màn hình tra cứu phiếu lương cá nhân của nhân viên trên Mobile
      */
     private void salary() {
-        title("Phiếu lương của tôi", "Tra cứu chi tiết thu nhập, phạt đi trễ từng phút, minh chứng ngày công và thực lĩnh.");
-        LinearLayout actions = card(null);
-        button(actions, "‹ Quay lại trang trước", false, () -> {
+        addProfileSubHeader("Phiếu lương của tôi", () -> {
             section = navigation.getSelectedItemId() == R.id.navProfile ? "profile" : "home";
             render();
         });
