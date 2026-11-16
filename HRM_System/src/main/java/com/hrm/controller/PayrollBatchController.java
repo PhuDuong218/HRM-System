@@ -247,6 +247,7 @@ public class PayrollBatchController {
                     }
                 }
             }
+            executionService.upgradeLegacyBatchIfNeeded(batchId);
         }
         List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
         boolean provisional = !details.isEmpty() && detailRepository.hasProvisionalDraft(batchId);

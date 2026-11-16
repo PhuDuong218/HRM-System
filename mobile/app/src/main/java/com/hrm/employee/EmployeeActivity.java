@@ -51,6 +51,7 @@ public class EmployeeActivity extends AppCompatActivity {
     private boolean writing = false;
     private int pendingReads = 0;
     private LocalDate from = today().minusDays(7), to = today().plusDays(30);
+    private long selectedPayslipId = 0L;
 
     private interface Reply {
         void accept(JSONObject value) throws Exception;
@@ -62,6 +63,7 @@ public class EmployeeActivity extends AppCompatActivity {
 
     public boolean showNotificationPage(JSONObject target){
         JSONObject detail=target.optJSONObject("detail");String kind=target.optString("referenceType");
+        if(kind.equals("payslips")){selectedPayslipId=target.optLong("payslipId",target.optLong("referenceId",0L));section="salary";render();return true;}
         if(kind.equals("overtime_requests")){navigation.setSelectedItemId(R.id.navRequests);category="ot";render();fetch("/api/overtime/workspace/requests/"+target.optLong("referenceId"),this::otDetail);return true;}
         if(kind.equals("attendance_records")){category="regular";navigation.setSelectedItemId(R.id.navAttendance);long schedule=target.optLong("scheduleId");fetch("/api/attendance-workspace/schedules/"+schedule+"?mine=true",this::attendanceDetail);return true;}
         navigation.setSelectedItemId(R.id.navRequests);
@@ -2056,44 +2058,203 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
+    private boolean profileInfoOpen = false;
+    private boolean profileSalaryOpen = true;
+    private boolean profileSalaryItemsOpen = false;
+    private boolean profileDocsOpen = false;
+    private boolean profileAccountOpen = false;
+
+    private LinearLayout dropdownCard(String heading, String subtitle, boolean initialOpen,
+                                      java.util.function.Consumer<Boolean> onToggle) {
+        MaterialCardView card = new MaterialCardView(this);
+        LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
+        cardParams.bottomMargin = dp(12);
+        card.setLayoutParams(cardParams);
+        card.setRadius(dp(14));
+        card.setCardElevation(0);
+        card.setStrokeColor(0xffe2e9f2);
+        card.setStrokeWidth(dp(1));
+        card.setCardBackgroundColor(Color.WHITE);
+
+        LinearLayout root = column();
+        root.setPadding(dp(16), dp(14), dp(16), dp(12));
+
+        LinearLayout header = new LinearLayout(this);
+        header.setOrientation(LinearLayout.HORIZONTAL);
+        header.setGravity(Gravity.CENTER_VERTICAL);
+
+        LinearLayout titleWrap = new LinearLayout(this);
+        titleWrap.setOrientation(LinearLayout.VERTICAL);
+        TextView titleView = text(heading, 15, INK, true);
+        ((LinearLayout.LayoutParams) titleView.getLayoutParams()).bottomMargin = dp(2);
+        titleWrap.addView(titleView);
+        if (subtitle != null && !subtitle.isEmpty()) {
+            TextView subView = text(subtitle, 12, MUTED, false);
+            ((LinearLayout.LayoutParams) subView.getLayoutParams()).bottomMargin = 0;
+            titleWrap.addView(subView);
+        }
+        header.addView(titleWrap, new LinearLayout.LayoutParams(0, -2, 1));
+
+        TextView toggleBadge = text(initialOpen ? "▲ Thu gọn" : "▼ Xem", 12, BLUE, true);
+        toggleBadge.setPadding(dp(10), dp(5), dp(10), dp(5));
+        toggleBadge.setBackground(rounded(0xffeaf2fb, 8));
+        LinearLayout.LayoutParams badgeParams = new LinearLayout.LayoutParams(-2, -2);
+        badgeParams.setMarginStart(dp(8));
+        header.addView(toggleBadge, badgeParams);
+
+        LinearLayout content = column();
+        content.setPadding(0, dp(12), 0, 0);
+        content.setVisibility(initialOpen ? View.VISIBLE : View.GONE);
+
+        header.setOnClickListener(v -> {
+            boolean nowOpen = content.getVisibility() != View.VISIBLE;
+            content.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
+            toggleBadge.setText(nowOpen ? "▲ Thu gọn" : "▼ Xem");
+            if (onToggle != null) {
+                onToggle.accept(nowOpen);
+            }
+        });
+
+        root.addView(header, new LinearLayout.LayoutParams(-1, -2));
+        root.addView(content, new LinearLayout.LayoutParams(-1, -2));
+        card.addView(root);
+        body.addView(card);
+        return content;
+    }
+
+    private String initialsOf(String fullName) {
+        if (fullName == null || fullName.trim().isEmpty()) return "NV";
+        String[] parts = fullName.trim().split("\\s+");
+        if (parts.length == 1) return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase(Locale.ROOT);
+        String first = parts[0].substring(0, 1);
+        String last = parts[parts.length - 1].substring(0, 1);
+        return (first + last).toUpperCase(Locale.ROOT);
+    }
+
     private void profile() {
         JSONObject p = session.profile();
-        title("Hồ sơ của tôi", "Thông tin cá nhân chỉ được xem bởi tài khoản của bạn.");
-        LinearLayout info = card(str(p, "fullName"));
-        for (String[] field : new String[][] { { "Mã nhân viên", "employeeCode" }, { "Tên đăng nhập", "username" },
-                { "Phòng ban", "departmentName" }, { "Chức vụ", "positionName" }, { "Ngày vào làm", "hireDate" },
-                { "Ngày sinh", "birthDate" }, { "Điện thoại", "phone" }, { "Email", "email" },
-                { "Địa chỉ", "address" } })
-            line(info, field[0], str(p, field[1]));
+        title("Hồ sơ của tôi", "Bấm vào từng mục bên dưới để xổ ra xem chi tiết thông tin cá nhân, lương và phụ cấp.");
+
+        // Thẻ tóm tắt định danh nhân viên gọn đẹp ở đầu trang
+        LinearLayout summaryCard = card(null);
+        LinearLayout topRow = new LinearLayout(this);
+        topRow.setOrientation(LinearLayout.HORIZONTAL);
+        topRow.setGravity(Gravity.CENTER_VERTICAL);
+
+        TextView avatar = text(initialsOf(str(p, "fullName")), 18, Color.WHITE, true);
+        avatar.setGravity(Gravity.CENTER);
+        avatar.setBackground(rounded(BLUE, 26));
+        LinearLayout.LayoutParams avatarParams = new LinearLayout.LayoutParams(dp(52), dp(52));
+        avatarParams.setMarginEnd(dp(14));
+        topRow.addView(avatar, avatarParams);
+
+        LinearLayout idCol = new LinearLayout(this);
+        idCol.setOrientation(LinearLayout.VERTICAL);
+        TextView nameTv = text(str(p, "fullName").isEmpty() ? "Nhân viên" : str(p, "fullName"), 17, INK, true);
+        ((LinearLayout.LayoutParams) nameTv.getLayoutParams()).bottomMargin = dp(2);
+        idCol.addView(nameTv);
+        TextView deptPosTv = text(
+                (str(p, "departmentName").isEmpty() ? "Chưa phân công" : str(p, "departmentName"))
+                        + " · "
+                        + (str(p, "positionName").isEmpty() ? "Nhân viên" : str(p, "positionName")),
+                13, MUTED, false);
+        ((LinearLayout.LayoutParams) deptPosTv.getLayoutParams()).bottomMargin = dp(4);
+        idCol.addView(deptPosTv);
+        badge(idCol, (str(p, "employeeCode").isEmpty() ? "NV" : str(p, "employeeCode")) + " · Đang làm việc", "DA_XAC_NHAN");
+        topRow.addView(idCol, new LinearLayout.LayoutParams(0, -2, 1));
+        summaryCard.addView(topRow);
+
+        // 1. DROPDOWN: THÔNG TIN CÁ NHÂN & LIÊN HỆ
+        LinearLayout info = dropdownCard(
+                "👤 Thông tin cá nhân & Liên hệ",
+                "Mã nhân viên, phòng ban, ngày sinh, điện thoại, email, địa chỉ",
+                profileInfoOpen,
+                open -> profileInfoOpen = open
+        );
+        salaryInfoRow(info, "Mã nhân viên", str(p, "employeeCode"), "Tên đăng nhập", str(p, "username"));
+        salaryInfoRow(info, "Phòng ban", str(p, "departmentName"), "Chức vụ", str(p, "positionName"));
+        salaryInfoRow(info, "Ngày vào làm", str(p, "hireDate"), "Ngày sinh", str(p, "birthDate"));
+        salaryInfoRow(info, "Điện thoại", str(p, "phone"), "Email", str(p, "email"));
+        line(info, "Địa chỉ liên hệ", str(p, "address"));
         info.addView(text("Bạn có thể cập nhật thông tin liên hệ. Thông tin nhân sự khác vui lòng liên hệ HR.", 12, MUTED, false));
-        button(info, "Chỉnh sửa hồ sơ", true, this::editProfile);
-        LinearLayout income = card("Lương và phúc lợi");
-        button(income, "Phiếu lương cá nhân đã công bố", false, () -> {
+        button(info, "✏️ Chỉnh sửa thông tin liên hệ", true, this::editProfile);
+
+        // 2. DROPDOWN: LƯƠNG VÀ PHÚC LỢI
+        LinearLayout income = dropdownCard(
+                "💰 Lương và phúc lợi",
+                "Xem phiếu lương đã công bố, các khoản trừ đi trễ, khoản lương & phụ cấp",
+                profileSalaryOpen,
+                open -> profileSalaryOpen = open
+        );
+        button(income, "📄 Phiếu lương cá nhân đã công bố", true, () -> {
             section = "salary";
             render();
         });
-        button(income, "Khoản lương / phụ cấp đã công bố", false, () -> fetch("/api/me/salary", data -> {
-            JSONArray rows = data.optJSONArray("items");
-            StringBuilder value = new StringBuilder();
-            java.text.NumberFormat money = java.text.NumberFormat.getCurrencyInstance(new Locale("vi", "VN"));
-            if (rows != null)
-                for (int i = 0; i < rows.length(); i++) {
-                    JSONObject r = rows.getJSONObject(i);
-                    value.append(str(r, "periodCode")).append(" · ").append(str(r, "componentName")).append("\n")
-                            .append(money.format(
-                                    new java.math.BigDecimal(str(r, "amount").isEmpty() ? "0" : str(r, "amount"))))
-                            .append("\n").append(str(r, "explanation")).append("\n\n");
-                }
-            new MaterialAlertDialogBuilder(this).setTitle("Khoản lương cá nhân")
-                    .setMessage(value.length() == 0 ? "Chưa có khoản lương được công bố." : value.toString())
-                    .setPositiveButton("Đóng", null).show();
-        }));
-        LinearLayout docs = card("Hợp đồng và quyết định");
-        docs.addView(text("Hợp đồng và quyết định hiện chưa hỗ trợ trên ứng dụng. Bạn có thể liên hệ HR để xem hồ sơ.",
-                13, MUTED, false));
-        LinearLayout account = card("Tài khoản");
-        button(account, "Đổi mật khẩu", false, this::changePassword);
-        button(account, "Đăng xuất", false,
+
+        LinearLayout publishedItemsContainer = column();
+        publishedItemsContainer.setVisibility(profileSalaryItemsOpen ? View.VISIBLE : View.GONE);
+        publishedItemsContainer.setPadding(0, dp(8), 0, 0);
+
+        final MaterialButton[] salaryItemsBtnHolder = new MaterialButton[1];
+        salaryItemsBtnHolder[0] = button(income,
+                profileSalaryItemsOpen ? "▲ Thu gọn Khoản lương / phụ cấp đã công bố" : "▼ Khoản lương / phụ cấp đã công bố",
+                false, () -> {
+                    profileSalaryItemsOpen = !profileSalaryItemsOpen;
+                    if (salaryItemsBtnHolder[0] != null) {
+                        salaryItemsBtnHolder[0].setText(profileSalaryItemsOpen
+                                ? "▲ Thu gọn Khoản lương / phụ cấp đã công bố"
+                                : "▼ Khoản lương / phụ cấp đã công bố");
+                    }
+                    if (profileSalaryItemsOpen) {
+                        publishedItemsContainer.setVisibility(View.VISIBLE);
+                        loadPublishedSalaryAndAllowances(publishedItemsContainer);
+                    } else {
+                        publishedItemsContainer.setVisibility(View.GONE);
+                    }
+                });
+        income.addView(publishedItemsContainer);
+        if (profileSalaryItemsOpen) {
+            loadPublishedSalaryAndAllowances(publishedItemsContainer);
+        }
+
+        // 3. DROPDOWN: HỢP ĐỒNG VÀ QUYẾT ĐỊNH
+        final boolean[] docsLoaded = {false};
+        LinearLayout docs = dropdownCard(
+                "📑 Hợp đồng và quyết định",
+                "Tra cứu hợp đồng lao động và các quyết định khen thưởng / kỷ luật",
+                profileDocsOpen,
+                open -> profileDocsOpen = open
+        );
+        Runnable loadDocs = () -> {
+            if (docsLoaded[0]) return;
+            docsLoaded[0] = true;
+            loadMyContractsAndDecisions(docs);
+        };
+        if (profileDocsOpen) {
+            loadDocs.run();
+        } else {
+            docs.addView(text("Đang tải dữ liệu hợp đồng & quyết định...", 13, MUTED, false));
+            // Tải ngay khi người dùng mở dropdown Hợp đồng và quyết định
+            View headerView = ((LinearLayout) docs.getParent()).getChildAt(0);
+            headerView.setOnClickListener(v -> {
+                boolean nowOpen = docs.getVisibility() != View.VISIBLE;
+                docs.setVisibility(nowOpen ? View.VISIBLE : View.GONE);
+                profileDocsOpen = nowOpen;
+                TextView badgeTv = (TextView) ((LinearLayout) headerView).getChildAt(1);
+                badgeTv.setText(nowOpen ? "▲ Thu gọn" : "▼ Xem");
+                if (nowOpen) loadDocs.run();
+            });
+        }
+
+        // 4. DROPDOWN: TÀI KHOẢN & BẢO MẬT
+        LinearLayout account = dropdownCard(
+                "🔐 Tài khoản & Bảo mật",
+                "Đổi mật khẩu đăng nhập hoặc đăng xuất khỏi thiết bị",
+                profileAccountOpen,
+                open -> profileAccountOpen = open
+        );
+        button(account, "🔑 Đổi mật khẩu", false, this::changePassword);
+        button(account, "🚪 Đăng xuất", false,
                 () -> new MaterialAlertDialogBuilder(this).setTitle("Đăng xuất?")
                         .setMessage("Kết thúc phiên đăng nhập trên ứng dụng?").setNegativeButton("Hủy", null)
                         .setPositiveButton("Đăng xuất", (d, w) -> {
@@ -2111,14 +2272,313 @@ public class EmployeeActivity extends AppCompatActivity {
                             });
                         }).show());
     }
-/**
+
+    /**
+     * Tải và hiển thị Khoản lương & Phụ cấp đã công bố ngay bên dưới nút "Khoản lương / phụ cấp đã công bố"
+     */
+    private void loadPublishedSalaryAndAllowances(LinearLayout container) {
+        container.removeAllViews();
+        container.setBackground(rounded(0xfff8fafc, 10));
+        container.setPadding(dp(12), dp(12), dp(12), dp(12));
+        TextView loadingTv = text("Đang tải danh sách khoản lương và phụ cấp đã công bố...", 13, MUTED, false);
+        container.addView(loadingTv);
+
+        int version = generation;
+        String token = session.token();
+        executor.execute(() -> {
+            JSONArray allowanceArr = new JSONArray();
+            JSONArray salaryArr = new JSONArray();
+            String errText = null;
+            try {
+                JSONObject allowRes = api.get("/api/me/allowances", token);
+                if (allowRes.optJSONArray("items") != null) {
+                    allowanceArr = allowRes.optJSONArray("items");
+                }
+            } catch (Exception ignored) {
+            }
+            try {
+                JSONObject salRes = api.get("/api/me/salary", token);
+                if (salRes.optJSONArray("items") != null) {
+                    salaryArr = salRes.optJSONArray("items");
+                }
+            } catch (Exception e) {
+                errText = HrmApi.message(e);
+            }
+            // Fallback từ /api/payslips/my-payslips nếu /api/me/salary trống
+            if (salaryArr == null || salaryArr.length() == 0) {
+                try {
+                    JSONObject mySlipsRes = api.get("/api/payslips/my-payslips", token);
+                    JSONArray slips = mySlipsRes.optJSONArray("items");
+                    if (slips != null && slips.length() > 0) {
+                        JSONArray built = new JSONArray();
+                        for (int i = 0; i < slips.length(); i++) {
+                            JSONObject s = slips.getJSONObject(i);
+                            String pCode = str(s, "periodCode");
+                            JSONArray lines = s.optJSONArray("lines");
+                            if (lines != null) {
+                                for (int j = 0; j < lines.length(); j++) {
+                                    JSONObject l = lines.getJSONObject(j);
+                                    JSONObject item = new JSONObject();
+                                    item.put("periodCode", pCode);
+                                    item.put("componentCode", str(l, "code"));
+                                    item.put("componentName", str(l, "name"));
+                                    item.put("direction", str(l, "direction"));
+                                    item.put("amount", l.optDouble("amount", 0));
+                                    item.put("explanation", str(l, "explanation"));
+                                    built.put(item);
+                                }
+                            }
+                        }
+                        salaryArr = built;
+                        errText = null;
+                    }
+                } catch (Exception ignored) {
+                }
+            }
+
+            final JSONArray finalAllowances = allowanceArr != null ? allowanceArr : new JSONArray();
+            final JSONArray finalSalaries = salaryArr != null ? salaryArr : new JSONArray();
+            final String finalErr = errText;
+
+            runOnUiThread(() -> {
+                if (isDestroyed() || version != generation) return;
+                container.removeAllViews();
+                java.util.Locale locale = java.util.Locale.forLanguageTag("vi-VN");
+                java.text.NumberFormat money = java.text.NumberFormat.getIntegerInstance(locale);
+
+                // PHẦN 1: PHỤ CẤP ĐỊNH MỨC CÁ NHÂN (THEO HỢP ĐỒNG / CHÍNH SÁCH)
+                TextView allowHeader = text("1. Phụ cấp định mức cá nhân đang hưởng", 14, BLUE, true);
+                ((LinearLayout.LayoutParams) allowHeader.getLayoutParams()).bottomMargin = dp(6);
+                container.addView(allowHeader);
+
+                if (finalAllowances.length() == 0) {
+                    container.addView(text("Chưa có phụ cấp cố định riêng hoặc đã gộp trực tiếp trong kỳ lương.", 12, MUTED, false));
+                } else {
+                    for (int i = 0; i < finalAllowances.length(); i++) {
+                        JSONObject a = finalAllowances.optJSONObject(i);
+                        if (a == null) continue;
+                        LinearLayout aBox = column();
+                        aBox.setBackground(rounded(Color.WHITE, 8));
+                        aBox.setPadding(dp(10), dp(8), dp(10), dp(8));
+                        LinearLayout.LayoutParams ap = new LinearLayout.LayoutParams(-1, -2);
+                        ap.bottomMargin = dp(6);
+                        aBox.setLayoutParams(ap);
+
+                        LinearLayout top = new LinearLayout(this);
+                        top.setOrientation(LinearLayout.HORIZONTAL);
+                        String aName = str(a, "typeName").isEmpty() ? str(a, "typeCode") : str(a, "typeName");
+                        TextView aTitle = text("🎁 " + aName, 13, INK, true);
+                        ((LinearLayout.LayoutParams) aTitle.getLayoutParams()).bottomMargin = 0;
+                        double amt = a.optDouble("amount", 0);
+                        String amtType = str(a, "amountType");
+                        String amtText = "PERCENT_BASE_SALARY".equalsIgnoreCase(amtType)
+                                ? (amt + "% lương CB")
+                                : ("+" + money.format(amt) + " ₫");
+                        TextView aVal = text(amtText, 13, 0xff126049, true);
+                        aVal.setGravity(Gravity.END);
+                        ((LinearLayout.LayoutParams) aVal.getLayoutParams()).bottomMargin = 0;
+                        top.addView(aTitle, new LinearLayout.LayoutParams(0, -2, 1));
+                        top.addView(aVal, new LinearLayout.LayoutParams(-2, -2));
+                        aBox.addView(top);
+
+                        String basis = "THEO_NGAY_CONG".equalsIgnoreCase(str(a, "calculationBasis"))
+                                ? "Tính theo ngày công thực tế"
+                                : "Định mức cố định theo kỳ lương";
+                        String effFrom = str(a, "effectiveFrom");
+                        String effTo = str(a, "effectiveTo");
+                        String sub = basis + (effFrom.isEmpty() ? "" : (" · Hiệu lực: " + effFrom + (effTo.isEmpty() ? " → Nay" : (" → " + effTo))));
+                        TextView subTv = text(sub, 11, MUTED, false);
+                        ((LinearLayout.LayoutParams) subTv.getLayoutParams()).bottomMargin = 0;
+                        aBox.addView(subTv);
+                        container.addView(aBox);
+                    }
+                }
+
+                // PHẦN 2: KHOẢN LƯƠNG & PHỤ CẤP ĐÃ CÔNG BỐ THEO KỲ
+                TextView salHeader = text("2. Chi tiết khoản lương & phụ cấp đã công bố theo kỳ", 14, BLUE, true);
+                salHeader.setPadding(0, dp(8), 0, dp(4));
+                container.addView(salHeader);
+
+                if (finalErr != null && finalSalaries.length() == 0) {
+                    container.addView(text(finalErr, 13, 0xffa32b32, false));
+                    return;
+                }
+                if (finalSalaries.length() == 0) {
+                    container.addView(text("Chưa có khoản lương / phụ cấp nào được công bố.", 13, MUTED, false));
+                    return;
+                }
+
+                // Gom nhóm theo periodCode
+                Map<String, List<JSONObject>> byPeriod = new LinkedHashMap<>();
+                for (int i = 0; i < finalSalaries.length(); i++) {
+                    JSONObject item = finalSalaries.optJSONObject(i);
+                    if (item == null) continue;
+                    String pCode = str(item, "periodCode");
+                    if (pCode.isEmpty()) pCode = "Kỳ lương";
+                    byPeriod.computeIfAbsent(pCode, k -> new ArrayList<>()).add(item);
+                }
+
+                List<String> periodKeys = new ArrayList<>(byPeriod.keySet());
+                String[] spinnerLabels = new String[periodKeys.size()];
+                for (int i = 0; i < periodKeys.size(); i++) {
+                    String pk = periodKeys.get(i);
+                    spinnerLabels[i] = "Kỳ lương " + pk + " (" + byPeriod.get(pk).size() + " khoản mục)";
+                }
+
+                container.addView(text("Chọn kỳ lương để xem các khoản thu nhập, phụ cấp & khấu trừ:", 12, MUTED, false));
+                Spinner periodSpinner = new Spinner(this);
+                ArrayAdapter<String> spAdapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, spinnerLabels);
+                spAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+                periodSpinner.setAdapter(spAdapter);
+                periodSpinner.setBackground(rounded(Color.WHITE, 8));
+                periodSpinner.setPadding(dp(8), dp(6), dp(8), dp(6));
+                container.addView(periodSpinner, new LinearLayout.LayoutParams(-1, -2));
+
+                LinearLayout periodItemsBox = column();
+                periodItemsBox.setPadding(0, dp(8), 0, 0);
+                container.addView(periodItemsBox);
+
+                periodSpinner.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
+                    @Override
+                    public void onNothingSelected(android.widget.AdapterView<?> parent) {
+                        periodItemsBox.removeAllViews();
+                    }
+
+                    @Override
+                    public void onItemSelected(android.widget.AdapterView<?> parent, View view, int position, long id) {
+                        periodItemsBox.removeAllViews();
+                        if (position < 0 || position >= periodKeys.size()) return;
+                        String pk = periodKeys.get(position);
+                        List<JSONObject> lines = byPeriod.get(pk);
+                        if (lines == null) return;
+
+                        double sumAdd = 0, sumDed = 0;
+                        for (JSONObject l : lines) {
+                            double amt = l.optDouble("amount", 0);
+                            if ("DEDUCT".equalsIgnoreCase(str(l, "direction"))) sumDed += amt;
+                            else sumAdd += amt;
+                        }
+
+                        LinearLayout summaryRow = column();
+                        summaryRow.setBackground(rounded(0xffeef6ff, 8));
+                        summaryRow.setPadding(dp(10), dp(8), dp(10), dp(8));
+                        LinearLayout.LayoutParams srp = new LinearLayout.LayoutParams(-1, -2);
+                        srp.bottomMargin = dp(8);
+                        summaryRow.setLayoutParams(srp);
+                        summaryRow.addView(text("Tổng hợp kỳ " + pk + ": Thu nhập +" + money.format(sumAdd) + " ₫  |  Khấu trừ −" + money.format(sumDed) + " ₫  |  Thực lĩnh: " + money.format(sumAdd - sumDed) + " ₫", 12, INK, true));
+                        periodItemsBox.addView(summaryRow);
+
+                        for (JSONObject l : lines) {
+                            boolean isAdd = !"DEDUCT".equalsIgnoreCase(str(l, "direction"));
+                            boolean isPenalty = !isAdd && "KHAU_TRU".equalsIgnoreCase(str(l, "componentCode"));
+                            LinearLayout itemCard = column();
+                            itemCard.setBackground(rounded(isPenalty ? 0xfffff2f2 : Color.WHITE, 8));
+                            itemCard.setPadding(dp(10), dp(8), dp(10), dp(8));
+                            LinearLayout.LayoutParams icp = new LinearLayout.LayoutParams(-1, -2);
+                            icp.bottomMargin = dp(6);
+                            itemCard.setLayoutParams(icp);
+
+                            LinearLayout top = new LinearLayout(EmployeeActivity.this);
+                            top.setOrientation(LinearLayout.HORIZONTAL);
+                            String cName = str(l, "componentName");
+                            TextView nameView = text((isAdd ? "➕ " : (isPenalty ? "⚠️ " : "➖ ")) + cName, 13, isPenalty ? 0xffa12823 : INK, true);
+                            ((LinearLayout.LayoutParams) nameView.getLayoutParams()).bottomMargin = 0;
+                            double amt = l.optDouble("amount", 0);
+                            TextView amtView = text((isAdd ? "+" : "−") + money.format(amt) + " ₫", 13, isAdd ? 0xff126049 : 0xffa12823, true);
+                            amtView.setGravity(Gravity.END);
+                            ((LinearLayout.LayoutParams) amtView.getLayoutParams()).bottomMargin = 0;
+                            top.addView(nameView, new LinearLayout.LayoutParams(0, -2, 1));
+                            top.addView(amtView, new LinearLayout.LayoutParams(-2, -2));
+                            itemCard.addView(top);
+
+                            String exp = str(l, "explanation");
+                            if (!exp.isEmpty()) {
+                                TextView expTv = text(exp, 11, MUTED, false);
+                                expTv.setPadding(0, dp(3), 0, 0);
+                                ((LinearLayout.LayoutParams) expTv.getLayoutParams()).bottomMargin = 0;
+                                itemCard.addView(expTv);
+                            }
+                            periodItemsBox.addView(itemCard);
+                        }
+                    }
+                });
+            });
+        });
+    }
+
+    private void loadMyContractsAndDecisions(LinearLayout docsContainer) {
+        docsContainer.removeAllViews();
+        docsContainer.addView(text("Đang tải hợp đồng và quyết định...", 13, MUTED, false));
+        int version = generation;
+        String token = session.token();
+        executor.execute(() -> {
+            JSONArray contractsArr = new JSONArray();
+            JSONArray decisionsArr = new JSONArray();
+            try {
+                JSONObject cRes = api.get("/api/me/contracts?page=0&size=20", token);
+                if (cRes.optJSONArray("content") != null) contractsArr = cRes.optJSONArray("content");
+            } catch (Exception ignored) {
+            }
+            try {
+                JSONObject dRes = api.get("/api/me/decisions?page=0&size=20", token);
+                if (dRes.optJSONArray("content") != null) decisionsArr = dRes.optJSONArray("content");
+            } catch (Exception ignored) {
+            }
+            final JSONArray finalContracts = contractsArr != null ? contractsArr : new JSONArray();
+            final JSONArray finalDecisions = decisionsArr != null ? decisionsArr : new JSONArray();
+            runOnUiThread(() -> {
+                if (isDestroyed() || version != generation) return;
+                docsContainer.removeAllViews();
+                docsContainer.addView(text("Hợp đồng lao động (" + finalContracts.length() + ")", 13, BLUE, true));
+                if (finalContracts.length() == 0) {
+                    docsContainer.addView(text("Chưa có dữ liệu hợp đồng lao động.", 12, MUTED, false));
+                } else {
+                    for (int i = 0; i < finalContracts.length(); i++) {
+                        JSONObject c = finalContracts.optJSONObject(i);
+                        if (c == null) continue;
+                        LinearLayout cBox = column();
+                        cBox.setBackground(rounded(0xfff8fafc, 8));
+                        cBox.setPadding(dp(10), dp(8), dp(10), dp(8));
+                        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2);
+                        cp.bottomMargin = dp(6);
+                        cBox.setLayoutParams(cp);
+                        cBox.addView(text(str(c, "contractNumber") + " · " + str(c, "typeName"), 13, INK, true));
+                        cBox.addView(text("Hiệu lực: " + str(c, "startDate") + " → " + (str(c, "endDate").isEmpty() ? "Không thời hạn" : str(c, "endDate")) + " (" + str(c, "status") + ")", 12, MUTED, false));
+                        docsContainer.addView(cBox);
+                    }
+                }
+                TextView decTitle = text("Quyết định nhân sự đã duyệt (" + finalDecisions.length() + ")", 13, BLUE, true);
+                decTitle.setPadding(0, dp(8), 0, 0);
+                docsContainer.addView(decTitle);
+                if (finalDecisions.length() == 0) {
+                    docsContainer.addView(text("Chưa có quyết định khen thưởng / kỷ luật nào.", 12, MUTED, false));
+                } else {
+                    for (int i = 0; i < finalDecisions.length(); i++) {
+                        JSONObject d = finalDecisions.optJSONObject(i);
+                        if (d == null) continue;
+                        LinearLayout dBox = column();
+                        dBox.setBackground(rounded(0xfff8fafc, 8));
+                        dBox.setPadding(dp(10), dp(8), dp(10), dp(8));
+                        LinearLayout.LayoutParams dpLayout = new LinearLayout.LayoutParams(-1, -2);
+                        dpLayout.bottomMargin = dp(6);
+                        dBox.setLayoutParams(dpLayout);
+                        dBox.addView(text(str(d, "decisionNumber") + " · " + str(d, "decisionType"), 13, INK, true));
+                        dBox.addView(text(str(d, "content") + (str(d, "issuedDate").isEmpty() ? "" : (" (" + str(d, "issuedDate") + ")")), 12, MUTED, false));
+                        docsContainer.addView(dBox);
+                    }
+                }
+            });
+        });
+    }
+
+    /**
      * Màn hình tra cứu phiếu lương cá nhân của nhân viên trên Mobile
      */
     private void salary() {
-        title("Phiếu lương của tôi", "Tra cứu chi tiết thu nhập, các khoản khấu trừ và thực lĩnh.");
+        title("Phiếu lương của tôi", "Tra cứu chi tiết thu nhập, phạt đi trễ từng phút, minh chứng ngày công và thực lĩnh.");
         LinearLayout actions = card(null);
-        button(actions, "‹ Quay lại trang chủ", false, () -> {
-            section = "home";
+        button(actions, "‹ Quay lại trang trước", false, () -> {
+            section = navigation.getSelectedItemId() == R.id.navProfile ? "profile" : "home";
             render();
         });
 
@@ -2129,16 +2589,23 @@ public class EmployeeActivity extends AppCompatActivity {
                 return;
             }
 
-            LinearLayout picker = card("Kỳ lương");
+            LinearLayout picker = card("Chọn kỳ lương đã công bố");
             String[] labels = new String[rows.length()];
+            int initialIndex = 0;
             for (int i = 0; i < rows.length(); i++) {
                 JSONObject row = rows.getJSONObject(i);
                 labels[i] = str(row, "periodCode") + " (v" + row.optInt("versionNo", 1) + ") · " + str(row, "payslipNumber");
+                if (selectedPayslipId > 0 && row.optLong("payslipId") == selectedPayslipId) {
+                    initialIndex = i;
+                }
             }
             Spinner periods = new Spinner(this);
             ArrayAdapter<String> adapter = new ArrayAdapter<>(this, android.R.layout.simple_spinner_item, labels);
             adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
             periods.setAdapter(adapter);
+            if (initialIndex > 0) {
+                periods.setSelection(initialIndex);
+            }
             picker.addView(periods);
             LinearLayout details = card(null);
             periods.setOnItemSelectedListener(new android.widget.AdapterView.OnItemSelectedListener() {
@@ -2150,7 +2617,8 @@ public class EmployeeActivity extends AppCompatActivity {
                     details.removeAllViews();
                     JSONObject row = rows.optJSONObject(position);
                     if (row == null) return;
-                    fetch("/api/payslips/" + row.optLong("payslipId"), slip -> {
+                    selectedPayslipId = row.optLong("payslipId");
+                    fetch("/api/payslips/" + selectedPayslipId, slip -> {
                         if (periods.getSelectedItemPosition() == position) showSalaryDetails(details, row, slip);
                     });
                 }
@@ -2160,27 +2628,57 @@ public class EmployeeActivity extends AppCompatActivity {
 
     private void showSalaryDetails(LinearLayout box, JSONObject row, JSONObject slip) throws Exception {
         box.removeAllViews();
+        long payslipId = slip.optLong("payslipId", row.optLong("payslipId"));
         java.util.Locale locale = java.util.Locale.forLanguageTag("vi-VN");
         java.text.NumberFormat money = java.text.NumberFormat.getIntegerInstance(locale);
         java.text.NumberFormat days = java.text.NumberFormat.getNumberInstance(locale);
         days.setMaximumFractionDigits(4);
         box.addView(text("Phiếu lương kỳ " + str(slip, "periodCode"), 18, INK, true));
-        badge(box, "Đã công bố", "DA_XAC_NHAN");
+        badge(box, "Đã công bố · " + str(slip, "payslipNumber"), "DA_XAC_NHAN");
         salaryInfoRow(box, "Mã nhân viên", str(row, "employeeCode"),
                 "Họ và tên", str(row, "employeeName"));
         salaryInfoRow(box, "Ngày công đi làm", salaryDays(slip, "actualWorkDays", days),
                 "Ngày công chuẩn", salaryDays(slip, "standardWorkDays", days));
+        String department = str(slip, "departmentName");
         String position = str(slip, "positionName");
-        line(box, "Chức vụ trong kỳ", position.isBlank() ? "Chưa có dữ liệu" : position);
+        salaryInfoRow(box, "Phòng ban", department.isBlank() ? "Chưa phân công" : department,
+                "Chức vụ trong kỳ", position.isBlank() ? "Chưa có dữ liệu" : position);
 
-        double gross = slip.getDouble("totalGross");
-        salaryTotal(box, "Tổng thu nhập (Gross)", money.format(gross), 0xffedf5ff, INK);
-        salaryTotal(box, "Tổng khấu trừ", money.format(slip.getDouble("totalDeduction")), 0xfffff2ef, 0xffa12823);
-        salaryTotal(box, "Thực lĩnh (Net)", money.format(slip.getDouble("netSalary")), 0xffe7f5ed, 0xff126049);
+        double gross = slip.optDouble("totalGross", 0);
+        salaryTotal(box, "Tổng thu nhập (Gross)", "+" + money.format(gross), 0xffedf5ff, INK);
+        salaryTotal(box, "Tổng khấu trừ & Phạt đi trễ", "−" + money.format(slip.optDouble("totalDeduction", 0)), 0xfffff2ef, 0xffa12823);
+        salaryTotal(box, "Thực lĩnh chuyển khoản (Net)", money.format(slip.optDouble("netSalary", 0)), 0xffe7f5ed, 0xff126049);
+
+        button(box, "🖨 Xem bản in Phiếu lương chuẩn / Lưu PDF", false, () -> openPrintablePayslipDialog(payslipId, str(slip, "payslipNumber")));
 
         JSONArray items = slip.optJSONArray("lines");
-        salaryItems(box, items, true, gross, money, locale);
-        salaryItems(box, items, false, gross, money, locale);
+        salaryItems(box, items, true, gross, money, locale, payslipId);
+        salaryItems(box, items, false, gross, money, locale, payslipId);
+    }
+
+    private void openPrintablePayslipDialog(long payslipId, String payslipNumber) {
+        fetch("/api/payslips/" + payslipId + "/html-json", data -> {
+            String html = str(data, "html");
+            if (html.isEmpty()) {
+                toast("Không tải được bản in phiếu lương.");
+                return;
+            }
+            android.webkit.WebView webView = new android.webkit.WebView(this);
+            webView.getSettings().setJavaScriptEnabled(false);
+            webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
+            new MaterialAlertDialogBuilder(this)
+                    .setTitle("Bản in " + (payslipNumber.isEmpty() ? ("PS-" + payslipId) : payslipNumber))
+                    .setView(webView)
+                    .setNegativeButton("Đóng", null)
+                    .setPositiveButton("🖨 In / Lưu PDF", (d, w) -> {
+                        android.print.PrintManager pm = (android.print.PrintManager) getSystemService( PRINT_SERVICE );
+                        if (pm != null) {
+                            String jobName = "PhieuLuong_" + (payslipNumber.isEmpty() ? payslipId : payslipNumber);
+                            pm.print(jobName, webView.createPrintDocumentAdapter(jobName), new android.print.PrintAttributes.Builder().build());
+                        }
+                    })
+                    .show();
+        });
     }
 
     private void salaryInfoRow(LinearLayout box, String leftLabel, String leftValue,
@@ -2218,9 +2716,12 @@ public class EmployeeActivity extends AppCompatActivity {
     }
 
     private void salaryItems(LinearLayout box, JSONArray items, boolean income, double gross,
-                             java.text.NumberFormat money, java.util.Locale locale) throws Exception {
+                             java.text.NumberFormat money, java.util.Locale locale, long payslipId) throws Exception {
         int color = income ? 0xff126049 : 0xffa12823;
-        TextView heading = text(income ? "Các khoản thu nhập" : "Các khoản trừ vào lương", 15, color, true);
+        TextView heading = text(
+                income ? "1. Các khoản thu nhập, phụ cấp & thưởng (+)"
+                       : "2. Các khoản trừ vào lương (Phạt đi trễ từng phút, Cắt cơm trưa, BH & Thuế)",
+                15, color, true);
         heading.setPadding(0, dp(16), 0, dp(6));
         box.addView(heading);
         java.text.NumberFormat percent = java.text.NumberFormat.getPercentInstance(locale);
@@ -2230,27 +2731,163 @@ public class EmployeeActivity extends AppCompatActivity {
             JSONObject item = items.getJSONObject(i);
             if (!(income ? "ADD" : "DEDUCT").equals(str(item, "direction"))) continue;
             found = true;
-            double amount = item.getDouble("amount");
+            double amount = item.optDouble("amount", 0);
+            String code = str(item, "code");
+            boolean isPenalty = !income && "KHAU_TRU".equalsIgnoreCase(code);
+            boolean isWorkSalary = income && "LUONG_CONG".equalsIgnoreCase(code);
+
+            LinearLayout itemCard = column();
+            itemCard.setBackground(rounded(isPenalty ? 0xfffff2f2 : (income ? 0xfff6fbf8 : 0xfffafafa), 10));
+            itemCard.setPadding(dp(12), dp(10), dp(12), dp(10));
+            LinearLayout.LayoutParams cardParams = new LinearLayout.LayoutParams(-1, -2);
+            cardParams.bottomMargin = dp(8);
+            itemCard.setLayoutParams(cardParams);
+
+            if (isPenalty) {
+                badge(itemCard, "⚠️ Khoản trừ đi trễ / về sớm / vi phạm ngày công", "TU_CHOI");
+            }
+
             LinearLayout row = new LinearLayout(this);
             row.setOrientation(LinearLayout.HORIZONTAL);
             row.setBaselineAligned(false);
-            TextView label = text(str(item, "name"), 13, INK, true);
+            TextView label = text(str(item, "name"), 14, isPenalty ? 0xffa12823 : INK, true);
             TextView value = text((income ? "+" : "−") + money.format(amount) + " ₫", 15, color, true);
             value.setGravity(android.view.Gravity.END);
             LinearLayout.LayoutParams labelParams = new LinearLayout.LayoutParams(0, -2, 1);
             labelParams.setMarginEnd(dp(8));
             row.addView(label, labelParams);
-            row.addView(value, new LinearLayout.LayoutParams(0, -2, 1));
-            box.addView(row, new LinearLayout.LayoutParams(-1, -2));
+            row.addView(value, new LinearLayout.LayoutParams(-2, -2));
+            itemCard.addView(row, new LinearLayout.LayoutParams(-1, -2));
+
             String explanation = str(item, "explanation");
-            if (!explanation.isEmpty()) box.addView(text(explanation, 12, MUTED, false));
-            if (!income && gross > 0) {
-                box.addView(text("Tỷ trọng: " + percent.format(amount / gross) + " tổng thu nhập", 12, MUTED, false));
+            if (!explanation.isEmpty()) {
+                itemCard.addView(text(explanation, 12, isPenalty ? 0xff7f1d1d : MUTED, false));
             }
-            View spacer = new View(this);
-            box.addView(spacer, new LinearLayout.LayoutParams(1, dp(10)));
+            if (!income && gross > 0) {
+                itemCard.addView(text("Tỷ trọng: " + percent.format(amount / gross) + " tổng thu nhập", 12, MUTED, false));
+            }
+
+            // Dropdown xem 22-23 dòng ngày công chi tiết ngay dưới dòng Lương theo ngày công (giống Web Admin)
+            if (isWorkSalary && payslipId > 0) {
+                LinearLayout workDropdownContainer = column();
+                workDropdownContainer.setVisibility(View.GONE);
+                workDropdownContainer.setPadding(0, dp(8), 0, 0);
+
+                final boolean[] loaded = {false};
+                final MaterialButton[] toggleBtn = new MaterialButton[1];
+                toggleBtn[0] = button(itemCard, "▼ Xem chi tiết từng ngày công (Check-in/Out, Trễ/Vắng)", false, () -> {
+                    boolean open = workDropdownContainer.getVisibility() != View.VISIBLE;
+                    workDropdownContainer.setVisibility(open ? View.VISIBLE : View.GONE);
+                    if (toggleBtn[0] != null) {
+                        toggleBtn[0].setText(open
+                                ? "▲ Thu gọn bảng ngày công chi tiết"
+                                : "▼ Xem chi tiết từng ngày công (Check-in/Out, Trễ/Vắng)");
+                    }
+                    if (open && !loaded[0]) {
+                        loaded[0] = true;
+                        loadPayslipWorkEvidenceDropdown(workDropdownContainer, payslipId);
+                    }
+                });
+                itemCard.addView(workDropdownContainer);
+            }
+
+            box.addView(itemCard);
         }
         if (!found) box.addView(text("Không có khoản mục.", 12, MUTED, false));
+    }
+
+    private void loadPayslipWorkEvidenceDropdown(LinearLayout container, long payslipId) {
+        container.removeAllViews();
+        container.addView(text("Đang tải minh chứng ngày công (Giờ Check-in/Out, Đi trễ, Vắng mặt)...", 12, MUTED, false));
+        fetch("/api/payslips/" + payslipId + "/work-details", data -> {
+            container.removeAllViews();
+            long lateMins = data.optLong("totalLateMinutes", 0);
+            int forfeitDays = data.optInt("forfeitedLunchDays", 0);
+            double unexcused = data.optDouble("unexcusedAbsenceDays", 0);
+            double actualDays = data.optDouble("actualWorkDays", 0);
+            double stdDays = data.optDouble("standardWorkDays", 22);
+            double totalHours = data.optDouble("totalWorkedHours", 0);
+
+            LinearLayout summaryBox = column();
+            summaryBox.setBackground(rounded(0xffedf5ff, 8));
+            summaryBox.setPadding(dp(10), dp(8), dp(10), dp(8));
+            LinearLayout.LayoutParams sbp = new LinearLayout.LayoutParams(-1, -2);
+            sbp.bottomMargin = dp(8);
+            summaryBox.setLayoutParams(sbp);
+            summaryBox.addView(text(
+                    "📅 Tổng hợp công: Đi làm " + actualDays + "/" + stdDays + " ngày · Tổng giờ: " + totalHours + "h"
+                    + "\n⏰ Đi trễ / Về sớm: " + lateMins + " phút"
+                    + (forfeitDays > 0 ? (" · 🚫 Cắt cơm trưa: " + forfeitDays + " ngày") : "")
+                    + (unexcused > 0 ? (" · ❌ Vắng không phép: " + unexcused + " ngày") : ""),
+                    12, INK, true));
+            container.addView(summaryBox);
+
+            JSONArray records = data.optJSONArray("dailyRecords");
+            if (records == null || records.length() == 0) {
+                container.addView(text("Không có dữ liệu lịch làm việc trong kỳ này.", 12, MUTED, false));
+                return;
+            }
+            for (int i = 0; i < records.length(); i++) {
+                JSONObject day = records.optJSONObject(i);
+                if (day == null) continue;
+                long dLate = day.optLong("lateMinutes", 0);
+                long dEarly = day.optLong("earlyLeaveMinutes", 0);
+                boolean lunchCut = day.optBoolean("lunchAllowanceForfeited", false);
+                String res = str(day, "attendanceResult");
+                boolean isAbsent = "VANG_KHONG_PHEP".equals(res);
+                boolean hasViolation = dLate > 0 || dEarly > 0 || lunchCut || isAbsent;
+
+                LinearLayout dCard = column();
+                dCard.setBackground(rounded(
+                        (lunchCut || isAbsent) ? 0xfffff1f2 : (hasViolation ? 0xfffff8e6 : Color.WHITE), 8));
+                dCard.setPadding(dp(10), dp(8), dp(10), dp(8));
+                LinearLayout.LayoutParams dcp = new LinearLayout.LayoutParams(-1, -2);
+                dcp.bottomMargin = dp(6);
+                dCard.setLayoutParams(dcp);
+
+                String statusLabel;
+                if (isAbsent) statusLabel = "❌ Vắng không phép";
+                else if ("NGHI_PHEP_CO_LUONG".equals(res)) statusLabel = "📝 Nghỉ phép có lương";
+                else if (lunchCut) statusLabel = "🚫 Trễ " + dLate + "p (>1/2 ca · Cắt cơm)";
+                else if (dLate > 0 && dEarly > 0) statusLabel = "⏰ Trễ " + dLate + "p · Sớm " + dEarly + "p";
+                else if (dLate > 0) statusLabel = "⏰ Đi trễ " + dLate + " phút";
+                else if (dEarly > 0) statusLabel = "⏰ Về sớm " + dEarly + " phút";
+                else if ("DI_LAM".equals(res)) statusLabel = "✔ Đúng giờ";
+                else statusLabel = "Chưa chấm công";
+
+                LinearLayout headerRow = new LinearLayout(this);
+                headerRow.setOrientation(LinearLayout.HORIZONTAL);
+                TextView dateTv = text("#" + (i + 1) + " · " + str(day, "workDate"), 13, INK, true);
+                ((LinearLayout.LayoutParams) dateTv.getLayoutParams()).bottomMargin = 0;
+                TextView stTv = text(statusLabel, 12,
+                        (lunchCut || isAbsent) ? 0xffa12823 : (hasViolation ? 0xff9a5b00 : 0xff126049), true);
+                stTv.setGravity(Gravity.END);
+                ((LinearLayout.LayoutParams) stTv.getLayoutParams()).bottomMargin = 0;
+                headerRow.addView(dateTv, new LinearLayout.LayoutParams(0, -2, 1));
+                headerRow.addView(stTv, new LinearLayout.LayoutParams(-2, -2));
+                dCard.addView(headerRow);
+
+                String aStart = shortTime(str(day, "actualStart"));
+                String aEnd = shortTime(str(day, "actualEnd"));
+                double wHrs = day.optDouble("workedHours", 0);
+                dCard.addView(text("Check-in/Out: " + aStart + " - " + aEnd + "  ·  Giờ làm: " + wHrs + "h", 12, INK, false));
+
+                String note = str(day, "evidenceNote");
+                if (!note.isEmpty()) {
+                    TextView noteTv = text(note, 11, MUTED, false);
+                    ((LinearLayout.LayoutParams) noteTv.getLayoutParams()).bottomMargin = 0;
+                    dCard.addView(noteTv);
+                }
+                container.addView(dCard);
+            }
+        });
+    }
+
+    private String shortTime(String raw) {
+        if (raw == null || raw.isEmpty()) return "—";
+        int tIdx = raw.indexOf('T');
+        String timePart = tIdx >= 0 ? raw.substring(tIdx + 1) : raw;
+        return timePart.length() >= 5 ? timePart.substring(0, 5) : timePart;
     }
 
     private void editProfile() {
