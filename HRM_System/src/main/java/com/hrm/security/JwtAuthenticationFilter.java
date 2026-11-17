@@ -110,7 +110,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 "ROLE_" + account.getRole().getRoleCode()));
 
         permissionRepository.findCodesByRoleId(
-                account.getRole().getRoleId()).forEach(code -> authorities.add(new SimpleGrantedAuthority(code)));
+                account.getRole().getRoleId()).forEach(code -> {
+            authorities.add(new SimpleGrantedAuthority(code));
+            if ("PAYSLIP_SELF_READ".equals(code)) {
+                authorities.add(new SimpleGrantedAuthority("payslip.self.view"));
+                authorities.add(new SimpleGrantedAuthority("payroll.self.view"));
+            }
+        });
 
         return authorities;
     }

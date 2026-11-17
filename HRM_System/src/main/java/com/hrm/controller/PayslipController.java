@@ -1,5 +1,6 @@
 package com.hrm.controller;
 
+import com.hrm.dto.PayrollEnhancementDTOs.EmployeePayrollWorkDetailDTO;
 import com.hrm.dto.PayslipDetailDTO;
 import com.hrm.service.PayslipService;
 import com.hrm.service.PersonnelScopeService;
@@ -11,6 +12,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
 @RestController
@@ -39,6 +41,26 @@ public class PayslipController {
         var detail = payslipService.getPayslipDetail(payslipId);
         authorize(detail.getEmployeeId());
         return ResponseEntity.ok(detail);
+    }
+
+    // P-15: Xem chi tiết 22-23 ngày công (Check-in/Out, Đi trễ/Về sớm, Cắt cơm trưa, Vắng) của phiếu lương
+    @GetMapping("/{payslipId}/work-details")
+    public ResponseEntity<EmployeePayrollWorkDetailDTO> getPayslipWorkDetails(@PathVariable Long payslipId) {
+        var detail = payslipService.getPayslipDetail(payslipId);
+        authorize(detail.getEmployeeId());
+        return ResponseEntity.ok(payslipService.getPayslipWorkDetails(payslipId));
+    }
+
+    // P-15: Xem bản in HTML gói trong JSON cho ứng dụng Mobile Android
+    @GetMapping("/{payslipId}/html-json")
+    public ResponseEntity<Map<String, Object>> viewPayslipHtmlJson(@PathVariable Long payslipId) {
+        var detail = payslipService.getPayslipDetail(payslipId);
+        authorize(detail.getEmployeeId());
+        return ResponseEntity.ok(Map.of(
+                "payslipId", payslipId,
+                "payslipNumber", detail.getPayslipNumber() != null ? detail.getPayslipNumber() : ("PS-" + payslipId),
+                "html", payslipService.renderPayslipHtml(payslipId)
+        ));
     }
 
     // P-15: Xem giao diện phiếu lương HTML chuẩn in ấn / lưu file PDF (Ctrl + P)

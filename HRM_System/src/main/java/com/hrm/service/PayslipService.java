@@ -1,6 +1,7 @@
 package com.hrm.service;
 
 import com.hrm.dto.PayrollDetailViewDTO;
+import com.hrm.dto.PayrollEnhancementDTOs.EmployeePayrollWorkDetailDTO;
 import com.hrm.dto.PayslipDTO;
 import com.hrm.dto.PayslipDetailDTO;
 import com.hrm.enums.BatchStatus;
@@ -14,6 +15,8 @@ import com.hrm.repository.PayrollDetailRepository;
 import com.hrm.repository.PayrollLineRepository;
 import com.hrm.repository.PayrollPeriodRepository;
 import com.hrm.repository.PayslipRepository;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,6 +24,7 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @Service
 public class PayslipService {
@@ -31,6 +35,13 @@ public class PayslipService {
     private final PayrollLineRepository lineRepository;
     private final PayrollPeriodRepository periodRepository;
     private final org.springframework.jdbc.core.JdbcTemplate jdbc;
+
+    @Autowired(required = false)
+    @Lazy
+    private PayrollExecutionService payrollExecutionService;
+
+    @Autowired(required = false)
+    private NotificationPublisher notificationPublisher;
 
     public PayslipService(PayslipRepository payslipRepository,
                           PayrollBatchRepository batchRepository,
@@ -61,11 +72,16 @@ public class PayslipService {
         PayrollPeriod period = periodRepository.findById(batch.getPeriodId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy kỳ lương ID: " + batch.getPeriodId()));
 
+        if (payrollExecutionService != null) {
+            payrollExecutionService.upgradeLegacyBatchIfNeeded(batchId);
+        }
+
         List<PayrollDetail> details = detailRepository.findByBatchId(batchId);
         List<PayslipDTO> result = new ArrayList<>();
 
         for (PayrollDetail d : details) {
-            if (!payslipRepository.existsByPayrollDetailId(d.getPayrollDetailId())) {
+            Payslip saved = payslipRepository.findByPayrollDetailId(d.getPayrollDetailId()).orElse(null);
+            if (saved == null) {
                 String cleanPeriodCode = period.getPeriodCode().replace("-", "");
                 String payslipNo = "PS-" + cleanPeriodCode + "-NV" + d.getEmployeeId() + "-V" + batch.getVersionNo();
 
@@ -75,18 +91,39 @@ public class PayslipService {
                 payslip.setIssuedAt(LocalDateTime.now());
                 payslip.setCreatedAt(LocalDateTime.now());
 
-                Payslip saved = payslipRepository.save(payslip);
+                saved = payslipRepository.save(payslip);
                 result.add(new PayslipDTO(saved.getPayslipId(), saved.getPayrollDetailId(), saved.getPayslipNumber(), saved.getIssuedAt(), saved.getFileReference()));
             }
+            notifyEmployeePayslipPublished(d.getEmployeeId(), saved.getPayslipId(), saved.getPayslipNumber(), period.getPeriodCode(), batch.getVersionNo());
         }
 
         return result;
+    }
+
+    private void notifyEmployeePayslipPublished(Long employeeId, Long payslipId, String payslipNumber, String periodCode, int versionNo) {
+        if (jdbc == null || notificationPublisher == null || employeeId == null || payslipId == null) {
+            return;
+        }
+        try {
+            List<Long> accountIds = jdbc.queryForList(
+                    "SELECT account_id FROM dbo.accounts WHERE employee_id = ? AND is_active = 1",
+                    Long.class, employeeId);
+            if (!accountIds.isEmpty()) {
+                String title = "Phiếu lương kỳ " + periodCode + " đã được công bố";
+                String message = "Phiếu lương " + payslipNumber + " (Đợt v" + versionNo + ") của bạn đã được công bố. Bấm để xem chi tiết thu nhập, các khoản khấu trừ và thực lĩnh.";
+                notificationPublisher.enqueue("payslip-published-" + payslipId, null, "PAYSLIP_PUBLISHED", title, message, "payslips", payslipId, Set.copyOf(accountIds));
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     /**
      * P-15: Lấy danh sách phiếu lương cá nhân của một nhân viên (Chỉ lấy các phiếu từ batch đã công bố)
      */
     public List<PayslipDetailDTO> getMyPayslips(Long employeeId) {
+        if (payrollExecutionService != null) {
+            payrollExecutionService.upgradeAllLegacyBatchesIfNeeded();
+        }
         List<PayrollBatch> publishedBatches = batchRepository.findAll().stream()
                 .filter(b -> b.getStatus() == BatchStatus.DA_CHOT && b.getPublishedAt() != null)
                 .toList();
@@ -122,11 +159,32 @@ public class PayslipService {
         PayrollBatch batch = batchRepository.findById(detail.getBatchId())
                 .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương!"));
 
-        if (batch.getStatus() != BatchStatus.DA_CHOT || batch.getPublishedAt() == null) {
+        if (batch.getStatus() != BatchStatus.DA_CHOT || batch.getPublishedAt() != null == false) {
             throw new org.springframework.web.server.ResponseStatusException(
                 org.springframework.http.HttpStatus.NOT_FOUND, "Phiếu lương chưa được công bố.");
         }
+        if (payrollExecutionService != null) {
+            payrollExecutionService.upgradeLegacyBatchIfNeeded(batch.getBatchId());
+        }
         return buildPayslipDetail(payslip, detail, batch);
+    }
+
+    public EmployeePayrollWorkDetailDTO getPayslipWorkDetails(Long payslipId) {
+        Payslip payslip = payslipRepository.findById(payslipId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy phiếu lương ID: " + payslipId));
+        PayrollDetail detail = detailRepository.findById(payslip.getPayrollDetailId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy chi tiết lương gắn với phiếu!"));
+        PayrollBatch batch = batchRepository.findById(detail.getBatchId())
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy đợt bảng lương!"));
+        if (batch.getStatus() != BatchStatus.DA_CHOT || batch.getPublishedAt() == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.NOT_FOUND, "Phiếu lương chưa được công bố.");
+        }
+        if (payrollExecutionService == null) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.SERVICE_UNAVAILABLE, "Dịch vụ chi tiết ngày công chưa sẵn sàng.");
+        }
+        return payrollExecutionService.getEmployeeWorkDetails(batch.getBatchId(), detail.getEmployeeId());
     }
 
     public String renderPayslipHtml(Long payslipId) {

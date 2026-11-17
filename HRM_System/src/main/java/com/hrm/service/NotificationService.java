@@ -71,6 +71,10 @@ public class NotificationService {
    var detail=new LinkedHashMap<String,Object>();detail.put("requestCode",request.requestCode());detail.put("requestType","ATTENDANCE_REQUEST");detail.put("status",request.status());detail.put("reason",request.reason());detail.put("submittedAt",request.submittedAt()+"Z");detail.put("proposedStart",request.proposedStart());detail.put("proposedEnd",request.proposedEnd());detail.put("decisionReason",request.decisionReason());detail.put("receiver",request.receiver());detail.put("receivedAt",request.receivedAt()==null?null:request.receivedAt()+"Z");detail.put("processedAt",request.processedAt()==null?null:request.processedAt()+"Z");
    return Map.of("referenceType","attendance_portal_requests","referenceId",reference,"detail",detail,"mine",senders.get(0)==actor.accountId());
   }
+  if("payslips".equals(row.get("reference_type"))){
+   long reference=((Number)row.get("reference_id")).longValue();
+   return Map.of("referenceType","payslips","referenceId",reference,"payslipId",reference,"mine",true,"route","/payroll");
+  }
   if(!"employee_requests".equals(row.get("reference_type")))throw new ResponseStatusException(HttpStatus.CONFLICT,"Chưa hỗ trợ mở loại thông báo này");
   long reference=((Number)row.get("reference_id")).longValue();var detail=requests.detail(reference,p); // Re-evaluate current RBAC/scope; old notifications never grant access.
   return Map.of("referenceType","employee_requests","referenceId",reference,"detail",detail,"mine",((Number)detail.get("employeeId")).longValue()==access.actor(p).employeeId(),"route",java.util.Set.of("ADMIN","HR").contains(access.actor(p).role())?"/requests":"/requests/head");

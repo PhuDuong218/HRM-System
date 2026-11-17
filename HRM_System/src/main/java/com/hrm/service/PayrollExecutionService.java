@@ -202,6 +202,185 @@ public class PayrollExecutionService {
                 + " (Kỳ " + period.getPeriodCode() + ")" + modeNote + ".";
     }
 
+    /**
+     * Tự động đồng bộ các đợt lương cũ (HRM-DRAFT-2026.1) sang chính sách 2026.2-PENALTY
+     * để cả Web Admin và Mobile App hiển thị đầy đủ các dòng phạt đi trễ / về sớm từng phút,
+     * cắt phụ cấp cơm trưa (> 1/2 ngày) và khấu trừ nghỉ không phép mà vẫn giữ nguyên payroll_detail_id & payslip_id.
+     */
+    @Transactional
+    public void upgradeAllLegacyBatchesIfNeeded() {
+        if (jdbc == null || batchRepository == null) {
+            return;
+        }
+        try {
+            List<Long> legacyBatchIds = jdbc.queryForList("""
+                SELECT DISTINCT pd.batch_id
+                FROM dbo.payroll_details pd
+                LEFT JOIN dbo.payroll_snapshots s ON s.payroll_detail_id = pd.payroll_detail_id
+                WHERE s.policy_version IS NULL OR s.policy_version <> '2026.2-PENALTY'
+            """, Long.class);
+            for (Long bId : legacyBatchIds) {
+                if (bId != null) {
+                    upgradeLegacyBatchIfNeeded(bId);
+                }
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    @Transactional
+    public void upgradeLegacyBatchIfNeeded(Long batchId) {
+        if (jdbc == null || batchId == null || batchRepository == null || periodRepository == null) {
+            return;
+        }
+        try {
+            Integer legacyCount = jdbc.queryForObject("""
+                SELECT COUNT(*)
+                FROM dbo.payroll_details pd
+                LEFT JOIN dbo.payroll_snapshots s ON s.payroll_detail_id = pd.payroll_detail_id
+                WHERE pd.batch_id = ?
+                  AND (s.policy_version IS NULL OR s.policy_version <> '2026.2-PENALTY')
+            """, Integer.class, batchId);
+            if (legacyCount == null || legacyCount == 0) {
+                return;
+            }
+
+            PayrollBatch batch = batchRepository.findById(batchId).orElse(null);
+            if (batch == null) {
+                return;
+            }
+            PayrollPeriod period = periodRepository.findById(batch.getPeriodId()).orElse(null);
+            if (period == null) {
+                return;
+            }
+
+            ensureSalaryComponentCatalog();
+
+            List<EmployeeSalaryProfileDTO> employeeProfiles = loadDatabaseSalaryProfiles(
+                    period.getPeriodStart(), period.getPeriodEnd());
+            Map<Long, EmployeeSalaryProfileDTO> profileByEmp = new HashMap<>();
+            for (EmployeeSalaryProfileDTO p : employeeProfiles) {
+                profileByEmp.put(p.getEmployeeId(), p);
+            }
+
+            List<PayrollDetail> existingDetails = detailRepository.findByBatchId(batchId);
+            for (PayrollDetail detail : existingDetails) {
+                Long empId = detail.getEmployeeId();
+                EmployeeSalaryProfileDTO profile = profileByEmp.get(empId);
+                if (profile == null) {
+                    profile = loadFallbackSalaryProfile(empId, period.getPeriodStart(), period.getPeriodEnd());
+                }
+                if (profile == null || profile.getBaseSalary() == null || profile.getBaseSalary().signum() <= 0) {
+                    continue;
+                }
+
+                AttendanceSummaryDTO baseAttendance = new AttendanceSummaryDTO(
+                        empId,
+                        BigDecimal.valueOf(PayrollConstants.DEFAULT_STANDARD_WORK_DAYS),
+                        BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO, BigDecimal.ZERO
+                );
+
+                EmployeePayrollWorkDetailDTO workDetail = buildEmployeeWorkDetail(
+                        batchId, empId, period.getPeriodStart(), period.getPeriodEnd(), baseAttendance);
+
+                AttendanceSummaryDTO effectiveAttendance = new AttendanceSummaryDTO(
+                        empId,
+                        workDetail.standardWorkDays(),
+                        workDetail.actualWorkDays(),
+                        workDetail.paidLeaveDays(),
+                        workDetail.unexcusedAbsenceDays(),
+                        workDetail.overtimeHours()
+                );
+
+                DecisionSummary bonusDecision = queryApprovedDecisionSummary(
+                        empId, period.getPeriodStart(), period.getPeriodEnd(), "ADD");
+                DecisionSummary disciplineDecision = queryApprovedDecisionSummary(
+                        empId, period.getPeriodStart(), period.getPeriodEnd(), "DEDUCT");
+
+                List<PayrollLine> newLines = calculationEngine.calculatePayrollLines(
+                        detail.getPayrollDetailId(),
+                        profile,
+                        effectiveAttendance,
+                        workDetail.dailyRecords(),
+                        workDetail.unexcusedAbsenceDays(),
+                        bonusDecision.totalAmount(),
+                        disciplineDecision.totalAmount(),
+                        bonusDecision.explanation(),
+                        disciplineDecision.explanation()
+                );
+                for (PayrollLine line : newLines) {
+                    line.setCreatedAt(LocalDateTime.now());
+                }
+
+                jdbc.update("DELETE FROM dbo.payroll_snapshots WHERE payroll_detail_id = ?", detail.getPayrollDetailId());
+                jdbc.update("DELETE FROM dbo.payroll_lines WHERE payroll_detail_id = ?", detail.getPayrollDetailId());
+                lineRepository.saveAll(newLines);
+
+                PayrollSnapshot snapshot = new PayrollSnapshot();
+                snapshot.setPayrollDetailId(detail.getPayrollDetailId());
+                snapshot.setSchemaVersion(2);
+                snapshot.setPolicyVersion("2026.2-PENALTY");
+                snapshot.setInputSnapshotJson(buildSnapshotJson(profile, effectiveAttendance, workDetail));
+                snapshot.setCapturedAt(LocalDateTime.now());
+                snapshot.setCreatedAt(LocalDateTime.now());
+                snapshotRepository.save(snapshot);
+            }
+        } catch (Exception ignored) {
+        }
+    }
+
+    private EmployeeSalaryProfileDTO loadFallbackSalaryProfile(Long employeeId, LocalDate periodStart, LocalDate periodEnd) {
+        if (jdbc == null || employeeId == null) {
+            return null;
+        }
+        List<EmployeeSalaryProfileDTO> list = jdbc.query("""
+            SELECT TOP 1 e.employee_id, e.employee_code, e.full_name,
+                   COALESCE((
+                       SELECT TOP 1 t.base_salary
+                       FROM dbo.contracts c
+                       JOIN dbo.contract_salary_terms t ON t.contract_id = c.contract_id
+                       WHERE c.employee_id = e.employee_id
+                       ORDER BY t.effective_from DESC, t.salary_term_id DESC
+                   ), 10000000) AS base_salary
+            FROM dbo.employees e
+            WHERE e.employee_id = ?
+        """, (rs, rowNum) -> {
+            EmployeeSalaryProfileDTO p = new EmployeeSalaryProfileDTO();
+            p.setEmployeeId(rs.getLong("employee_id"));
+            p.setEmployeeCode(rs.getString("employee_code"));
+            p.setFullName(rs.getString("full_name"));
+            p.setBaseSalary(rs.getBigDecimal("base_salary"));
+            p.setAllowances(new ArrayList<>());
+            return p;
+        }, employeeId);
+        if (list.isEmpty()) {
+            return null;
+        }
+        EmployeeSalaryProfileDTO p = list.get(0);
+        jdbc.query("""
+            SELECT atp.type_code, atp.type_name, ea.calculation_basis, ea.amount_type, ea.amount
+            FROM dbo.employee_allowances ea
+            JOIN dbo.allowance_types atp ON atp.allowance_type_id = ea.allowance_type_id
+            WHERE ea.employee_id = ?
+              AND ea.effective_from <= ?
+              AND (ea.effective_to IS NULL OR ea.effective_to >= ?)
+            ORDER BY atp.allowance_type_id
+        """, rs -> {
+            BigDecimal cfgAmt = rs.getBigDecimal("amount");
+            String amountType = rs.getString("amount_type");
+            BigDecimal resolvedAmt = "PERCENT_BASE_SALARY".equalsIgnoreCase(amountType) && p.getBaseSalary() != null
+                    ? p.getBaseSalary().multiply(cfgAmt).divide(BigDecimal.valueOf(100), 0, RoundingMode.HALF_UP)
+                    : cfgAmt;
+            p.getAllowances().add(new EmployeeSalaryProfileDTO.AllowanceItemDTO(
+                    rs.getString("type_code"),
+                    rs.getString("type_name"),
+                    resolvedAmt,
+                    rs.getString("calculation_basis")
+            ));
+        }, employeeId, periodEnd, periodStart);
+        return p;
+    }
+
     private void ensureSalaryComponentCatalog() {
         if (jdbc == null) {
             return;
