@@ -1,5 +1,6 @@
 package com.hrm.employee;
 
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -110,8 +111,10 @@ public class MainActivity extends AppCompatActivity {
                     throw new HrmApi.ApiException(403,
                             "Ứng dụng này dành cho tài khoản EMPLOYEE. ADMIN/HR vui lòng dùng giao diện web.");
                 runOnUiThread(() -> {
-                    if (isDestroyed() || version != screenVersion)
-                        return;
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN_MR1) {
+                        if (isDestroyed() || version != screenVersion)
+                            return;
+                    }
                     password.setText("");
                     session.signIn(token, profile);
                     showHome();
