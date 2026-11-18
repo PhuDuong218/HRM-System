@@ -5,6 +5,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { Router } from '@angular/router';
 import { AccountsPage } from '../src/app/pages/accounts/accounts';
 import { AccountService } from '../src/app/services/account.service';
+import { DepartmentService } from '../src/app/services/department.service';
 import { AuthService } from '../src/app/services/auth.service';
 
 export function setup() {
@@ -12,7 +13,7 @@ export function setup() {
   const auth = { username: () => 'admin', clear: () => { visits.push('cleared'); } };
   const injector = createEnvironmentInjector([
     provideHttpClient(), provideHttpClientTesting(),
-    { provide: PendingTasks, useValue: { add: () => () => {} } }, AccountService,
+    { provide: PendingTasks, useValue: { add: () => () => {} } }, AccountService, DepartmentService,
     { provide: AuthService, useValue: auth },
     { provide: Router, useValue: { navigateByUrl: (url: string) => { visits.push(url); return Promise.resolve(true); } } }
   ], Injector.NULL);

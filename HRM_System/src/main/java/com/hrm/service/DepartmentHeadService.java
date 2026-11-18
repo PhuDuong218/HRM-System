@@ -88,8 +88,21 @@ public class DepartmentHeadService {
     public DepartmentHeadDTO appoint(Long departmentId, DepartmentHeadRequest request, Principal principal) {
         Long actor=access.requireManager(principal);
         guard.lockTimeline();
+        return appointLocked(departmentId, request, actor, true);
+    }
+
+    private DepartmentHeadDTO appointLocked(Long departmentId, DepartmentHeadRequest request, Long actor,
+            boolean allowReplacement) {
         requireDepartment(departmentId,true);
         validateDate(request.effectiveFrom());
+        if (!allowReplacement && jdbc.queryForObject("""
+                SELECT COUNT_BIG(*) FROM dbo.employee_assignments a
+                JOIN dbo.positions p ON p.position_id=a.position_id
+                WHERE p.position_code='TRUONG_PHONG' AND a.department_id=?
+                  AND (a.effective_to IS NULL OR a.effective_to>?)
+                """, Long.class, departmentId, request.effectiveFrom()) > 0) {
+            throw conflict("Phòng ban đã có trưởng phòng trong thời gian này. Hãy xử lý ở Phân công / Điều chuyển.");
+        }
         Assignment candidate=requireAssignment(request.employeeId(),departmentId,request.effectiveFrom());
         Long headPosition=activeHeadPosition();
         if (candidate.positionId().equals(headPosition)) throw conflict("Nhân viên này đang là trưởng phòng");
@@ -117,15 +130,45 @@ public class DepartmentHeadService {
     public void end(Long departmentId, DepartmentHeadEndRequest request, Principal principal) {
         Long actor=access.requireManager(principal);
         guard.lockTimeline();
+        endLocked(departmentId, request, actor, null);
+    }
+
+    private void endLocked(Long departmentId, DepartmentHeadEndRequest request, Long actor, Long expectedEmployeeId) {
         requireDepartment(departmentId,false);
         validateDate(request.effectiveFrom());
         requireNonHeadPosition(request.nextPositionId());
         var heads=openHeads(departmentId);
         if(heads.size()!=1) throw conflict("Phòng phải có đúng một trưởng phòng đang đảm nhiệm");
         var old=heads.get(0);
+        if (expectedEmployeeId != null && !expectedEmployeeId.equals(old.employeeId()))
+            throw conflict("Phân công trưởng phòng đã thay đổi. Vui lòng tải lại.");
         change(requireAssignment(old.employeeId(),departmentId,request.effectiveFrom()),
                 request.nextPositionId(),request.effectiveFrom(),actor);
         audit(actor,departmentId,old,null,request.reason(),"DEPARTMENT_HEAD_END");
+    }
+
+    @Transactional
+    public void changeFromAccount(Long employeeId, AdminAccessDTOs.AccountHeadChange request, Principal principal) {
+        Long actor = access.requireManager(principal);
+        validateDate(request.effectiveFrom());
+        if (request.effectiveFrom().isBefore(LocalDate.now(clock)))
+            throw bad("Ngày hiệu lực không được trước hôm nay khi chỉnh sửa tài khoản.");
+        guard.lockTimeline();
+        var departments = jdbc.queryForList("""
+                SELECT department_id FROM dbo.employee_assignments WITH (UPDLOCK,HOLDLOCK)
+                WHERE employee_id=? AND effective_to IS NULL
+                """, Long.class, employeeId);
+        if (departments.size() != 1)
+            throw conflict("Nhân viên phải có đúng một phân công phòng ban đang mở.");
+        Long departmentId = departments.getFirst();
+        if (request.appoint()) {
+            appointLocked(departmentId,
+                    new DepartmentHeadRequest(employeeId, request.effectiveFrom(), null, request.reason()), actor, false);
+        } else {
+            if (request.nextPositionId() == null) throw bad("Phải chọn chức vụ tiếp theo.");
+            endLocked(departmentId, new DepartmentHeadEndRequest(request.effectiveFrom(), request.nextPositionId(),
+                    request.reason()), actor, employeeId);
+        }
     }
 
     private record Assignment(Long id, Long employeeId, Long departmentId, Long positionId, LocalDate start) {}

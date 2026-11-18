@@ -1,5 +1,5 @@
 import { RowViewDirective } from '../../shared/row-view.directive';
-import {SearchAssistDirective} from '../../shared/search-assist.directive';
+import { SearchAssistDirective, searchKey } from '../../shared/search-assist.directive';
 import {ActionDialogService} from '../../shared/ui/action-dialog';
 import {EditFormDirective} from '../../shared/edit-form.directive';
 import {HrmNotice} from '../../shared/ui/notice';
@@ -78,6 +78,23 @@ export class AllowancesPage implements OnInit {
 
   // ===== Phụ cấp của nhân viên =====
   rows: EmployeeAllowanceResponse[] = [];
+  assignedFilter = { keyword: '', from: '', to: '' };
+  private appliedAssignedFilter = { ...this.assignedFilter };
+  assignedFilterError = '';
+
+  get filteredAllowances(): EmployeeAllowanceResponse[] {
+    const { keyword, from, to } = this.appliedAssignedFilter;
+    if (!keyword && !from && !to) return this.rows;
+    return this.rows.filter(row =>
+      (!from || !row.effectiveTo || row.effectiveTo >= from) &&
+      (!to || row.effectiveFrom <= to) &&
+      (!keyword || searchKey(`${row.typeCode} ${row.typeName} ${row.conditionNote ?? ''}`).includes(keyword))
+    );
+  }
+
+  get assignedRowsLoaded(): boolean {
+    return this.rowsLoadedEmployeeId === this.employeeId;
+  }
   rowsLoading = false;
   showAssignForm = false;
   assignMode: AssignMode = 'create';
@@ -282,7 +299,19 @@ export class AllowancesPage implements OnInit {
     return { allowanceTypeId: 0, effectiveFrom: '', effectiveTo: null, calculationBasis: 'THEO_KY', amountType: 'FIXED', amount: 0, conditionNote: '', reason: '' };
   }
 
-  onEmployeeChange(value: string): void {
+  applyAssignedFilters(): void {
+    const { keyword, from, to } = this.assignedFilter;
+    this.assignedFilterError = from && to && from > to ? 'Từ ngày phải nhỏ hơn hoặc bằng đến ngày.' : '';
+    if (this.assignedFilterError) return;
+    this.appliedAssignedFilter = { keyword: searchKey(keyword), from, to };
+  }
+
+  clearAssignedFilters(): void {
+    this.assignedFilter = { keyword: '', from: '', to: '' };
+    this.applyAssignedFilters();
+  }
+
+  onEmployeeChange(value: string | number | null): void {
     if (this.saving) return;
     const nextId = value ? Number(value) : null;
     this.employeeId = nextId !== null && Number.isSafeInteger(nextId) && nextId > 0 ? nextId : null;
@@ -318,6 +347,7 @@ export class AllowancesPage implements OnInit {
     const id = this.employeeId;
     this.rowsRequest?.unsubscribe();
     this.rowsLoading = true;
+    this.rowsLoadedEmployeeId = null;
     this.rows = [];
     this.error = '';
     this.rowsRequest = this.api.list(id)
