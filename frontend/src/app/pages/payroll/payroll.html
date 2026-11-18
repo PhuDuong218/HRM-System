@@ -647,39 +647,93 @@
 @if (activeTab === 'allowances') {
   <section class="surface mb-4">
     <div class="mb-3 pb-2 border-bottom">
-      <h2 class="h5 mb-1">🎁 Danh sách phụ cấp theo tháng &amp; phân bổ theo phòng ban</h2>
+      <h2 class="h5 mb-1">🎁 Danh sách phụ cấp theo tháng, quý, năm &amp; phân bổ theo phòng ban</h2>
       <p class="small text-muted mb-0">
-        <strong>Hướng dẫn sử dụng:</strong> Chọn <strong>Kỳ lương</strong> để xem tổng hợp ngân sách phụ cấp của từng phòng ban (Bảng 1) và danh sách chi tiết từng nhân viên được hưởng phụ cấp trong tháng đó (Bảng 2). Bạn có thể bấm nút <em>"Xem danh sách"</em> ở từng phòng ban để lọc riêng nhân sự thuộc bộ phận đó.
+        <strong>Hướng dẫn sử dụng:</strong> Lọc theo <strong>Năm</strong>, <strong>Quý</strong>, <strong>Kỳ lương (Tháng)</strong>, <strong>Phòng ban</strong> hoặc <strong>Nhân viên</strong>. Bấm trực tiếp vào bất kỳ dòng nhân viên nào ở Bảng 2 để mở <strong>Phiếu chi tiết phụ cấp &amp; bảng lương (Subform)</strong> ngay bên phải màn hình.
       </p>
     </div>
 
-    <div class="row g-3 align-items-end mb-4">
-      <div class="col-md-4">
-        <label class="form-label fw-bold mb-1">Kỳ lương:</label>
-        <select class="form-select" [(ngModel)]="selectedPeriodId" (ngModelChange)="onPeriodChange()">
-          @for (period of periods; track period.periodId) {
-            <option [ngValue]="period.periodId">{{ period.periodCode }} ({{ period.periodStart }} - {{ period.periodEnd }})</option>
+    <!-- BỘ LỌC NĂM, QUÝ, KỲ THÁNG, PHÒNG BAN & NHÂN VIÊN -->
+    <div class="row g-2 align-items-end mb-3 p-3 bg-light rounded border">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Năm:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="allowanceYear" (ngModelChange)="onAllowanceYearOrQuarterChange()">
+          <option [ngValue]="null">Tất cả năm</option>
+          @for (yr of availableYears; track yr) {
+            <option [ngValue]="yr">Năm {{ yr }}</option>
           }
         </select>
       </div>
-      <div class="col-md-4">
-        <label class="form-label fw-bold mb-1">Lọc theo phòng ban:</label>
-        <select class="form-select" [(ngModel)]="selectedAllowanceDeptId" (ngModelChange)="loadPeriodAllowances()">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Quý:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="allowanceQuarter" (ngModelChange)="onAllowanceYearOrQuarterChange()">
+          <option [ngValue]="null">Tất cả các quý</option>
+          <option [ngValue]="1">Quý 1 (Tháng 01 - 03)</option>
+          <option [ngValue]="2">Quý 2 (Tháng 04 - 06)</option>
+          <option [ngValue]="3">Quý 3 (Tháng 07 - 09)</option>
+          <option [ngValue]="4">Quý 4 (Tháng 10 - 12)</option>
+        </select>
+      </div>
+      <div class="col-md-3">
+        <label class="form-label small fw-bold mb-1">Kỳ lương (Tháng):</label>
+        <select class="form-select form-select-sm" [(ngModel)]="allowancePeriodMode" (ngModelChange)="onAllowancePeriodModeChange()">
+          <option [ngValue]="'ALL'">Tất cả tháng hiện có trong bộ lọc</option>
+          @for (period of periods; track period.periodId) {
+            <option [ngValue]="period.periodId">{{ period.periodCode }} ({{ period.periodStart }} → {{ period.periodEnd }})</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Phòng ban:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="selectedAllowanceDeptId" (ngModelChange)="loadPeriodAllowances()">
           <option [ngValue]="null">Tất cả phòng ban</option>
           @for (dept of departments; track dept.departmentId) {
             <option [ngValue]="dept.departmentId">{{ dept.departmentName }}</option>
           }
         </select>
       </div>
-      <div class="col-md-4 text-md-end">
+      <div class="col-md-3">
+        <label class="form-label small fw-bold mb-1">Chọn nhân viên:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="allowanceEmployeeCode" (ngModelChange)="allowancePage = 1">
+          <option value="">Tất cả nhân viên ({{ allowanceEmployeeOptions.length }} NV)</option>
+          @for (emp of allowanceEmployeeOptions; track emp.employeeCode) {
+            <option [value]="emp.employeeCode">{{ emp.employeeCode }} — {{ emp.fullName }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-8 mt-2">
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          [(ngModel)]="allowanceKeyword"
+          (ngModelChange)="allowancePage = 1"
+          placeholder="🔍 Tìm nhanh theo Mã NV, Họ và tên nhân viên hoặc Tên khoản phụ cấp...">
+      </div>
+      <div class="col-md-4 mt-2 d-flex justify-content-between align-items-center gap-2">
+        <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetAllowanceFilters()">
+          ↺ Đặt lại bộ lọc
+        </button>
         @if (allowanceOverview) {
-          <div class="p-2 px-3 bg-light rounded border d-inline-block text-end">
-            <small class="text-muted d-block">Tổng quỹ phụ cấp tháng {{ allowanceOverview.periodCode }}</small>
-            <strong class="text-primary fs-5">{{ allowanceOverview.totalCompanyAllowance | number:'1.0-0' }} đ</strong>
+          <div class="px-3 py-1 bg-white rounded border text-end flex-grow-1">
+            <small class="text-muted d-block">Tổng phụ cấp đang lọc ({{ filteredAllowanceItems.length }} khoản)</small>
+            <strong class="text-primary">{{ filteredAllowanceTotalAmount | number:'1.0-0' }} đ</strong>
           </div>
         }
       </div>
     </div>
+
+    @if (allowanceMonthsNotice) {
+      <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span>📅 <strong>Phạm vi tháng dữ liệu:</strong> {{ allowanceMonthsNotice }}</span>
+        @if (allowanceActivePeriodCodes.length > 0) {
+          <div class="d-flex flex-wrap gap-1">
+            @for (code of allowanceActivePeriodCodes; track code) {
+              <span class="badge text-bg-primary">{{ code }}</span>
+            }
+          </div>
+        }
+      </div>
+    }
 
     @if (loadingAllowances) {
       <p class="text-muted">Đang tải dữ liệu phụ cấp của tháng &amp; phòng ban...</p>
@@ -735,64 +789,260 @@
         </div>
       }
 
-      <!-- BẢNG 2B: CHI TIẾT PHỤ CẤP NHÂN VIÊN TRONG THÁNG -->
-      <div class="d-flex justify-content-between align-items-center mb-2">
-        <h3 class="h6 fw-bold text-uppercase text-primary mb-0">
-          2. Danh sách chi tiết phụ cấp nhân viên trong tháng {{ allowanceOverview.periodCode }} ({{ allowanceOverview.items.length }} khoản)
-        </h3>
-        @if (selectedAllowanceDeptId !== null) {
-          <button type="button" class="btn btn-sm btn-outline-secondary" (click)="filterAllowanceByDept(null)">
-            Hiển thị tất cả phòng ban
-          </button>
+      <!-- BẢNG 2B + SUBFORM CHI TIẾT PHỤ CẤP & LƯƠNG NHÂN VIÊN -->
+      <div class="row g-4">
+        <div [class]="selectedAllowanceItem ? 'col-lg-6' : 'col-12'">
+          <div class="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+            <div>
+              <h3 class="h6 fw-bold text-uppercase text-primary mb-0">
+                2. Danh sách chi tiết phụ cấp nhân viên ({{ filteredAllowanceItems.length }} khoản)
+              </h3>
+              <small class="text-muted">Bấm vào dòng nhân viên hoặc nút "Chi tiết" để mở Subform xem chi tiết phụ cấp &amp; lương ngay bên cạnh.</small>
+            </div>
+            @if (selectedAllowanceDeptId !== null || allowanceEmployeeCode || allowanceKeyword) {
+              <button type="button" class="btn btn-sm btn-outline-secondary" (click)="resetAllowanceFilters()">
+                Hiển thị tất cả
+              </button>
+            }
+          </div>
+          <div class="table-responsive">
+            <table class="table table-hover align-middle mb-0">
+              <thead class="table-light">
+                <tr>
+                  <th class="text-center" style="width: 50px;">STT</th>
+                  <th>Kỳ</th>
+                  <th>Mã NV</th>
+                  <th>Họ và tên nhân viên</th>
+                  @if (!selectedAllowanceItem) {
+                    <th>Phòng ban</th>
+                  }
+                  <th>Loại phụ cấp</th>
+                  @if (!selectedAllowanceItem) {
+                    <th>Cách tính &amp; Hiệu lực</th>
+                  }
+                  <th class="text-end">Mức hưởng</th>
+                  <th class="text-center" style="width: 85px;">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (item of pagedAllowanceItems; track (item.periodCode || '') + '-' + item.employeeAllowanceId; let idx = $index) {
+                  <tr
+                    [class.table-primary]="selectedAllowanceItem?.employeeAllowanceId === item.employeeAllowanceId && selectedAllowanceItem?.periodCode === item.periodCode"
+                    style="cursor: pointer;"
+                    (click)="selectAllowanceItem(item)">
+                    <td class="text-center text-muted fw-semibold">{{ (allowancePage - 1) * pageSize + idx + 1 }}</td>
+                    <td class="small fw-semibold text-nowrap">{{ item.periodCode || allowanceOverview.periodCode }}</td>
+                    <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
+                    <td>
+                      <div class="fw-semibold">{{ item.fullName }}</div>
+                      @if (selectedAllowanceItem) {
+                        <small class="text-muted d-block">{{ item.departmentName }}</small>
+                      }
+                    </td>
+                    @if (!selectedAllowanceItem) {
+                      <td>{{ item.departmentName }}</td>
+                    }
+                    <td>
+                      <div class="fw-semibold">{{ item.allowanceName }} <small class="text-muted">({{ item.allowanceCode }})</small></div>
+                      <small class="text-muted">
+                        {{ item.isTaxable ? 'Chịu thuế TNCN' : 'Miễn thuế TNCN' }} ·
+                        {{ item.countsForSocialInsurance ? 'Đóng BHXH' : 'Không đóng BHXH' }}
+                      </small>
+                    </td>
+                    @if (!selectedAllowanceItem) {
+                      <td class="small">
+                        <span class="badge text-bg-light border me-1">{{ item.calculationBasis === 'THEO_KY' ? 'Theo kỳ' : item.calculationBasis === 'THEO_NGAY_CONG' ? 'Theo ngày công' : item.calculationBasis }}</span>
+                        <div class="text-muted mt-1">{{ item.effectiveFrom }} → {{ item.effectiveTo || 'Vô thời hạn' }}</div>
+                      </td>
+                    }
+                    <td class="text-end fw-bold text-success text-nowrap">+{{ item.estimatedPeriodAmount | number:'1.0-0' }} đ</td>
+                    <td class="text-center">
+                      <button
+                        type="button"
+                        class="btn btn-sm btn-outline-primary py-0 px-2"
+                        (click)="selectAllowanceItem(item); $event.stopPropagation()">
+                        Chi tiết
+                      </button>
+                    </td>
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td colspan="9" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (filteredAllowanceItems.length > 0) {
+            <div class="pt-3">
+              <app-pagination [page]="allowancePage - 1" [pages]="allowanceTotalPages" [busy]="loadingAllowances" (pageChange)="allowancePage = $event + 1" />
+            </div>
+          }
+        </div>
+
+        <!-- SUBFORM CHI TIẾT PHỤ CẤP & PHIẾU LƯƠNG TẠI CHỖ (TAB 2) -->
+        @if (selectedAllowanceItem) {
+          <div class="col-lg-6">
+            <section class="surface border border-primary-subtle shadow-sm">
+              <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+                <div>
+                  <span class="badge text-bg-primary mb-1">Chi tiết Phụ cấp &amp; Hồ sơ lương nhân viên</span>
+                  <h3 class="h5 mb-1 text-primary fw-bold">
+                    {{ selectedAllowanceItem.fullName }}
+                    <span class="text-secondary">({{ selectedAllowanceItem.employeeCode }})</span>
+                  </h3>
+                  <div class="small text-muted d-flex flex-wrap gap-3">
+                    <span>🏢 Phòng ban: <strong>{{ selectedAllowanceItem.departmentName }}</strong></span>
+                    <span>📅 Kỳ đang xem: <strong>{{ selectedAllowanceItem.periodCode || allowanceOverview.periodCode }}</strong></span>
+                  </div>
+                </div>
+                <button type="button" class="btn-close" aria-label="Đóng" (click)="closeAllowanceSubform()"></button>
+              </div>
+
+              <!-- 1. THÔNG TIN KHOẢN PHỤ CẤP ĐANG CHỌN -->
+              <h4 class="small fw-bold text-primary text-uppercase mb-2">1. Chi tiết khoản phụ cấp đang chọn</h4>
+              <div class="p-3 bg-light rounded border mb-3 small">
+                <div class="d-flex justify-content-between align-items-center mb-2">
+                  <strong class="fs-6 text-dark">{{ selectedAllowanceItem.allowanceName }} (<code>{{ selectedAllowanceItem.allowanceCode }}</code>)</strong>
+                  <span class="fs-5 fw-bold text-success">+{{ selectedAllowanceItem.estimatedPeriodAmount | number:'1.0-0' }} đ</span>
+                </div>
+                <div class="row g-2">
+                  <div class="col-sm-6">
+                    <span class="text-muted">Cách tính:</span>
+                    <strong class="ms-1">{{ selectedAllowanceItem.calculationBasis === 'THEO_KY' ? 'Theo kỳ (cố định)' : selectedAllowanceItem.calculationBasis === 'THEO_NGAY_CONG' ? 'Theo ngày công thực tế' : selectedAllowanceItem.calculationBasis }}</strong>
+                  </div>
+                  <div class="col-sm-6">
+                    <span class="text-muted">Thời hạn hiệu lực:</span>
+                    <strong class="ms-1">{{ selectedAllowanceItem.effectiveFrom }} → {{ selectedAllowanceItem.effectiveTo || 'Vô thời hạn' }}</strong>
+                  </div>
+                  <div class="col-sm-6">
+                    <span class="text-muted">Thuế TNCN:</span>
+                    <strong class="ms-1">{{ selectedAllowanceItem.isTaxable ? 'Chịu thuế TNCN' : 'Miễn thuế TNCN' }}</strong>
+                  </div>
+                  <div class="col-sm-6">
+                    <span class="text-muted">Bảo hiểm bắt buộc:</span>
+                    <strong class="ms-1">{{ selectedAllowanceItem.countsForSocialInsurance ? 'Tính đóng BHXH' : 'Không tính đóng BHXH' }}</strong>
+                  </div>
+                </div>
+              </div>
+
+              <!-- 2. TẤT CẢ CÁC KHOẢN PHỤ CẤP CỦA NHÂN VIÊN NÀY TRONG BỘ LỌC -->
+              <h4 class="small fw-bold text-success text-uppercase mb-2">
+                2. Tổng hợp các khoản phụ cấp của {{ selectedAllowanceItem.fullName }} ({{ selectedEmployeeAllowanceItems.length }} khoản)
+              </h4>
+              <div class="table-responsive mb-3">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th>Kỳ</th>
+                      <th>Khoản phụ cấp</th>
+                      <th>Cách tính</th>
+                      <th class="text-end">Số tiền (+)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (aItem of selectedEmployeeAllowanceItems; track (aItem.periodCode || '') + '-' + aItem.employeeAllowanceId) {
+                      <tr [class.table-primary]="aItem.employeeAllowanceId === selectedAllowanceItem.employeeAllowanceId && aItem.periodCode === selectedAllowanceItem.periodCode">
+                        <td class="small fw-semibold">{{ aItem.periodCode || allowanceOverview.periodCode }}</td>
+                        <td class="small fw-semibold">{{ aItem.allowanceName }} <small class="text-muted">({{ aItem.allowanceCode }})</small></td>
+                        <td class="small">{{ aItem.calculationBasis === 'THEO_KY' ? 'Theo kỳ' : 'Theo ngày công' }}</td>
+                        <td class="text-end text-success fw-bold">+{{ aItem.estimatedPeriodAmount | number:'1.0-0' }} đ</td>
+                      </tr>
+                    }
+                    <tr class="table-light fw-bold">
+                      <td colspan="3" class="text-end">Tổng cộng phụ cấp của nhân viên:</td>
+                      <td class="text-end text-success">+{{ selectedEmployeeAllowanceTotal | number:'1.0-0' }} đ</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 3. BẢNG LƯƠNG & MINH CHỨNG NGÀY CÔNG TRONG KỲ CỦA NHÂN VIÊN -->
+              @if (loadingAllowanceSubform) {
+                <p class="small text-muted mb-0">Đang tải chi tiết bảng lương trong kỳ của nhân viên...</p>
+              } @else if (allowanceSubformDetail && allowanceSubformDetail.lines && allowanceSubformDetail.lines.length > 0) {
+                <h4 class="small fw-bold text-primary text-uppercase mb-2">
+                  3. Phiếu giải trình lương &amp; ngày công trong kỳ {{ selectedAllowanceItem.periodCode || allowanceOverview.periodCode }}
+                </h4>
+                <div class="table-responsive mb-3">
+                  <table class="table table-sm table-bordered align-middle mb-0">
+                    <thead class="table-light">
+                      <tr>
+                        <th>Khoản mục lương / Khấu trừ</th>
+                        <th>Diễn giải chi tiết</th>
+                        <th class="text-end" style="width: 130px;">Số tiền</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (line of allowanceSubformDetail.lines; track $index) {
+                        <tr
+                          [class.table-danger]="line.direction === 'DEDUCT' && line.code === 'KHAU_TRU'"
+                          [style.cursor]="line.code === 'LUONG_CONG' ? 'pointer' : 'default'"
+                          (click)="line.code === 'LUONG_CONG' ? toggleAllowanceWorkDropdown($event) : null">
+                          <td class="small fw-semibold">
+                            <div class="d-flex justify-content-between align-items-center gap-1 flex-wrap">
+                              <span>{{ line.name }}</span>
+                              @if (line.code === 'LUONG_CONG') {
+                                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" (click)="toggleAllowanceWorkDropdown($event)">
+                                  {{ showAllowanceWorkDropdown ? '▲ Thu gọn công' : ('▼ Xem ' + (allowanceSubformWorkDetail?.dailyRecords?.length || 22) + ' ngày công') }}
+                                </button>
+                              }
+                            </div>
+                          </td>
+                          <td class="small text-muted">{{ line.explanation }}</td>
+                          <td class="text-end fw-bold text-nowrap" [class.text-success]="line.direction === 'ADD'" [class.text-danger]="line.direction === 'DEDUCT'">
+                            {{ line.direction === 'ADD' ? '+' : '-' }}{{ line.amount | number:'1.0-0' }} đ
+                          </td>
+                        </tr>
+                        @if (line.code === 'LUONG_CONG' && showAllowanceWorkDropdown && allowanceSubformWorkDetail) {
+                          <tr>
+                            <td colspan="3" class="p-2 bg-light">
+                              <div class="table-responsive" style="max-height: 260px; overflow-y: auto;">
+                                <table class="table table-sm table-bordered bg-white mb-0">
+                                  <thead class="table-light">
+                                    <tr>
+                                      <th>#</th>
+                                      <th>Ngày</th>
+                                      <th>Check-in/Out</th>
+                                      <th>Giờ</th>
+                                      <th>Trạng thái</th>
+                                    </tr>
+                                  </thead>
+                                  <tbody>
+                                    @for (d of allowanceSubformWorkDetail.dailyRecords; track d.scheduleId; let di = $index) {
+                                      <tr [class.table-warning]="d.lateMinutes > 0 || d.earlyLeaveMinutes > 0" [class.table-danger]="d.attendanceResult === 'VANG_KHONG_PHEP' || d.lunchAllowanceForfeited">
+                                        <td class="small text-center">{{ di + 1 }}</td>
+                                        <td class="small text-nowrap">{{ d.workDate }}</td>
+                                        <td class="small text-nowrap">{{ d.actualStart ? (d.actualStart | date:'HH:mm') : '—' }} - {{ d.actualEnd ? (d.actualEnd | date:'HH:mm') : '—' }}</td>
+                                        <td class="small text-end fw-bold">{{ d.workedHours }}h</td>
+                                        <td class="small">{{ d.evidenceNote }}</td>
+                                      </tr>
+                                    }
+                                  </tbody>
+                                </table>
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      }
+                      <tr class="table-light fw-bold">
+                        <td colspan="2" class="text-end">Thực lĩnh (Net Salary):</td>
+                        <td class="text-end text-primary">{{ allowanceSubformDetail.netSalary | number:'1.0-0' }} đ</td>
+                      </tr>
+                    </tbody>
+                  </table>
+                </div>
+              }
+
+              <div class="d-flex justify-content-end">
+                <button type="button" class="btn btn-secondary btn-sm" (click)="closeAllowanceSubform()">
+                  Đóng chi tiết
+                </button>
+              </div>
+            </section>
+          </div>
         }
       </div>
-      <div class="table-responsive">
-        <table class="table table-hover align-middle mb-0">
-          <thead class="table-light">
-            <tr>
-              <th class="text-center" style="width: 56px;">STT</th>
-              <th>Mã NV</th>
-              <th>Họ và tên nhân viên</th>
-              <th>Phòng ban</th>
-              <th>Loại phụ cấp &amp; Chính sách thuế/BH</th>
-              <th>Cách tính</th>
-              <th>Thời hạn hiệu lực</th>
-              <th class="text-end">Mức hưởng / kỳ</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (item of pagedAllowanceItems; track item.employeeAllowanceId; let idx = $index) {
-              <tr>
-                <td class="text-center text-muted fw-semibold">{{ (allowancePage - 1) * pageSize + idx + 1 }}</td>
-                <td class="fw-bold"><code>{{ item.employeeCode }}</code></td>
-                <td class="fw-semibold">{{ item.fullName }}</td>
-                <td>{{ item.departmentName }}</td>
-                <td>
-                  <div class="fw-semibold">{{ item.allowanceName }} <small class="text-muted">({{ item.allowanceCode }})</small></div>
-                  <small class="text-muted">
-                    {{ item.isTaxable ? 'Chịu thuế TNCN (ăn ca miễn tối đa 730.000đ)' : 'Miễn thuế TNCN' }} ·
-                    {{ item.countsForSocialInsurance ? 'Tính đóng BHXH' : 'Không tính đóng BHXH' }}
-                  </small>
-                </td>
-                <td class="small">
-                  <span class="badge text-bg-light border">{{ item.calculationBasis === 'THEO_KY' ? 'Theo kỳ (cố định)' : item.calculationBasis === 'THEO_NGAY_CONG' ? 'Theo ngày công' : item.calculationBasis }}</span>
-                </td>
-                <td class="small">{{ item.effectiveFrom }} → {{ item.effectiveTo || 'Vô thời hạn' }}</td>
-                <td class="text-end fw-bold text-success">{{ item.estimatedPeriodAmount | number:'1.0-0' }} đ</td>
-              </tr>
-            } @empty {
-              <tr>
-                <td colspan="8" class="text-center text-muted py-4">Không có khoản phụ cấp nào phù hợp bộ lọc.</td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      @if (allowanceOverview.items.length > 0) {
-        <div class="pt-3">
-          <app-pagination [page]="allowancePage - 1" [pages]="allowanceTotalPages" [busy]="loadingAllowances" (pageChange)="allowancePage = $event + 1" />
-        </div>
-      }
     }
   </section>
 }
@@ -805,42 +1055,104 @@
     <div class="mb-3 pb-2 border-bottom">
       <h2 class="h5 mb-1">👤 Lịch sử lương nhân viên</h2>
       <p class="small text-muted mb-0">
-        <strong>Hướng dẫn sử dụng:</strong> Trang này giúp kế toán và quản lý tra cứu toàn bộ lịch sử thu nhập (Ngày công, Giờ tăng ca OT, Tổng Gross, Khấu trừ, Thực lĩnh Net) của bất kỳ nhân viên hoặc phòng ban nào qua tất cả các tháng và các phiên bản điều chỉnh (<code>v1</code>, <code>v2</code>...). Bấm nút <strong>"Xem chi tiết ↗"</strong> ở bất kỳ dòng nào để mở ngay phiếu giải trình công &amp; lương của nhân viên ở kỳ đó.
+        <strong>Hướng dẫn sử dụng:</strong> Lọc lịch sử thu nhập theo <strong>Năm</strong>, <strong>Quý</strong>, <strong>Kỳ lương (Tháng)</strong>, <strong>Phòng ban</strong> hoặc <strong>Nhân viên</strong>. Bấm vào bất kỳ dòng nào hoặc nút <strong>"Chi tiết"</strong> để mở ngay <strong>Phiếu giải trình chi tiết lương &amp; Minh chứng ngày công (Subform)</strong> ngay bên phải màn hình.
       </p>
     </div>
 
-    <div class="row g-3 align-items-end mb-4">
-      <div class="col-md-3">
-        <label class="form-label fw-bold mb-1">Phòng ban:</label>
-        <select class="form-select" [(ngModel)]="historyDeptId" (ngModelChange)="loadEmployeeHistory()">
+    <!-- BỘ LỌC NĂM, QUÝ, THÁNG, PHÒNG BAN, NHÂN VIÊN & TRẠNG THÁI -->
+    <div class="row g-2 align-items-end mb-3 p-3 bg-light rounded border">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Năm:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyYear" (ngModelChange)="onHistoryYearOrQuarterChange()">
+          <option [ngValue]="null">Tất cả năm</option>
+          @for (yr of availableYears; track yr) {
+            <option [ngValue]="yr">Năm {{ yr }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Quý:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyQuarter" (ngModelChange)="onHistoryYearOrQuarterChange()">
+          <option [ngValue]="null">Tất cả các quý</option>
+          <option [ngValue]="1">Quý 1 (Tháng 01 - 03)</option>
+          <option [ngValue]="2">Quý 2 (Tháng 04 - 06)</option>
+          <option [ngValue]="3">Quý 3 (Tháng 07 - 09)</option>
+          <option [ngValue]="4">Quý 4 (Tháng 10 - 12)</option>
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Kỳ lương (Tháng):</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyPeriodCode" (ngModelChange)="applyHistoryClientFilters()">
+          <option value="">Tất cả tháng hiện có</option>
+          @for (period of periods; track period.periodId) {
+            <option [value]="period.periodCode">{{ period.periodCode }}</option>
+          }
+        </select>
+      </div>
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Phòng ban:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyDeptId" (ngModelChange)="loadEmployeeHistory()">
           <option [ngValue]="null">Tất cả phòng ban</option>
           @for (dept of departments; track dept.departmentId) {
             <option [ngValue]="dept.departmentId">{{ dept.departmentName }}</option>
           }
         </select>
       </div>
-      <div class="col-md-4">
-        <label class="form-label fw-bold mb-1">Tìm theo Mã NV hoặc Họ tên:</label>
-        <input type="text" class="form-control" [(ngModel)]="historyKeyword" placeholder="Ví dụ: DEMO001, Hoàng, Nhi..." (keyup.enter)="loadEmployeeHistory()">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Nhân viên:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyEmployeeCode" (ngModelChange)="applyHistoryClientFilters()">
+          <option value="">Tất cả ({{ historyEmployeeOptions.length }} NV)</option>
+          @for (emp of historyEmployeeOptions; track emp.employeeCode) {
+            <option [value]="emp.employeeCode">{{ emp.employeeCode }} — {{ emp.fullName }}</option>
+          }
+        </select>
       </div>
-      <div class="col-md-3">
-        <label class="form-label fw-bold mb-1">Trạng thái đợt lương:</label>
-        <select class="form-select" [(ngModel)]="historyStatus" (ngModelChange)="loadEmployeeHistory()">
+      <div class="col-md-2">
+        <label class="form-label small fw-bold mb-1">Trạng thái:</label>
+        <select class="form-select form-select-sm" [(ngModel)]="historyStatus" (ngModelChange)="loadEmployeeHistory()">
           <option value="">Tất cả trạng thái</option>
           <option value="NHAP">Đang nháp</option>
           <option value="DA_CHOT">Đã chốt</option>
           <option value="CONG_BO">Đã công bố</option>
         </select>
       </div>
-      <div class="col-md-2 d-flex gap-2">
-        <button type="button" class="btn btn-primary flex-grow-1" [disabled]="loadingHistory" (click)="loadEmployeeHistory()">
-          🔍 Lọc
+      <div class="col-md-9 mt-2">
+        <input
+          type="text"
+          class="form-control form-control-sm"
+          [(ngModel)]="historyKeyword"
+          (ngModelChange)="applyHistoryClientFilters()"
+          placeholder="🔍 Tìm nhanh theo Mã NV, Họ và tên nhân viên hoặc Phòng ban...">
+      </div>
+      <div class="col-md-3 mt-2 d-flex gap-2">
+        <button type="button" class="btn btn-sm btn-primary flex-grow-1" [disabled]="loadingHistory" (click)="loadEmployeeHistory()">
+          🔍 Làm mới
         </button>
-        <button type="button" class="btn btn-outline-secondary" [disabled]="loadingHistory" title="Đặt lại bộ lọc" (click)="resetHistoryFilters()">
-          ↺
+        <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="loadingHistory" title="Đặt lại bộ lọc" (click)="resetHistoryFilters()">
+          ↺ Đặt lại
         </button>
       </div>
     </div>
+
+    @if (historyMonthsNotice) {
+      <div class="alert alert-info py-2 px-3 small mb-3 d-flex align-items-center justify-content-between flex-wrap gap-2">
+        <span>📅 <strong>Phạm vi tháng dữ liệu:</strong> {{ historyMonthsNotice }}</span>
+        @if (historyActivePeriodCodes.length > 0) {
+          <div class="d-flex flex-wrap gap-1">
+            @for (code of historyActivePeriodCodes; track code) {
+              <button
+                type="button"
+                class="btn btn-sm py-0 px-2"
+                [class.btn-primary]="historyPeriodCode === code"
+                [class.btn-outline-primary]="historyPeriodCode !== code"
+                (click)="historyPeriodCode = historyPeriodCode === code ? '' : code; applyHistoryClientFilters()">
+                {{ code }}
+              </button>
+            }
+          </div>
+        }
+      </div>
+    }
 
     <div class="row g-3 mb-3">
       <div class="col-md-3">
@@ -869,69 +1181,338 @@
       </div>
     </div>
 
-    <div class="table-responsive">
-      <table class="table table-hover align-middle mb-0">
-        <thead class="table-light">
-          <tr>
-            <th class="text-center" style="width: 56px;">STT</th>
-            <th>Kỳ lương</th>
-            <th>Phiên bản</th>
-            <th>Trạng thái</th>
-            <th>Mã NV</th>
-            <th>Họ và tên nhân viên</th>
-            <th>Phòng ban / Chức vụ</th>
-            <th class="text-center">Ngày công</th>
-            <th class="text-end">Tổng Gross</th>
-            <th class="text-end">Khấu trừ</th>
-            <th class="text-end">Thực lĩnh (Net)</th>
-            <th class="text-end">Thao tác</th>
-          </tr>
-        </thead>
-        <tbody>
-          @for (row of pagedHistoryRows; track row.payrollDetailId; let idx = $index) {
-            <tr>
-              <td class="text-center text-muted fw-semibold">{{ (historyPage - 1) * pageSize + idx + 1 }}</td>
-              <td class="fw-bold">{{ row.periodCode }}</td>
-              <td><code>v{{ row.versionNo }}</code></td>
-              <td>
-                <span class="badge"
-                  [class.text-bg-primary]="row.batchStatus === 'CONG_BO'"
-                  [class.text-bg-success]="row.batchStatus === 'DA_CHOT'"
-                  [class.text-bg-warning]="row.batchStatus === 'NHAP'">
-                  {{ row.batchStatus === 'CONG_BO' ? 'Đã công bố' : (row.batchStatus === 'DA_CHOT' ? 'Đã chốt' : 'Đang nháp') }}
-                </span>
-              </td>
-              <td class="fw-bold"><code>{{ row.employeeCode }}</code></td>
-              <td class="fw-semibold">{{ row.fullName }}</td>
-              <td class="small">{{ row.departmentName }} · {{ row.positionName }}</td>
-              <td class="text-center small">
-                <strong>{{ row.actualWorkDays }}</strong> công
-                @if (row.overtimeHours > 0) {
-                  <span class="text-primary d-block">+{{ row.overtimeHours }}h OT</span>
+    <!-- CẤU TRÚC MAIN TABLE + SUBFORM TẠI CHỖ CHO TAB LỊCH SỬ LƯƠNG NHÂN VIÊN -->
+    <div class="row g-4">
+      <div [class]="selectedHistoryRow ? 'col-lg-5' : 'col-12'">
+        <div class="table-responsive">
+          <table class="table table-hover align-middle mb-0">
+            <thead class="table-light">
+              <tr>
+                <th class="text-center" style="width: 50px;">STT</th>
+                <th>Kỳ lương</th>
+                @if (!selectedHistoryRow) {
+                  <th>Phiên bản</th>
+                  <th>Trạng thái</th>
                 }
-              </td>
-              <td class="text-end">{{ row.totalGross | number:'1.0-0' }} đ</td>
-              <td class="text-end text-danger">-{{ row.totalDeduction | number:'1.0-0' }} đ</td>
-              <td class="text-end fw-bold text-primary">{{ row.netSalary | number:'1.0-0' }} đ</td>
-              <td class="text-end">
-                <button type="button" class="btn btn-sm btn-outline-primary py-0 px-2" (click)="openHistoryItemInBatch(row)">
-                  Xem chi tiết ↗
-                </button>
-              </td>
-            </tr>
-          } @empty {
-            <tr>
-              <td colspan="12" class="text-center text-muted py-4">Không tìm thấy dữ liệu lịch sử lương phù hợp bộ lọc.</td>
-            </tr>
-          }
-        </tbody>
-      </table>
-    </div>
-    @if (historyRows.length > 0) {
-      <div class="pt-3">
-        <app-pagination [page]="historyPage - 1" [pages]="historyTotalPages" [busy]="loadingHistory" (pageChange)="historyPage = $event + 1" />
+                <th>Mã NV</th>
+                <th>Họ và tên nhân viên</th>
+                @if (!selectedHistoryRow) {
+                  <th>Phòng ban / Chức vụ</th>
+                  <th class="text-center">Ngày công</th>
+                }
+                <th class="text-end">Tổng Gross</th>
+                @if (!selectedHistoryRow) {
+                  <th class="text-end">Khấu trừ</th>
+                }
+                <th class="text-end">Thực lĩnh (Net)</th>
+                <th class="text-center" style="width: 90px;">Thao tác</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of pagedHistoryRows; track row.payrollDetailId; let idx = $index) {
+                <tr
+                  [class.table-primary]="selectedHistoryRow?.payrollDetailId === row.payrollDetailId"
+                  style="cursor: pointer;"
+                  (click)="selectHistoryRow(row)">
+                  <td class="text-center text-muted fw-semibold">{{ (historyPage - 1) * pageSize + idx + 1 }}</td>
+                  <td class="fw-bold text-nowrap">
+                    {{ row.periodCode }}
+                    @if (selectedHistoryRow) {
+                      <small class="text-muted d-block">v{{ row.versionNo }}</small>
+                    }
+                  </td>
+                  @if (!selectedHistoryRow) {
+                    <td><code>v{{ row.versionNo }}</code></td>
+                    <td>
+                      <span class="badge"
+                        [class.text-bg-primary]="row.batchStatus === 'CONG_BO'"
+                        [class.text-bg-success]="row.batchStatus === 'DA_CHOT'"
+                        [class.text-bg-warning]="row.batchStatus === 'NHAP'">
+                        {{ row.batchStatus === 'CONG_BO' ? 'Đã công bố' : (row.batchStatus === 'DA_CHOT' ? 'Đã chốt' : 'Đang nháp') }}
+                      </span>
+                    </td>
+                  }
+                  <td class="fw-bold"><code>{{ row.employeeCode }}</code></td>
+                  <td>
+                    <div class="fw-semibold">{{ row.fullName }}</div>
+                    @if (selectedHistoryRow) {
+                      <small class="text-muted d-block">{{ row.departmentName }}</small>
+                    }
+                  </td>
+                  @if (!selectedHistoryRow) {
+                    <td class="small">{{ row.departmentName }} · {{ row.positionName }}</td>
+                    <td class="text-center small">
+                      <strong>{{ row.actualWorkDays }}</strong> công
+                      @if (row.overtimeHours > 0) {
+                        <span class="text-primary d-block">+{{ row.overtimeHours }}h OT</span>
+                      }
+                    </td>
+                  }
+                  <td class="text-end text-nowrap">{{ row.totalGross | number:'1.0-0' }} đ</td>
+                  @if (!selectedHistoryRow) {
+                    <td class="text-end text-danger text-nowrap">-{{ row.totalDeduction | number:'1.0-0' }} đ</td>
+                  }
+                  <td class="text-end fw-bold text-primary text-nowrap">{{ row.netSalary | number:'1.0-0' }} đ</td>
+                  <td class="text-center">
+                    <button
+                      type="button"
+                      class="btn btn-sm btn-outline-primary py-0 px-2"
+                      (click)="selectHistoryRow(row); $event.stopPropagation()">
+                      Chi tiết
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="12" class="text-center text-muted py-4">Không tìm thấy dữ liệu lịch sử lương phù hợp bộ lọc.</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (historyRows.length > 0) {
+          <div class="pt-3">
+            <app-pagination [page]="historyPage - 1" [pages]="historyTotalPages" [busy]="loadingHistory" (pageChange)="historyPage = $event + 1" />
+          </div>
+        }
       </div>
-    }
+
+      <!-- SUBFORM CHI TIẾT LƯƠNG & MINH CHỨNG NGÀY CÔNG NGAY TẠI TAB LỊCH SỬ -->
+      @if (selectedHistoryRow) {
+        <div class="col-lg-7">
+          <section class="surface border border-primary-subtle shadow-sm">
+            <div class="d-flex justify-content-between align-items-start mb-3 border-bottom pb-2">
+              <div>
+                <div class="d-flex align-items-center gap-2 mb-1">
+                  <span class="badge text-bg-primary">Phiếu giải trình chi tiết lương &amp; Minh chứng chấm công</span>
+                  <span class="badge"
+                    [class.text-bg-primary]="selectedHistoryRow.batchStatus === 'CONG_BO'"
+                    [class.text-bg-success]="selectedHistoryRow.batchStatus === 'DA_CHOT'"
+                    [class.text-bg-warning]="selectedHistoryRow.batchStatus === 'NHAP'">
+                    Kỳ {{ selectedHistoryRow.periodCode }} (v{{ selectedHistoryRow.versionNo }}) · {{ selectedHistoryRow.batchStatus === 'CONG_BO' ? 'Đã công bố' : (selectedHistoryRow.batchStatus === 'DA_CHOT' ? 'Đã chốt' : 'Đang nháp') }}
+                  </span>
+                </div>
+                <h3 class="h5 mb-1 text-primary fw-bold">
+                  {{ selectedHistoryRow.fullName }}
+                  <span class="text-secondary">({{ selectedHistoryRow.employeeCode }})</span>
+                </h3>
+                <div class="small text-muted d-flex flex-wrap gap-3">
+                  <span>🏢 Phòng ban: <strong>{{ selectedHistoryRow.departmentName }}</strong></span>
+                  <span>💼 Chức vụ: <strong>{{ selectedHistoryRow.positionName }}</strong></span>
+                  @if (historySelectedDetail?.baseSalary) {
+                    <span>💰 Lương CB HĐ: <strong>{{ historySelectedDetail!.baseSalary | number:'1.0-0' }} đ/tháng</strong></span>
+                  }
+                </div>
+              </div>
+              <button type="button" class="btn-close" aria-label="Đóng" (click)="closeHistorySubform()"></button>
+            </div>
+
+            @if (loadingHistorySubform) {
+              <p class="text-muted py-3 text-center">Đang tải chi tiết các khoản lương và minh chứng ngày công...</p>
+            } @else if (historySelectedDetail && historySelectedDetail.lines && historySelectedDetail.lines.length > 0) {
+              <!-- 1. THU NHẬP, PHỤ CẤP & THƯỞNG -->
+              <h4 class="small fw-bold text-success text-uppercase mb-2">1. Các khoản Thu nhập, Phụ cấp &amp; Khen thưởng (+)</h4>
+              <div class="table-responsive mb-3">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 30%;">Khoản mục thu nhập</th>
+                      <th>Căn cứ tính &amp; Lý do chi tiết (Công, OT, Phụ cấp, Quyết định thưởng)</th>
+                      <th class="text-end" style="width: 145px;">Số tiền (+)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of historySelectedDetail.lines; track $index) {
+                      @if (line.direction === 'ADD') {
+                        <tr
+                          [class.work-salary-clickable]="line.code === 'LUONG_CONG'"
+                          [style.cursor]="line.code === 'LUONG_CONG' ? 'pointer' : 'default'"
+                          (click)="line.code === 'LUONG_CONG' ? toggleHistoryWorkDropdown($event) : null">
+                          <td>
+                            <div class="fw-semibold d-flex align-items-center justify-content-between gap-2 flex-wrap">
+                              <span>{{ line.name }}</span>
+                              @if (line.code === 'LUONG_CONG') {
+                                <button
+                                  type="button"
+                                  class="btn btn-sm py-0 px-2"
+                                  [class.btn-primary]="showHistoryWorkDropdown"
+                                  [class.btn-outline-primary]="!showHistoryWorkDropdown"
+                                  (click)="toggleHistoryWorkDropdown($event)">
+                                  {{ showHistoryWorkDropdown ? '▲ Thu gọn ngày công' : ('▼ Xem ' + (historySelectedWorkDetail?.dailyRecords?.length || 22) + ' ngày công') }}
+                                </button>
+                              }
+                            </div>
+                          </td>
+                          <td class="small text-body-secondary">
+                            <div>{{ line.explanation || 'Theo dữ liệu hợp đồng &amp; công đã xác nhận' }}</div>
+                            @if (line.code === 'LUONG_CONG') {
+                              <small class="text-primary fw-medium d-block mt-1">
+                                👉 Bấm vào dòng này để {{ showHistoryWorkDropdown ? 'ẩn' : 'xổ danh sách' }} chi tiết từng ngày công (xem ngay ngày nào đi trễ, ngày nào vắng mặt).
+                              </small>
+                            }
+                          </td>
+                          <td class="text-end text-success fw-bold">+{{ line.amount | number:'1.0-0' }} đ</td>
+                        </tr>
+
+                        @if (line.code === 'LUONG_CONG' && showHistoryWorkDropdown) {
+                          <tr class="work-days-dropdown-row">
+                            <td colspan="3" class="p-2 bg-light-subtle">
+                              <div class="work-dropdown-panel p-2 rounded border bg-white">
+                                @if (historySelectedWorkDetail) {
+                                  <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2 pb-2 border-bottom">
+                                    <strong class="small text-primary">
+                                      📅 Bảng kê chi tiết {{ historySelectedWorkDetail.dailyRecords.length }} ngày công kỳ {{ selectedHistoryRow.periodCode }}
+                                    </strong>
+                                    <div class="work-summary-pills">
+                                      <span class="badge text-bg-light border">Đi làm: <strong>{{ historySelectedWorkDetail.actualWorkDays }}/{{ historySelectedWorkDetail.standardWorkDays }}</strong> ngày</span>
+                                      <span class="badge text-bg-light border">Tổng giờ: <strong>{{ historySelectedWorkDetail.totalWorkedHours }}h</strong></span>
+                                      @if (historySelectedWorkDetail.totalLateMinutes > 0) {
+                                        <span class="badge bg-warning-subtle text-warning-emphasis border">Đi trễ / Về sớm: <strong>{{ historySelectedWorkDetail.totalLateMinutes }} phút</strong></span>
+                                      }
+                                      @if (historySelectedWorkDetail.unexcusedAbsenceDays > 0) {
+                                        <span class="badge bg-danger-subtle text-danger border">Vắng mặt: <strong>{{ historySelectedWorkDetail.unexcusedAbsenceDays }} ngày</strong></span>
+                                      }
+                                      @if (historySelectedWorkDetail.forfeitedLunchDays > 0) {
+                                        <span class="badge bg-danger-subtle text-danger border">Cắt cơm trưa: <strong>{{ historySelectedWorkDetail.forfeitedLunchDays }} ngày</strong></span>
+                                      }
+                                    </div>
+                                  </div>
+                                  <div class="table-responsive work-evidence-table">
+                                    <table class="table table-sm table-bordered align-middle mb-0">
+                                      <thead class="table-light">
+                                        <tr>
+                                          <th class="text-center" style="width: 44px;">STT</th>
+                                          <th style="width: 105px;">Ngày công</th>
+                                          <th style="width: 130px;">Check-in / Out</th>
+                                          <th class="text-end" style="width: 80px;">Giờ làm</th>
+                                          <th style="width: 155px;">Trạng thái công</th>
+                                          <th>Lý do &amp; Ghi chú chi tiết</th>
+                                        </tr>
+                                      </thead>
+                                      <tbody>
+                                        @for (day of historySelectedWorkDetail.dailyRecords; track day.scheduleId; let dIdx = $index) {
+                                          <tr
+                                            [class.table-warning]="(day.lateMinutes > 0 || day.earlyLeaveMinutes > 0) && !day.lunchAllowanceForfeited"
+                                            [class.table-danger]="day.lunchAllowanceForfeited || day.attendanceResult === 'VANG_KHONG_PHEP'">
+                                            <td class="text-center text-muted small fw-semibold">{{ dIdx + 1 }}</td>
+                                            <td class="fw-semibold text-nowrap small">{{ day.workDate }}</td>
+                                            <td class="small text-nowrap fw-semibold">
+                                              @if (day.actualStart) {
+                                                <span [class.text-danger]="day.lateMinutes > 0" [class.text-success]="day.lateMinutes === 0">
+                                                  {{ day.actualStart | date:'HH:mm' }}
+                                                </span>
+                                                <span class="text-muted"> - </span>
+                                                @if (day.actualEnd) {
+                                                  <span [class.text-danger]="day.earlyLeaveMinutes > 0" [class.text-success]="day.earlyLeaveMinutes === 0">
+                                                    {{ day.actualEnd | date:'HH:mm' }}
+                                                  </span>
+                                                } @else {
+                                                  <span class="text-muted">—</span>
+                                                }
+                                              } @else {
+                                                <span class="text-muted">—</span>
+                                              }
+                                            </td>
+                                            <td class="text-end small fw-bold">{{ day.workedHours }}h</td>
+                                            <td class="small text-nowrap">
+                                              @if (day.attendanceResult === 'VANG_KHONG_PHEP') {
+                                                <span class="badge text-bg-danger">❌ Vắng không phép</span>
+                                              } @else if (day.attendanceResult === 'NGHI_PHEP_CO_LUONG') {
+                                                <span class="badge text-bg-info">📝 Nghỉ phép có lương</span>
+                                              } @else if (day.lunchAllowanceForfeited) {
+                                                <span class="badge text-bg-danger">🚫 Trễ {{ day.lateMinutes }}p (&gt;1/2 ca)</span>
+                                              } @else if (day.lateMinutes > 0 && day.earlyLeaveMinutes > 0) {
+                                                <span class="badge text-bg-warning">⏰ Trễ {{ day.lateMinutes }}p · Sớm {{ day.earlyLeaveMinutes }}p</span>
+                                              } @else if (day.lateMinutes > 0) {
+                                                <span class="badge text-bg-warning">⏰ Đi trễ {{ day.lateMinutes }} phút</span>
+                                              } @else if (day.earlyLeaveMinutes > 0) {
+                                                <span class="badge text-bg-warning">⏰ Về sớm {{ day.earlyLeaveMinutes }} phút</span>
+                                              } @else if (day.attendanceResult === 'DI_LAM') {
+                                                <span class="badge text-bg-success">✔ Đúng giờ</span>
+                                              } @else {
+                                                <span class="badge text-bg-secondary">Chưa chấm công</span>
+                                              }
+                                            </td>
+                                            <td class="small">{{ day.evidenceNote }}</td>
+                                          </tr>
+                                        }
+                                      </tbody>
+                                    </table>
+                                  </div>
+                                }
+                              </div>
+                            </td>
+                          </tr>
+                        }
+                      }
+                    }
+                    <tr class="table-light fw-bold">
+                      <td colspan="2" class="text-end">Tổng thu nhập trước thuế (Gross):</td>
+                      <td class="text-end text-success">+{{ historySelectedDetail.totalGross | number:'1.0-0' }} đ</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <!-- 2. CÁC KHOẢN KHẤU TRỪ & PHẠT -->
+              <h4 class="small fw-bold text-danger text-uppercase mb-2">2. Các khoản Khấu trừ, Phạt đi trễ từng phút, Cắt cơm trưa &amp; Thuế/BH (-)</h4>
+              <div class="table-responsive mb-4">
+                <table class="table table-sm table-bordered align-middle mb-0">
+                  <thead class="table-light">
+                    <tr>
+                      <th style="width: 30%;">Khoản khấu trừ / Phạt</th>
+                      <th>Lý do phạt, Số phút vi phạm &amp; Căn cứ pháp lý (BHXH, Giảm trừ gia cảnh, Thuế TNCN)</th>
+                      <th class="text-end" style="width: 145px;">Số tiền (-)</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (line of historySelectedDetail.lines; track $index) {
+                      @if (line.direction === 'DEDUCT') {
+                        <tr [class.table-danger]="line.code === 'KHAU_TRU'">
+                          <td class="fw-semibold">{{ line.name }}</td>
+                          <td class="small">
+                            <div>{{ line.explanation || 'Trích nộp nghĩa vụ pháp lý / khấu trừ' }}</div>
+                            @if (line.deductionShareText) {
+                              <small class="text-muted d-block mt-1">Tỷ trọng: {{ line.deductionShareText }}</small>
+                            }
+                          </td>
+                          <td class="text-end text-danger fw-bold">-{{ line.amount | number:'1.0-0' }} đ</td>
+                        </tr>
+                      }
+                    }
+                    <tr class="table-light fw-bold">
+                      <td colspan="2" class="text-end">Tổng cộng các khoản khấu trừ &amp; phạt:</td>
+                      <td class="text-end text-danger">-{{ historySelectedDetail.totalDeduction | number:'1.0-0' }} đ</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            }
+
+            <!-- TỔNG THỰC LĨNH -->
+            <div class="p-3 bg-light rounded border text-end">
+              <span class="text-muted small text-uppercase fw-bold d-block mb-1">Thực lĩnh chuyển khoản (Net Salary):</span>
+              <h2 class="text-primary fw-bold mb-0" style="font-size: 1.75rem;">
+                {{ (historySelectedDetail?.netSalary ?? selectedHistoryRow.netSalary) | number:'1.0-0' }} <span class="fs-5">VNĐ</span>
+              </h2>
+            </div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+              <button
+                type="button"
+                class="btn btn-outline-primary btn-sm"
+                [disabled]="!selectedHistoryRow.published && selectedHistoryRow.batchStatus !== 'CONG_BO'"
+                (click)="printHistoryPayslip(selectedHistoryRow, historySelectedDetail)">
+                🖨 Mở bản in phiếu lương (PDF)
+              </button>
+              <button type="button" class="btn btn-secondary btn-sm" (click)="closeHistorySubform()">
+                Đóng chi tiết
+              </button>
+            </div>
+          </section>
+        </div>
+      }
+    </div>
   </section>
 }
 

@@ -2,6 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
+import { forkJoin, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { PayrollService } from '../../services/payroll.service';
 import { Pagination } from '../../shared/pagination';
 import { HrmNotice } from '../../shared/ui/notice';
@@ -11,6 +13,8 @@ import {
   PayrollDetailView,
   EmployeePayrollWorkDetail,
   PeriodAllowanceOverview,
+  PeriodAllowanceItem,
+  DepartmentAllowanceSummary,
   EmployeePayrollHistoryItem,
   DepartmentPayrollCost,
   PayrollBlockerItem
@@ -42,18 +46,44 @@ export class PayrollPage implements OnInit {
   selectedWorkDetail: EmployeePayrollWorkDetail | null = null;
   loadingWorkDetail = false;
 
-  // 2. Phụ cấp theo tháng & phòng ban
+  // 2. Phụ cấp theo tháng & phòng ban (kèm bộ lọc Năm, Quý, Nhân viên & Subform tại chỗ)
   departments: Array<{ departmentId: number; departmentCode: string; departmentName: string }> = [];
   allowanceOverview: PeriodAllowanceOverview | null = null;
   selectedAllowanceDeptId: number | null = null;
+  allowanceYear: number | null = null;
+  allowanceQuarter: number | null = null;
+  allowancePeriodMode: number | 'ALL' = 'ALL';
+  allowanceEmployeeCode = '';
+  allowanceKeyword = '';
+  allowanceMonthsNotice = '';
+  allowanceActivePeriodCodes: string[] = [];
   loadingAllowances = false;
 
-  // 3. Bộ lọc & lịch sử nhân viên
+  selectedAllowanceItem: PeriodAllowanceItem | null = null;
+  allowanceSubformDetail: PayrollDetailView | null = null;
+  allowanceSubformWorkDetail: EmployeePayrollWorkDetail | null = null;
+  showAllowanceWorkDropdown = false;
+  loadingAllowanceSubform = false;
+
+  // 3. Lịch sử lương nhân viên (kèm bộ lọc Năm, Quý, Tháng, Nhân viên & Subform tại chỗ)
+  allHistoryRows: EmployeePayrollHistoryItem[] = [];
   historyRows: EmployeePayrollHistoryItem[] = [];
+  historyYear: number | null = null;
+  historyQuarter: number | null = null;
+  historyPeriodCode = '';
   historyDeptId: number | null = null;
+  historyEmployeeCode = '';
   historyKeyword = '';
   historyStatus = '';
+  historyMonthsNotice = '';
+  historyActivePeriodCodes: string[] = [];
   loadingHistory = false;
+
+  selectedHistoryRow: EmployeePayrollHistoryItem | null = null;
+  historySelectedDetail: PayrollDetailView | null = null;
+  historySelectedWorkDetail: EmployeePayrollWorkDetail | null = null;
+  showHistoryWorkDropdown = false;
+  loadingHistorySubform = false;
 
   // 4. Chi phí theo phòng ban
   departmentCosts: DepartmentPayrollCost[] = [];
@@ -95,6 +125,7 @@ export class PayrollPage implements OnInit {
         this.periods = data || [];
         if (this.periods.length > 0) {
           this.selectedPeriodId = Number(this.periods[0].periodId);
+          this.allowancePeriodMode = Number(this.periods[0].periodId);
           this.onPeriodChange();
         } else {
           this.loading = false;
@@ -453,20 +484,201 @@ export class PayrollPage implements OnInit {
   }
 
   loadPeriodAllowances(): void {
-    if (!this.selectedPeriodId) return;
+    if (!this.periods || this.periods.length === 0) return;
     this.loadingAllowances = true;
     this.allowanceDeptPage = 1;
     this.allowancePage = 1;
-    this.payrollService.getPeriodAllowances(Number(this.selectedPeriodId), this.selectedAllowanceDeptId).subscribe({
-      next: (data) => {
-        this.allowanceOverview = data;
+
+    const targetPeriods = this.resolveAllowanceTargetPeriods();
+    this.allowanceActivePeriodCodes = targetPeriods.map((p) => p.periodCode);
+
+    if (targetPeriods.length === 0) {
+      this.allowanceOverview = null;
+      this.loadingAllowances = false;
+      return;
+    }
+
+    if (targetPeriods.length === 1) {
+      const target = targetPeriods[0];
+      this.payrollService.getPeriodAllowances(Number(target.periodId), this.selectedAllowanceDeptId).subscribe({
+        next: (data) => {
+          if (data && data.items) {
+            data.items = data.items.map((it) => ({
+              ...it,
+              periodId: data.periodId,
+              periodCode: data.periodCode
+            }));
+          }
+          this.allowanceOverview = data;
+          if (this.selectedAllowanceItem) {
+            const refreshed = (data?.items || []).find(
+              (x) =>
+                x.employeeAllowanceId === this.selectedAllowanceItem!.employeeAllowanceId &&
+                x.employeeId === this.selectedAllowanceItem!.employeeId
+            );
+            this.selectedAllowanceItem = refreshed || null;
+          }
+          this.loadingAllowances = false;
+        },
+        error: (err) => {
+          this.errorMessage = this.extractErrorMessage(err, 'Không thể tải danh sách phụ cấp trong kỳ.');
+          this.loadingAllowances = false;
+        }
+      });
+      return;
+    }
+
+    // Tổng hợp phụ cấp của nhiều tháng khi lọc theo Quý / Năm
+    const calls = targetPeriods.map((p) =>
+      this.payrollService.getPeriodAllowances(Number(p.periodId), this.selectedAllowanceDeptId).pipe(
+        catchError(() =>
+          of({
+            periodId: p.periodId,
+            periodCode: p.periodCode,
+            periodStart: p.periodStart,
+            periodEnd: p.periodEnd,
+            totalCompanyAllowance: 0,
+            departmentSummaries: [],
+            items: []
+          } as PeriodAllowanceOverview)
+        )
+      )
+    );
+
+    forkJoin(calls).subscribe({
+      next: (overviews) => {
+        this.allowanceOverview = this.mergeAllowanceOverviews(overviews, targetPeriods);
         this.loadingAllowances = false;
       },
       error: (err) => {
-        this.errorMessage = this.extractErrorMessage(err, 'Không thể tải danh sách phụ cấp trong kỳ.');
+        this.errorMessage = this.extractErrorMessage(err, 'Không thể tổng hợp danh sách phụ cấp theo quý/năm.');
         this.loadingAllowances = false;
       }
     });
+  }
+
+  onAllowanceYearOrQuarterChange(): void {
+    // Khi người dùng chọn Quý hoặc Năm thì chuyển sang tổng hợp tất cả các tháng hiện có trong Quý/Năm đó
+    if (this.allowanceYear !== null || this.allowanceQuarter !== null) {
+      this.allowancePeriodMode = 'ALL';
+    } else if (this.selectedPeriodId) {
+      this.allowancePeriodMode = Number(this.selectedPeriodId);
+    }
+    this.selectedAllowanceItem = null;
+    this.loadPeriodAllowances();
+  }
+
+  onAllowancePeriodModeChange(): void {
+    if (this.allowancePeriodMode !== 'ALL') {
+      this.selectedPeriodId = Number(this.allowancePeriodMode);
+    }
+    this.selectedAllowanceItem = null;
+    this.loadPeriodAllowances();
+  }
+
+  resetAllowanceFilters(): void {
+    this.allowanceYear = null;
+    this.allowanceQuarter = null;
+    this.selectedAllowanceDeptId = null;
+    this.allowanceEmployeeCode = '';
+    this.allowanceKeyword = '';
+    this.allowanceMonthsNotice = '';
+    this.selectedAllowanceItem = null;
+    if (this.periods.length > 0) {
+      this.allowancePeriodMode = Number(this.selectedPeriodId || this.periods[0].periodId);
+    }
+    this.loadPeriodAllowances();
+  }
+
+  private resolveAllowanceTargetPeriods(): PayrollPeriod[] {
+    this.allowanceMonthsNotice = '';
+    if (this.allowancePeriodMode !== 'ALL') {
+      const single = this.periods.find((p) => Number(p.periodId) === Number(this.allowancePeriodMode));
+      return single ? [single] : this.periods.slice(0, 1);
+    }
+
+    const { matched, fallbackNotice } = this.filterPeriodsByYearAndQuarter(
+      this.periods,
+      this.allowanceYear,
+      this.allowanceQuarter
+    );
+    this.allowanceMonthsNotice = fallbackNotice;
+    return matched;
+  }
+
+  private mergeAllowanceOverviews(
+    overviews: PeriodAllowanceOverview[],
+    targetPeriods: PayrollPeriod[]
+  ): PeriodAllowanceOverview {
+    let totalCompany = 0;
+    const allItems: PeriodAllowanceItem[] = [];
+    const deptMap = new Map<
+      number,
+      {
+        departmentId: number;
+        departmentCode: string;
+        departmentName: string;
+        empSet: Set<number>;
+        allowanceCount: number;
+        totalAmount: number;
+        byType: Record<string, number>;
+      }
+    >();
+
+    for (const ov of overviews) {
+      if (!ov) continue;
+      totalCompany += ov.totalCompanyAllowance || 0;
+      for (const it of ov.items || []) {
+        allItems.push({
+          ...it,
+          periodId: ov.periodId,
+          periodCode: ov.periodCode
+        });
+        let dEntry = deptMap.get(it.departmentId);
+        if (!dEntry) {
+          const ds = (ov.departmentSummaries || []).find((d) => d.departmentId === it.departmentId);
+          dEntry = {
+            departmentId: it.departmentId,
+            departmentCode: ds?.departmentCode || `PB-${it.departmentId}`,
+            departmentName: it.departmentName,
+            empSet: new Set<number>(),
+            allowanceCount: 0,
+            totalAmount: 0,
+            byType: {}
+          };
+          deptMap.set(it.departmentId, dEntry);
+        }
+        dEntry.empSet.add(it.employeeId);
+        dEntry.allowanceCount += 1;
+        dEntry.totalAmount += it.estimatedPeriodAmount || 0;
+        dEntry.byType[it.allowanceName] =
+          (dEntry.byType[it.allowanceName] || 0) + (it.estimatedPeriodAmount || 0);
+      }
+    }
+
+    const deptSummaries: DepartmentAllowanceSummary[] = Array.from(deptMap.values()).map((d) => ({
+      departmentId: d.departmentId,
+      departmentCode: d.departmentCode,
+      departmentName: d.departmentName,
+      employeeCount: d.empSet.size,
+      allowanceCount: d.allowanceCount,
+      totalAllowanceAmount: d.totalAmount,
+      amountByAllowanceType: d.byType
+    }));
+
+    const codes = targetPeriods.map((p) => p.periodCode);
+    const labelCode =
+      codes.length > 1 ? `${codes[codes.length - 1]} → ${codes[0]} (${codes.length} tháng)` : codes[0] || '';
+
+    return {
+      periodId: targetPeriods[0]?.periodId || 0,
+      periodCode: labelCode,
+      periodStart: targetPeriods[targetPeriods.length - 1]?.periodStart || '',
+      periodEnd: targetPeriods[0]?.periodEnd || '',
+      totalCompanyAllowance: totalCompany,
+      departmentSummaries: deptSummaries,
+      items: allItems
+    };
   }
 
   filterAllowanceByDept(deptId: number | null): void {
@@ -475,19 +687,75 @@ export class PayrollPage implements OnInit {
     this.loadPeriodAllowances();
   }
 
+  selectAllowanceItem(item: PeriodAllowanceItem): void {
+    this.selectedAllowanceItem = item;
+    this.allowanceSubformDetail = null;
+    this.allowanceSubformWorkDetail = null;
+    this.showAllowanceWorkDropdown = false;
+
+    const targetPeriodId = Number(item.periodId || this.selectedPeriodId || this.periods[0]?.periodId);
+    if (!targetPeriodId) return;
+
+    this.loadingAllowanceSubform = true;
+    this.payrollService.getBatchesByPeriod(targetPeriodId).subscribe({
+      next: (batches) => {
+        const sorted = [...(batches || [])].sort((a, b) => b.versionNo - a.versionNo);
+        const targetBatch =
+          sorted.find((b) => b.publishedAt || b.status === 'CONG_BO') ??
+          sorted.find((b) => b.status === 'DA_CHOT') ??
+          sorted[0];
+        if (!targetBatch) {
+          this.loadingAllowanceSubform = false;
+          return;
+        }
+        this.payrollService.getBatchDetails(targetBatch.batchId).subscribe({
+          next: (details) => {
+            this.allowanceSubformDetail =
+              (details || []).find((d) => d.employeeId === item.employeeId) || null;
+            this.loadingAllowanceSubform = false;
+          },
+          error: () => {
+            this.loadingAllowanceSubform = false;
+          }
+        });
+        this.payrollService.getEmployeeWorkDetails(targetBatch.batchId, item.employeeId).subscribe({
+          next: (wd) => {
+            this.allowanceSubformWorkDetail = wd;
+          },
+          error: () => {}
+        });
+      },
+      error: () => {
+        this.loadingAllowanceSubform = false;
+      }
+    });
+  }
+
+  closeAllowanceSubform(): void {
+    this.selectedAllowanceItem = null;
+    this.allowanceSubformDetail = null;
+    this.allowanceSubformWorkDetail = null;
+    this.showAllowanceWorkDropdown = false;
+  }
+
+  toggleAllowanceWorkDropdown(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.showAllowanceWorkDropdown = !this.showAllowanceWorkDropdown;
+  }
+
   loadEmployeeHistory(): void {
     this.loadingHistory = true;
     this.historyPage = 1;
     this.payrollService
       .getEmployeePayrollHistory({
         departmentId: this.historyDeptId,
-        keyword: this.historyKeyword,
+        keyword: '',
         status: this.historyStatus
       })
       .subscribe({
         next: (rows) => {
-          this.historyRows = rows || [];
-          this.historyPage = 1;
+          this.allHistoryRows = rows || [];
+          this.applyHistoryClientFilters();
           this.loadingHistory = false;
         },
         error: (err) => {
@@ -497,38 +765,281 @@ export class PayrollPage implements OnInit {
       });
   }
 
-  resetHistoryFilters(): void {
-    this.historyDeptId = null;
-    this.historyKeyword = '';
-    this.historyStatus = '';
+  applyHistoryClientFilters(): void {
     this.historyPage = 1;
-    this.loadEmployeeHistory();
-  }
+    this.historyMonthsNotice = '';
+    let list = [...(this.allHistoryRows || [])];
 
-  openHistoryItemInBatch(row: EmployeePayrollHistoryItem): void {
-    this.selectedPeriodId = Number(row.periodId);
-    this.activeTab = 'batch';
-    this.filterKeyword = row.employeeCode || '';
-    this.currentPage = 1;
-    this.highlightedEmployeeId = row.employeeId;
-    this.payrollService.getBatchesByPeriod(Number(row.periodId)).subscribe({
-      next: (batches) => {
-        this.batches = [...(batches || [])].sort((a, b) => b.versionNo - a.versionNo);
-        const targetBatch = this.batches.find((b) => b.batchId === row.batchId) ?? this.batches[0];
-        if (targetBatch) {
-          this.currentBatch = targetBatch;
-          this.payrollService.getBatchDetails(targetBatch.batchId).subscribe({
-            next: (list) => {
-              this.details = list || [];
-              const empDetail = this.details.find((d) => d.employeeId === row.employeeId);
-              if (empDetail) {
-                this.viewDetail(empDetail);
-              }
-            }
+    // 1. Lọc theo Năm & Quý (nếu chưa đủ tháng của Quý/Năm thì hiện các tháng hiện có; nếu Quý chưa có tháng nào thì hiển thị các tháng hiện có trong năm)
+    if (this.historyYear !== null || this.historyQuarter !== null) {
+      const uniquePeriodsMap = new Map<string, PayrollPeriod>();
+      for (const r of list) {
+        if (!uniquePeriodsMap.has(r.periodCode)) {
+          uniquePeriodsMap.set(r.periodCode, {
+            periodId: r.periodId,
+            periodCode: r.periodCode,
+            periodStart: r.periodStart,
+            periodEnd: r.periodEnd
           });
         }
       }
+      for (const p of this.periods) {
+        if (!uniquePeriodsMap.has(p.periodCode)) {
+          uniquePeriodsMap.set(p.periodCode, p);
+        }
+      }
+      const allKnownPeriods = Array.from(uniquePeriodsMap.values());
+      const { matched, fallbackNotice } = this.filterPeriodsByYearAndQuarter(
+        allKnownPeriods,
+        this.historyYear,
+        this.historyQuarter
+      );
+      this.historyMonthsNotice = fallbackNotice;
+      const allowedCodes = new Set(matched.map((p) => p.periodCode));
+      this.historyActivePeriodCodes = Array.from(allowedCodes);
+      if (allowedCodes.size > 0) {
+        list = list.filter((r) => allowedCodes.has(r.periodCode));
+      }
+    } else {
+      const codes = new Set<string>();
+      for (const r of list) codes.add(r.periodCode);
+      this.historyActivePeriodCodes = Array.from(codes);
+    }
+
+    // 2. Lọc theo Kỳ lương (Tháng cụ thể) nếu chọn
+    if (this.historyPeriodCode) {
+      list = list.filter((r) => r.periodCode === this.historyPeriodCode);
+    }
+
+    // 3. Lọc theo Nhân viên (dropdown chọn nhân viên)
+    if (this.historyEmployeeCode) {
+      list = list.filter((r) => r.employeeCode === this.historyEmployeeCode);
+    }
+
+    // 4. Lọc theo từ khóa Mã NV / Họ tên
+    const kw = this.historyKeyword.trim().toLowerCase();
+    if (kw) {
+      list = list.filter(
+        (r) =>
+          (r.employeeCode || '').toLowerCase().includes(kw) ||
+          (r.fullName || '').toLowerCase().includes(kw) ||
+          (r.departmentName || '').toLowerCase().includes(kw)
+      );
+    }
+
+    this.historyRows = list;
+    if (
+      this.selectedHistoryRow &&
+      !this.historyRows.some((r) => r.payrollDetailId === this.selectedHistoryRow!.payrollDetailId)
+    ) {
+      this.closeHistorySubform();
+    }
+  }
+
+  onHistoryYearOrQuarterChange(): void {
+    this.historyPeriodCode = '';
+    this.applyHistoryClientFilters();
+  }
+
+  resetHistoryFilters(): void {
+    this.historyYear = null;
+    this.historyQuarter = null;
+    this.historyPeriodCode = '';
+    this.historyDeptId = null;
+    this.historyEmployeeCode = '';
+    this.historyKeyword = '';
+    this.historyStatus = '';
+    this.historyMonthsNotice = '';
+    this.historyPage = 1;
+    this.closeHistorySubform();
+    this.loadEmployeeHistory();
+  }
+
+  /**
+   * Mở Subform chi tiết lương & minh chứng ngày công NGAY TẠI TAB LỊCH SỬ LƯƠNG NHÂN VIÊN
+   * (Không nhảy sang tab Đợt lương theo kỳ)
+   */
+  selectHistoryRow(row: EmployeePayrollHistoryItem): void {
+    this.selectedHistoryRow = row;
+    this.historySelectedDetail = null;
+    this.historySelectedWorkDetail = null;
+    this.showHistoryWorkDropdown = false;
+    this.loadingHistorySubform = true;
+
+    this.payrollService.getBatchDetails(row.batchId).subscribe({
+      next: (list) => {
+        const found =
+          (list || []).find((d) => d.payrollDetailId === row.payrollDetailId) ??
+          (list || []).find((d) => d.employeeId === row.employeeId) ??
+          null;
+        this.historySelectedDetail =
+          found || {
+            payrollDetailId: row.payrollDetailId,
+            employeeId: row.employeeId,
+            employeeCode: row.employeeCode,
+            employeeName: row.fullName,
+            departmentName: row.departmentName,
+            totalGross: row.totalGross,
+            totalDeduction: row.totalDeduction,
+            netSalary: row.netSalary,
+            payslipId: row.payslipId,
+            lines: []
+          };
+        this.loadingHistorySubform = false;
+      },
+      error: () => {
+        this.historySelectedDetail = {
+          payrollDetailId: row.payrollDetailId,
+          employeeId: row.employeeId,
+          employeeCode: row.employeeCode,
+          employeeName: row.fullName,
+          departmentName: row.departmentName,
+          totalGross: row.totalGross,
+          totalDeduction: row.totalDeduction,
+          netSalary: row.netSalary,
+          payslipId: row.payslipId,
+          lines: []
+        };
+        this.loadingHistorySubform = false;
+      }
     });
+
+    this.payrollService.getEmployeeWorkDetails(row.batchId, row.employeeId).subscribe({
+      next: (wd) => {
+        this.historySelectedWorkDetail = wd;
+      },
+      error: () => {}
+    });
+  }
+
+  openHistoryItemInBatch(row: EmployeePayrollHistoryItem): void {
+    this.selectHistoryRow(row);
+  }
+
+  closeHistorySubform(): void {
+    this.selectedHistoryRow = null;
+    this.historySelectedDetail = null;
+    this.historySelectedWorkDetail = null;
+    this.showHistoryWorkDropdown = false;
+  }
+
+  toggleHistoryWorkDropdown(event?: Event): void {
+    if (event) event.stopPropagation();
+    this.showHistoryWorkDropdown = !this.showHistoryWorkDropdown;
+  }
+
+  printHistoryPayslip(row: EmployeePayrollHistoryItem, detail?: PayrollDetailView | null): void {
+    if (!row.published && row.batchStatus !== 'CONG_BO') {
+      this.errorMessage = 'Phiếu lương chỉ khả dụng sau khi đợt lương đã được Chốt và Công bố.';
+      return;
+    }
+    const targetPayslipId = detail?.payslipId || row.payslipId;
+    const targetDetailId = detail?.payrollDetailId || row.payrollDetailId;
+    const req$ = targetPayslipId
+      ? this.payrollService.getPayslipHtml(targetPayslipId)
+      : targetDetailId != null
+        ? this.payrollService.getPayslipHtmlByPayrollDetail(targetDetailId)
+        : null;
+    if (!req$) {
+      this.errorMessage = 'Chưa có thông tin phiếu lương để in.';
+      return;
+    }
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.errorMessage = 'Trình duyệt đang chặn cửa sổ in.';
+      return;
+    }
+    req$.subscribe({
+      next: (html: string) => {
+        printWindow.document.open();
+        printWindow.document.write(html);
+        printWindow.document.close();
+      },
+      error: () => {
+        printWindow.close();
+        this.errorMessage = 'Chưa tìm thấy phiếu lương đã phát hành cho phiên bản này.';
+      }
+    });
+  }
+
+  private extractPeriodYearMonth(p: { periodCode?: string; periodStart?: string }): {
+    year: number;
+    month: number;
+    quarter: number;
+  } | null {
+    const codeMatch = (p.periodCode || '').match(/^(\d{4})-(\d{2})$/);
+    if (codeMatch) {
+      const year = Number(codeMatch[1]);
+      const month = Number(codeMatch[2]);
+      if (month >= 1 && month <= 12) {
+        return { year, month, quarter: Math.ceil(month / 3) };
+      }
+    }
+    const startMatch = (p.periodStart || '').match(/^(\d{4})-(\d{2})/);
+    if (startMatch) {
+      const year = Number(startMatch[1]);
+      const month = Number(startMatch[2]);
+      if (month >= 1 && month <= 12) {
+        return { year, month, quarter: Math.ceil(month / 3) };
+      }
+    }
+    return null;
+  }
+
+  private filterPeriodsByYearAndQuarter(
+    sourcePeriods: PayrollPeriod[],
+    year: number | null,
+    quarter: number | null
+  ): { matched: PayrollPeriod[]; fallbackNotice: string } {
+    const withMeta = sourcePeriods
+      .map((p) => ({ period: p, ym: this.extractPeriodYearMonth(p) }))
+      .filter((x) => x.ym !== null) as Array<{
+      period: PayrollPeriod;
+      ym: { year: number; month: number; quarter: number };
+    }>;
+
+    if (withMeta.length === 0) {
+      return { matched: sourcePeriods, fallbackNotice: '' };
+    }
+
+    let yearFiltered = year !== null ? withMeta.filter((x) => x.ym.year === Number(year)) : withMeta;
+    let fallbackNotice = '';
+
+    if (year !== null && yearFiltered.length === 0) {
+      yearFiltered = withMeta;
+      const availCodes = yearFiltered.map((x) => x.period.periodCode).join(', ');
+      fallbackNotice = `Năm ${year} chưa có dữ liệu phát sinh — Đang hiển thị các tháng hiện có trong hệ thống: ${availCodes}.`;
+    }
+
+    if (quarter !== null) {
+      const qNum = Number(quarter);
+      const qFiltered = yearFiltered.filter((x) => x.ym.quarter === qNum);
+      if (qFiltered.length === 0) {
+        const availCodes = yearFiltered.map((x) => x.period.periodCode).join(', ');
+        fallbackNotice = `Quý ${qNum}${year ? '/' + year : ''} chưa có dữ liệu phát sinh — Hệ thống tự động hiển thị các tháng hiện có (${availCodes}).`;
+        return { matched: yearFiltered.map((x) => x.period), fallbackNotice };
+      }
+      const uniqueMonths = new Set(qFiltered.map((x) => `${x.ym.year}-${x.ym.month}`));
+      const codes = qFiltered.map((x) => x.period.periodCode).join(', ');
+      if (uniqueMonths.size < 3) {
+        fallbackNotice = `Quý ${qNum}${year ? '/' + year : ''} hiện có ${uniqueMonths.size}/3 tháng dữ liệu (${codes}) — Đang hiển thị các tháng hiện có.`;
+      } else {
+        fallbackNotice = `Đang lọc Quý ${qNum}${year ? '/' + year : ''} gồm các tháng: ${codes}.`;
+      }
+      return { matched: qFiltered.map((x) => x.period), fallbackNotice };
+    }
+
+    if (year !== null && !fallbackNotice) {
+      const uniqueMonths = new Set(yearFiltered.map((x) => `${x.ym.year}-${x.ym.month}`));
+      const codes = yearFiltered.map((x) => x.period.periodCode).join(', ');
+      if (uniqueMonths.size < 12) {
+        fallbackNotice = `Năm ${year} hiện có ${uniqueMonths.size}/12 tháng dữ liệu (${codes}) — Đang hiển thị các tháng hiện có.`;
+      } else {
+        fallbackNotice = `Đang lọc trọn Năm ${year} (${codes}).`;
+      }
+    }
+
+    return { matched: yearFiltered.map((x) => x.period), fallbackNotice };
   }
 
   loadDepartmentCosts(): void {
@@ -604,6 +1115,84 @@ export class PayrollPage implements OnInit {
     return this.filteredDetails.slice(start, start + this.pageSize);
   }
 
+  get availableYears(): number[] {
+    const years = new Set<number>();
+    for (const p of this.periods || []) {
+      const ym = this.extractPeriodYearMonth(p);
+      if (ym) years.add(ym.year);
+    }
+    for (const r of this.allHistoryRows || []) {
+      const ym = this.extractPeriodYearMonth(r);
+      if (ym) years.add(ym.year);
+    }
+    if (years.size === 0) years.add(new Date().getFullYear());
+    return Array.from(years).sort((a, b) => b - a);
+  }
+
+  get allowanceEmployeeOptions(): Array<{ employeeCode: string; fullName: string; departmentName: string }> {
+    const map = new Map<string, { employeeCode: string; fullName: string; departmentName: string }>();
+    for (const it of this.allowanceOverview?.items || []) {
+      if (it.employeeCode && !map.has(it.employeeCode)) {
+        map.set(it.employeeCode, {
+          employeeCode: it.employeeCode,
+          fullName: it.fullName,
+          departmentName: it.departmentName
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.employeeCode.localeCompare(b.employeeCode));
+  }
+
+  get filteredAllowanceItems(): PeriodAllowanceItem[] {
+    let list = this.allowanceOverview?.items || [];
+    if (this.allowanceEmployeeCode) {
+      list = list.filter((it) => it.employeeCode === this.allowanceEmployeeCode);
+    }
+    const kw = this.allowanceKeyword.trim().toLowerCase();
+    if (kw) {
+      list = list.filter(
+        (it) =>
+          (it.employeeCode || '').toLowerCase().includes(kw) ||
+          (it.fullName || '').toLowerCase().includes(kw) ||
+          (it.allowanceName || '').toLowerCase().includes(kw) ||
+          (it.departmentName || '').toLowerCase().includes(kw)
+      );
+    }
+    return list;
+  }
+
+  get filteredAllowanceTotalAmount(): number {
+    return this.filteredAllowanceItems.reduce((sum, it) => sum + (it.estimatedPeriodAmount || 0), 0);
+  }
+
+  get selectedEmployeeAllowanceItems(): PeriodAllowanceItem[] {
+    if (!this.selectedAllowanceItem) return [];
+    return (this.allowanceOverview?.items || []).filter(
+      (it) => it.employeeId === this.selectedAllowanceItem!.employeeId
+    );
+  }
+
+  get selectedEmployeeAllowanceTotal(): number {
+    return this.selectedEmployeeAllowanceItems.reduce(
+      (sum, it) => sum + (it.estimatedPeriodAmount || 0),
+      0
+    );
+  }
+
+  get historyEmployeeOptions(): Array<{ employeeCode: string; fullName: string; departmentName: string }> {
+    const map = new Map<string, { employeeCode: string; fullName: string; departmentName: string }>();
+    for (const r of this.allHistoryRows || []) {
+      if (r.employeeCode && !map.has(r.employeeCode)) {
+        map.set(r.employeeCode, {
+          employeeCode: r.employeeCode,
+          fullName: r.fullName,
+          departmentName: r.departmentName
+        });
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => a.employeeCode.localeCompare(b.employeeCode));
+  }
+
   get allowanceDeptTotalPages(): number {
     const list = this.allowanceOverview?.departmentSummaries || [];
     return Math.max(1, Math.ceil(list.length / this.pageSize));
@@ -616,12 +1205,12 @@ export class PayrollPage implements OnInit {
   }
 
   get allowanceTotalPages(): number {
-    const list = this.allowanceOverview?.items || [];
+    const list = this.filteredAllowanceItems;
     return Math.max(1, Math.ceil(list.length / this.pageSize));
   }
 
-  get pagedAllowanceItems(): NonNullable<PeriodAllowanceOverview['items']> {
-    const list = this.allowanceOverview?.items || [];
+  get pagedAllowanceItems(): PeriodAllowanceItem[] {
+    const list = this.filteredAllowanceItems;
     const start = (this.allowancePage - 1) * this.pageSize;
     return list.slice(start, start + this.pageSize);
   }
