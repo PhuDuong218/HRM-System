@@ -1,7 +1,9 @@
 package com.hrm.dto;
 
 import com.hrm.enums.EmploymentStatus;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Set;
@@ -31,7 +33,16 @@ public final class AdminAccessDTOs {
             @NotBlank @Size(max = 100) @Pattern(regexp = "[A-Za-z0-9][A-Za-z0-9._@-]*") String username,
             @NotNull @Positive Long roleId,
             Set<@NotNull @Positive Long> expectedDepartmentIds,
-            Set<@NotNull @Positive Long> departmentIds) {}
+            Set<@NotNull @Positive Long> departmentIds,
+            @Valid AccountHeadChange headChange) {
+        public EditAccountIdentity(String expectedUsername, Long expectedRoleId, String username, Long roleId,
+                Set<Long> expectedDepartmentIds, Set<Long> departmentIds) {
+            this(expectedUsername, expectedRoleId, username, roleId, expectedDepartmentIds, departmentIds, null);
+        }
+    }
+
+    public record AccountHeadChange(@NotNull Boolean appoint, @NotNull LocalDate effectiveFrom,
+            @Positive Long nextPositionId, @NotBlank @Size(max = 1000) String reason) {}
 
     public record AccountView(Long accountId, Long employeeId, String employeeCode, String fullName,
             Long roleId, String roleCode, String roleName, String username, boolean active,

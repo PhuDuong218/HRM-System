@@ -10,10 +10,11 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { finalize, Subscription } from 'rxjs';
+import { EMPTY, expand, finalize, reduce, Subscription } from 'rxjs';
 import { Account, AccountContact, AccountFilters, AccountRole, AccountService, AccessPermission, ActiveDepartment, CreateAccount, EligibleEmployee, ScopeDepartmentOption } from '../../services/account.service';
 import { RecordWorkspace } from '../../shared/record-workspace';
 import { AuthService } from '../../services/auth.service';
+import { DepartmentService, Position } from '../../services/department.service';
 
 type Section = 'accounts' | 'roles' | 'permissions';
 type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-lock' | 'account-reset'
@@ -29,6 +30,8 @@ type DialogMode = 'account-create' | 'account-view' | 'account-edit' | 'account-
 })
 export class AccountsPage implements OnInit {
   private api = inject(AccountService);
+  private departments = inject(DepartmentService);
+  private headPositionsRequest?: Subscription;
   private auth = inject(AuthService);
   private router = inject(Router);
   private destroyRef = inject(DestroyRef);
@@ -62,7 +65,17 @@ export class AccountsPage implements OnInit {
   actionMessage = '';
   resetPassword = '';
   resetConfirm = '';
-  editRoleId = 0;
+  readonly departmentHeadRole = 'DEPARTMENT_HEAD';
+  readonly headMinDate = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Asia/Ho_Chi_Minh', year: 'numeric', month: '2-digit', day: '2-digit'
+  }).format(new Date());
+  editRoleId: number | 'DEPARTMENT_HEAD' = 0;
+  headEffectiveFrom = '';
+  headReason = '';
+  headNextPositionId: number | null = null;
+  headPositions: Position[] = [];
+  headPositionsLoading = false;
+  headPositionsError = '';
   editPermissionName = '';
   editPermissionDescription = '';
   message = '';
@@ -296,7 +309,37 @@ export class AccountsPage implements OnInit {
       (this.scopeExpected.length !== this.scopeSelected.size || this.scopeExpected.some(id => !this.scopeSelected.has(id)));
   }
 
-  onEditRoleChange(): void { this.cancelScopeEdit(); }
+  get headRoleChanged(): boolean {
+    return !!this.selectedAccount &&
+      (this.editRoleId === this.departmentHeadRole) !== !!this.selectedAccount.departmentHead;
+  }
+
+  get endingHeadRole(): boolean {
+    return this.headRoleChanged && this.editRoleId !== this.departmentHeadRole;
+  }
+
+  onEditRoleChange(): void {
+    this.cancelScopeEdit();
+    this.actionError = '';
+    this.headPositionsRequest?.unsubscribe();
+    this.headPositionsLoading = false;
+    if (this.endingHeadRole && !this.headPositions.length) this.loadHeadPositions();
+  }
+
+  loadHeadPositions(): void {
+    this.headPositionsRequest?.unsubscribe();
+    this.headPositionsLoading = true;
+    this.headPositionsError = '';
+    this.headPositionsRequest = this.departments.positions(0).pipe(
+      expand((page, index) => index + 1 < page.totalPages ? this.departments.positions(index + 1) : EMPTY),
+      reduce((positions, page) => positions.concat(page.content.filter(p => p.isActive && p.positionCode !== 'TRUONG_PHONG')), [] as Position[]),
+      takeUntilDestroyed(this.destroyRef),
+      finalize(() => this.headPositionsLoading = false)
+    ).subscribe({
+      next: positions => this.headPositions = positions,
+      error: () => this.headPositionsError = 'Không tải được danh sách chức vụ. Vui lòng thử lại.'
+    });
+  }
 
   dateOnly(value: string | null): string {
     if (!value) return 'Chưa có thông tin';
@@ -310,7 +353,13 @@ export class AccountsPage implements OnInit {
     this.actionMessage = '';
     this.resetPassword = this.resetConfirm = '';
     if (mode === 'account-edit' && this.selectedAccount) {
-      this.editRoleId = this.selectedAccount.roleId;
+      this.editRoleId = this.selectedAccount.departmentHead ? this.departmentHeadRole : this.selectedAccount.roleId;
+      this.headEffectiveFrom = this.headMinDate;
+      this.headReason = '';
+      this.headNextPositionId = null;
+      this.headPositions = [];
+      this.headPositionsError = '';
+      this.headPositionsRequest?.unsubscribe();
       this.cancelScopeEdit();
     }
     if (mode === 'permission-edit' && this.selectedPermission) {
@@ -354,7 +403,16 @@ export class AccountsPage implements OnInit {
   saveAccountIdentity(): void {
     if (this.saving || !this.selectedAccount) return;
     const account = this.selectedAccount;
-    if (!this.roles.some(role => role.roleId === this.editRoleId && this.isSystemRole(role))) {
+    const appointHead = this.editRoleId === this.departmentHeadRole;
+    const roleId = this.editRoleId === this.departmentHeadRole ? account.roleId : this.editRoleId;
+    const headChanged = this.headRoleChanged;
+    const reason = this.headReason.trim();
+    if (headChanged && (!this.headEffectiveFrom || this.headEffectiveFrom < this.headMinDate || !reason ||
+        (this.endingHeadRole && !this.headNextPositionId))) {
+      this.actionError = 'Vui lòng nhập ngày hiệu lực, lý do và chọn chức vụ tiếp theo khi kết thúc phân công.';
+      return;
+    }
+    if (!this.roles.some(role => role.roleId === roleId && this.isSystemRole(role))) {
       this.actionError = 'Vui lòng chọn vai trò hợp lệ.'; return;
     }
     if (this.scopeEditing && (this.hrDepartmentsLoading || !this.scopeOptionsReady)) {
@@ -363,15 +421,17 @@ export class AccountsPage implements OnInit {
     if (this.scopeChanged && !this.scopeOptions.some(item => item.active && this.scopeSelected.has(item.departmentId))) {
       this.actionError = 'Vui lòng chọn ít nhất một phòng ban đang hoạt động.'; return;
     }
-    const identityChanged = this.editRoleId !== account.roleId;
-    if (!identityChanged && !this.scopeChanged) {
+    const identityChanged = roleId !== account.roleId;
+    if (!identityChanged && !this.scopeChanged && !headChanged) {
       this.actionError = 'Thông tin tài khoản chưa thay đổi.'; return;
     }
     const ownAccount = this.isOwnAccount(account);
     this.saving = true;
     this.actionError = '';
     this.api.editIdentity(account.accountId, {
-      expectedUsername: account.username, expectedRoleId: account.roleId, username: account.username, roleId: this.editRoleId,
+      expectedUsername: account.username, expectedRoleId: account.roleId, username: account.username, roleId,
+      ...(headChanged ? { headChange: { appoint: appointHead, effectiveFrom: this.headEffectiveFrom, reason,
+        ...(!appointHead && this.headNextPositionId ? { nextPositionId: this.headNextPositionId } : {}) } } : {}),
       ...(this.scopeChanged ? { expectedDepartmentIds: this.scopeExpected, departmentIds: [...this.scopeSelected] } : {})
     }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
       next: updated => {
@@ -382,7 +442,7 @@ export class AccountsPage implements OnInit {
         }
         this.selectedAccount = updated;
         this.dialogMode = 'account-view';
-        this.actionMessage = identityChanged ? 'Đã cập nhật tài khoản. Các phiên đăng nhập cũ đã bị thu hồi.' : 'Đã cập nhật phạm vi phòng ban.';
+        this.actionMessage = headChanged ? 'Đã lưu thay đổi phân công trưởng phòng theo ngày hiệu lực.' : identityChanged ? 'Đã cập nhật tài khoản. Các phiên đăng nhập cũ đã bị thu hồi.' : 'Đã cập nhật phạm vi phòng ban.';
         this.scopeEditing = false;
         this.scopeRequest?.unsubscribe();
         this.hrDepartments = [];

@@ -27,6 +27,7 @@ import org.springframework.web.server.ResponseStatusException;
 public class AdminAccessService {
     private static final Set<String> SYSTEM_ROLES = Set.of("ADMIN", "HR", "EMPLOYEE");
     @org.springframework.beans.factory.annotation.Autowired(required=false) private org.springframework.jdbc.core.JdbcTemplate headDb;
+    @org.springframework.beans.factory.annotation.Autowired private DepartmentHeadService departmentHeads;
     private final AccountRepository accounts;
     private final EmployeeRepository employees;
     private final RoleRepository roles;
@@ -145,6 +146,9 @@ public class AdminAccessService {
     public AccountView editAccountIdentity(AuthenticatedAccount actor, long id, EditAccountIdentity request) {
         adminWrite(actor);
         boolean scopeRequested = request.expectedDepartmentIds() != null || request.departmentIds() != null;
+        boolean headRequested = request.headChange() != null;
+        if (headRequested && scopeRequested)
+            throw new IllegalArgumentException("Hãy lưu thay đổi trưởng phòng trước khi phân công phạm vi HR.");
         if (scopeRequested) hrScopes.lockAccountForUpdate(actor, id);
         Account account = accountEntity(id);
         if (!account.getUsername().equals(request.expectedUsername()) ||
@@ -153,15 +157,16 @@ public class AdminAccessService {
         Role role = roleEntity(request.roleId());
         if (!SYSTEM_ROLES.contains(role.getRoleCode())) conflict("Vai trò không được hỗ trợ.");
         validateAdminRoleAssignment(account.getRole().getRoleCode(), role.getRoleCode());
-        if (actor.accountId().equals(id) && !account.getRole().getRoleId().equals(request.roleId()))
+        if (actor.accountId().equals(id) && (headRequested || !account.getRole().getRoleId().equals(request.roleId())))
             conflict("Không được thay đổi vai trò tài khoản đang sử dụng.");
         uniqueUsername(request.username(), id);
         boolean identityChanged = !account.getUsername().equals(request.username()) || !account.getRole().getRoleId().equals(request.roleId());
         if (scopeRequested && (!"HR".equals(role.getRoleCode()) || request.expectedDepartmentIds() == null || request.departmentIds() == null))
             throw new IllegalArgumentException("Phân công phòng ban chỉ áp dụng cho vai trò HR và cần đủ thông tin");
-        if (!identityChanged && !scopeRequested)
+        if (!identityChanged && !scopeRequested && !headRequested)
             conflict("Thông tin tài khoản chưa thay đổi.");
-        if (identityChanged) {
+        if (headRequested) departmentHeads.changeFromAccount(account.getEmployeeId(), request.headChange(), actor);
+        if (identityChanged || headRequested) {
             account.setUsername(request.username());
             account.setRole(role);
             account.revokeTokens();

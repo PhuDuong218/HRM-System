@@ -196,8 +196,39 @@
         <fieldset class="dialog-grid" [disabled]="saving">
           <div class="detail-wide edit-account-owner"><span>{{ 'Nhân viên sở hữu tài khoản' | translate }}</span><strong>{{ (selectedAccount?.fullName || 'Chưa có thông tin') | translate }}</strong><small>{{ (selectedAccount?.employeeCode || 'Chưa có mã nhân viên') | translate }}</small></div>
           <div><label class="form-label" for="edit-username">{{ 'Tên đăng nhập' | translate }}</label><input id="edit-username" class="form-control" [value]="selectedAccount?.username || ''" readonly></div>
-          <div><label class="form-label" for="edit-role">{{ 'Vai trò' | translate }}</label><select id="edit-role" name="roleId" class="form-select" [(ngModel)]="editRoleId" (ngModelChange)="onEditRoleChange()" [disabled]="!!selectedAccount && isOwnAccount(selectedAccount)">@for (item of roles; track item.roleId) { @if (isSystemRole(item)) { <option [ngValue]="item.roleId" [disabled]="item.roleCode === 'ADMIN' && selectedAccount?.roleCode !== 'ADMIN'">{{ item.roleName }} ({{ item.roleCode }})</option> } }</select></div>
-          @if (editRoleIsHr) {
+          <div><label class="form-label" for="edit-role">{{ 'Vai trò' | translate }}</label><select id="edit-role" name="roleId" class="form-select" [(ngModel)]="editRoleId" (ngModelChange)="onEditRoleChange()" [disabled]="!!selectedAccount && isOwnAccount(selectedAccount)"><option [ngValue]="departmentHeadRole">{{ 'Trưởng phòng (theo phân công hiệu lực)' | translate }}</option>@for (item of roles; track item.roleId) { @if (isSystemRole(item)) { <option [ngValue]="item.roleId" [disabled]="item.roleCode === 'ADMIN' && selectedAccount?.roleCode !== 'ADMIN'">{{ item.roleName }} ({{ item.roleCode }})</option> } }</select></div>
+          @if (headRoleChanged) {
+            <div class="detail-wide scope-confirm">
+              <p>{{ (endingHeadRole
+                ? 'Chọn chức vụ tiếp theo trong phòng ban hiện tại của nhân viên.'
+                : 'Bổ nhiệm tại phòng ban hiện tại của nhân viên. Mỗi phòng chỉ có một trưởng phòng.') | translate }}</p>
+              <label for="head-effective-from" class="form-label">{{ 'Ngày hiệu lực' | translate }}</label>
+              <input id="head-effective-from" name="headEffectiveFrom" class="form-control" type="date"
+                     [min]="headMinDate" [(ngModel)]="headEffectiveFrom" required>
+              <p class="small muted mt-2">{{ 'Ngày hiệu lực phải sau ngày bắt đầu phân công hiện tại.' | translate }}</p>
+              @if (endingHeadRole) {
+                <label for="head-next-position" class="form-label">{{ 'Chức vụ tiếp theo' | translate }}</label>
+                @if (headPositionsLoading) {
+                  <p role="status">{{ 'Đang tải chức vụ…' | translate }}</p>
+                } @else if (headPositionsError) {
+                  <p role="alert">{{ headPositionsError | translate }}
+                    <button type="button" class="btn btn-sm btn-outline-primary" (click)="loadHeadPositions()">{{ 'Thử lại' | translate }}</button>
+                  </p>
+                } @else {
+                  <select id="head-next-position" name="headNextPositionId" class="form-select" [(ngModel)]="headNextPositionId" required>
+                    <option [ngValue]="null">{{ 'Chọn chức vụ' | translate }}</option>
+                    @for (item of headPositions; track item.positionId) {
+                      <option [ngValue]="item.positionId">{{ item.positionName }}</option>
+                    }
+                  </select>
+                }
+              }
+              <label for="head-reason" class="form-label mt-2">{{ 'Lý do' | translate }}</label>
+              <textarea id="head-reason" name="headReason" class="form-control" rows="2" maxlength="1000"
+                        [(ngModel)]="headReason" required></textarea>
+            </div>
+          }
+          @if (editRoleIsHr && !headRoleChanged) {
             <div class="detail-wide">
               <p class="detail-label">{{ 'Phòng ban quản lý' | translate }}</p>
               @if (!scopeEditing) {
@@ -266,9 +297,9 @@
     }
     <button type="button" class="btn btn-outline-primary" (click)="closeDialog()" [disabled]="saving">{{ 'Đóng' | translate }}</button>
     @if (dialogMode === 'account-create') {
-      <button type="submit" form="create-account-form" class="btn btn-primary" [disabled]="saving || rolesLoading || !!rolesError">{{ (saving ? 'Đang tạo…' : 'Tạo tài khoản') | translate }}</button>
+      <button type="submit" form="create-account-form" class="btn btn-primary" [disabled]="saving || rolesLoading || !!rolesError || headPositionsLoading">{{ (saving ? 'Đang tạo…' : 'Tạo tài khoản') | translate }}</button>
     } @else if (dialogMode === 'account-edit') {
-      <button type="submit" form="edit-account-form" class="btn btn-primary" [disabled]="saving || rolesLoading || !!rolesError">{{ (saving ? 'Đang lưu…' : 'Lưu thay đổi') | translate }}</button>
+      <button type="submit" form="edit-account-form" class="btn btn-primary" [disabled]="saving || rolesLoading || !!rolesError || headPositionsLoading">{{ (saving ? 'Đang lưu…' : 'Lưu thay đổi') | translate }}</button>
     } @else if (dialogMode === 'account-reset') {
       <button type="submit" form="reset-account-password" class="btn btn-primary" [disabled]="saving">{{ (saving ? 'Đang lưu…' : 'Xác nhận đặt lại') | translate }}</button>
     } @else if (dialogMode === 'account-lock') {

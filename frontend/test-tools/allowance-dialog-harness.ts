@@ -3,6 +3,7 @@ import {Injector,createEnvironmentInjector,runInInjectionContext} from '@angular
 import {NEVER} from 'rxjs';
 import {AllowancesPage} from '../src/app/pages/allowances/allowances';
 import {AllowanceService} from '../src/app/services/allowance.service';
+import {PayrollService} from '../src/app/services/payroll.service';
 import {EmployeeService} from '../src/app/services/employee.service';
 import {ActionDialogService} from '../src/app/shared/ui/action-dialog';
 export function setup(){
@@ -10,6 +11,7 @@ export function setup(){
  const injector=createEnvironmentInjector([
   {provide:AllowanceService,useValue:{deactivateType:()=>{calls++;return NEVER;}}},
   {provide:EmployeeService,useValue:{}},
+  {provide:PayrollService,useValue:{}},
   {provide:ActionDialogService,useValue:{prompt:()=>new Promise<string|null>(resolve=>resolvePrompt=resolve)}}
  ],Injector.NULL as any);
  return {injector,page:runInInjectionContext(injector,()=>new AllowancesPage()),resolve:(value:string|null)=>resolvePrompt(value),calls:()=>calls};

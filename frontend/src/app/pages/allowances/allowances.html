@@ -146,7 +146,6 @@
   <app-record-workspace [open]="showAssignForm" [busy]="saving" (dismiss)="closeWorkspace()">
     <div recordList class="allowance-list-column module-list">
   <section class="surface mb-4">
-    <label class="form-label" for="al-emp">{{ "Nhân viên" | translate }}</label>
     @if (employeesLoading) {
       <p role="status">{{ "Đang tải danh sách nhân viên…" | translate }}</p>
     } @else if (employeesError) {
@@ -154,16 +153,46 @@
     } @else if (employees.length === 0) {
       <p class="muted">{{ "Chưa có nhân viên để chọn." | translate }}</p>
     }
-    <select id="al-emp" class="form-select" #empSel [value]="employeeId ?? ''"
-            (change)="onEmployeeChange(empSel.value)" [disabled]="employeesLoading || saving">
-      <option value="">{{ "— Chọn nhân viên —" | translate }}</option>
-      @for (e of employees; track e.employeeId) {
-        <option [value]="e.employeeId">{{ employeeLabel(e) }}</option>
+    <form (ngSubmit)="applyAssignedFilters()">
+      <div class="row g-3">
+        <div class="col-12 col-xl-6">
+          <label class="form-label" for="al-emp">{{ "Nhân viên" | translate }}</label>
+          <select id="al-emp" name="employee" class="form-select" [ngModel]="employeeId"
+                  (ngModelChange)="onEmployeeChange($event)" [disabled]="employeesLoading || saving">
+            <option [ngValue]="null">{{ "— Chọn nhân viên —" | translate }}</option>
+            @for (e of employees; track e.employeeId) {
+              <option [ngValue]="e.employeeId">{{ employeeLabel(e) }}</option>
+            }
+          </select>
+        </div>
+        <div class="col-12 col-xl-6">
+          <label class="form-label" for="al-keyword">{{ "Từ khóa" | translate }}</label>
+          <input id="al-keyword" name="allowanceKeyword" class="form-control" type="search"
+                 [(ngModel)]="assignedFilter.keyword" [placeholder]="'Mã, tên loại phụ cấp hoặc ghi chú' | translate">
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label" for="al-filter-from">{{ "Từ ngày" | translate }}</label>
+          <input id="al-filter-from" name="allowanceFrom" class="form-control" type="date" [(ngModel)]="assignedFilter.from"
+                 [attr.aria-invalid]="assignedFilterError ? 'true' : null" aria-describedby="al-date-filter-help">
+        </div>
+        <div class="col-12 col-sm-6">
+          <label class="form-label" for="al-filter-to">{{ "Đến ngày" | translate }}</label>
+          <input id="al-filter-to" name="allowanceTo" class="form-control" type="date" [(ngModel)]="assignedFilter.to"
+                 [attr.aria-invalid]="assignedFilterError ? 'true' : null" aria-describedby="al-date-filter-help">
+        </div>
+      </div>
+      <p id="al-date-filter-help" class="form-text">{{ "Hiển thị khoản phụ cấp có hiệu lực trong khoảng ngày đã chọn." | translate }}</p>
+      @if (assignedFilterError) {
+        <p class="text-danger small" role="alert">{{ assignedFilterError | translate }}</p>
       }
-    </select>
-    @if (employeeId) {
-      <button type="button" class="btn btn-outline-secondary mt-2" [disabled]="rowsLoading || saving" (click)="loadRows()">{{ "Tải phụ cấp" | translate }}</button>
-    }
+      <div class="d-flex flex-wrap gap-2 mt-3">
+        <button type="submit" class="btn btn-primary" [disabled]="!employeeId || rowsLoading || saving">{{ "Tìm kiếm" | translate }}</button>
+        <button type="button" class="btn btn-outline-secondary" (click)="clearAssignedFilters()" [disabled]="saving">{{ "Xóa lọc" | translate }}</button>
+        @if (employeeId) {
+          <button type="button" class="btn btn-outline-secondary" [disabled]="rowsLoading || saving" (click)="loadRows()">{{ "Tải lại" | translate }}</button>
+        }
+      </div>
+    </form>
   </section>
         <section class="surface">
     <div class="d-flex justify-content-between align-items-center mb-3 gap-2 flex-wrap">
@@ -175,13 +204,16 @@
     @if (employeeId && !canCreateForSelectedEmployee() && !employeesLoading) {
       <p class="form-text">{{ "Chỉ nhân viên đang làm việc mới được gán khoản phụ cấp mới; lịch sử vẫn có thể tra cứu." | translate }}</p>
     }
+    @let visibleRows = filteredAllowances;
     @if (!employeeId) {
       <p class="muted">{{ "Chọn nhân viên để xem phụ cấp." | translate }}</p>
     } @else if (rowsLoading) {
       <p role="status">{{ "Đang tải danh sách…" | translate }}</p>
-    } @else if (rows.length === 0) {
+    } @else if (assignedRowsLoaded && rows.length === 0) {
       <p class="muted">{{ "Nhân viên này chưa có phụ cấp nào." | translate }}</p>
-    } @else {
+    } @else if (assignedRowsLoaded && visibleRows.length === 0) {
+      <p class="muted">{{ "Không có phụ cấp phù hợp với bộ lọc." | translate }}</p>
+    } @else if (assignedRowsLoaded) {
       <div class="table-responsive">
         <table class="table table-striped align-middle">
           <thead><tr>
@@ -189,7 +221,7 @@
             <th>{{ "Cách tính" | translate }}</th><th class="text-end">{{ "Đơn giá" | translate }}</th><th>{{ "Ghi chú" | translate }}</th><th></th>
           </tr></thead>
           <tbody>
-            @for (r of rows; track r.employeeAllowanceId) {
+            @for (r of visibleRows; track r.employeeAllowanceId) {
               <tr [class.selected-row]="showAssignForm && target?.employeeAllowanceId === r.employeeAllowanceId" [appSelectedRowScroll]="showAssignForm && target?.employeeAllowanceId === r.employeeAllowanceId ? assignMode : null">
                 <td [attr.data-label]="'Loại' | translate">{{ r.typeCode }} — {{ r.typeName }}</td>
                 <td [attr.data-label]="'Từ' | translate">{{ r.effectiveFrom }}</td>

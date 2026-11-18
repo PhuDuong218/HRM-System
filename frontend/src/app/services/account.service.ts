@@ -76,7 +76,7 @@ export class AccountService {
     return this.http.patch<Account>(`${API_BASE_URL}/admin/accounts/${accountId}/status`, { expectedActive, active }).pipe(timeout(15000));
   }
 
-  editIdentity(accountId: number, change: { expectedUsername: string; expectedRoleId: number; username: string; roleId: number; expectedDepartmentIds?: number[]; departmentIds?: number[] }) {
+  editIdentity(accountId: number, change: { expectedUsername: string; expectedRoleId: number; username: string; roleId: number; expectedDepartmentIds?: number[]; departmentIds?: number[]; headChange?: { appoint: boolean; effectiveFrom: string; nextPositionId?: number; reason: string } }) {
     return this.http.patch<Account>(`${API_BASE_URL}/admin/accounts/${accountId}/identity`, change).pipe(timeout(15000));
   }
 

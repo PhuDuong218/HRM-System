@@ -116,6 +116,10 @@ public class EmployeeActivity extends AppCompatActivity {
             @Override
             public void handleOnBackPressed() {
                 if (writing) return;
+                if ("profile".equals(section) && "contract_detail".equals(profileSubPage)) {
+                    showProfileContracts();
+                    return;
+                }
                 if ("profile".equals(section) && !"hub".equals(profileSubPage)) {
                     profileSubPage = "edit_profile".equals(profileSubPage) && profileEditFromAccountInfo
                             ? "account_info"
@@ -398,6 +402,10 @@ public class EmployeeActivity extends AppCompatActivity {
     }
 
     private void fetch(String path, Reply reply) {
+        fetch(path, reply, this::error);
+    }
+
+    private void fetch(String path, Reply reply, java.util.function.Consumer<String> onError) {
         int version = generation;
         ++pendingReads;
         loading.setVisibility(View.VISIBLE);
@@ -413,7 +421,7 @@ public class EmployeeActivity extends AppCompatActivity {
                     try {
                         reply.accept(data);
                     } catch (Exception e) {
-                        error("Dữ liệu phản hồi không hợp lệ.");
+                        onError.accept("Dữ liệu phản hồi không hợp lệ.");
                     }
                 });
             } catch (Exception e) {
@@ -426,7 +434,7 @@ public class EmployeeActivity extends AppCompatActivity {
                         session.clearSession();
                         signOutLocal();
                     } else
-                        error(HrmApi.message(e));
+                        onError.accept(HrmApi.message(e));
                 });
             }
         });
@@ -2084,6 +2092,9 @@ public class EmployeeActivity extends AppCompatActivity {
     }
 
     private String profileSubPage = "hub";
+    private static final int PROFILE_CONTRACT_PAGE_SIZE = 20;
+    private int profileContractPage;
+    private long profileContractId;
     private boolean profileEditFromAccountInfo = false;
     private boolean profileSoundEnabled = true;
     private boolean profileSecurityLockEnabled = false;
@@ -2346,6 +2357,9 @@ public class EmployeeActivity extends AppCompatActivity {
             case "contracts":
                 profileContractsAndDecisionsPage();
                 break;
+            case "contract_detail":
+                profileContractDetailPage();
+                break;
             case "settings":
                 profileSettingsPage();
                 break;
@@ -2492,8 +2506,8 @@ public class EmployeeActivity extends AppCompatActivity {
                 });
         addProfileMenuRow(salaryGroup, "📑", "Hợp đồng và quyết định",
                 "Hợp đồng lao động, quyết định khen thưởng & kỷ luật", 0xff111827, null, false, () -> {
-                    profileSubPage = "contracts";
-                    render();
+                    profileContractPage = 0;
+                    showProfileContracts();
                 });
 
         // 6. Mục "Ứng dụng" — Giống hệt Hình 7 (Cài đặt chung, Góp ý cho ứng dụng, Hướng dẫn sử dụng)
@@ -3247,9 +3261,10 @@ public class EmployeeActivity extends AppCompatActivity {
             profileSubPage = "hub";
             render();
         });
-        LinearLayout container = column();
-        body.addView(container);
-        loadMyContractsAndDecisions(container);
+        LinearLayout contracts = card("Hợp đồng lao động");
+        LinearLayout decisions = card("Quyết định nhân sự đã duyệt");
+        loadMyContracts(contracts);
+        loadMyDecisions(decisions);
     }
 
     /**
@@ -3785,69 +3800,147 @@ public class EmployeeActivity extends AppCompatActivity {
         });
     }
 
-    private void loadMyContractsAndDecisions(LinearLayout docsContainer) {
-        docsContainer.removeAllViews();
-        docsContainer.addView(text("Đang tải hợp đồng và quyết định...", 13, MUTED, false));
-        int version = generation;
-        String token = session.token();
-        executor.execute(() -> {
-            JSONArray contractsArr = new JSONArray();
-            JSONArray decisionsArr = new JSONArray();
-            try {
-                JSONObject cRes = api.get("/api/me/contracts?page=0&size=20", token);
-                if (cRes.optJSONArray("content") != null) contractsArr = cRes.optJSONArray("content");
-            } catch (Exception ignored) {
+    private void showProfileContracts() {
+        profileSubPage = "contracts";
+        render();
+    }
+
+    private void loadMyContracts(LinearLayout section) {
+        LinearLayout results = column();
+        section.addView(results);
+        loadMyContractPage(results, profileContractPage);
+    }
+
+    private void loadMyContractPage(LinearLayout results, int pageIndex) {
+        results.removeAllViews();
+        results.addView(text("Đang tải hợp đồng…", 13, MUTED, false));
+        fetch("/api/me/contracts?page=" + pageIndex + "&size=" + PROFILE_CONTRACT_PAGE_SIZE, data -> {
+            JSONArray items = data.getJSONArray("items");
+            int totalPages = data.getInt("totalPages");
+            if (items.length() == 0 && pageIndex > 0 && pageIndex >= totalPages) {
+                profileContractPage = Math.max(0, totalPages - 1);
+                loadMyContractPage(results, profileContractPage);
+                return;
             }
-            try {
-                JSONObject dRes = api.get("/api/me/decisions?page=0&size=20", token);
-                if (dRes.optJSONArray("content") != null) decisionsArr = dRes.optJSONArray("content");
-            } catch (Exception ignored) {
+            profileContractPage = pageIndex;
+            results.removeAllViews();
+            results.addView(text(data.getLong("totalElements") + " hợp đồng", 12, MUTED, false));
+            if (items.length() == 0) {
+                results.addView(text("Chưa có dữ liệu hợp đồng lao động.", 13, MUTED, false));
             }
-            final JSONArray finalContracts = contractsArr != null ? contractsArr : new JSONArray();
-            final JSONArray finalDecisions = decisionsArr != null ? decisionsArr : new JSONArray();
-            runOnUiThread(() -> {
-                if (isDestroyed() || version != generation) return;
-                docsContainer.removeAllViews();
-                docsContainer.addView(text("Hợp đồng lao động (" + finalContracts.length() + ")", 13, BLUE, true));
-                if (finalContracts.length() == 0) {
-                    docsContainer.addView(text("Chưa có dữ liệu hợp đồng lao động.", 12, MUTED, false));
-                } else {
-                    for (int i = 0; i < finalContracts.length(); i++) {
-                        JSONObject c = finalContracts.optJSONObject(i);
-                        if (c == null) continue;
-                        LinearLayout cBox = column();
-                        cBox.setBackground(rounded(0xfff8fafc, 8));
-                        cBox.setPadding(dp(10), dp(8), dp(10), dp(8));
-                        LinearLayout.LayoutParams cp = new LinearLayout.LayoutParams(-1, -2);
-                        cp.bottomMargin = dp(6);
-                        cBox.setLayoutParams(cp);
-                        cBox.addView(text(str(c, "contractNumber") + " · " + str(c, "typeName"), 13, INK, true));
-                        cBox.addView(text("Hiệu lực: " + str(c, "startDate") + " → " + (str(c, "endDate").isEmpty() ? "Không thời hạn" : str(c, "endDate")) + " (" + str(c, "status") + ")", 12, MUTED, false));
-                        docsContainer.addView(cBox);
-                    }
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject contract = items.getJSONObject(i);
+                LinearLayout row = personalDocumentRow(results);
+                row.addView(text(str(contract, "contractNumber") + " · " + str(contract, "typeName"), 14, INK, true));
+                row.addView(text(contractDateRange(contract, "startDate", "endDate") + " · "
+                        + contractStatusLabel(str(contract, "status")), 13, MUTED, false));
+                long contractId = contract.getLong("contractId");
+                button(row, "Xem chi tiết", false, () -> {
+                    profileContractId = contractId;
+                    profileSubPage = "contract_detail";
+                    render();
+                });
+            }
+            if (totalPages > 1) {
+                results.addView(text("Trang " + (pageIndex + 1) + " / " + totalPages, 12, MUTED, true));
+                if (pageIndex > 0) {
+                    button(results, "Trang trước", false, () -> loadMyContractPage(results, pageIndex - 1));
                 }
-                TextView decTitle = text("Quyết định nhân sự đã duyệt (" + finalDecisions.length() + ")", 13, BLUE, true);
-                decTitle.setPadding(0, dp(8), 0, 0);
-                docsContainer.addView(decTitle);
-                if (finalDecisions.length() == 0) {
-                    docsContainer.addView(text("Chưa có quyết định khen thưởng / kỷ luật nào.", 12, MUTED, false));
-                } else {
-                    for (int i = 0; i < finalDecisions.length(); i++) {
-                        JSONObject d = finalDecisions.optJSONObject(i);
-                        if (d == null) continue;
-                        LinearLayout dBox = column();
-                        dBox.setBackground(rounded(0xfff8fafc, 8));
-                        dBox.setPadding(dp(10), dp(8), dp(10), dp(8));
-                        LinearLayout.LayoutParams dpLayout = new LinearLayout.LayoutParams(-1, -2);
-                        dpLayout.bottomMargin = dp(6);
-                        dBox.setLayoutParams(dpLayout);
-                        dBox.addView(text(str(d, "decisionNumber") + " · " + str(d, "decisionType"), 13, INK, true));
-                        dBox.addView(text(str(d, "content") + (str(d, "issuedDate").isEmpty() ? "" : (" (" + str(d, "issuedDate") + ")")), 12, MUTED, false));
-                        docsContainer.addView(dBox);
-                    }
+                if (pageIndex + 1 < totalPages) {
+                    button(results, "Trang sau", false, () -> loadMyContractPage(results, pageIndex + 1));
                 }
-            });
-        });
+            }
+        }, message -> documentLoadError(results, message, () -> loadMyContractPage(results, pageIndex)));
+    }
+
+    private void loadMyDecisions(LinearLayout section) {
+        LinearLayout results = column();
+        section.addView(results);
+        loadMyDecisionResults(results);
+    }
+
+    private void loadMyDecisionResults(LinearLayout results) {
+        results.removeAllViews();
+        results.addView(text("Đang tải quyết định…", 13, MUTED, false));
+        fetch("/api/me/decisions?page=0&size=20", data -> {
+            JSONArray items = data.getJSONArray("items");
+            results.removeAllViews();
+            if (items.length() == 0) {
+                results.addView(text("Chưa có quyết định nhân sự đã duyệt.", 13, MUTED, false));
+            }
+            for (int i = 0; i < items.length(); i++) {
+                JSONObject decision = items.getJSONObject(i);
+                LinearLayout row = personalDocumentRow(results);
+                row.addView(text(str(decision, "decisionNumber") + " · " + str(decision, "decisionType"), 13, INK, true));
+                row.addView(text(str(decision, "content") + " · " + formatDateVi(str(decision, "issuedDate")), 12, MUTED, false));
+            }
+        }, message -> documentLoadError(results, message, () -> loadMyDecisionResults(results)));
+    }
+
+    private void profileContractDetailPage() {
+        addProfileSubHeader("Chi tiết hợp đồng", this::showProfileContracts);
+        LinearLayout details = card("Thông tin hợp đồng");
+        details.addView(text("Đang tải chi tiết…", 13, MUTED, false));
+        fetch("/api/me/contracts/" + profileContractId, data -> {
+            JSONObject contract = data.getJSONObject("contract");
+            JSONArray terms = data.getJSONArray("salaryTerms");
+            details.removeAllViews();
+            line(details, "Số hợp đồng", str(contract, "contractNumber"));
+            line(details, "Loại hợp đồng", str(contract, "typeName"));
+            line(details, "Ngày ký", formatDateVi(str(contract, "signedDate")));
+            line(details, "Hiệu lực", contractDateRange(contract, "startDate", "endDate"));
+            line(details, "Trạng thái", contractStatusLabel(str(contract, "status")));
+
+            LinearLayout salary = card("Mức lương theo hợp đồng");
+            if (terms.length() == 0) {
+                salary.addView(text("Chưa có mức lương được ghi nhận cho hợp đồng này.", 13, MUTED, false));
+            }
+            java.text.NumberFormat money = java.text.NumberFormat.getNumberInstance(new Locale("vi", "VN"));
+            money.setMaximumFractionDigits(4);
+            for (int i = 0; i < terms.length(); i++) {
+                JSONObject term = terms.getJSONObject(i);
+                String unit = str(term, "payBasis");
+                switch (unit) {
+                    case "THANG": unit = "tháng"; break;
+                    case "NGAY": unit = "ngày"; break;
+                    case "GIO": unit = "giờ"; break;
+                    default: break;
+                }
+                String amount = money.format(new java.math.BigDecimal(term.getString("baseSalary")));
+                line(salary, contractDateRange(term, "effectiveFrom", "effectiveTo"),
+                        amount + " ₫" + (unit.isEmpty() ? "" : " / " + unit));
+            }
+        }, message -> documentLoadError(details, message, this::render));
+    }
+
+    private LinearLayout personalDocumentRow(LinearLayout parent) {
+        LinearLayout row = column();
+        row.setBackground(rounded(0xfff8fafc, 8));
+        row.setPadding(dp(10), dp(8), dp(10), dp(8));
+        LinearLayout.LayoutParams params = new LinearLayout.LayoutParams(-1, -2);
+        params.bottomMargin = dp(6);
+        parent.addView(row, params);
+        return row;
+    }
+
+    private void documentLoadError(LinearLayout panel, String message, Runnable retry) {
+        panel.removeAllViews();
+        panel.addView(text(message, 13, 0xffa32b32, false));
+        button(panel, "Thử lại", false, retry);
+    }
+
+    private String contractDateRange(JSONObject row, String fromField, String toField) {
+        String end = str(row, toField);
+        return formatDateVi(str(row, fromField)) + " → " + (end.isEmpty() ? "Không thời hạn" : formatDateVi(end));
+    }
+
+    private String contractStatusLabel(String status) {
+        switch (status) {
+            case "DA_KY": return "Đã ký";
+            case "DA_KET_THUC": return "Đã kết thúc";
+            case "DA_HUY": return "Đã hủy";
+            default: return status;
+        }
     }
 
     /**
