@@ -120,6 +120,8 @@ export interface EmployeePayrollWorkDetail {
 // --- 2. PHỤ CẤP THEO THÁNG & PHÒNG BAN ---
 export interface PeriodAllowanceItem {
   employeeAllowanceId: number;
+  periodId?: number;
+  periodCode?: string;
   employeeId: number;
   employeeCode: string;
   fullName: string;
