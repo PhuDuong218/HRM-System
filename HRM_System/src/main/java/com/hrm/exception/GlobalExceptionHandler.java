@@ -238,10 +238,10 @@ public class GlobalExceptionHandler {
                                 "Tham số yêu cầu không hợp lệ");
         }
 
-        // 17. Loi RuntimeException chua duoc xu ly
-        @ExceptionHandler(RuntimeException.class)
-        public ResponseEntity<Object> handleRuntimeException(
-                        RuntimeException ex) {
+        // 17. Loi RuntimeException / Exception chua duoc xu ly
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<Object> handleUnhandledException(
+                        Exception ex) {
 
                 log.error("Loi Backend chua duoc xu ly", ex);
 

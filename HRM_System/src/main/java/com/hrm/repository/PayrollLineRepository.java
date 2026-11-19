@@ -9,5 +9,6 @@ import java.util.List;
 @Repository
 public interface PayrollLineRepository extends JpaRepository<PayrollLine, Long> {
     List<PayrollLine> findByPayrollDetailIdOrderByLineNoAsc(Long payrollDetailId);
+    List<PayrollLine> findByPayrollDetailIdInOrderByPayrollDetailIdAscLineNoAsc(java.util.Collection<Long> payrollDetailIds);
     void deleteByPayrollDetailIdIn(List<Long> payrollDetailIds);
 }

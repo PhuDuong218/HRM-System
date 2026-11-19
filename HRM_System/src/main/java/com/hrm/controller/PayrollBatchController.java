@@ -321,12 +321,19 @@ public class PayrollBatchController {
             }, batchId);
         }
 
+        List<Long> allDetailIds = details.stream().map(PayrollDetail::getPayrollDetailId).toList();
+        Map<Long, List<PayrollLine>> linesByDetailId = allDetailIds.isEmpty()
+                ? Map.of()
+                : lineRepository.findByPayrollDetailIdInOrderByPayrollDetailIdAscLineNoAsc(allDetailIds)
+                        .stream()
+                        .collect(Collectors.groupingBy(PayrollLine::getPayrollDetailId));
+
         for (PayrollDetail d : details) {
             if (allowedEmployees != null && !allowedEmployees.contains(d.getEmployeeId())) {
                 continue;
             }
 
-            List<PayrollLine> lines = lineRepository.findByPayrollDetailIdOrderByLineNoAsc(d.getPayrollDetailId());
+            List<PayrollLine> lines = linesByDetailId.getOrDefault(d.getPayrollDetailId(), List.of());
             if (lines.isEmpty() && missingSalaryIds.contains(d.getEmployeeId())) {
                 continue;
             }

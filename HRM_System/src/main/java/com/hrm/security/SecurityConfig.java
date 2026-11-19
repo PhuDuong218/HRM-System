@@ -16,6 +16,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.header.writers.ReferrerPolicyHeaderWriter;
+import org.springframework.security.web.header.writers.StaticHeadersWriter;
 
 @Configuration
 @EnableWebSecurity
@@ -29,6 +31,14 @@ public class SecurityConfig {
 
         http
                 .csrf(csrf -> csrf.disable())
+
+                .headers(headers -> headers
+                        .contentTypeOptions(org.springframework.security.config.Customizer.withDefaults())
+                        .frameOptions(frame -> frame.deny())
+                        .referrerPolicy(referrer -> referrer
+                                .policy(ReferrerPolicyHeaderWriter.ReferrerPolicy.STRICT_ORIGIN_WHEN_CROSS_ORIGIN))
+                        .addHeaderWriter(new StaticHeadersWriter(
+                                "Permissions-Policy", "camera=(), microphone=(), geolocation=()")))
 
                 .sessionManagement(session -> session.sessionCreationPolicy(
                         SessionCreationPolicy.STATELESS))
@@ -49,6 +59,23 @@ public class SecurityConfig {
                                     response.getWriter().write(
                                             """
                                                     {"trang_thai":401,"loi_chi_tiet":"Phiên đăng nhập không hợp lệ hoặc tài khoản không còn được phép truy cập."}
+                                                    """);
+                                })
+                        .accessDeniedHandler(
+                                (request, response, exception) -> {
+
+                                    response.setStatus(
+                                            HttpServletResponse.SC_FORBIDDEN);
+
+                                    response.setContentType(
+                                            MediaType.APPLICATION_JSON_VALUE);
+
+                                    response.setCharacterEncoding(
+                                            StandardCharsets.UTF_8.name());
+
+                                    response.getWriter().write(
+                                            """
+                                                    {"trang_thai":403,"loi_chi_tiet":"Bạn không có quyền thực hiện thao tác này."}
                                                     """);
                                 }))
 

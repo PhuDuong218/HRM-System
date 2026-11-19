@@ -128,7 +128,7 @@ export class AttendancePage implements OnInit {
                 if (context.manage) this.api.departments().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({ next: d => this.departments = d, error: e => this.error = this.api.message(e) });
             }, error: e => { this.loading = false; this.error = this.api.message(e); },
         });
-        timer(30000, 30000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => { if (this.tab === 'mine' && !this.saving) this.loadToday(); });
+        timer(120000, 120000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => { if (this.tab === 'mine' && !this.saving && (typeof document === 'undefined' || !document.hidden)) this.loadToday(); });
     }
 
     date(offset = 0): string { const d = new Date(); d.setDate(d.getDate() + offset); return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`; }

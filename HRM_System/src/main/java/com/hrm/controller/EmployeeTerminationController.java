@@ -34,7 +34,7 @@ public class EmployeeTerminationController {
             @jakarta.validation.Valid @RequestBody com.hrm.dto.DirectTerminationRequest request,
             Principal principal) {
 
-        Long actorAccountId = accessService.requireManager(principal);
+        accessService.requireManager(principal);
 
         requests.directTermination(id,request,principal);
     }

@@ -1,6 +1,6 @@
 import { Injectable, inject } from '@angular/core';
-import { HttpInterceptorFn, HttpResponse } from '@angular/common/http';
-import { Subject, tap } from 'rxjs';
+import { HttpEvent, HttpInterceptorFn, HttpResponse } from '@angular/common/http';
+import { Observable, Subject, finalize, of, shareReplay, tap } from 'rxjs';
 import { API_BASE_URL } from './api.config';
 import { AuthService } from './auth.service';
 
@@ -15,10 +15,16 @@ const IGNORED_MUTATION_PATHS = [
   '/auth/login',
   '/auth/web/login',
   '/auth/refresh',
+  '/auth/web/refresh',
   '/auth/logout',
   '/auth/forgot-password',
   '/auth/verify-recovery-code',
   '/auth/reset-forgotten-password',
+];
+const UNCACHEABLE_GET_PREFIXES = [
+  '/auth/',
+  '/health',
+  '/notifications',
 ];
 
 @Injectable({
@@ -29,6 +35,7 @@ export class ViewCacheService {
 
   private auth = inject(AuthService, { optional: true });
   private store = new Map<string, { data: unknown; updatedAt: number; scope: string }>();
+  private inFlightGets = new Map<string, Observable<HttpEvent<unknown>>>();
   private lastScope = '';
   private dataChangedSubject = new Subject<string>();
   readonly dataChanged$ = this.dataChangedSubject.asObservable();
@@ -81,23 +88,64 @@ export class ViewCacheService {
         this.store.delete(key);
       }
     }
+    this.inFlightGets.clear();
     this.dataChangedSubject.next(sourceUrl);
+  }
+
+  getInFlight(key: string): Observable<HttpEvent<unknown>> | undefined {
+    return this.inFlightGets.get(key);
+  }
+
+  setInFlight(key: string, obs: Observable<HttpEvent<unknown>>): void {
+    this.inFlightGets.set(key, obs);
+  }
+
+  deleteInFlight(key: string): void {
+    this.inFlightGets.delete(key);
   }
 
   clear(): void {
     this.store.clear();
+    this.inFlightGets.clear();
   }
 }
 
 export const viewCacheInvalidationInterceptor: HttpInterceptorFn = (request, next) => {
-  if (!MUTATION_METHODS.has(request.method) || !request.url.startsWith(`${API_BASE_URL}/`)) {
+  if (!request.url.startsWith(`${API_BASE_URL}/`)) {
     return next(request);
   }
   const path = request.url.slice(API_BASE_URL.length);
+  const cache = inject(ViewCacheService);
+
+  if (request.method === 'GET' && !UNCACHEABLE_GET_PREFIXES.some(p => path.startsWith(p))) {
+    const cacheKey = `http:GET:${request.urlWithParams}`;
+    const cached = cache.get<HttpResponse<unknown>>(cacheKey);
+    if (cached) {
+      return of(cached.data.clone());
+    }
+    const existing = cache.getInFlight(cacheKey);
+    if (existing) {
+      return existing;
+    }
+    const shared$ = next(request).pipe(
+      tap(event => {
+        if (event instanceof HttpResponse && event.status === 200) {
+          cache.set(cacheKey, event.clone());
+        }
+      }),
+      finalize(() => cache.deleteInFlight(cacheKey)),
+      shareReplay(1)
+    );
+    cache.setInFlight(cacheKey, shared$);
+    return shared$;
+  }
+
+  if (!MUTATION_METHODS.has(request.method)) {
+    return next(request);
+  }
   if (IGNORED_MUTATION_PATHS.some(ignored => path.startsWith(ignored)) || path.includes('/export')) {
     return next(request);
   }
-  const cache = inject(ViewCacheService);
   return next(request).pipe(
     tap(event => {
       if (event instanceof HttpResponse && event.status >= 200 && event.status < 300) {

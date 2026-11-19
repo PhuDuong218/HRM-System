@@ -191,13 +191,15 @@ public class PayslipService {
         PayslipDetailDTO p = getPayslipDetail(payslipId);
         java.text.DecimalFormat fmt = new java.text.DecimalFormat("#,##0");
 
-        String empCode = (p.getEmployeeCode() != null && !p.getEmployeeCode().isBlank()) ? p.getEmployeeCode() : ("NV-" + p.getEmployeeId());
-        String empName = (p.getEmployeeName() != null && !p.getEmployeeName().isBlank()) ? p.getEmployeeName() : ("Nhân viên #" + p.getEmployeeId());
-        String deptName = (p.getDepartmentName() != null && !p.getDepartmentName().isBlank()) ? p.getDepartmentName() : "—";
-        String posName = (p.getPositionName() != null && !p.getPositionName().isBlank()) ? p.getPositionName() : "Nhân viên";
+        String empCode = escHtml((p.getEmployeeCode() != null && !p.getEmployeeCode().isBlank()) ? p.getEmployeeCode() : ("NV-" + p.getEmployeeId()));
+        String empName = escHtml((p.getEmployeeName() != null && !p.getEmployeeName().isBlank()) ? p.getEmployeeName() : ("Nhân viên #" + p.getEmployeeId()));
+        String deptName = escHtml((p.getDepartmentName() != null && !p.getDepartmentName().isBlank()) ? p.getDepartmentName() : "—");
+        String posName = escHtml((p.getPositionName() != null && !p.getPositionName().isBlank()) ? p.getPositionName() : "Nhân viên");
+        String payslipNumber = escHtml(p.getPayslipNumber());
+        String periodCode = escHtml(p.getPeriodCode());
 
         StringBuilder sb = new StringBuilder();
-        sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Phiếu lương - ").append(p.getPayslipNumber()).append("</title>");
+        sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'><title>Phiếu lương - ").append(payslipNumber).append("</title>");
         sb.append("<style>");
         sb.append("body { font-family: 'Segoe UI', Arial, sans-serif; margin: 36px auto; max-width: 840px; color: #1e293b; background: #fff; }");
         sb.append(".header { text-align: center; border-bottom: 2px solid #004581; padding-bottom: 14px; margin-bottom: 20px; }");
@@ -225,13 +227,13 @@ public class PayslipService {
 
         sb.append("<div class='header'>");
         sb.append("<h2>TRUNG TÂM GIÁO DỤC - PHIẾU THANH TOÁN TIỀN LƯƠNG</h2>");
-        sb.append("<p>Mã số phiếu: <strong>").append(p.getPayslipNumber()).append("</strong> | Ngày phát hành: ").append(p.getIssuedAt()).append("</p>");
+        sb.append("<p>Mã số phiếu: <strong>").append(payslipNumber).append("</strong> | Ngày phát hành: ").append(escHtml(String.valueOf(p.getIssuedAt()))).append("</p>");
         sb.append("</div>");
 
         sb.append("<div class='info-card'>");
         sb.append("<div>Họ và tên nhân viên: <strong>").append(empName).append("</strong> (Mã NV: <strong>").append(empCode).append("</strong>)<br>")
           .append("Phòng ban: <strong>").append(deptName).append("</strong> · Chức vụ: <strong>").append(posName).append("</strong></div>");
-        sb.append("<div style='text-align: right;'>Kỳ làm việc: <strong>").append(p.getPeriodCode()).append("</strong> (Đợt V").append(p.getVersionNo()).append(")<br>")
+        sb.append("<div style='text-align: right;'>Kỳ làm việc: <strong>").append(periodCode).append("</strong> (Đợt V").append(p.getVersionNo()).append(")<br>")
           .append("Trạng thái: <strong style='color:#16a34a;'>Đã chốt & Công bố</strong></div>");
         sb.append("</div>");
 
@@ -243,11 +245,13 @@ public class PayslipService {
             boolean isAdd = "ADD".equalsIgnoreCase(line.getDirection());
             sb.append("<tr>");
             sb.append("<td class='text-center'>").append(stt++).append("</td>");
-            sb.append("<td style='font-weight:600;'>").append(line.getName()).append("</td>");
+            sb.append("<td style='font-weight:600;'>").append(escHtml(line.getName())).append("</td>");
             sb.append("<td>").append(isAdd ? "<span style='color:#16a34a;'>+ Thu nhập</span>" : "<span style='color:#dc2626;'>- Khấu trừ</span>").append("</td>");
             sb.append("<td class='money-col' style='color:").append(isAdd ? "#0f766e" : "#b91c1c").append(";'>")
               .append(isAdd ? "+" : "-").append(fmt.format(line.getAmount())).append(" đ</td>");
-            sb.append("<td style='color:#475569; font-size:12px;'>").append(line.getExplanation() != null ? line.getExplanation() : "—").append(line.getDeductionShareText() == null ? "" : " · " + line.getDeductionShareText()).append("</td>");
+            String explanation = line.getExplanation() != null ? escHtml(line.getExplanation()) : "—";
+            String shareText = line.getDeductionShareText() == null ? "" : " · " + escHtml(line.getDeductionShareText());
+            sb.append("<td style='color:#475569; font-size:12px;'>").append(explanation).append(shareText).append("</td>");
             sb.append("</tr>");
         }
 
@@ -265,6 +269,10 @@ public class PayslipService {
         sb.append("</body></html>");
 
         return sb.toString();
+    }
+
+    private String escHtml(String value) {
+        return value == null ? "" : org.springframework.web.util.HtmlUtils.htmlEscape(value);
     }
 
     private PayslipDetailDTO buildPayslipDetail(Payslip payslip, PayrollDetail detail, PayrollBatch batch) {

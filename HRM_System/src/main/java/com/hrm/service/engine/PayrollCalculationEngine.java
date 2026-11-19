@@ -419,15 +419,33 @@ public class PayrollCalculationEngine {
         return BigDecimal.valueOf(tax).setScale(PayrollConstants.MONEY_DECIMAL_SCALE, PayrollConstants.DEFAULT_ROUNDING_MODE);
     }
 
+    private volatile List<SalaryComponent> cachedComponents = List.of();
+    private volatile long cachedComponentsAt = 0L;
+
+    private List<SalaryComponent> loadComponentsCached() {
+        long now = System.currentTimeMillis();
+        if (now - cachedComponentsAt < 60_000L && !cachedComponents.isEmpty()) {
+            return cachedComponents;
+        }
+        List<SalaryComponent> all = componentRepository.findAll();
+        cachedComponents = all;
+        cachedComponentsAt = now;
+        return all;
+    }
+
     private PayrollLine buildLine(
             Long payrollDetailId, int lineNo, String code, String name, String direction,
             BigDecimal quantity, BigDecimal unitRate, BigDecimal multiplier, BigDecimal amount, String explanation) {
 
-        SalaryComponent comp = componentRepository.findByComponentCode(code)
-                .orElseGet(() -> componentRepository.findAll().stream()
-                        .filter(c -> c.getDirection() != null && direction.equalsIgnoreCase(c.getDirection().name()))
-                        .findFirst()
-                        .orElseThrow(() -> new IllegalStateException("Thiếu cấu hình danh mục salary_components cho mã: " + code)));
+        List<SalaryComponent> allComponents = loadComponentsCached();
+        SalaryComponent comp = allComponents.stream()
+                .filter(c -> code != null && code.equalsIgnoreCase(c.getComponentCode()))
+                .findFirst()
+                .orElseGet(() -> componentRepository.findByComponentCode(code)
+                        .orElseGet(() -> allComponents.stream()
+                                .filter(c -> c.getDirection() != null && direction.equalsIgnoreCase(c.getDirection().name()))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException("Thiếu cấu hình danh mục salary_components cho mã: " + code))));
 
         PayrollLine line = new PayrollLine();
         line.setPayrollDetailId(payrollDetailId);

@@ -4,7 +4,7 @@ import {Router} from '@angular/router';
 import {DatePipe} from '@angular/common';
 import {HttpClient} from '@angular/common/http';
 import {takeUntilDestroyed} from '@angular/core/rxjs-interop';
-import {EMPTY,Subject,catchError,distinctUntilChanged,filter,finalize,forkJoin,fromEvent,map,merge,of,switchMap,timer} from 'rxjs';
+import {EMPTY,Subject,catchError,distinctUntilChanged,filter,finalize,fromEvent,map,merge,of,switchMap,timer} from 'rxjs';
 import {API_BASE_URL} from '../services/api.config';
 interface Notice {id:number;title:string;message:string;eventType:string;referenceType:string;referenceId:number;isRead:boolean;createdAt:string}
 interface Inbox {items:Notice[];totalElements:number;page:number;totalPages:number;unreadCount:number;snapshotId:number}
@@ -15,11 +15,14 @@ export class NotificationBell implements OnInit {
  get badge(){return this.unread>99?'99+':String(this.unread);}
  ngOnInit(){
   const visible=merge(of(!document.hidden),fromEvent(document,'visibilitychange').pipe(map(()=>!document.hidden))).pipe(distinctUntilChanged());
-  const ticks=visible.pipe(switchMap(v=>v?timer(0,15000):EMPTY));
+  const ticks=visible.pipe(switchMap(v=>v?timer(0,60000):EMPTY));
   merge(ticks,this.refresh).pipe(filter(()=>!document.hidden&&!this.busy),switchMap(()=>{
    this.loading=this.open;
    const params:Record<string,string|number|boolean>={page:this.page,size:10};if(this.onlyUnread)params['read']=false;if(this.snapshotId!==undefined&&this.page>0)params['snapshotId']=this.snapshotId;
-   return forkJoin({count:this.http.get<{unreadCount:number}>(API_BASE_URL+'/notifications/unread-count'),list:this.open?this.http.get<Inbox>(API_BASE_URL+'/notifications',{params}):of(null)}).pipe(catchError(e=>{this.loading=false;this.error=this.message(e.status);return of(null);}));
+   if(this.open){
+    return this.http.get<Inbox>(API_BASE_URL+'/notifications',{params}).pipe(map(list=>({count:{unreadCount:list.unreadCount},list})),catchError(e=>{this.loading=false;this.error=this.message(e.status);return of(null);}));
+   }
+   return this.http.get<{unreadCount:number}>(API_BASE_URL+'/notifications/unread-count').pipe(map(count=>({count,list:null as Inbox|null})),catchError(e=>{this.loading=false;this.error=this.message(e.status);return of(null);}));
   }),takeUntilDestroyed(this.destroy)).subscribe(result=>{this.loading=false;if(!result)return;this.error='';this.unread=result.count.unreadCount;if(result.list){this.inbox=result.list;this.snapshotId=result.list.snapshotId;}});
  }
  toggle(){this.open=!this.open;this.detail=null;if(this.open){this.page=0;this.snapshotId=undefined;this.refresh.next();}}

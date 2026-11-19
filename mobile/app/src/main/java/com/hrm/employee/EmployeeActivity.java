@@ -39,7 +39,7 @@ public class EmployeeActivity extends AppCompatActivity {
             runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText(uploaded.optString("reference"));target.setError(null);toast("Đã đính kèm minh chứng");}});
         }catch(Exception error){runOnUiThread(()->{evidenceUploading=false;if(target==leaveEvidenceTarget){target.setText("");target.setError(HrmApi.message(error));target.requestFocus();}});}});
     });
-    private final ExecutorService executor = Executors.newSingleThreadExecutor();
+    private final ExecutorService executor = Executors.newFixedThreadPool(3);
     private HrmApplication session;
     private HrmApi api;
     private MobileNotifications notifications;
@@ -139,8 +139,10 @@ public class EmployeeActivity extends AppCompatActivity {
             }
         });
         findViewById(R.id.employeeRefresh).setOnClickListener(v -> {
-            if (!writing)
+            if (!writing) {
+                if (api != null) api.clearCache();
                 render();
+            }
         });
         notifications=new MobileNotifications(this,api,session,findViewById(R.id.employeeBell),findViewById(R.id.employeeNotificationBadge));
         render();
@@ -149,7 +151,7 @@ public class EmployeeActivity extends AppCompatActivity {
     @Override protected void onResume(){
         super.onResume();
         if(notifications!=null)notifications.start();
-        if(body!=null && api!=null && session!=null && session.token()!=null && !writing && pendingReads==0)render();
+        if(body!=null && body.getChildCount()==0 && api!=null && session!=null && session.token()!=null && !writing && pendingReads==0)render();
     }
 
     @Override protected void onPause(){if(notifications!=null)notifications.stop();super.onPause();}
@@ -4035,6 +4037,8 @@ public class EmployeeActivity extends AppCompatActivity {
             }
             android.webkit.WebView webView = new android.webkit.WebView(this);
             webView.getSettings().setJavaScriptEnabled(false);
+            webView.getSettings().setAllowFileAccess(false);
+            webView.getSettings().setAllowContentAccess(false);
             webView.loadDataWithBaseURL(null, html, "text/html", "UTF-8", null);
             new MaterialAlertDialogBuilder(this)
                     .setTitle("Bản in " + (payslipNumber.isEmpty() ? ("PS-" + payslipId) : payslipNumber))

@@ -3,8 +3,6 @@ import {pendingEditorGuard} from './services/pending-editor.service';
 import {adminGuard} from './services/admin.guard';
 import { Routes } from "@angular/router";
 import { AdminLayout } from "./layout/admin-layout";
-import { ConnectionPage } from "./pages/connection/connection";
-import { PlaceholderPage } from "./pages/placeholder/placeholder";
 import { authGuard, guestGuard } from "./services/auth.guard";
 export const routes: Routes = [
   { path: "login", canActivate: [guestGuard], loadComponent: () => import("./pages/login/login").then(m => m.LoginPage) },
@@ -38,7 +36,7 @@ export const routes: Routes = [
         loadComponent: () => import("./pages/personnel-workspace/personnel-workspace").then(m => m.PersonnelWorkspacePage),
         data: { workspace: "audit" },
       },
-      { path: "connection", component: ConnectionPage, canActivate:[adminGuard] },
+      { path: "connection", loadComponent: () => import("./pages/connection/connection").then(m => m.ConnectionPage), canActivate:[adminGuard] },
       {
         path: "accounts",
         canActivate:[adminGuard],
@@ -117,7 +115,7 @@ export const routes: Routes = [
       },
       {
         path: "forbidden",
-        component: PlaceholderPage,
+        loadComponent: () => import("./pages/placeholder/placeholder").then(m => m.PlaceholderPage),
         data: {
           title: "Không có quyền truy cập",
           message:
@@ -126,7 +124,7 @@ export const routes: Routes = [
       },
       {
         path: "**",
-        component: PlaceholderPage,
+        loadComponent: () => import("./pages/placeholder/placeholder").then(m => m.PlaceholderPage),
         data: {
           title: "404 — Không tìm thấy trang",
           message: "Đường dẫn bạn nhập không tồn tại.",

@@ -37,7 +37,7 @@ export interface CurrentUser {
 }
 
 const SESSION_KEY = 'hrm.session';
-const REFRESH_INTERVAL_MS = 30 * 1000;
+const REFRESH_INTERVAL_MS = 120 * 1000;
 
 export class ManagementAccessDeniedError extends Error {
   constructor() {

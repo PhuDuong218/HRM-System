@@ -1,6 +1,5 @@
 import {NotificationBell} from '../shared/notification-bell';
 import {FormControl, FormGroup, ReactiveFormsModule, Validators} from '@angular/forms';
-import {SearchAssistDirective} from '../shared/search-assist.directive';
 import {ExitWorkflowBanner} from '../shared/exit-workflow-banner';
 import {HrmNotice} from '../shared/ui/notice';
 import {Breadcrumb} from '../shared/breadcrumb';
@@ -22,7 +21,7 @@ import { ThemeService } from '../services/theme.service';
 @Component({
   selector: 'app-admin-layout',
   standalone: true,
-  imports:[NotificationBell,ReactiveFormsModule,SearchAssistDirective,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
+  imports:[NotificationBell,ReactiveFormsModule,ExitWorkflowBanner,HrmNotice,ToastOutlet,Breadcrumb,HrmIcon, DatePipe, RouterLink, RouterLinkActive, RouterOutlet,TranslatePipe],
   templateUrl: './admin-layout.html',
   styleUrl: './admin-layout.css'
 })

@@ -65,15 +65,16 @@ public class PersonnelPrivacyAdvice extends RequestBodyAdviceAdapter implements 
  private static String clean(String v){return v==null||v.isBlank()?null:v.trim();}
  @Override public boolean supports(MethodParameter parameter,Class<? extends HttpMessageConverter<?>> converter){return true;}
  @Override public Object beforeBodyWrite(Object body,MethodParameter parameter,MediaType type,Class<? extends HttpMessageConverter<?>> converter,ServerHttpRequest request,ServerHttpResponse response){
-  var actor=PersonnelScopeService.current();
+  PersonnelScopeService.current();
   if(body instanceof EmployeeDetailDTO detail){if(!scope.canReadPrivate(detail.getEmployeeId())){detail.setAddress(null);detail.setIdentityNumber(null);}return detail;}
   String controller=parameter.getContainingClass().getSimpleName();
   if(!Set.of("G1AuditController","PersonnelAuditController","AuditLogController").contains(controller))return body;
   if(body instanceof Page<?> page)return page.map(row->scrubAudit(row,request));return body;
  }
+ @SuppressWarnings("unchecked")
  public Map<String,Object> scrubAudit(Object row,ServerHttpRequest request){
   Map<String,Object> map=new LinkedHashMap<>(json.convertValue(row,Map.class));
-  var actor=PersonnelScopeService.current();var query=org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams();
+  PersonnelScopeService.current();var query=org.springframework.web.util.UriComponentsBuilder.fromUri(request.getURI()).build().getQueryParams();
   String table=Objects.toString(map.getOrDefault("targetTable",query.getFirst("targetTable")),"");
   String record=Objects.toString(map.getOrDefault("targetRecordKey",map.getOrDefault("recordKey",query.getFirst("recordId"))),"");
   return auditPolicy.row(table,record,map);

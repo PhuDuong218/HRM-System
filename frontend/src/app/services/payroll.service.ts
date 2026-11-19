@@ -1,7 +1,8 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient, HttpParams } from '@angular/common/http';
-import { Observable, catchError } from 'rxjs';
+import { Observable, catchError, of, tap } from 'rxjs';
 import { API_BASE_URL } from './api.config';
+import { ViewCacheService } from './view-cache.service';
 import {
   PayrollPeriod,
   PayrollBatch,
@@ -36,11 +37,16 @@ export interface PayslipDirectory {
 })
 export class PayrollService {
   private http = inject(HttpClient);
+  private cache = inject(ViewCacheService, { optional: true });
   private periodUrl = `${API_BASE_URL}/payroll-periods`;
   private batchUrl = `${API_BASE_URL}/payroll-batches`;
 
   getPeriods(): Observable<PayrollPeriod[]> {
-    return this.http.get<PayrollPeriod[]>(this.periodUrl);
+    const cached = this.cache?.get<PayrollPeriod[]>('payroll:periods');
+    if (cached) return of(cached.data);
+    return this.http.get<PayrollPeriod[]>(this.periodUrl).pipe(
+      tap(rows => this.cache?.set('payroll:periods', rows))
+    );
   }
 
   getBatchesByPeriod(periodId: number): Observable<PayrollBatch[]> {
@@ -130,7 +136,11 @@ export class PayrollService {
 
   // 12. Danh sách phòng ban
   getDepartments(): Observable<Array<{ departmentId: number; departmentCode: string; departmentName: string }>> {
-    return this.http.get<Array<{ departmentId: number; departmentCode: string; departmentName: string }>>(`${API_BASE_URL}/departments`);
+    const cached = this.cache?.get<Array<{ departmentId: number; departmentCode: string; departmentName: string }>>('payroll:departments');
+    if (cached) return of(cached.data);
+    return this.http.get<Array<{ departmentId: number; departmentCode: string; departmentName: string }>>(`${API_BASE_URL}/departments`).pipe(
+      tap(rows => this.cache?.set('payroll:departments', rows))
+    );
   }
 
   // 13. Danh mục phiếu lương & cá nhân

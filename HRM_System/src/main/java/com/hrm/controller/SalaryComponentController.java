@@ -6,12 +6,14 @@ import com.hrm.service.SalaryComponentService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
 @RequestMapping({"/salary-components", "/api/salary-components"}) // Gọi thử: http://localhost:2005/salary-components
+@PreAuthorize("hasAnyRole('ADMIN', 'HR') and hasAuthority('PAYROLL_MANAGE')")
 public class SalaryComponentController {
 
     private final SalaryComponentService service;

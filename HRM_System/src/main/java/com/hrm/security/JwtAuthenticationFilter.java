@@ -23,10 +23,16 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
+
+    private static final long AUTH_CACHE_TTL_MS = 60_000L;
+    private record CachedAuth(AuthenticatedAccount principal, Set<SimpleGrantedAuthority> authorities, int tokenVersion, long expiresAt) {}
+    private final Map<Long, CachedAuth> authCache = new ConcurrentHashMap<>();
 
     private final JwtService jwtService;
     private final AccountRepository accountRepository;
@@ -74,6 +80,14 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
+            long now = System.currentTimeMillis();
+            CachedAuth cached = authCache.get(accountId);
+            if (cached != null && cached.tokenVersion() == tokenVersion && now < cached.expiresAt()) {
+                SecurityContextHolder.getContext().setAuthentication(
+                        new UsernamePasswordAuthenticationToken(cached.principal(), null, cached.authorities()));
+                return;
+            }
+
             Account account = accountRepository.findById(accountId).orElse(null);
 
             if (account == null
@@ -82,6 +96,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     || !employeeRepository.existsByEmployeeIdAndEmploymentStatus(
                             account.getEmployeeId(),
                             EmploymentStatus.DANG_LAM)) {
+                authCache.remove(accountId);
                 return;
             }
 
@@ -91,10 +106,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                     account.getUsername(),
                     account.getRole().getRoleCode());
 
+            Set<SimpleGrantedAuthority> authorities = buildAuthorities(account);
+            authCache.put(accountId, new CachedAuth(principal, authorities, tokenVersion, now + AUTH_CACHE_TTL_MS));
+
             UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
                     principal,
                     null,
-                    buildAuthorities(account));
+                    authorities);
 
             SecurityContextHolder.getContext().setAuthentication(authentication);
 

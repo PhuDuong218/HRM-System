@@ -469,6 +469,7 @@ export class PayrollPage implements OnInit {
       this.errorMessage = 'Trình duyệt đang chặn cửa sổ in.';
       return;
     }
+    printWindow.opener = null;
 
     req$.subscribe({
       next: (html: string) => {
@@ -949,6 +950,7 @@ export class PayrollPage implements OnInit {
       this.errorMessage = 'Trình duyệt đang chặn cửa sổ in.';
       return;
     }
+    printWindow.opener = null;
     req$.subscribe({
       next: (html: string) => {
         printWindow.document.open();
@@ -977,6 +979,7 @@ export class PayrollPage implements OnInit {
       this.errorMessage = 'Trình duyệt đang chặn cửa sổ in. Vui lòng cho phép mở popup để in/lưu PDF.';
       return;
     }
+    printWindow.opener = null;
 
     const fmt = (n: number | null | undefined) =>
       Math.round(Number(n || 0)).toLocaleString('vi-VN');

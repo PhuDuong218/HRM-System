@@ -207,9 +207,11 @@ public class PayrollExecutionService {
      * để cả Web Admin và Mobile App hiển thị đầy đủ các dòng phạt đi trễ / về sớm từng phút,
      * cắt phụ cấp cơm trưa (> 1/2 ngày) và khấu trừ nghỉ không phép mà vẫn giữ nguyên payroll_detail_id & payslip_id.
      */
+    private volatile boolean legacyBatchesUpgraded = false;
+
     @Transactional
     public void upgradeAllLegacyBatchesIfNeeded() {
-        if (jdbc == null || batchRepository == null) {
+        if (legacyBatchesUpgraded || jdbc == null || batchRepository == null) {
             return;
         }
         try {
@@ -224,6 +226,7 @@ public class PayrollExecutionService {
                     upgradeLegacyBatchIfNeeded(bId);
                 }
             }
+            legacyBatchesUpgraded = true;
         } catch (Exception ignored) {
         }
     }

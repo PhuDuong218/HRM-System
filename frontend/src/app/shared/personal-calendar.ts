@@ -52,9 +52,10 @@ export class PersonalCalendarComponent extends OvertimeCalendarComponent impleme
  setMode(weekly:boolean){if(this.saving)return;this.weekly=weekly;this.load();}
  setKind(kind:string){if(this.saving)return;this.kind=kind;this.load();}
  today(){if(!this.saving){this.anchor=this.localDate();this.load();}}
- private async all<T>(url:string,from:string,to:string):Promise<T[]>{let page=0,total=1;const rows:T[]=[];do{const params=new HttpParams().set('mine',true).set('from',from).set('to',to).set('page',page);const r=await firstValueFrom(this.client.get<Page<T>>(API_BASE_URL+url,{params}).pipe(takeUntilDestroyed(this.lifecycle)));rows.push(...r.items);total=r.totalPages;page++;}while(page<total);return rows;}
+ private async all<T>(url:string,from:string,to:string):Promise<T[]>{let page=0,total=1;const rows:T[]=[];do{let params=new HttpParams().set('mine',true).set('from',from).set('to',to).set('page',page);if(url==='/attendance-workspace/records')params=params.set('size',100).set('includeStats',false);const r=await firstValueFrom(this.client.get<Page<T>>(API_BASE_URL+url,{params}).pipe(takeUntilDestroyed(this.lifecycle)));rows.push(...r.items);total=r.totalPages;page++;}while(page<total);return rows;}
  override load(_page=0,force=false){if(this.saving)return;const first=this.first,last=this.last,kind=this.kind;
   const cacheKey=`schedules:personal-cal:${this.attendance?'att':'sch'}:${kind}:${first}:${last}`;
+  if(force)this.cache?.invalidate('http:GET:');
   if(!force){
    const cached=this.cache?.get<{entries:Entry[];days:{date:string;entries:Entry[]}[]}>(cacheKey,this.AUTO_REFRESH_MS);
    if(cached){

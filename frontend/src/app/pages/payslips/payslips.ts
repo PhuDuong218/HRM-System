@@ -141,10 +141,11 @@ export class PayslipsPage implements OnInit {
   // Sử dụng Service tải HTML qua HTTP Client (hỗ trợ JWT, không hardcode cổng)
   printCurrentPayslip(): void {
     if (!this.selectedPayslip) return;
-    this.payrollService.getPayslipHtml(this.selectedPayslip.payslipId).subscribe({
+    this.payrollService.getPayslipHtml(this.selectedPayslip.payslipId).pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: (htmlContent) => {
         const printWin = window.open('', '_blank');
         if (printWin) {
+          printWin.opener = null;
           printWin.document.open();
           printWin.document.write(htmlContent);
           printWin.document.close();

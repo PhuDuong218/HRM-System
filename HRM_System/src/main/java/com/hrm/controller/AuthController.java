@@ -38,7 +38,11 @@ public class AuthController {
 
     @PostMapping("/web/refresh")
     public ResponseEntity<LoginResponse> refreshWeb(@AuthenticationPrincipal AuthenticatedAccount account,
-                                                    @RequestHeader("Authorization") String authorization) {
+                                                    @RequestHeader(value = "Authorization", required = false) String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ") || authorization.length() <= 7) {
+            throw new org.springframework.web.server.ResponseStatusException(
+                    org.springframework.http.HttpStatus.UNAUTHORIZED, "Thiếu token xác thực hợp lệ.");
+        }
         return ResponseEntity.ok(authService.refreshWeb(account, authorization.substring(7)));
     }
 

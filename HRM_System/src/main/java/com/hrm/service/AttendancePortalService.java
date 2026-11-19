@@ -227,26 +227,39 @@ public class AttendancePortalService {
     }
     @Transactional(value="scheduleTransactionManager",readOnly=true)
     public Search search(AuthenticatedAccount p,boolean mine,LocalDate from,LocalDate to,String q,Long department,String verification,String anomaly,int page){
+        return search(p,mine,from,to,q,department,null,verification,anomaly,page,20,true);
+    }
+    @Transactional(value="scheduleTransactionManager",readOnly=true)
+    public Search search(AuthenticatedAccount p,boolean mine,LocalDate from,LocalDate to,String q,Long department,Long employeeId,String verification,String anomaly,int page,int size){
+        return search(p,mine,from,to,q,department,employeeId,verification,anomaly,page,size,true);
+    }
+    @Transactional(value="scheduleTransactionManager",readOnly=true)
+    public Search search(AuthenticatedAccount p,boolean mine,LocalDate from,LocalDate to,String q,Long department,Long employeeId,String verification,String anomaly,int page,int size,boolean includeStats){
         Actor a=actor(p);range(from,to,page);Scope scope=scope(a,mine);
+        int pageSize=Math.max(1,Math.min(size,100));
         StringBuilder where=new StringBuilder(FROM).append(scope.sql()).append(" AND s.work_date BETWEEN ? AND ?");
         List<Object> args=new ArrayList<>(scope.args());args.add(from);args.add(to);
+        if(employeeId!=null){if(employeeId<=0)throw error(HttpStatus.BAD_REQUEST,"Nhân viên không hợp lệ.");where.append(" AND s.employee_id=?");args.add(employeeId);}
         if(q!=null&&!q.isBlank()){if(q.length()>200||q.trim().matches("-\\d+(\\.\\d+)?"))throw error(HttpStatus.BAD_REQUEST,"Mã hoặc tên nhân viên không hợp lệ.");String normalized=java.text.Normalizer.normalize(q.trim().replaceAll("\\s+"," ").replace('—','-').replace('–','-'),java.text.Normalizer.Form.NFD).replaceAll("\\p{M}+","").replace('đ','d').replace('Đ','D');String text="%"+normalized.replace("[","[[]").replace("%","[%]").replace("_","[_]")+"%";where.append(" AND (e.employee_code COLLATE Latin1_General_100_CI_AI LIKE ? OR REPLACE(REPLACE(CONCAT(e.employee_code,N' - ',e.full_name),N'đ',N'd'),N'Đ',N'D') COLLATE Latin1_General_100_CI_AI LIKE ?)");args.add(text);args.add(text);}
         if(department!=null){if(department<=0)throw error(HttpStatus.BAD_REQUEST,"Phòng ban không hợp lệ.");where.append(" AND dep.department_id=?");args.add(department);}
         if(verification!=null&&!verification.isBlank()){if(!Set.of("CHUA_XAC_NHAN","DA_XAC_NHAN","CHUA_CO_CONG","CHUA_HOAN_TAT").contains(verification))throw error(HttpStatus.BAD_REQUEST,"Trạng thái không hợp lệ.");if(verification.equals("CHUA_CO_CONG"))where.append(" AND ar.attendance_id IS NULL");else if(verification.equals("CHUA_HOAN_TAT"))where.append(" AND (ar.attendance_id IS NULL OR ar.verification_status='CHUA_XAC_NHAN')");else {where.append(" AND ar.verification_status=?");args.add(verification);}}
         String late="ar.actual_start>DATEADD(minute,15,s.planned_start)",early="ar.actual_end<s.planned_end",mi="ar.actual_start IS NULL AND s.planned_end<?",mo="ar.actual_start IS NOT NULL AND ar.actual_end IS NULL AND DATEADD(hour,2,s.planned_end)<?";
         if(anomaly!=null&&!anomaly.isBlank()){switch(anomaly){case "DI_MUON"->where.append(" AND ").append(late);case "VE_SOM"->where.append(" AND ").append(early);case "VANG"->where.append(" AND ar.attendance_result='VANG'");case "THIEU_GIO"->{where.append(" AND ( (").append(mi).append(") OR (").append(mo).append(")) AND (ar.attendance_result IS NULL OR ar.attendance_result<>'VANG')");args.add(now());args.add(now());}default->throw error(HttpStatus.BAD_REQUEST,"Bất thường không hợp lệ.");}}
         Long count=db.queryForObject("SELECT COUNT_BIG(*) "+where,Long.class,args.toArray());long total=count==null?0:count;
-        List<Object> paged=new ArrayList<>(args);paged.add(page*20);paged.add(20);
+        List<Object> paged=new ArrayList<>(args);paged.add(page*pageSize);paged.add(pageSize);
         List<Row> items=db.query(FIELDS+where+" ORDER BY s.work_date DESC,s.schedule_id DESC OFFSET ? ROWS FETCH NEXT ? ROWS ONLY",(rs,n)->map(rs,a,mine),paged.toArray());
-        List<Object> statArgs=new ArrayList<>();statArgs.add(now());statArgs.add(now());statArgs.addAll(args);
-        Stats stats=db.queryForObject("""
-          SELECT COALESCE(SUM(CASE WHEN ar.verification_status='CHUA_XAC_NHAN' THEN CAST(1 AS bigint) ELSE 0 END),0),
-          COALESCE(SUM(CASE WHEN ar.verification_status='DA_XAC_NHAN' THEN CAST(1 AS bigint) ELSE 0 END),0),
-          COALESCE(SUM(CASE WHEN (ar.attendance_result IS NULL OR ar.attendance_result<>'VANG') AND
-            ((ar.actual_start IS NULL AND s.planned_end<?) OR (ar.actual_start IS NOT NULL AND ar.actual_end IS NULL AND DATEADD(hour,2,s.planned_end)<?)) THEN CAST(1 AS bigint) ELSE 0 END),0),
-          COALESCE(SUM(CASE WHEN ar.actual_start>DATEADD(minute,15,s.planned_start) OR ar.actual_end<s.planned_end OR ar.attendance_result='VANG' THEN CAST(1 AS bigint) ELSE 0 END),0)
-          """+where,(rs,n)->new Stats(rs.getLong(1),rs.getLong(2),rs.getLong(3),rs.getLong(4),openCount(a,mine)),statArgs.toArray());
-        return new Search(items,page,20,total,(int)((total+19)/20),stats);
+        Stats stats=null;
+        if(includeStats){
+            List<Object> statArgs=new ArrayList<>();statArgs.add(now());statArgs.add(now());statArgs.addAll(args);
+            stats=db.queryForObject("""
+              SELECT COALESCE(SUM(CASE WHEN ar.verification_status='CHUA_XAC_NHAN' THEN CAST(1 AS bigint) ELSE 0 END),0),
+              COALESCE(SUM(CASE WHEN ar.verification_status='DA_XAC_NHAN' THEN CAST(1 AS bigint) ELSE 0 END),0),
+              COALESCE(SUM(CASE WHEN (ar.attendance_result IS NULL OR ar.attendance_result<>'VANG') AND
+                ((ar.actual_start IS NULL AND s.planned_end<?) OR (ar.actual_start IS NOT NULL AND ar.actual_end IS NULL AND DATEADD(hour,2,s.planned_end)<?)) THEN CAST(1 AS bigint) ELSE 0 END),0),
+              COALESCE(SUM(CASE WHEN ar.actual_start>DATEADD(minute,15,s.planned_start) OR ar.actual_end<s.planned_end OR ar.attendance_result='VANG' THEN CAST(1 AS bigint) ELSE 0 END),0)
+              """+where,(rs,n)->new Stats(rs.getLong(1),rs.getLong(2),rs.getLong(3),rs.getLong(4),openCount(a,mine)),statArgs.toArray());
+        }
+        return new Search(items,page,pageSize,total,(int)((total+pageSize-1)/pageSize),stats);
     }
     private List<Audit> auditList(String table,long id){return db.query("""
         SELECT a.action,COALESCE(u.username,N'Hệ thống'),a.occurred_at,a.reason FROM dbo.audit_logs a

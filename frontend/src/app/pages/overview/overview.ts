@@ -184,6 +184,7 @@ export class OverviewPage implements OnInit {
   }
 
   load(force = true): void {
+    if (force) this.cache?.invalidate('http:GET:');
     if (!force && this.cache) {
       const cached = this.cache.get<OverviewSnapshot>(this.cacheKey, this.autoRefreshMs);
       if (cached) {

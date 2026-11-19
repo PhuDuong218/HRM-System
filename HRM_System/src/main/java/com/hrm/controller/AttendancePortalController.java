@@ -21,9 +21,22 @@ public class AttendancePortalController {
     @GetMapping("/calendar-policy") public Object calendarPolicy(@AuthenticationPrincipal AuthenticatedAccount a){return service.calendarInfo(a);}
     @GetMapping("/departments") public Object departments(@AuthenticationPrincipal AuthenticatedAccount a){return service.departments(a);}
     @GetMapping("/pending") public Object pending(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="0") int page){return service.pending(a,page);}
-    @GetMapping("/records") public Object records(@AuthenticationPrincipal AuthenticatedAccount a,@RequestParam(defaultValue="false") boolean mine,
-      @RequestParam LocalDate from,@RequestParam LocalDate to,@RequestParam(required=false) String q,@RequestParam(required=false) Long departmentId,
-      @RequestParam(required=false) String verification,@RequestParam(required=false) String anomaly,@RequestParam(defaultValue="0") int page){return service.search(a,mine,from,to,q,departmentId,verification,anomaly,page);}
+    @GetMapping("/records")
+    public Object records(
+            @AuthenticationPrincipal AuthenticatedAccount a,
+            @RequestParam(defaultValue = "false") boolean mine,
+            @RequestParam LocalDate from,
+            @RequestParam LocalDate to,
+            @RequestParam(required = false) String q,
+            @RequestParam(required = false) Long departmentId,
+            @RequestParam(required = false) Long employeeId,
+            @RequestParam(required = false) String verification,
+            @RequestParam(required = false) String anomaly,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "20") int size,
+            @RequestParam(defaultValue = "true") boolean includeStats) {
+        return service.search(a, mine, from, to, q, departmentId, employeeId, verification, anomaly, page, size, includeStats);
+    }
     @GetMapping("/schedules/{id}") public Object detail(@AuthenticationPrincipal AuthenticatedAccount a,@PathVariable long id,@RequestParam(defaultValue="false") boolean mine){return service.detail(a,mine,id);}
     @PostMapping("/schedules/{id}/remind-missing-clock")
     public void remindMissingClock(@AuthenticationPrincipal AuthenticatedAccount actor, @PathVariable long id) {

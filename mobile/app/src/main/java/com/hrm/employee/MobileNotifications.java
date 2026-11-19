@@ -17,8 +17,8 @@ public final class MobileNotifications {
  private final AppCompatActivity activity;private final HrmApi api;private final HrmApplication session;private final TextView badge;
  private final Handler handler=new Handler(Looper.getMainLooper());private final ExecutorService executor=Executors.newSingleThreadExecutor();
  private long latestNotification=-1;
- private boolean active=false,countBusy=false,listBusy=false,writing=false,unreadOnly=false;private int generation=0,page=0,listVersion=0;private Long snapshot=null;private AlertDialog dialog;private LinearLayout content;
- private final Runnable poll=new Runnable(){public void run(){if(!active)return;refreshCount();if(dialog!=null&&dialog.isShowing())load();handler.postDelayed(this,15000);}};
+ private boolean active=false,countBusy=false,listBusy=false,writing=false,unreadOnly=false,channelCreated=false;private int generation=0,page=0,listVersion=0;private Long snapshot=null;private AlertDialog dialog;private LinearLayout content;
+ private final Runnable poll=new Runnable(){public void run(){if(!active)return;if(dialog!=null&&dialog.isShowing())load();else refreshCount();handler.postDelayed(this,30000);}};
  public MobileNotifications(AppCompatActivity activity,HrmApi api,HrmApplication session,View trigger,TextView badge){this.activity=activity;this.api=api;this.session=session;this.badge=badge;trigger.setOnClickListener(v->open());}
  public void start(){if(active)return;active=true;handler.post(poll);}
  public void stop(){active=false;++generation;handler.removeCallbacks(poll);countBusy=false;listBusy=false;writing=false;if(dialog!=null)dialog.dismiss();dialog=null;}
@@ -35,10 +35,11 @@ public final class MobileNotifications {
    android.app.NotificationManager nm=(android.app.NotificationManager)activity.getSystemService(android.content.Context.NOTIFICATION_SERVICE);
    if(nm==null)return;
    String channelId="hrm_popup_alerts";
-   if(android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.O){
+   if(!channelCreated&&android.os.Build.VERSION.SDK_INT>=android.os.Build.VERSION_CODES.O){
     android.app.NotificationChannel ch=new android.app.NotificationChannel(channelId,"Thông báo HRM",android.app.NotificationManager.IMPORTANCE_HIGH);
     ch.setDescription("Thông báo nhảy trên màn hình chính khi có cập nhật mới");
     nm.createNotificationChannel(ch);
+    channelCreated=true;
    }
    androidx.core.app.NotificationCompat.Builder b=new androidx.core.app.NotificationCompat.Builder(activity,channelId)
     .setSmallIcon(android.R.drawable.ic_dialog_info)

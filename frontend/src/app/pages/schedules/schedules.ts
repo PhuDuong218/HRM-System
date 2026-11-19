@@ -131,7 +131,9 @@ export class SchedulesPage implements OnInit {
       .subscribe(() => {
         if (!this.busy && !this.personal) this.load(false, true);
       });
-    timer(0, 1000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.currentTime = Date.now());
+    timer(0, 15000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => {
+      if (typeof document === 'undefined' || !document.hidden) this.currentTime = Date.now();
+    });
   }
   private saveUiState(): void {
     this.cache?.set(this.UI_STATE_CACHE_KEY, {
@@ -184,6 +186,7 @@ export class SchedulesPage implements OnInit {
   refreshAll(): void {
     if (this.busy || this.lookupLoading) return;
     this.cache?.invalidate('schedules:');
+    this.cache?.invalidate('http:GET:');
     this.loadLookups(true);
     if (!this.personal) this.load(false, true);
   }
@@ -358,6 +361,7 @@ export class SchedulesPage implements OnInit {
       shiftId: this.filterShift.selected?.shift.shiftId ?? null,
       departmentId: this.departmentId || null,
     });
+    if (force) this.cache?.invalidate('http:GET:');
     if (!force) {
       const cached = this.cache?.get<Page<Row>>(cacheKey, this.AUTO_REFRESH_MS);
       if (cached) {

@@ -2,12 +2,14 @@ import {HrmNotice} from '../../shared/ui/notice';
 import {PageHeader} from '../../shared/page-header';
 import {HrmButton} from '../../shared/ui/button';
 import {TranslatePipe} from '../../shared/translate.pipe';
-import { Component, inject } from '@angular/core';
+import { Component, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { HttpErrorResponse } from '@angular/common/http';
 import { HealthService } from '../../services/health.service';
 @Component({imports:[HrmNotice,PageHeader,HrmButton,TranslatePipe], selector: 'app-connection', standalone: true, templateUrl: './connection.html' })
 export class ConnectionPage {
   private healthService = inject(HealthService);
+  private destroyRef = inject(DestroyRef);
   loading = false;
   response = '';
   error = '';
@@ -18,7 +20,7 @@ export class ConnectionPage {
     this.response = '';
     this.error = '';
     this.success = false;
-    this.healthService.check().subscribe({
+    this.healthService.check().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
       next: text => {
         this.response = text;
         this.success = true;
