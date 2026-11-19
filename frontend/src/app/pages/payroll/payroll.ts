@@ -962,6 +962,221 @@ export class PayrollPage implements OnInit {
     });
   }
 
+  /**
+   * In / Xuất PDF toàn bộ bảng lịch sử lương theo đúng bộ lọc người dùng đang chọn
+   * (theo Năm, Quý, Tháng hiện có, Phòng ban, Nhân viên cụ thể, Trạng thái)
+   */
+  printFilteredHistoryPdf(): void {
+    const rows = this.historyRows || [];
+    if (rows.length === 0) {
+      this.errorMessage = 'Không có dữ liệu lịch sử lương nào trong bộ lọc hiện tại để in PDF.';
+      return;
+    }
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) {
+      this.errorMessage = 'Trình duyệt đang chặn cửa sổ in. Vui lòng cho phép mở popup để in/lưu PDF.';
+      return;
+    }
+
+    const fmt = (n: number | null | undefined) =>
+      Math.round(Number(n || 0)).toLocaleString('vi-VN');
+    const esc = (s: unknown) =>
+      String(s ?? '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;');
+
+    const uniqueEmps = new Map<string, { code: string; name: string; dept: string; pos: string }>();
+    const uniquePeriods = new Set<string>();
+    let totalDays = 0;
+    let totalOt = 0;
+
+    for (const r of rows) {
+      uniquePeriods.add(r.periodCode);
+      totalDays += Number(r.actualWorkDays || 0);
+      totalOt += Number(r.overtimeHours || 0);
+      if (r.employeeCode && !uniqueEmps.has(r.employeeCode)) {
+        uniqueEmps.set(r.employeeCode, {
+          code: r.employeeCode,
+          name: r.fullName,
+          dept: r.departmentName,
+          pos: r.positionName
+        });
+      }
+    }
+
+    const singleEmp = uniqueEmps.size === 1 ? Array.from(uniqueEmps.values())[0] : null;
+    const sortedPeriodCodes = Array.from(uniquePeriods).sort();
+
+    let scopeTimeText = 'Tất cả các kỳ hiện có';
+    if (this.historyPeriodCode) {
+      scopeTimeText = `Kỳ lương ${this.historyPeriodCode}`;
+    } else if (this.historyQuarter !== null) {
+      scopeTimeText = `Quý ${this.historyQuarter}${this.historyYear ? '/' + this.historyYear : ''} (${sortedPeriodCodes.length} tháng hiện có: ${sortedPeriodCodes.join(', ')})`;
+    } else if (this.historyYear !== null) {
+      scopeTimeText = `Năm ${this.historyYear} (${sortedPeriodCodes.length}/12 tháng hiện có: ${sortedPeriodCodes.join(', ')})`;
+    } else if (sortedPeriodCodes.length > 0) {
+      scopeTimeText = `Các tháng hiện có (${sortedPeriodCodes.join(', ')})`;
+    }
+
+    const deptLabel =
+      this.historyDeptId != null
+        ? this.departments.find((d) => d.departmentId === this.historyDeptId)?.departmentName || `Phòng ban #${this.historyDeptId}`
+        : 'Tất cả phòng ban';
+
+    const statusLabel =
+      this.historyStatus === 'CONG_BO'
+        ? 'Đã công bố'
+        : this.historyStatus === 'DA_CHOT'
+          ? 'Đã chốt'
+          : this.historyStatus === 'NHAP'
+            ? 'Đang nháp'
+            : 'Tất cả trạng thái';
+
+    const empLabel = singleEmp
+      ? `${singleEmp.code} — ${singleEmp.name} (${singleEmp.dept} · ${singleEmp.pos})`
+      : this.historyEmployeeCode
+        ? this.historyEmployeeCode
+        : this.historyKeyword.trim()
+          ? `Tìm kiếm: "${this.historyKeyword.trim()}" (${uniqueEmps.size} nhân sự)`
+          : `Tất cả nhân viên (${uniqueEmps.size} nhân sự)`;
+
+    const reportTitle = singleEmp
+      ? `BẢNG TỔNG HỢP LƯƠNG CÁ NHÂN — ${singleEmp.name.toUpperCase()} (${singleEmp.code})`
+      : 'BẢNG TỔNG HỢP LỊCH SỬ TIỀN LƯƠNG NHÂN VIÊN';
+
+    const nowStr = new Date().toLocaleString('vi-VN');
+
+    const rowsHtml = rows
+      .map((r, idx) => {
+        const stText =
+          r.batchStatus === 'CONG_BO'
+            ? 'Đã công bố'
+            : r.batchStatus === 'DA_CHOT'
+              ? 'Đã chốt'
+              : 'Đang nháp';
+        return `<tr>
+          <td class="tc">${idx + 1}</td>
+          <td class="tc fw">${esc(r.periodCode)}</td>
+          <td class="tc">v${r.versionNo}</td>
+          <td class="tc">${esc(stText)}</td>
+          <td class="fw">${esc(r.employeeCode)}</td>
+          <td class="fw">${esc(r.fullName)}</td>
+          <td>${esc(r.departmentName)}<br><span class="muted">${esc(r.positionName)}</span></td>
+          <td class="tc">${r.actualWorkDays} công${r.overtimeHours > 0 ? `<br><span class="ot">+${r.overtimeHours}h OT</span>` : ''}</td>
+          <td class="tr mono">${fmt(r.totalGross)} đ</td>
+          <td class="tr mono ded">-${fmt(r.totalDeduction)} đ</td>
+          <td class="tr mono net">${fmt(r.netSalary)} đ</td>
+        </tr>`;
+      })
+      .join('');
+
+    const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>${esc(reportTitle)}</title>
+  <style>
+    @page { size: A4 landscape; margin: 12mm; }
+    body { font-family: 'Segoe UI', Arial, sans-serif; color: #0f172a; margin: 20px auto; max-width: 1120px; background: #fff; font-size: 12.5px; }
+    .toolbar { display: flex; justify-content: flex-end; gap: 10px; margin-bottom: 16px; }
+    .btn { padding: 8px 16px; border-radius: 6px; border: 1px solid #cbd5e1; cursor: pointer; font-weight: 600; font-size: 13px; background: #fff; color: #1e293b; }
+    .btn-primary { background: #004581; color: #fff; border-color: #004581; }
+    .header { text-align: center; border-bottom: 2px solid #004581; padding-bottom: 12px; margin-bottom: 16px; }
+    .header h1 { margin: 0 0 4px 0; font-size: 19px; color: #004581; letter-spacing: 0.3px; }
+    .header p { margin: 0; color: #475569; font-size: 12.5px; }
+    .meta-box { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 24px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 16px; margin-bottom: 14px; font-size: 12.5px; }
+    .summary-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat { border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px 12px; background: #fff; }
+    .stat small { display: block; color: #64748b; font-size: 11px; text-transform: uppercase; font-weight: 700; margin-bottom: 3px; }
+    .stat strong { font-size: 15px; }
+    table { width: 100%; border-collapse: collapse; margin-bottom: 18px; }
+    th, td { border: 1px solid #cbd5e1; padding: 7px 8px; vertical-align: middle; }
+    th { background: #f1f5f9; color: #004581; font-weight: 700; font-size: 12px; text-align: left; }
+    .tc { text-align: center; }
+    .tr { text-align: right; }
+    .fw { font-weight: 600; }
+    .muted { color: #64748b; font-size: 11px; }
+    .ot { color: #0284c7; font-size: 11px; font-weight: 600; }
+    .mono { font-family: 'Consolas', 'Courier New', monospace; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    .ded { color: #b91c1c; }
+    .net { color: #004581; font-weight: 700; }
+    .total-row td { background: #eff6ff; font-weight: 700; font-size: 13px; }
+    .notice { background: #eff6ff; border: 1px solid #bfdbfe; color: #1e3a8a; border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; font-size: 12px; }
+    .signs { display: grid; grid-template-columns: repeat(3, 1fr); text-align: center; margin-top: 28px; }
+    .signs div { min-height: 85px; }
+    @media print { .no-print { display: none !important; } body { margin: 0; max-width: none; } }
+  </style>
+</head>
+<body>
+  <div class="toolbar no-print">
+    <button class="btn btn-primary" onclick="window.print()">🖨 In / Lưu thành file PDF</button>
+    <button class="btn" onclick="window.close()">Đóng</button>
+  </div>
+
+  <div class="header">
+    <h1>${esc(reportTitle)}</h1>
+    <p>Hệ thống Quản trị Nhân sự &amp; Tiền lương (HRM Center) · Xuất báo cáo lúc ${esc(nowStr)}</p>
+  </div>
+
+  <div class="meta-box">
+    <div><strong>Phạm vi thời gian:</strong> ${esc(scopeTimeText)}</div>
+    <div><strong>Phòng ban:</strong> ${esc(deptLabel)}</div>
+    <div><strong>Đối tượng nhân sự:</strong> ${esc(empLabel)}</div>
+    <div><strong>Trạng thái đợt lương:</strong> ${esc(statusLabel)}</div>
+  </div>
+
+  ${this.historyMonthsNotice ? `<div class="notice">📅 <strong>Ghi chú phạm vi dữ liệu:</strong> ${esc(this.historyMonthsNotice)}</div>` : ''}
+
+  <div class="summary-grid">
+    <div class="stat"><small>Số bản ghi trong báo cáo</small><strong>${rows.length} bản ghi</strong></div>
+    <div class="stat"><small>Tổng thu nhập (Gross)</small><strong style="color:#004581;">${fmt(this.historyTotalGross)} đ</strong></div>
+    <div class="stat"><small>Tổng khấu trừ &amp; phạt</small><strong style="color:#b91c1c;">-${fmt(this.historyTotalDeduction)} đ</strong></div>
+    <div class="stat"><small>Tổng thực lĩnh (Net)</small><strong style="color:#15803d;">${fmt(this.historyTotalNet)} đ</strong></div>
+  </div>
+
+  <table>
+    <thead>
+      <tr>
+        <th class="tc" style="width:36px;">STT</th>
+        <th class="tc" style="width:74px;">Kỳ lương</th>
+        <th class="tc" style="width:46px;">Đợt</th>
+        <th class="tc" style="width:86px;">Trạng thái</th>
+        <th style="width:82px;">Mã NV</th>
+        <th>Họ và tên nhân viên</th>
+        <th>Phòng ban / Chức vụ</th>
+        <th class="tc" style="width:86px;">Công / OT</th>
+        <th class="tr" style="width:118px;">Tổng Gross</th>
+        <th class="tr" style="width:112px;">Khấu trừ</th>
+        <th class="tr" style="width:124px;">Thực lĩnh (Net)</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${rowsHtml}
+      <tr class="total-row">
+        <td colspan="7" class="tr">TỔNG CỘNG (${rows.length} bản ghi):</td>
+        <td class="tc">${Number(totalDays.toFixed(2))} công${totalOt > 0 ? `<br><span class="ot">+${Number(totalOt.toFixed(2))}h OT</span>` : ''}</td>
+        <td class="tr mono">${fmt(this.historyTotalGross)} đ</td>
+        <td class="tr mono ded">-${fmt(this.historyTotalDeduction)} đ</td>
+        <td class="tr mono net">${fmt(this.historyTotalNet)} đ</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="signs">
+    <div><strong>Người lập biểu</strong><br><span class="muted">(Ký, ghi rõ họ tên)</span></div>
+    <div><strong>Kế toán tiền lương</strong><br><span class="muted">(Ký, ghi rõ họ tên)</span></div>
+    <div><strong>Ban Giám đốc</strong><br><span class="muted">(Ký, đóng dấu xác nhận)</span></div>
+  </div>
+</body>
+</html>`;
+
+    printWindow.document.open();
+    printWindow.document.write(html);
+    printWindow.document.close();
+  }
+
   private extractPeriodYearMonth(p: { periodCode?: string; periodStart?: string }): {
     year: number;
     month: number;

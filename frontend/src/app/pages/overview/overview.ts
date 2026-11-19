@@ -7,13 +7,41 @@ import { HttpErrorResponse } from '@angular/common/http';
 import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
-import { EMPTY, Subscription, catchError, exhaustMap, filter, timer } from 'rxjs';
+import { EMPTY, Subscription, catchError, debounceTime, filter, timer } from 'rxjs';
 import { AuthService } from '../../services/auth.service';
 import { LanguageService } from '../../services/language.service';
+import { ViewCacheService } from '../../services/view-cache.service';
 import { ContractReport, EmployeeReport, GroupRow, OverviewMonth, PayrollBatch, PayrollReport, PendingItem, PendingOverview, ReportFilters, ReportService, WorkReport } from '../../services/report.service';
 
 type LoadState = 'loading' | 'ready' | 'error';
 interface StatusItem { label: string; count: number; color: string; }
+interface OverviewSnapshot {
+  today: string;
+  fromDate: string;
+  filters: ReportFilters;
+  isHr: boolean;
+  isAdmin: boolean;
+  attendanceStatus: { workDate: string; present: number; absent: number; leave: number; missing: number } | null;
+  attendanceState: LoadState;
+  months: OverviewMonth[];
+  trendsState: LoadState;
+  batches: PayrollBatch[];
+  selectedPayrollId: string;
+  payroll: PayrollBatch | null;
+  payrollState: LoadState | 'denied';
+  pending: PendingOverview | null;
+  pendingState: LoadState;
+  pendingError: string;
+  employeeReport: EmployeeReport | null;
+  contracts: ContractReport | null;
+  work: WorkReport | null;
+  employeeState: LoadState;
+  contractState: LoadState;
+  workState: LoadState;
+  employeeError: string;
+  contractError: string;
+  workError: string;
+}
 
 @Component({
   selector: 'app-overview', standalone: true, imports:[HrmNotice,PageHeader,HrmButton,RouterLink,FormsModule],
@@ -24,9 +52,14 @@ export class OverviewPage implements OnInit {
   private api = inject(ReportService);
   private router = inject(Router, { optional: true });
   private auth = inject(AuthService);
+  private cache = inject(ViewCacheService, { optional: true });
   private destroyRef = inject(DestroyRef);
   private requests = new Subscription();
+  private autoRefreshSub?: Subscription;
   private pendingRequest?: Subscription;
+  private readonly cacheKey = 'overview:snapshot';
+  private readonly autoRefreshMs = ViewCacheService.DEFAULT_TTL_MS;
+  lastUpdatedAt: number | null = null;
   attendanceStatus: {workDate: string; present: number; absent: number; leave: number; missing: number} | null = null;
   attendanceState: LoadState = 'loading';
   months: OverviewMonth[] = [];
@@ -90,9 +123,102 @@ export class OverviewPage implements OnInit {
     { key: 'overtimeActual', label: 'OT chưa hoàn tất', description: 'Chờ ghi nhận / xác nhận thực tế', route: '/overtime', query: { pending: 'actual' } }
   ] as const;
 
-  ngOnInit(): void { this.load(); }
+  ngOnInit(): void {
+    this.load(false);
+    this.cache?.dataChanged$
+      .pipe(debounceTime(80), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (!this.loading) this.load(true);
+      });
+  }
 
-  load(): void {
+  get lastUpdatedTime(): string {
+    if (!this.lastUpdatedAt) return '';
+    return new Intl.DateTimeFormat('vi-VN', {
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit',
+      hour12: false
+    }).format(new Date(this.lastUpdatedAt));
+  }
+
+  private scheduleAutoRefresh(initialDelayMs: number): void {
+    this.autoRefreshSub?.unsubscribe();
+    this.autoRefreshSub = timer(initialDelayMs, this.autoRefreshMs)
+      .pipe(
+        filter(() => !document.hidden && !this.loading),
+        takeUntilDestroyed(this.destroyRef)
+      )
+      .subscribe(() => this.load(true));
+  }
+
+  private saveSnapshot(): void {
+    if (!this.cache || (!this.isAdmin && !this.isHr)) return;
+    this.lastUpdatedAt = this.cache.set<OverviewSnapshot>(this.cacheKey, {
+      today: this.today,
+      fromDate: this.fromDate,
+      filters: this.filters,
+      isHr: this.isHr,
+      isAdmin: this.isAdmin,
+      attendanceStatus: this.attendanceStatus,
+      attendanceState: this.attendanceState,
+      months: this.months,
+      trendsState: this.trendsState,
+      batches: this.batches,
+      selectedPayrollId: this.selectedPayrollId,
+      payroll: this.payroll,
+      payrollState: this.payrollState,
+      pending: this.pending,
+      pendingState: this.pendingState,
+      pendingError: this.pendingError,
+      employeeReport: this.employeeReport,
+      contracts: this.contracts,
+      work: this.work,
+      employeeState: this.employeeState,
+      contractState: this.contractState,
+      workState: this.workState,
+      employeeError: this.employeeError,
+      contractError: this.contractError,
+      workError: this.workError
+    });
+  }
+
+  load(force = true): void {
+    if (!force && this.cache) {
+      const cached = this.cache.get<OverviewSnapshot>(this.cacheKey, this.autoRefreshMs);
+      if (cached) {
+        const s = cached.data;
+        this.today = s.today;
+        this.fromDate = s.fromDate;
+        this.filters = s.filters;
+        this.isHr = s.isHr;
+        this.isAdmin = s.isAdmin;
+        this.attendanceStatus = s.attendanceStatus;
+        this.attendanceState = s.attendanceState;
+        this.months = s.months;
+        this.trendsState = s.trendsState;
+        this.batches = s.batches;
+        this.selectedPayrollId = s.selectedPayrollId;
+        this.payroll = s.payroll;
+        this.payrollState = s.payrollState;
+        this.pending = s.pending;
+        this.pendingState = s.pendingState;
+        this.pendingError = s.pendingError;
+        this.employeeReport = s.employeeReport;
+        this.contracts = s.contracts;
+        this.work = s.work;
+        this.employeeState = s.employeeState;
+        this.contractState = s.contractState;
+        this.workState = s.workState;
+        this.employeeError = s.employeeError;
+        this.contractError = s.contractError;
+        this.workError = s.workError;
+        this.lastUpdatedAt = cached.updatedAt;
+        this.scheduleAutoRefresh(cached.remainingMs);
+        return;
+      }
+    }
+
     this.requests.unsubscribe();
     this.requests = new Subscription();
     this.attendanceStatus = null; this.attendanceState = 'loading';
@@ -117,6 +243,7 @@ export class OverviewPage implements OnInit {
         this.loadDashboardCharts();
         if (this.isHr) this.loadHrOverview();
         else this.loadReports();
+        this.scheduleAutoRefresh(this.autoRefreshMs);
       },
       error: error => this.failAll(this.errorMessage(error))
     }));
@@ -137,6 +264,7 @@ export class OverviewPage implements OnInit {
           data[card.key] = valid ? item : { count: null, state: 'ERROR' };
         }
         this.pending = data; this.pendingState = 'ready';
+        this.saveSnapshot();
       },
       error: error => { this.pendingError = this.errorMessage(error); this.pendingState = 'error'; }
     });
@@ -165,6 +293,7 @@ export class OverviewPage implements OnInit {
             Number.isSafeInteger(work?.confirmedAbsentDays) && work.confirmedAbsentDays >= 0) {
           this.work = work; this.workState = 'ready';
         } else { this.workError = 'Dữ liệu tổng quan chưa hợp lệ.'; this.workState = 'error'; }
+        this.saveSnapshot();
       },
       error: error => this.failAll(this.errorMessage(error))
     }));
@@ -179,6 +308,7 @@ export class OverviewPage implements OnInit {
           this.employeeError = 'Dữ liệu báo cáo chưa hợp lệ.'; this.employeeState = 'error'; return;
         }
         this.employeeReport = data; this.employeeState = 'ready';
+        this.saveSnapshot();
       },
       error: error => { this.employeeError = this.errorMessage(error); this.employeeState = 'error'; }
     }));
@@ -187,6 +317,7 @@ export class OverviewPage implements OnInit {
         const data = report as ContractReport;
         if (!Number.isSafeInteger(data?.effectiveCount) || data.effectiveCount < 0 || !Number.isSafeInteger(data?.expiringCount) || data.expiringCount < 0) { this.contractError = 'Dữ liệu báo cáo chưa hợp lệ.'; this.contractState = 'error'; return; }
         this.contracts = data; this.contractState = 'ready';
+        this.saveSnapshot();
       },
       error: error => { this.contractError = this.errorMessage(error); this.contractState = 'error'; }
     }));
@@ -195,6 +326,7 @@ export class OverviewPage implements OnInit {
         const data = report as WorkReport;
         if (!Number.isSafeInteger(data?.confirmedWorkDays) || data.confirmedWorkDays < 0 || !Number.isSafeInteger(data?.confirmedAbsentDays) || data.confirmedAbsentDays < 0) { this.workError = 'Dữ liệu báo cáo chưa hợp lệ.'; this.workState = 'error'; return; }
         this.work = data; this.workState = 'ready';
+        this.saveSnapshot();
       },
       error: error => { this.workError = this.errorMessage(error); this.workState = 'error'; }
     }));
@@ -202,7 +334,7 @@ export class OverviewPage implements OnInit {
 
   private loadTrends(): void {
     this.requests.add(this.api.getOverviewTrends().pipe(takeUntilDestroyed(this.destroyRef)).subscribe({
-      next: months => { this.months = months; this.trendsState = 'ready'; },
+      next: months => { this.months = months; this.trendsState = 'ready'; this.saveSnapshot(); },
       error: () => { this.trendsState = 'error'; }
     }));
   }
@@ -220,6 +352,7 @@ export class OverviewPage implements OnInit {
             b.periodEnd.localeCompare(a.periodEnd) || b.periodId - a.periodId || b.versionNo - a.versionNo);
           this.selectPayroll();
           this.payrollState = 'ready';
+          this.saveSnapshot();
         },
         error: error => { this.payrollState = error.status === 403 ? 'denied' : 'error'; }
       }));
@@ -257,16 +390,16 @@ export class OverviewPage implements OnInit {
   get departments(): GroupRow[] { return [...(this.employeeReport?.byDepartment || [])].sort((a, b) => b.employeeCount - a.employeeCount); }
   get departmentMax(): number { return this.axisMax(this.departments.reduce((max, row) => Math.max(max, row.employeeCount), 0)); }
   private pollAttendanceStatus(): void {
-    this.requests.add(timer(0, 15000).pipe(
-      filter(() => !document.hidden),
-      exhaustMap(() => this.api.getAttendanceStatus().pipe(catchError(() => {
+    this.requests.add(this.api.getAttendanceStatus().pipe(
+      catchError(() => {
         this.attendanceState = 'error';
         return EMPTY;
-      }))),
+      }),
       takeUntilDestroyed(this.destroyRef)
     ).subscribe(data => {
       this.attendanceStatus = data;
       this.attendanceState = 'ready';
+      this.saveSnapshot();
     }));
   }
 

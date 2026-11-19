@@ -14,8 +14,9 @@ import { Component, DestroyRef, OnInit, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
-import { Subscription, finalize, forkJoin, switchMap, timer } from 'rxjs';
+import { Subscription, debounceTime, finalize, forkJoin, switchMap, timer } from 'rxjs';
 import { API_BASE_URL } from '../../services/api.config';
+import { ViewCacheService } from '../../services/view-cache.service';
 
 interface ScheduleHistory {id:number;action:string;actor:string;occurredAt:string;reason:string|null;beforeJson:string|null;afterJson:string|null;}
 interface Employee { employeeId: number; employeeCode: string; fullName: string; }
@@ -37,7 +38,13 @@ export class SchedulesPage implements OnInit {
 
   private readonly http = inject(HttpClient);
   private readonly destroyRef = inject(DestroyRef);
+  private readonly cache = inject(ViewCacheService, { optional: true });
   private readonly url = `${API_BASE_URL}/management/schedule-workspace`;
+  private readonly AUTO_REFRESH_MS = ViewCacheService.DEFAULT_TTL_MS;
+  private readonly LOOKUP_CACHE_KEY = 'schedules:lookups';
+  private readonly UI_STATE_CACHE_KEY = 'schedules:ui-state';
+  private autoRefreshSub: Subscription | null = null;
+  lastUpdatedAt = 0;
   loading = false; saving = false; lookupLoading = false;
   error = ''; lookupError = ''; sortDirection:'asc'|'desc'='desc';
   private successMessage='';private successQueue:string[]=[];private successTimer:Subscription|null=null;private successStarted=0;private successBatch=false;
@@ -48,22 +55,26 @@ export class SchedulesPage implements OnInit {
     if(!this.successMessage)this.nextSuccess();
     else if(!this.successBatch){this.successBatch=true;this.scheduleSuccess(Math.max(0,5000-(Date.now()-this.successStarted)));}
   }
-  constructor(){this.destroyRef.onDestroy(()=>{this.successTimer?.unsubscribe();this.successQueue=[];});}
+  constructor(){this.destroyRef.onDestroy(()=>{this.successTimer?.unsubscribe();this.autoRefreshSub?.unsubscribe();this.successQueue=[];});}
+  get lastUpdatedTime(): string {
+    if (!this.lastUpdatedAt) return '';
+    return new Intl.DateTimeFormat('vi-VN', { hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(this.lastUpdatedAt));
+  }
   private nextSuccess(){this.successMessage=this.successQueue.shift()??'';if(!this.successMessage){this.successBatch=false;return;}this.successStarted=Date.now();this.scheduleSuccess(this.successBatch?5000:10000);}
   private scheduleSuccess(delay:number){this.successTimer?.unsubscribe();this.successTimer=timer(delay).subscribe(()=>this.nextSuccess());}
-  sortSchedules(direction:'asc'|'desc'){if(this.busy)return;this.sortDirection=direction;this.closeDetails();this.load();}
+  sortSchedules(direction:'asc'|'desc'){if(this.busy)return;this.sortDirection=direction;this.closeDetails();this.load(true,false);}
   chooseEmployee(state:EmployeeLookup,employee:Employee){state.subscription?.unsubscribe();state.selected=employee;state.text=this.employeeLabel(employee);state.options=[];state.open=false;state.error='';state.loading=false;}
 
   detailFocusVersion=0;
   personal=false;templateBreaks:Array<{start:string;end:string}>=[];templateBreakError='';
-  switchScheduleScope(personal:boolean):void {if(this.busy)return;this.personal=personal;this.closeDetails();this.filterEmployee=employeeLookup();this.departmentId='';this.load();}
+  switchScheduleScope(personal:boolean):void {if(this.busy)return;this.personal=personal;this.closeDetails();this.filterEmployee=employeeLookup();this.departmentId='';this.saveUiState();if(!personal)this.load(true,false);}
   async saveTemplateBreaks():Promise<void> {
     const option=this.formShift.selected;if(!option||this.busy)return;const shift=option.shift;const start=this.toMinute(shift.startTime);const duration=this.toMinute(shift.endTime)+shift.endDayOffset*1440-start;
     const offsets=this.templateBreaks.map(b=>{let a=this.toMinute(b.start)-start,z=this.toMinute(b.end)-start;if(shift.endDayOffset===1){if(a<0)a+=1440;if(z<=0)z+=1440;}return {startMinute:a,endMinute:z};}).sort((a,b)=>a.startMinute-b.startMinute);
     let previous=0;for(const b of offsets){if(!Number.isFinite(b.startMinute)||!Number.isFinite(b.endMinute)||b.startMinute<previous||b.endMinute<=b.startMinute||b.endMinute>duration){this.templateBreakError='Giờ nghỉ phải nằm trong ca, kết thúc sau bắt đầu và không chồng lấn.';return;}previous=b.endMinute;}
     if(!offsets.length||offsets.reduce((n,b)=>n+b.endMinute-b.startMinute,0)!==shift.breakMinutes){this.templateBreakError='Tổng các khoảng nghỉ phải bằng '+shift.breakMinutes+' phút của ca.';return;}
     if(!(await this.actionDialogInPage.confirm('Lưu giờ nghỉ chi tiết cho ca '+shift.shiftCode+'? Mẫu ca sẽ dùng giờ nghỉ này cho các lịch tạo mới.')))return;
-    this.saving=true;this.templateBreakError='';this.http.put<Shift>(API_BASE_URL+'/management/shifts/'+shift.shiftId,{shift,breaks:offsets}).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({next:saved=>{const updated={shift:saved,breaksVerified:true};this.shifts=this.shifts.map(s=>s.shift.shiftId===saved.shiftId?updated:s);this.formShift.selected=updated;this.formShift.text=this.shiftLabel(updated);this.success='Đã bổ sung giờ nghỉ cho ca. Bạn có thể lưu lịch làm việc.';this.templateBreaks=[];},error:e=>this.templateBreakError=this.message(e)});
+    this.saving=true;this.templateBreakError='';this.http.put<Shift>(API_BASE_URL+'/management/shifts/'+shift.shiftId,{shift,breaks:offsets}).pipe(takeUntilDestroyed(this.destroyRef),finalize(()=>this.saving=false)).subscribe({next:saved=>{const updated={shift:saved,breaksVerified:true};this.shifts=this.shifts.map(s=>s.shift.shiftId===saved.shiftId?updated:s);this.formShift.selected=updated;this.formShift.text=this.shiftLabel(updated);this.cache?.invalidate('schedules:');this.success='Đã bổ sung giờ nghỉ cho ca. Bạn có thể lưu lịch làm việc.';this.templateBreaks=[];},error:e=>this.templateBreakError=this.message(e)});
   }
   private toMinute(value:string):number {const match=value.match(/^(\d{2}):(\d{2})/);return match&&+match[1]<24&&+match[2]<60?+match[1]*60+(+match[2]):NaN;}
   canManage = false; canSubmitOwn = false; ownEmployeeId: number | null = null;
@@ -111,8 +122,70 @@ export class SchedulesPage implements OnInit {
   get changeEnd(): string { return this.shiftTime(this.changeShift, this.changeDate, true); }
 
   ngOnInit(): void {
-    this.loadLookups(); this.load();
+    this.restoreUiState();
+    this.loadLookups(false);
+    if (!this.personal) this.load(false, false);
+    else this.scheduleAutoRefresh(this.AUTO_REFRESH_MS);
+    this.cache?.dataChanged$
+      .pipe(debounceTime(80), takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (!this.busy && !this.personal) this.load(false, true);
+      });
     timer(0, 1000).pipe(takeUntilDestroyed(this.destroyRef)).subscribe(() => this.currentTime = Date.now());
+  }
+  private saveUiState(): void {
+    this.cache?.set(this.UI_STATE_CACHE_KEY, {
+      personal: this.personal,
+      from: this.from,
+      to: this.to,
+      departmentId: this.departmentId,
+      sortDirection: this.sortDirection,
+      page: this.page,
+      filterEmployeeSelected: this.filterEmployee.selected,
+      filterEmployeeText: this.filterEmployee.text,
+      filterShiftSelected: this.filterShift.selected,
+      filterShiftText: this.filterShift.text,
+    });
+  }
+  private restoreUiState(): void {
+    const cached = this.cache?.get<{
+      personal: boolean;
+      from: string;
+      to: string;
+      departmentId: string;
+      sortDirection: 'asc' | 'desc';
+      page: number;
+      filterEmployeeSelected: Employee | null;
+      filterEmployeeText: string;
+      filterShiftSelected: ShiftOption | null;
+      filterShiftText: string;
+    }>(this.UI_STATE_CACHE_KEY, this.AUTO_REFRESH_MS);
+    if (!cached) return;
+    const s = cached.data;
+    this.personal = s.personal;
+    this.from = s.from;
+    this.to = s.to;
+    this.departmentId = s.departmentId;
+    this.sortDirection = s.sortDirection;
+    this.page = s.page;
+    this.filterEmployee = { ...employeeLookup(), selected: s.filterEmployeeSelected, text: s.filterEmployeeText };
+    this.filterShift = { ...shiftLookup(), selected: s.filterShiftSelected, text: s.filterShiftText };
+  }
+  private scheduleAutoRefresh(initialDelayMs: number): void {
+    this.autoRefreshSub?.unsubscribe();
+    this.autoRefreshSub = timer(Math.max(1000, initialDelayMs), this.AUTO_REFRESH_MS)
+      .pipe(takeUntilDestroyed(this.destroyRef))
+      .subscribe(() => {
+        if (typeof document !== 'undefined' && document.hidden) return;
+        if (this.busy || this.personal) return;
+        this.load(false, true);
+      });
+  }
+  refreshAll(): void {
+    if (this.busy || this.lookupLoading) return;
+    this.cache?.invalidate('schedules:');
+    this.loadLookups(true);
+    if (!this.personal) this.load(false, true);
   }
   scheduleHasStarted(row: Row): boolean {
     // plannedStart is a business-local timestamp in UTC+07:00.
@@ -183,14 +256,45 @@ export class SchedulesPage implements OnInit {
     const day = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     return `${day}T${(end ? shift.endTime : shift.startTime).slice(0, 8)}`;
   }
-  loadLookups(): void {
+  loadLookups(force = false): void {
+    if (!force) {
+      const cached = this.cache?.get<{
+        canManage: boolean;
+        canSubmitOwn: boolean;
+        ownEmployeeId: number | null;
+        shifts: ShiftOption[];
+        departments: Array<{ departmentId: number; departmentName: string }>;
+      }>(this.LOOKUP_CACHE_KEY, this.AUTO_REFRESH_MS);
+      if (cached) {
+        this.canManage = cached.data.canManage;
+        this.canSubmitOwn = cached.data.canSubmitOwn;
+        this.ownEmployeeId = cached.data.ownEmployeeId;
+        this.shifts = cached.data.shifts;
+        this.departments = cached.data.departments;
+        this.lookupError = '';
+        return;
+      }
+    }
     this.lookupLoading = true; this.lookupError = '';
     forkJoin({
       context: this.http.get<{ canManage: boolean; canSubmitOwn: boolean; employeeId: number | null }>(`${this.url}/context`),
       shifts: this.http.get<ShiftOption[]>(`${this.url}/shifts`),
       departments: this.http.get<Array<{ departmentId: number; departmentName: string }>>(`${API_BASE_URL}/management/schedules/filter-departments`),
     }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.lookupLoading = false)).subscribe({
-      next: result => { this.canManage = result.context.canManage; this.canSubmitOwn = result.context.canSubmitOwn; this.ownEmployeeId = result.context.employeeId; this.shifts = result.shifts; this.departments = result.departments; },
+      next: result => {
+        this.canManage = result.context.canManage;
+        this.canSubmitOwn = result.context.canSubmitOwn;
+        this.ownEmployeeId = result.context.employeeId;
+        this.shifts = result.shifts;
+        this.departments = result.departments;
+        this.cache?.set(this.LOOKUP_CACHE_KEY, {
+          canManage: this.canManage,
+          canSubmitOwn: this.canSubmitOwn,
+          ownEmployeeId: this.ownEmployeeId,
+          shifts: this.shifts,
+          departments: this.departments,
+        });
+      },
       error: e => this.lookupError = this.message(e),
     });
   }
@@ -238,26 +342,59 @@ export class SchedulesPage implements OnInit {
     state.text = this.shiftLabel(state.selected); state.error = ''; return true;
   }
   formDateChanged(): void { if (this.formEmployee.text) this.employeeChanged(this.formEmployee, this.formEmployee.text); }
-  load(reset = true): void {
+  load(reset = true, force = false): void {
     if (this.loading || this.saving) return;
     if (!this.validateEmployee(this.filterEmployee, false) || !this.validateShift(this.filterShift, false)) return;
     if (this.from && this.to && this.from > this.to) { this.error = 'Khoảng ngày không hợp lệ.'; return; }
     if (reset) this.page = 0;
+    this.saveUiState();
+    const cacheKey = 'schedules:list:' + JSON.stringify({
+      personal: this.personal,
+      from: this.from || '2000-01-01',
+      to: this.to || '2100-12-31',
+      page: this.page,
+      sort: this.sortDirection,
+      employeeId: this.filterEmployee.selected?.employeeId ?? null,
+      shiftId: this.filterShift.selected?.shift.shiftId ?? null,
+      departmentId: this.departmentId || null,
+    });
+    if (!force) {
+      const cached = this.cache?.get<Page<Row>>(cacheKey, this.AUTO_REFRESH_MS);
+      if (cached) {
+        this.records = cached.data.items;
+        this.page = cached.data.page;
+        this.totalPages = cached.data.totalPages;
+        this.totalElements = cached.data.totalElements;
+        this.lastUpdatedAt = cached.updatedAt;
+        this.error = '';
+        const remaining = Math.max(1000, this.AUTO_REFRESH_MS - (Date.now() - cached.updatedAt));
+        this.scheduleAutoRefresh(remaining);
+        return;
+      }
+    }
     this.loading = true; this.error = '';
     let params = new HttpParams().set('from', this.from || '2000-01-01').set('to', this.to || '2100-12-31').set('page', this.page).set('sort',this.sortDirection);
     if (this.filterEmployee.selected) params = params.set('employeeId', this.filterEmployee.selected.employeeId);
     if (this.filterShift.selected) params = params.set('shiftId', this.filterShift.selected.shift.shiftId);
     if (this.departmentId) params = params.set('departmentId', this.departmentId);
     this.http.get<Page<Row>>(`${this.url}/${this.personal?'my-search':'search'}`, { params }).pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.loading = false)).subscribe({
-      next: result => { this.records = result.items; this.page = result.page; this.totalPages = result.totalPages; this.totalElements = result.totalElements; },
+      next: result => {
+        this.records = result.items;
+        this.page = result.page;
+        this.totalPages = result.totalPages;
+        this.totalElements = result.totalElements;
+        this.lastUpdatedAt = Date.now();
+        this.cache?.set(cacheKey, result);
+        this.scheduleAutoRefresh(this.AUTO_REFRESH_MS);
+      },
       error: e => this.error = this.message(e),
     });
   }
   clearFilters(): void {
     this.filterEmployee.subscription?.unsubscribe(); this.filterEmployee = employeeLookup(); this.filterShift = shiftLookup();
-    this.from = ''; this.to = ''; this.departmentId = ''; this.load();
+    this.from = ''; this.to = ''; this.departmentId = ''; this.load(true, false);
   }
-  goPage(page: number): void { if (!this.busy && page >= 0 && page < this.totalPages) { this.page = page; this.load(false); } }
+  goPage(page: number): void { if (!this.busy && page >= 0 && page < this.totalPages) { this.page = page; this.load(false, false); } }
   createForm(): void {
     if (this.personal || !this.canManage || this.busy) return;
     this.formEmployee.subscription?.unsubscribe(); this.formEmployee = employeeLookup(); this.formShift = shiftLookup();
@@ -313,7 +450,7 @@ export class SchedulesPage implements OnInit {
     const request = creating ? this.http.post<Schedule>(`${this.url}/schedules`, body) : this.http.put<Schedule>(`${this.url}/schedules/${id}`, body);
     this.saving = true; this.formError = '';
     request.pipe(takeUntilDestroyed(this.destroyRef), finalize(() => this.saving = false)).subscribe({
-      next: () => { this.mode = 'view'; this.selected = null; this.success = creating ? 'Đã thêm lịch làm việc.' : 'Đã cập nhật lịch làm việc.'; if(creating)this.sortDirection='desc';this.saving = false; this.load(); },
+      next: () => { this.mode = 'view'; this.selected = null; this.success = creating ? 'Đã thêm lịch làm việc.' : 'Đã cập nhật lịch làm việc.'; if(creating)this.sortDirection='desc';this.saving = false; this.cache?.invalidate('schedules:list:'); this.load(true, true); },
       error: e => this.formError = this.message(e),
     });
   }
@@ -351,6 +488,7 @@ export class SchedulesPage implements OnInit {
         next: r => {
           this.scheduleState = r.state; if (this.selected) { this.selected.state = r.state; if (action === 'cancel') this.selected.cancellationReason = reason; }
           this.records = this.records.map(row => row.schedule.scheduleId === id ? { ...row, state: r.state, ...(action === 'cancel' ? { cancellationReason: reason } : {}) } : row);
+          this.cache?.invalidate('schedules:list:');
           this.mode = 'view'; this.formError = ''; this.success = `Đã ${verb.toLowerCase()} #${id}.`; this.loadHistory();
         }, error: e => this.formError = this.message(e)
       });
@@ -381,7 +519,7 @@ export class SchedulesPage implements OnInit {
     const id = this.requestDetail.request.requestId; this.requestBusy = true; this.requestError = '';
     this.http.post<void>(`${this.url}/requests/${id}/decision`, { approve, rejectionReason: reason })
       .pipe(switchMap(() => this.http.get<ChangeDetail>(`${this.url}/requests/${id}`)), takeUntilDestroyed(this.destroyRef), finalize(() => this.requestBusy = false)).subscribe({
-        next: r => { this.requestDetail = r; this.requestFeedback = `Trạng thái yêu cầu: ${this.statusLabel(r.request.status)}.`; this.requestBusy = false; this.loadRequests(false); this.load(false); }, error: e => this.requestError = this.message(e),
+        next: r => { this.requestDetail = r; this.requestFeedback = `Trạng thái yêu cầu: ${this.statusLabel(r.request.status)}.`; this.requestBusy = false; this.cache?.invalidate('schedules:list:'); this.loadRequests(false); if (!this.personal) this.load(false, true); }, error: e => this.requestError = this.message(e),
       });
   }
   newRequest(): void {
@@ -407,7 +545,7 @@ export class SchedulesPage implements OnInit {
         const at = (offset: number) => { const date = new Date(start); date.setMinutes(date.getMinutes() + offset); const pad = (n: number) => String(n).padStart(2, '0'); return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}T${pad(date.getHours())}:${pad(date.getMinutes())}:00`; };
         return this.http.post<{ requestId: number }>(`${this.url}/requests`, { scheduleId: id, proposedShiftId: this.changeShift.selected!.shift.shiftId, proposedStart: start, proposedEnd: this.changeEnd, reason: this.changeReason.trim(), proposedBreaks: detail.breaks.map(b => ({ start: at(b.startMinute), end: at(b.endMinute) })) });
       }), takeUntilDestroyed(this.destroyRef), finalize(() => this.requestBusy = false),
-    ).subscribe({ next: () => { this.requestMode = 'list'; this.requestFeedback = 'Đã gửi yêu cầu đổi lịch.'; this.requestBusy = false; this.loadRequests(); }, error: e => this.requestError = this.message(e) });
+    ).subscribe({ next: () => { this.requestMode = 'list'; this.requestFeedback = 'Đã gửi yêu cầu đổi lịch.'; this.requestBusy = false; this.cache?.invalidate('schedules:list:'); this.loadRequests(); }, error: e => this.requestError = this.message(e) });
   }
   private message(error: unknown): string {
     if (!(error instanceof HttpErrorResponse)) return 'Không thể xử lý yêu cầu.';

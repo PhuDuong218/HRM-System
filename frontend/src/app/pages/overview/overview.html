@@ -1,7 +1,7 @@
 <div class="overview">
 <app-page-header variant="directory" title="Tổng quan" description="Theo dõi cơ cấu nhân sự, hợp đồng và công việc từ dữ liệu báo cáo hiện có.">
-      <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}</span>
-      <button type="button" hrmBtn="secondary" (click)="load()" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
+      <span class="date-badge">{{ language.t('Cập nhật theo ngày') }} · {{ date(today) }}@if (lastUpdatedTime) { · {{ lastUpdatedTime }} }</span>
+      <button type="button" hrmBtn="secondary" (click)="load(true)" [disabled]="loading">{{ language.t(loading ? 'Đang tải…' : 'Tải lại') }}</button>
 
     @if (isAdmin) { <a hrmBtn="primary" routerLink="/reports">{{ language.t('Xem báo cáo chi tiết') }} <span aria-hidden="true">↗</span></a> }
   </app-page-header>

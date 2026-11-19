@@ -1116,7 +1116,7 @@
           <option value="CONG_BO">Đã công bố</option>
         </select>
       </div>
-      <div class="col-md-9 mt-2">
+      <div class="col-md-7 mt-2">
         <input
           type="text"
           class="form-control form-control-sm"
@@ -1124,9 +1124,17 @@
           (ngModelChange)="applyHistoryClientFilters()"
           placeholder="🔍 Tìm nhanh theo Mã NV, Họ và tên nhân viên hoặc Phòng ban...">
       </div>
-      <div class="col-md-3 mt-2 d-flex gap-2">
-        <button type="button" class="btn btn-sm btn-primary flex-grow-1" [disabled]="loadingHistory" (click)="loadEmployeeHistory()">
+      <div class="col-md-5 mt-2 d-flex gap-2 flex-wrap">
+        <button type="button" class="btn btn-sm btn-primary" [disabled]="loadingHistory" (click)="loadEmployeeHistory()">
           🔍 Làm mới
+        </button>
+        <button
+          type="button"
+          class="btn btn-sm btn-success fw-semibold flex-grow-1"
+          [disabled]="loadingHistory || historyRows.length === 0"
+          title="In hoặc lưu file PDF toàn bộ bảng lương theo đúng bộ lọc đang chọn (theo Năm, Quý, Tháng, Phòng ban, Nhân viên)"
+          (click)="printFilteredHistoryPdf()">
+          🖨 In / Xuất PDF bảng lương đang lọc ({{ historyRows.length }})
         </button>
         <button type="button" class="btn btn-sm btn-outline-secondary" [disabled]="loadingHistory" title="Đặt lại bộ lọc" (click)="resetHistoryFilters()">
           ↺ Đặt lại
