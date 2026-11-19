@@ -2409,13 +2409,13 @@ public class EmployeeActivity extends AppCompatActivity {
             render();
         });
 
-        // 2. Banner vàng kim nổi bật "NÂNG CẤP ỨNG DỤNG / Gói trọn đời" (giống hệt Hình 7 -> bấm vào mở trang Nâng cấp gói Plus / Premium)
+        // 2. Banner xanh dương đồng bộ "NÂNG CẤP ỨNG DỤNG / Gói trọn đời" (-> bấm vào mở trang Nâng cấp gói Plus / Premium)
         LinearLayout goldBanner = new LinearLayout(this);
         goldBanner.setOrientation(LinearLayout.HORIZONTAL);
         goldBanner.setGravity(Gravity.CENTER_VERTICAL);
         android.graphics.drawable.GradientDrawable goldBg = new android.graphics.drawable.GradientDrawable(
                 android.graphics.drawable.GradientDrawable.Orientation.LEFT_RIGHT,
-                new int[]{0xffeab308, 0xfffef08a, 0xffeab308});
+                new int[]{0xff1e40af, 0xff2563eb, 0xff1d4ed8});
         goldBg.setCornerRadius(dp(16));
         goldBanner.setBackground(goldBg);
         goldBanner.setPadding(dp(16), dp(14), dp(16), dp(14));
@@ -2434,7 +2434,7 @@ public class EmployeeActivity extends AppCompatActivity {
         goldTextCol.setOrientation(LinearLayout.VERTICAL);
         TextView gt1 = text("NÂNG CẤP ỨNG DỤNG", 16, Color.WHITE, true);
         ((LinearLayout.LayoutParams) gt1.getLayoutParams()).bottomMargin = dp(2);
-        TextView gt2 = text("Gói trọn đời", 14, Color.WHITE, false);
+        TextView gt2 = text("Gói trọn đời", 14, 0xffdbeafe, false);
         ((LinearLayout.LayoutParams) gt2.getLayoutParams()).bottomMargin = 0;
         goldTextCol.addView(gt1);
         goldTextCol.addView(gt2);
@@ -2446,12 +2446,12 @@ public class EmployeeActivity extends AppCompatActivity {
         goldBanner.addView(diamond);
         body.addView(goldBanner);
 
-        // 3. Pill bar viền vàng nhạt "👑 Quản lý gói nâng cấp" (giống hệt Hình 7 -> bấm vào mở trang < Quản lý gói nâng cấp)
+        // 3. Pill bar viền xanh nhạt đồng bộ "👑 Quản lý gói nâng cấp" (-> bấm vào mở trang < Quản lý gói nâng cấp)
         LinearLayout pillBar = new LinearLayout(this);
         pillBar.setOrientation(LinearLayout.HORIZONTAL);
         pillBar.setGravity(Gravity.CENTER_VERTICAL);
-        android.graphics.drawable.GradientDrawable pillBg = rounded(0xfffff9db, 24);
-        pillBg.setStroke(dp(1), 0xffe5c158);
+        android.graphics.drawable.GradientDrawable pillBg = rounded(0xffeff6ff, 24);
+        pillBg.setStroke(dp(1), 0xff93c5fd);
         pillBar.setBackground(pillBg);
         pillBar.setPadding(dp(16), dp(11), dp(16), dp(11));
         LinearLayout.LayoutParams pbp = new LinearLayout.LayoutParams(-1, -2);
@@ -2463,10 +2463,10 @@ public class EmployeeActivity extends AppCompatActivity {
             profileSubPage = "manage_plan";
             render();
         });
-        TextView crownTitle = text("👑   Quản lý gói nâng cấp", 15, 0xff111827, true);
+        TextView crownTitle = text("👑   Quản lý gói nâng cấp", 15, 0xff1e3a8a, true);
         ((LinearLayout.LayoutParams) crownTitle.getLayoutParams()).bottomMargin = 0;
         pillBar.addView(crownTitle, new LinearLayout.LayoutParams(0, -2, 1));
-        TextView pillChev = text("›", 20, 0xff111827, true);
+        TextView pillChev = text("›", 20, 0xff1e3a8a, true);
         ((LinearLayout.LayoutParams) pillChev.getLayoutParams()).bottomMargin = 0;
         ((LinearLayout.LayoutParams) pillChev.getLayoutParams()).width = -2;
         pillBar.addView(pillChev);
@@ -2771,12 +2771,12 @@ public class EmployeeActivity extends AppCompatActivity {
         tabPill.addView(premiumTab, new LinearLayout.LayoutParams(0, -2, 1));
         mainBox.addView(tabPill);
 
-        // Thẻ Giá gói nâng cấp (Plus: 300,000 đ / 600,000 đ nền xanh nhạt | Premium: 400,000 đ / 800,000 đ nền vàng kim)
+        // Thẻ Giá gói nâng cấp (Plus & Premium đều dùng tông xanh dương đồng bộ giao diện)
         LinearLayout priceCard = new LinearLayout(this);
         priceCard.setOrientation(LinearLayout.HORIZONTAL);
         priceCard.setGravity(Gravity.CENTER_VERTICAL);
-        android.graphics.drawable.GradientDrawable priceBg = rounded(isPremium ? 0xfffde047 : 0xffeef5ff, 14);
-        priceBg.setStroke(dp(1.5f), isPremium ? 0xffca8a04 : 0xff2563eb);
+        android.graphics.drawable.GradientDrawable priceBg = rounded(isPremium ? 0xffdbeafe : 0xffeef5ff, 14);
+        priceBg.setStroke(dp(1.5f), isPremium ? 0xff1d4ed8 : 0xff2563eb);
         priceCard.setBackground(priceBg);
         priceCard.setPadding(dp(16), dp(14), dp(16), dp(14));
         LinearLayout.LayoutParams pcp = new LinearLayout.LayoutParams(-1, -2);
@@ -2785,9 +2785,9 @@ public class EmployeeActivity extends AppCompatActivity {
 
         LinearLayout priceLeft = new LinearLayout(this);
         priceLeft.setOrientation(LinearLayout.VERTICAL);
-        TextView pl1 = text("Gói nâng cấp chỉ", 16, 0xff111827, true);
+        TextView pl1 = text("Gói nâng cấp chỉ", 16, 0xff1e3a8a, true);
         ((LinearLayout.LayoutParams) pl1.getLayoutParams()).bottomMargin = dp(4);
-        TextView pl2 = text(isPremium ? "Tiết kiệm 400,000 đ" : "Tiết kiệm 300,000 đ", 14, isPremium ? 0xff854d0e : 0xff7b8798, false);
+        TextView pl2 = text(isPremium ? "Tiết kiệm 400,000 đ" : "Tiết kiệm 300,000 đ", 14, 0xff1d4ed8, false);
         ((LinearLayout.LayoutParams) pl2.getLayoutParams()).bottomMargin = 0;
         priceLeft.addView(pl1);
         priceLeft.addView(pl2);
@@ -2795,10 +2795,10 @@ public class EmployeeActivity extends AppCompatActivity {
         LinearLayout priceRight = new LinearLayout(this);
         priceRight.setOrientation(LinearLayout.VERTICAL);
         priceRight.setGravity(Gravity.END);
-        TextView pr1 = text(isPremium ? "400,000 đ" : "300,000 đ", 18, 0xff111827, true);
+        TextView pr1 = text(isPremium ? "400,000 đ" : "300,000 đ", 18, 0xff1e3a8a, true);
         pr1.setGravity(Gravity.END);
         ((LinearLayout.LayoutParams) pr1.getLayoutParams()).bottomMargin = dp(4);
-        TextView pr2 = text(isPremium ? "800,000 đ" : "600,000 đ", 14, isPremium ? 0xff854d0e : 0xff7b8798, false);
+        TextView pr2 = text(isPremium ? "800,000 đ" : "600,000 đ", 14, 0xff64748b, false);
         pr2.setGravity(Gravity.END);
         pr2.setPaintFlags(pr2.getPaintFlags() | android.graphics.Paint.STRIKE_THRU_TEXT_FLAG);
         ((LinearLayout.LayoutParams) pr2.getLayoutParams()).bottomMargin = 0;
@@ -2917,10 +2917,10 @@ public class EmployeeActivity extends AppCompatActivity {
         subscribeBtn.setText(isPremium ? "Đăng ký gói Premium" : "Đăng ký gói Plus");
         subscribeBtn.setAllCaps(false);
         subscribeBtn.setTextSize(16);
-        subscribeBtn.setTextColor(isPremium ? 0xff111827 : Color.WHITE);
+        subscribeBtn.setTextColor(Color.WHITE);
         subscribeBtn.setTypeface(null, Typeface.BOLD);
         subscribeBtn.setCornerRadius(dp(12));
-        subscribeBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isPremium ? 0xfffacc15 : 0xff1d61e7));
+        subscribeBtn.setBackgroundTintList(android.content.res.ColorStateList.valueOf(isPremium ? 0xff1e40af : 0xff1d61e7));
         LinearLayout.LayoutParams subParams = new LinearLayout.LayoutParams(-1, dp(52));
         subscribeBtn.setLayoutParams(subParams);
         subscribeBtn.setOnClickListener(v -> {
@@ -3095,6 +3095,11 @@ public class EmployeeActivity extends AppCompatActivity {
         EditText addressEdit = addStyledInputBox(str(p, "address"), "📍",
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE, true);
 
+        addStyledFieldLabel("Lý do thay đổi", true);
+        EditText reasonEdit = addStyledInputBox("Cập nhật thông tin liên hệ cá nhân", "📝",
+                InputType.TYPE_CLASS_TEXT, true);
+        reasonEdit.setHint("Nhập lý do thay đổi thông tin");
+
         TextView helperTv = text("Bạn có thể cập nhật Số điện thoại, Email và Địa chỉ. Thông tin nhân sự khác (Họ tên, Phòng ban, Chức vụ) vui lòng liên hệ HR.", 12, 0xff7b8798, false);
         helperTv.setPadding(dp(2), dp(6), dp(2), dp(6));
         body.addView(helperTv);
@@ -3118,6 +3123,9 @@ public class EmployeeActivity extends AppCompatActivity {
             String e = emailEdit.getText() == null ? "" : emailEdit.getText().toString().trim();
             String ph = (phoneEdit.getText() == null ? "" : phoneEdit.getText().toString().trim()).replaceAll("[\\s().-]", "");
             String a = addressEdit.getText() == null ? "" : addressEdit.getText().toString().trim();
+            String rs = reasonEdit.getText() == null ? "" : reasonEdit.getText().toString().trim();
+            if (rs.isEmpty()) rs = "Cập nhật thông tin liên hệ cá nhân";
+            final String finalReason = rs;
             if (ph.startsWith("+84")) ph = "0" + ph.substring(3);
             final String normalizedPhone = ph;
 
@@ -3136,11 +3144,17 @@ public class EmployeeActivity extends AppCompatActivity {
                 addressEdit.requestFocus();
                 return;
             }
+            if (finalReason.length() > 1000) {
+                reasonEdit.setError("Lý do tối đa 1000 ký tự");
+                reasonEdit.requestFocus();
+                return;
+            }
 
             phoneEdit.setText(normalizedPhone);
             emailEdit.setEnabled(false);
             phoneEdit.setEnabled(false);
             addressEdit.setEnabled(false);
+            reasonEdit.setEnabled(false);
             saveBtn.setEnabled(false);
             notice.setTextColor(MUTED);
             notice.setText("Đang lưu thay đổi…");
@@ -3148,8 +3162,15 @@ public class EmployeeActivity extends AppCompatActivity {
             String token = session.token();
             executor.execute(() -> {
                 try {
-                    JSONObject updated = api.send("/api/me/profile", "PUT", token,
-                            json("email", e, "phone", normalizedPhone, "address", a));
+                    JSONObject currentDetail = api.get("/api/me/profile", token);
+                    String ver = currentDetail.optString("version", "");
+                    JSONObject payload = new JSONObject();
+                    payload.put("version", ver);
+                    payload.put("reason", finalReason);
+                    payload.put("phone", normalizedPhone);
+                    if (!e.isEmpty()) payload.put("email", e);
+                    if (!a.isEmpty()) payload.put("address", a);
+                    JSONObject updated = api.send("/api/me/profile", "PUT", token, payload);
                     runOnUiThread(() -> {
                         if (isDestroyed()) return;
                         writing = false;
@@ -3166,6 +3187,7 @@ public class EmployeeActivity extends AppCompatActivity {
                         emailEdit.setEnabled(true);
                         phoneEdit.setEnabled(true);
                         addressEdit.setEnabled(true);
+                        reasonEdit.setEnabled(true);
                         saveBtn.setEnabled(true);
                         notice.setTextColor(0xffdc2626);
                         if (error instanceof HrmApi.ApiException && ((HrmApi.ApiException) error).status == 401) {
@@ -4273,11 +4295,16 @@ public class EmployeeActivity extends AppCompatActivity {
         TextInputEditText phone = input(box, "Số điện thoại", str(p, "phone"), InputType.TYPE_CLASS_PHONE);
         TextInputEditText address = input(box, "Địa chỉ", str(p, "address"),
                 InputType.TYPE_CLASS_TEXT | InputType.TYPE_TEXT_FLAG_MULTI_LINE);
+        TextInputEditText reason = input(box, "Lý do thay đổi", "Cập nhật thông tin liên hệ cá nhân",
+                InputType.TYPE_CLASS_TEXT);
         TextView notice = text("", 13, 0xffa32b32, false);
         box.addView(notice);
         dialog("Chỉnh sửa hồ sơ cá nhân", box, "Lưu thay đổi", d -> {
             if (writing) return;
             String e = value(email), ph = value(phone).replaceAll("[\\s().-]", ""), a = value(address);
+            String rs = value(reason);
+            if (rs.isEmpty()) rs = "Cập nhật thông tin liên hệ cá nhân";
+            final String finalReason = rs;
             if (ph.startsWith("+84")) ph = "0" + ph.substring(3);
             final String normalizedPhone = ph;
             if (e.length() > 254 || (!e.isEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(e).matches())) {
@@ -4290,7 +4317,7 @@ public class EmployeeActivity extends AppCompatActivity {
                 address.setError("Địa chỉ tối đa 500 ký tự"); address.requestFocus(); return;
             }
             phone.setText(normalizedPhone);
-            email.setEnabled(false); phone.setEnabled(false); address.setEnabled(false);
+            email.setEnabled(false); phone.setEnabled(false); address.setEnabled(false); reason.setEnabled(false);
             notice.setTextColor(MUTED);
             notice.setText("Đang lưu thay đổi…");
             writing = true;
@@ -4300,8 +4327,15 @@ public class EmployeeActivity extends AppCompatActivity {
             String token = session.token();
             executor.execute(() -> {
                 try {
-                    JSONObject updated = api.send("/api/me/profile", "PUT", token,
-                            json("email", e, "phone", normalizedPhone, "address", a));
+                    JSONObject currentDetail = api.get("/api/me/profile", token);
+                    String ver = currentDetail.optString("version", "");
+                    JSONObject payload = new JSONObject();
+                    payload.put("version", ver);
+                    payload.put("reason", finalReason);
+                    payload.put("phone", normalizedPhone);
+                    if (!e.isEmpty()) payload.put("email", e);
+                    if (!a.isEmpty()) payload.put("address", a);
+                    JSONObject updated = api.send("/api/me/profile", "PUT", token, payload);
                     runOnUiThread(() -> {
                         if (isDestroyed()) return;
                         writing = false;
@@ -4315,7 +4349,7 @@ public class EmployeeActivity extends AppCompatActivity {
                         if (isDestroyed()) return;
                         writing = false;
                         d.setCancelable(true);
-                        email.setEnabled(true); phone.setEnabled(true); address.setEnabled(true);
+                        email.setEnabled(true); phone.setEnabled(true); address.setEnabled(true); reason.setEnabled(true);
                         notice.setTextColor(0xffa32b32);
                         d.getButton(-1).setEnabled(true);
                         d.getButton(-2).setEnabled(true);
